@@ -9,12 +9,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Threading.Tasks;
     using System.Linq;
     using Xunit;
+    using Xunit.Abstractions;
 
     public class QueueClientTests
     {
         const int MaxAttemptsCount = 5;
-        public QueueClientTests()
+        ITestOutputHelper output;
+
+        public QueueClientTests(ITestOutputHelper output)
         {
+            this.output = output;
             ConnectionString = Environment.GetEnvironmentVariable("QUEUECLIENTCONNECTIONSTRING");
             
             if (string.IsNullOrWhiteSpace(ConnectionString))
@@ -23,7 +27,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        String ConnectionString { get; }
+        string ConnectionString { get; }
 
         [Fact]
         async Task BrokeredMessageOperationsTest()
@@ -69,7 +73,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        async Task QueueClientBasicPeekLockTest()
+        async Task BasicPeekLockTest()
         {
             const int messageCount = 10;
 
@@ -89,7 +93,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        async Task QueueClientBasicReceiveDeleteTest()
+        async Task BasicReceiveDeleteTest()
         {
             const int messageCount = 10;
 
@@ -106,7 +110,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        async Task QueueClientPeekLockWithAbandonTest()
+        async Task PeekLockWithAbandonTest()
         {
             const int messageCount = 10;
 
@@ -135,9 +139,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await this.CompleteMessagesAsync(queueClient, receivedMessages);
         }
 
-
         [Fact]
-        async Task QueueClientPeekLockWithDeadLetterTest()
+        async Task PeekLockWithDeadLetterTest()
         {
             const int messageCount = 10;
             IEnumerable<BrokeredMessage> receivedMessages = null;
@@ -174,7 +177,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        async Task QueueClientPeekLockDeferTest()
+        async Task PeekLockDeferTest()
         {
             const int messageCount = 10;
 
@@ -216,7 +219,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
 
             await queueClient.SendAsync(messagesToSend);
-            WriteLine(string.Format("Sent {0} messages", messageCount));
+            Log(string.Format("Sent {0} messages", messageCount));
         }
 
         async Task<IEnumerable<BrokeredMessage>> ReceiveMessagesAsync(QueueClient queueClient, int messageCount)
@@ -233,7 +236,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 }
             }
 
-            WriteLine(string.Format("Received {0} messages", messagesToReturn.Count));
+            Log(string.Format("Received {0} messages", messagesToReturn.Count));
             
             return messagesToReturn;
         }
@@ -241,33 +244,33 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task CompleteMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
         {
             await queueClient.CompleteAsync(messages.Select(message => message.LockToken));
-            WriteLine(string.Format("Completed {0} messages", messages.Count()));
+            Log(string.Format("Completed {0} messages", messages.Count()));
         }
 
         async Task AbandonMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
         {
             await queueClient.AbandonAsync(messages.Select(message => message.LockToken));
-            WriteLine(string.Format("Abandoned {0} messages", messages.Count()));
+            Log(string.Format("Abandoned {0} messages", messages.Count()));
         }
 
         async Task DeadLetterMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
         {
             await queueClient.DeadLetterAsync(messages.Select(message => message.LockToken));
-            WriteLine(string.Format("Deadlettered {0} messages", messages.Count()));
+            Log(string.Format("Deadlettered {0} messages", messages.Count()));
         }
 
         async Task DeferMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
         {
             await queueClient.DeferAsync(messages.Select(message => message.LockToken));
-            WriteLine(string.Format("Deferred {0} messages", messages.Count()));
+            Log(string.Format("Deferred {0} messages", messages.Count()));
         }
 
-        static void WriteLine(string message)
+        void Log(string message)
         {
-            // Currently xunit2 for .net core doesn't seem to have any output mechanism.  If we find one, replace these here:
-            message = DateTime.Now.TimeOfDay + " " + message;
-            Debug.WriteLine(message);
-            Console.WriteLine(message);
+            var formattedMessage = string.Format("{0} {1}", DateTime.Now.TimeOfDay, message);
+            output.WriteLine(formattedMessage);
+            Debug.WriteLine(formattedMessage);
+            Console.WriteLine(formattedMessage);
         }
     }
 }
