@@ -16,7 +16,6 @@ namespace Microsoft.Azure.ServiceBus
         MessageSender innerSender;
         MessageReceiver innerReceiver;
 
-
         internal QueueClient(ServiceBusConnectionSettings connectionSettings, ReceiveMode receiveMode)
             : base($"{nameof(QueueClient)}{ClientEntity.GetNextId()}({connectionSettings.EntityPath})")
         {
