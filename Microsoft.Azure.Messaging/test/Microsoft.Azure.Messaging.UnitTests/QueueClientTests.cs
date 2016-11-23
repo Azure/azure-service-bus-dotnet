@@ -8,6 +8,8 @@ namespace Microsoft.Azure.Messaging.UnitTests
     using System.Diagnostics;
     using System.Threading.Tasks;
     using System.Linq;
+    using System.Threading;
+    using System.Xml;
     using Xunit;
 
     public class QueueClientTests
@@ -16,7 +18,14 @@ namespace Microsoft.Azure.Messaging.UnitTests
         public QueueClientTests()
         {
             ConnectionString = Environment.GetEnvironmentVariable("QUEUECLIENTCONNECTIONSTRING");
-            
+            //string namespaceConnectionString =
+            //    "Endpoint = sb://contoso.servicebus.onebox.windows-int.net/;SharedAccessKeyName=DefaultNamespaceSasAllKeyName;SharedAccessKey=8864/auVd3qDC75iTjBL1GJ4D2oXC6bIttRd0jzDZ+g=";
+
+            ConnectionString =
+            //"Endpoint=sb://newvinsu1028.servicebus.windows.net/;EntityPath=testqshortlockq;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=7oMVG2as0pelFCFujgSb2JExro7/tZ6oIGcECpljubc=";
+            "Endpoint=sb://testvinsustandard924.servicebus.windows.net/;EntityPath=testq;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=+nCcyesi2Vdw5eAQeJvR85XMwpj46o2gvxmdizbqXoY=";
+            //"Endpoint=sb://contoso.servicebus.onebox.windows-int.net/;EntityPath=testq;SharedAccessKeyName=DefaultNamespaceSasAllKeyName;SharedAccessKey=8864/auVd3qDC75iTjBL1GJ4D2oXC6bIttRd0jzDZ+g=";
+
             if (string.IsNullOrWhiteSpace(ConnectionString))
             {
                 throw new InvalidOperationException("QUEUECLIENTCONNECTIONSTRING environment variable was not found!");
@@ -63,9 +72,11 @@ namespace Microsoft.Azure.Messaging.UnitTests
             //Send a Message, Receive/Defer using BrokeredMessage methods
             await this.SendMessagesAsync(queueClient, 1);
             message = await queueClient.ReceiveAsync();
+            long deferredSequenceNumber = message.SequenceNumber;
             await message.DeferAsync();
 
-            //TODO: Once ReceivebySequence is implemented, Receive and Complete this message
+            var deferredMessage = await queueClient.ReceiveBySequenceNumberAsync(deferredSequenceNumber);
+            await deferredMessage.CompleteAsync();
         }
 
         [Fact]
@@ -188,16 +199,65 @@ namespace Microsoft.Azure.Messaging.UnitTests
             int deferMessagesCount = 5;
             IEnumerable<BrokeredMessage> receivedMessages = await this.ReceiveMessagesAsync(queueClient, deferMessagesCount);
             Assert.True(receivedMessages.Count() == deferMessagesCount);
-
+            var sequenceNumbers = receivedMessages.Select(receivedMessage => receivedMessage.SequenceNumber).ToArray();
             await this.DeferMessagesAsync(queueClient, receivedMessages);
 
             //Receive and Complete 5 other regular messages
             receivedMessages = await this.ReceiveMessagesAsync(queueClient, messageCount - deferMessagesCount);
             await this.CompleteMessagesAsync(queueClient, receivedMessages);
-
             Assert.True(receivedMessages.Count() == messageCount - deferMessagesCount);
 
-            //Once Request response link is implemented,  Call ReceiveBySequenceNumber() here and complete the rest of the 5 messages
+            //Receive / Abandon deferred messages
+            receivedMessages = await queueClient.ReceiveBySequenceNumberAsync(sequenceNumbers);
+            Assert.True(receivedMessages.Count() == 5);
+            await this.DeferMessagesAsync(queueClient, receivedMessages);
+
+            // Receive Again and Check delivery count
+            receivedMessages = await queueClient.ReceiveBySequenceNumberAsync(sequenceNumbers);
+            int count = receivedMessages.Where((message) => message.DeliveryCount == 3).Count();
+            Assert.True(count == receivedMessages.Count());
+
+            // Complete messages
+            await this.CompleteMessagesAsync(queueClient, receivedMessages);
+        }
+
+        // Request Response Tests
+        [Fact]
+        async Task QueueClientBasicRenewLockTest()
+        {
+            const int messageCount = 1;
+
+            //Create QueueClient With PeekLock
+            QueueClient queueClient = QueueClient.Create(this.ConnectionString);
+
+            //Send messages
+            await this.SendMessagesAsync(queueClient, messageCount);
+
+            //Receive messages
+            IEnumerable<BrokeredMessage> receivedMessages = await ReceiveMessagesAsync(queueClient, messageCount);
+
+            BrokeredMessage message = receivedMessages.First();
+            DateTime firstLockedUntilUtcTime = message.LockedUntilUtc;
+            WriteLine($"MessageLockedUntil: {firstLockedUntilUtcTime}");
+
+            WriteLine("Sleeping 10 seconds...");
+            Thread.Sleep(TimeSpan.FromSeconds(10));
+
+            DateTime lockedUntilUtcTime = await queueClient.RenewMessageLockAsync(receivedMessages.First().LockToken);
+            WriteLine($"After First Renewal: {lockedUntilUtcTime}");
+            Assert.True(lockedUntilUtcTime >= firstLockedUntilUtcTime + TimeSpan.FromSeconds(10));
+
+            WriteLine("Sleeping 5 seconds...");
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+
+            lockedUntilUtcTime = await queueClient.RenewMessageLockAsync(receivedMessages.First().LockToken);
+            WriteLine($"After Second Renewal: {lockedUntilUtcTime}");
+            Assert.True(lockedUntilUtcTime >= firstLockedUntilUtcTime + TimeSpan.FromSeconds(5));
+
+            //Complete Messages
+            await this.CompleteMessagesAsync(queueClient, receivedMessages);
+
+            Assert.True(receivedMessages.Count() == messageCount);
         }
 
         async Task SendMessagesAsync(QueueClient queueClient, int messageCount)

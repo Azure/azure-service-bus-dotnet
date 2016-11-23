@@ -185,6 +185,30 @@ namespace Microsoft.Azure.Messaging
             }
         }
 
+        public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
+        {
+            IList<BrokeredMessage> messages = await this.ReceiveBySequenceNumberAsync(new long[] {sequenceNumber});
+            if (messages != null && messages.Count > 0)
+            {
+                return messages[0];
+            }
+
+            return null;
+        }
+
+        public async Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
+        {
+            try
+            {
+                return await this.InnerReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers);
+            }
+            catch (Exception)
+            {
+                //TODO: Log Receive Exception
+                throw;
+            }
+        }
+
         public Task CompleteAsync(Guid lockToken)
         {
             return this.CompleteAsync(new Guid[] {lockToken});
@@ -249,6 +273,19 @@ namespace Microsoft.Azure.Messaging
             try
             {
                 await this.InnerReceiver.DeadLetterAsync(lockTokens);
+            }
+            catch (Exception)
+            {
+                //TODO: Log Complete Exception
+                throw;
+            }
+        }
+
+        public async Task<DateTime> RenewMessageLockAsync(Guid lockToken)
+        {
+            try
+            {
+                return await this.InnerReceiver.RenewLockAsync(lockToken);
             }
             catch (Exception)
             {

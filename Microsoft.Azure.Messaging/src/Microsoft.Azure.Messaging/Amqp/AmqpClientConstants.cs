@@ -55,6 +55,7 @@ namespace Microsoft.Azure.Messaging.Amqp
         public const string FilterReceivedAtFormatString = FilterReceivedAt + "{0}";
 
         // AMQP Management Operation
+        public const string EntityTypeManagement = "entity-mgmt";
         public const string ManagementAddress = "$management";
         public const string EntityNameKey = "name";
         public const string PartitionNameKey = "partition";

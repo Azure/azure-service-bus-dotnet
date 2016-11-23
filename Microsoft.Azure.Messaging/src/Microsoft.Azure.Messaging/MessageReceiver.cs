@@ -23,6 +23,11 @@ namespace Microsoft.Azure.Messaging
             return this.OnReceiveAsync(maxMessageCount);
         }
 
+        public Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
+        {
+            return this.OnReceiveBySequenceNumberAsync(sequenceNumbers);
+        }
+
         public Task CompleteAsync(IEnumerable<Guid> lockTokens)
         {
             this.ThrowIfNotPeekLockMode();
@@ -55,7 +60,17 @@ namespace Microsoft.Azure.Messaging
             return this.OnDeadLetterAsync(lockTokens);
         }
 
+        public Task<DateTime> RenewLockAsync(Guid lockToken)
+        {
+            this.ThrowIfNotPeekLockMode();
+            MessageReceiver.ValidateLockTokens(new Guid[] {lockToken});
+
+            return this.OnRenewLockAsync(lockToken);
+        }
+
         protected abstract Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount);
+
+        protected abstract Task<IList<BrokeredMessage>> OnReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers);
 
         protected abstract Task OnCompleteAsync(IEnumerable<Guid> lockTokens);
 
@@ -64,6 +79,8 @@ namespace Microsoft.Azure.Messaging
         protected abstract Task OnDeferAsync(IEnumerable<Guid> lockTokens);
 
         protected abstract Task OnDeadLetterAsync(IEnumerable<Guid> lockTokens);
+
+        protected abstract Task<DateTime> OnRenewLockAsync(Guid lockToken);
 
         void ThrowIfNotPeekLockMode()
         {

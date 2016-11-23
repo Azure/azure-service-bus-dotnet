@@ -1091,6 +1091,16 @@ namespace Microsoft.Azure.Messaging
             return this.Receiver.DeferAsync(new Guid[] { this.LockToken });
         }
 
+        // Summary:
+        //     Asynchronously indicates that the receiver wants to renew the lock for the message.
+        public Task RenewLockAsync()
+        {
+            this.ThrowIfDisposed();
+            this.ThrowIfNotLocked();
+
+            return this.InternalRenewLockAsync(this.LockToken);
+        }
+
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         public void Dispose()
         {
@@ -1195,6 +1205,11 @@ namespace Microsoft.Azure.Messaging
             {
                 this.attachedDisposables.AddRange(disposables);
             }
+        }
+
+        internal async Task InternalRenewLockAsync(Guid lockToken)
+        {
+            this.LockedUntilUtc = await this.Receiver.RenewLockAsync(this.LockToken);
         }
 
         /// <summary> Performs application-defined tasks associated with freeing, releasing, or resetting
