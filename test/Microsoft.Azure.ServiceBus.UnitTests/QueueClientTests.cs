@@ -80,6 +80,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             var deferredMessage = await queueClient.ReceiveBySequenceNumberAsync(deferredSequenceNumber);
             await deferredMessage.CompleteAsync();
+
+            queueClient.Close();
         }
 
         [Fact]
@@ -100,6 +102,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await this.CompleteMessagesAsync(queueClient, receivedMessages);
 
             Assert.True(receivedMessages.Count() == messageCount);
+
+            queueClient.Close();
         }
 
         [Fact]
@@ -117,6 +121,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             IEnumerable<BrokeredMessage> receivedMessages = await this.ReceiveMessagesAsync(queueClient, messageCount);
 
             Assert.True(receivedMessages.Count() == messageCount);
+
+            queueClient.Close();
         }
 
         [Fact]
@@ -135,9 +141,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             IEnumerable<BrokeredMessage> receivedMessages = await ReceiveMessagesAsync(queueClient, abandonMessagesCount);
             Assert.True(receivedMessages.Count() == abandonMessagesCount);
 
-            await this.AbandonMessagesAsync(queueClient, receivedMessages);
+            await this.AbandonMessagesAsync(queueClient, receivedMessages);     
 
-            //Receive all 10 messages, 5 of them should have DeliveryCount = 2
+            //Receive all 10 messages
             receivedMessages = await this.ReceiveMessagesAsync(queueClient, messageCount);
             Assert.True(receivedMessages.Count() == messageCount);
 
@@ -147,6 +153,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             //Complete Messages
             await this.CompleteMessagesAsync(queueClient, receivedMessages);
+
+            queueClient.Close();
         }
 
         [Fact]
@@ -184,6 +192,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             receivedMessages = await this.ReceiveMessagesAsync(deadLetterQueueClient, deadLetterMessageCount);
             Assert.True(receivedMessages.Count() == deadLetterMessageCount);
             await this.CompleteMessagesAsync(deadLetterQueueClient, receivedMessages);
+
+
+            deadLetterQueueClient.Close();
+            queueClient.Close();
         }
 
         [Fact]
@@ -221,11 +233,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             // Complete messages
             await this.CompleteMessagesAsync(queueClient, receivedMessages);
+
+            queueClient.Close();
         }
 
         // Request Response Tests
         [Fact]
-        async Task QueueClientBasicRenewLockTest()
+        async Task BasicRenewLockTest()
         {
             const int messageCount = 1;
 
@@ -260,6 +274,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await this.CompleteMessagesAsync(queueClient, receivedMessages);
 
             Assert.True(receivedMessages.Count() == messageCount);
+
+            queueClient.Close();
         }
 
         async Task SendMessagesAsync(QueueClient queueClient, int messageCount)
