@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
     using System.Collections.Generic;
+    using Messaging.Amqp;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;

@@ -176,7 +176,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                return await this.InnerReceiver.ReceiveAsync(maxMessageCount);
+                return await this.InnerReceiver.ReceiveAsync(maxMessageCount).ConfigureAwait(false);
             }
             catch(Exception)
             {
@@ -200,7 +200,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                return await this.InnerReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers);
+                return await this.InnerReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers).ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -285,7 +285,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                return await this.InnerReceiver.RenewLockAsync(lockToken);
+                return await this.InnerReceiver.RenewLockAsync(lockToken).ConfigureAwait(false);
             }
             catch (Exception)
             {

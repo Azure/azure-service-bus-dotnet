@@ -9,7 +9,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Threading.Tasks;
     using System.Linq;
     using System.Threading;
-    using System.Xml;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -241,20 +240,20 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             BrokeredMessage message = receivedMessages.First();
             DateTime firstLockedUntilUtcTime = message.LockedUntilUtc;
-            WriteLine($"MessageLockedUntil: {firstLockedUntilUtcTime}");
+            Log($"MessageLockedUntil: {firstLockedUntilUtcTime}");
 
-            WriteLine("Sleeping 10 seconds...");
+            Log("Sleeping 10 seconds...");
             Thread.Sleep(TimeSpan.FromSeconds(10));
 
             DateTime lockedUntilUtcTime = await queueClient.RenewMessageLockAsync(receivedMessages.First().LockToken);
-            WriteLine($"After First Renewal: {lockedUntilUtcTime}");
+            Log($"After First Renewal: {lockedUntilUtcTime}");
             Assert.True(lockedUntilUtcTime >= firstLockedUntilUtcTime + TimeSpan.FromSeconds(10));
 
-            WriteLine("Sleeping 5 seconds...");
+            Log("Sleeping 5 seconds...");
             Thread.Sleep(TimeSpan.FromSeconds(5));
 
             lockedUntilUtcTime = await queueClient.RenewMessageLockAsync(receivedMessages.First().LockToken);
-            WriteLine($"After Second Renewal: {lockedUntilUtcTime}");
+            Log($"After Second Renewal: {lockedUntilUtcTime}");
             Assert.True(lockedUntilUtcTime >= firstLockedUntilUtcTime + TimeSpan.FromSeconds(5));
 
             //Complete Messages

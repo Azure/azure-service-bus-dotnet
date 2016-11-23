@@ -7,7 +7,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Messaging.Amqp;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Framing;
 
@@ -52,7 +51,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                 }
 
-                Outcome outcome = await amqpLink.SendMessageAsync(amqpMessage, this.GetNextDeliveryTag(), AmqpConstants.NullBinary, timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                Outcome outcome = await amqpLink.SendMessageAsync(amqpMessage, this.GetNextDeliveryTag(), AmqpConstants.NullBinary, timeoutHelper.RemainingTime());
                 if (outcome.DescriptorCode != Accepted.Code)
                 {
                     Rejected rejected = (Rejected)outcome;
@@ -69,6 +68,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         async Task<SendingAmqpLink> CreateLinkAsync(TimeSpan timeout)
         {
+<<<<<<< HEAD:Microsoft.Azure.Messaging/src/Microsoft.Azure.Messaging/Amqp/AmqpMessageSender.cs
             var linkSettings = new AmqpLinkSettings
             {
                 Role = false,
@@ -78,8 +78,55 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             };
             linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)MessagingEntityType.Queue);
 
-            SendingAmqpLink sendingAmqpLink = (SendingAmqpLink) await AmqpLinkHelper.CreateAndOpenAmqpLinkAsync((AmqpQueueClient) this.QueueClient, this.Path, new[] { ClaimConstants.Send }, linkSettings, false).ConfigureAwait(false);
+            SendingAmqpLink sendingAmqpLink = (SendingAmqpLink) await AmqpLinkHelper.CreateAndOpenAmqpLinkAsync((AmqpQueueClient) this.QueueClient, this.Path, new[] { ClaimConstants.Send }, linkSettings, false);
             return sendingAmqpLink;
+=======
+            var amqpQueueClient = ((AmqpQueueClient)this.QueueClient);
+            var connectionSettings = amqpQueueClient.ConnectionSettings;
+            var timeoutHelper = new TimeoutHelper(connectionSettings.OperationTimeout);
+            AmqpConnection connection = await amqpQueueClient.ConnectionManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+
+            // Authenticate over CBS
+            var cbsLink = connection.Extensions.Find<AmqpCbsLink>();
+
+            ICbsTokenProvider cbsTokenProvider = amqpQueueClient.CbsTokenProvider;
+            Uri address = new Uri(connectionSettings.Endpoint, this.Path);
+            string audience = address.AbsoluteUri;
+            string resource = address.AbsoluteUri;
+            var expiresAt = await cbsLink.SendTokenAsync(cbsTokenProvider, address, audience, resource, new[] { ClaimConstants.Send }, timeoutHelper.RemainingTime()).ConfigureAwait(false);
+
+            AmqpSession session = null;
+            try
+            {
+                // Create our Session
+                var sessionSettings = new AmqpSessionSettings { Properties = new Fields() };
+                //sessionSettings.Properties[AmqpClientConstants.BatchFlushIntervalName] = (uint)connectionSettings.BatchFlushInterval.TotalMilliseconds;
+                session = connection.CreateSession(sessionSettings);
+                await session.OpenAsync(timeoutHelper.RemainingTime());
+
+                // Create our Link
+                var linkSettings = new AmqpLinkSettings();
+                linkSettings.AddProperty(AmqpClientConstants.TimeoutName, (uint)timeoutHelper.RemainingTime().TotalMilliseconds);
+                linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)MessagingEntityType.Queue);
+                linkSettings.Role = false;
+                linkSettings.InitialDeliveryCount = 0;
+                linkSettings.Target = new Target { Address = address.AbsolutePath };
+                linkSettings.Source = new Source { Address = this.ClientId };
+
+                var link = new SendingAmqpLink(linkSettings);
+                linkSettings.LinkName = $"{amqpQueueClient.ContainerId};{connection.Identifier}:{session.Identifier}:{link.Identifier}";
+                link.AttachTo(session);
+
+                await link.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                return link;
+            }
+            catch (Exception)
+            {
+                // Cleanup any session (and thus link) in case of exception.
+                session?.Abort();
+                throw;
+            }
+>>>>>>> f861c93638d0b6002414b8a60a947c5211e058b0:src/Microsoft.Azure.ServiceBus/Amqp/AmqpMessageSender.cs
         }
 
         void CloseSession(SendingAmqpLink link)

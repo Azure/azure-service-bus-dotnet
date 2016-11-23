@@ -1208,7 +1208,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal async Task InternalRenewLockAsync(Guid lockToken)
         {
-            this.LockedUntilUtc = await this.Receiver.RenewLockAsync(this.LockToken);
+            this.LockedUntilUtc = await this.Receiver.RenewLockAsync(this.LockToken).ConfigureAwait(false);
         }
 
         /// <summary> Performs application-defined tasks associated with freeing, releasing, or resetting
