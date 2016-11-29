@@ -38,6 +38,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         // Filters
         public static readonly AmqpSymbol SessionFilterName = AmqpConstants.Vendor + ":session-filter";
+        public static readonly AmqpSymbol LockedUntilUtc = AmqpConstants.Vendor + ":locked-until-utc";
         public static readonly AmqpSymbol MessageReceiptsFilterName = AmqpConstants.Vendor + ":message-receipts-filter";
         public static readonly AmqpSymbol ClientSideCursorFilterName = AmqpConstants.Vendor + ":client-side-filter";
         public static readonly TimeSpan ClientMinimumTokenRefreshInterval = TimeSpan.FromMinutes(4);

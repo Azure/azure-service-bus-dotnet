@@ -3,15 +3,24 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
     abstract class MessageSender : ClientEntity
     {
-        protected MessageSender()
+        readonly TimeSpan operationTimeout;
+
+        protected MessageSender(TimeSpan operationTimeout)
             : base(nameof(MessageSender) + StringUtility.GetRandomString())
         {
+            this.operationTimeout = operationTimeout;
+        }
+
+        internal TimeSpan OperationTimeout
+        {
+            get { return this.operationTimeout; }
         }
 
         public Task SendAsync(IEnumerable<BrokeredMessage> brokeredMessages)

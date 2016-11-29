@@ -244,6 +244,27 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
+        public Task<MessageSession> AcceptMessageSessionAsync()
+        {
+            return this.AcceptMessageSessionAsync(null);
+        }
+
+        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
+        {
+            MessageSession session = null;
+            try
+            {
+                session = await this.OnAcceptMessageSessionAsync(sessionId).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                //TODO: Log Complete Exception
+                throw;
+            }
+
+            return session;
+        }
+
         public Task DeferAsync(Guid lockToken)
         {
             return this.DeferAsync(new Guid[] { lockToken });
@@ -306,6 +327,8 @@ namespace Microsoft.Azure.ServiceBus
         internal abstract MessageSender OnCreateMessageSender();
 
         internal abstract MessageReceiver OnCreateMessageReceiver();
+
+        internal abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId);
 
         protected abstract Task OnCloseAsync();
     }

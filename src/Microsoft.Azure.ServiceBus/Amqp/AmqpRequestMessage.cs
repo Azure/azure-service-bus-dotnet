@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Messaging.Amqp
     using Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp;
 
-    sealed class AmqpRequestMessage
+    public sealed class AmqpRequestMessage
     {
         readonly AmqpMessage requestMessage;
 

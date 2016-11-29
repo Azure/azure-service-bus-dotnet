@@ -28,6 +28,9 @@ namespace Microsoft.Azure.Messaging.Amqp
             public const string RenewLockOperation = Microsoft + ":renew-lock";
             public const string ReceiveBySequenceNumberOperation = Microsoft + ":receive-by-sequence-number";
             public const string UpdateDispositionOperation = Microsoft + ":update-disposition";
+            public const string RenewSessionLockOperation = Microsoft + ":renew-session-lock";
+            public const string SetSessionStateOperation = Microsoft + ":set-session-state";
+            public const string GetSessionStateOperation = Microsoft + ":get-session-state";
         }
 
         public static class Properties
@@ -35,12 +38,14 @@ namespace Microsoft.Azure.Messaging.Amqp
             public static readonly MapKey ServerTimeout = new MapKey(Microsoft + ":server-timeout");
             public static readonly MapKey TrackingId = new MapKey(Microsoft + ":tracking-id");
 
+            public static readonly MapKey SessionState = new MapKey("session-state");
             public static readonly MapKey LockToken = new MapKey("lock-token");
             public static readonly MapKey LockTokens = new MapKey("lock-tokens");
             public static readonly MapKey SequenceNumbers = new MapKey("sequence-numbers");
             public static readonly MapKey Expirations = new MapKey("expirations");
             public static readonly MapKey Expiration = new MapKey("expiration");
-            public static readonly MapKey LockedUntilUtc = new MapKey("locked-until-utc");
+            public static readonly MapKey SessionId = new MapKey("session-id");
+
             public static readonly MapKey ReceiverSettleMode = new MapKey("receiver-settle-mode");
             public static readonly MapKey Message = new MapKey("message");
             public static readonly MapKey Messages = new MapKey("messages");

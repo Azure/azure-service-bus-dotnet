@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Amqp;
 
     /// <summary>
     /// Contract for all client entities with Open-Close/Abort state m/c

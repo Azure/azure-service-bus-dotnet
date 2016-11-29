@@ -16,7 +16,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         int deliveryCount;
 
         internal AmqpMessageSender(AmqpQueueClient queueClient)
-            : base()
+            : base(queueClient.ConnectionSettings.OperationTimeout)
         {
             this.QueueClient = queueClient;
             this.Path = this.QueueClient.QueueName;
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         protected override async Task OnSendAsync(IEnumerable<BrokeredMessage> brokeredMessages)
         {
-            var timeoutHelper = new TimeoutHelper(this.QueueClient.ConnectionSettings.OperationTimeout, true);
+            var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
             using (AmqpMessage amqpMessage = AmqpMessageConverter.BrokeredMessagesToAmqpMessage(brokeredMessages, true))
             {
                 var amqpLink = await this.SendLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);

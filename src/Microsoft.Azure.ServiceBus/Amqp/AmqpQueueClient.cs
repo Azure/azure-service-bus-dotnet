@@ -51,6 +51,22 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return new AmqpMessageReceiver(this);
         }
 
+        internal override async Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId)
+        {
+            AmqpMessageReceiver receiver = new AmqpMessageReceiver(this, sessionId, true);
+            try
+            {
+                await receiver.GetSessionReceiverLinkAsync();
+            }
+            catch (AmqpException exception)
+            {
+                //ToDo: Abort the Receiver here
+                AmqpExceptionHelper.ToMessagingContract(exception.Error, false);
+            }
+            MessageSession session = new AmqpMessageSession(sessionId, receiver.LockedUntilUtc, receiver);
+            return session;
+        }
+
         protected override Task OnCloseAsync()
         {
             // Closing the Connection will also close all Links associated with it.

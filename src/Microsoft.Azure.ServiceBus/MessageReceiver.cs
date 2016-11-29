@@ -7,16 +7,39 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Linq;
+    using Azure.Amqp;
+    using Messaging.Amqp;
 
-    abstract class MessageReceiver : ClientEntity
+    public abstract class MessageReceiver : ClientEntity
     {
-        protected MessageReceiver(ReceiveMode receiveMode)
+        readonly TimeSpan operationTimeout;
+
+        protected MessageReceiver(ReceiveMode receiveMode, TimeSpan operationTimeout)
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString())
         {
             this.ReceiveMode = receiveMode;
+            this.operationTimeout = operationTimeout;
         }
 
+        public abstract string Path { get; }
+
         public ReceiveMode ReceiveMode { get; protected set; }
+
+        internal TimeSpan OperationTimeout
+        {
+            get { return this.operationTimeout; }
+        }
+
+        public async Task<BrokeredMessage> ReceiveAsync()
+        {
+            IList<BrokeredMessage> messages = await this.ReceiveAsync(1).ConfigureAwait(false);
+            if (messages != null && messages.Count > 0)
+            {
+                return messages[0];
+            }
+
+            return null;
+        }
 
         public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
         {
@@ -81,6 +104,13 @@ namespace Microsoft.Azure.ServiceBus
         protected abstract Task OnDeadLetterAsync(IEnumerable<Guid> lockTokens);
 
         protected abstract Task<DateTime> OnRenewLockAsync(Guid lockToken);
+
+        internal abstract Task<AmqpResponseMessage> OnExecuteRequestResponseAsync(AmqpRequestMessage requestAmqpMessage);
+
+        internal Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
+        {
+            return this.OnExecuteRequestResponseAsync(amqpRequestMessage);
+        }
 
         void ThrowIfNotPeekLockMode()
         {

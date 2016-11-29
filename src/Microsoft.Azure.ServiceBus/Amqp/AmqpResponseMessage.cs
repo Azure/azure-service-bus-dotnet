@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Messaging.Amqp
     using Microsoft.Azure.Amqp;
     using ServiceBus.Amqp;
 
-    sealed class AmqpResponseMessage
+    public sealed class AmqpResponseMessage
     {
         readonly AmqpMessage responseMessage;
 
@@ -31,7 +31,10 @@ namespace Microsoft.Azure.Messaging.Amqp
             }
         }
 
-        public AmqpMessage AmqpMessage => this.responseMessage;
+        public AmqpMessage AmqpMessage
+        {
+            get { return this.responseMessage; }
+        }
 
         public AmqpResponseStatusCode StatusCode { get; }
 
