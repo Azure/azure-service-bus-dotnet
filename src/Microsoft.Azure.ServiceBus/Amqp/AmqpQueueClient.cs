@@ -56,7 +56,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             AmqpMessageReceiver receiver = new AmqpMessageReceiver(this, sessionId, true);
             try
             {
-                await receiver.GetSessionReceiverLinkAsync();
+                await receiver.GetSessionReceiverLinkAsync().ConfigureAwait(false);
             }
             catch (AmqpException exception)
             {

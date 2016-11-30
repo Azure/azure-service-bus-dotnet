@@ -81,8 +81,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public override async Task CloseAsync()
         {
-            await this.ReceiveLinkManager.CloseAsync();
-            await this.RequestResponseLinkManager.CloseAsync();
+            await this.ReceiveLinkManager.CloseAsync().ConfigureAwait(false);
+            await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
         }
 
         protected override async Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount)
