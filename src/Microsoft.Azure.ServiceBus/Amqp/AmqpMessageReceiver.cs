@@ -12,7 +12,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using Messaging.Primitives;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Framing;
-    using Primitives;
 
     sealed class AmqpMessageReceiver : MessageReceiver
     {
@@ -56,6 +55,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         public DateTime LockedUntilUtc
         {
             get { return this.lockedUntilUtc; }
+        }
+
+        public string SessionId
+        {
+            get { return this.sessionId; }
         }
 
         QueueClient QueueClient { get; }
@@ -346,11 +350,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 TotalLinkCredit = (uint) this.PrefetchCount,
                 AutoSendFlow = this.PrefetchCount > 0,
                 Source = new Source { Address = this.Path, FilterSet = filterMap },
-                Target = new Target { Address = this.ClientId },
                 SettleType = (this.QueueClient.Mode == ReceiveMode.PeekLock) ? SettleMode.SettleOnDispose : SettleMode.SettleOnSend
             };
 
             linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)MessagingEntityType.Queue);
+            linkSettings.AddProperty(AmqpClientConstants.TimeoutName, (uint)timeout.TotalMilliseconds);
 
             ReceivingAmqpLink receivingAmqpLink = (ReceivingAmqpLink) await AmqpLinkHelper.CreateAndOpenAmqpLinkAsync((AmqpQueueClient) this.QueueClient, this.Path, new[] {ClaimConstants.Listen}, linkSettings, false).ConfigureAwait(false);
             return receivingAmqpLink;
