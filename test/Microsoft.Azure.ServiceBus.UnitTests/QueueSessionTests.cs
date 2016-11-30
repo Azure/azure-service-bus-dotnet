@@ -23,7 +23,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             this.output = output;
             ConnectionString = Environment.GetEnvironmentVariable("SESSIONQUEUECLIENTCONNECTIONSTRING");
-            
+
             if (string.IsNullOrWhiteSpace(ConnectionString))
             {
                 throw new InvalidOperationException("SESSIONQUEUECLIENTCONNECTIONSTRING environment variable was not found!");
