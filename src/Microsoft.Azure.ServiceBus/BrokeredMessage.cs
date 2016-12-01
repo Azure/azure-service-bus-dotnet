@@ -61,7 +61,7 @@ namespace Microsoft.Azure.ServiceBus
         public BrokeredMessage() 
         {
             this.version = BrokeredMessage.messageVersion;
-            MessageId = Guid.NewGuid().ToString("N");
+            this.MessageId = Guid.NewGuid().ToString("N");
         }
 
         /// <summary>Initializes a new instance of the 
