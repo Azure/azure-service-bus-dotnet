@@ -519,7 +519,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return buffer;
         }
 
-        internal static Stream GetMessageBodyStream(AmqpMessage message)
+        static Stream GetMessageBodyStream(AmqpMessage message)
         {
             if ((message.BodyType & SectionFlag.Data) != 0 &&
                 message.DataBody != null)
