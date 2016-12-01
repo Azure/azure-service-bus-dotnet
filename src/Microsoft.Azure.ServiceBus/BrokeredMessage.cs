@@ -1059,9 +1059,9 @@ namespace Microsoft.Azure.ServiceBus
             return this.Receiver.AbandonAsync(new Guid[] { this.LockToken });
         }
 
-        // Summary:
-        //     Asynchronously completes the receive operation of a message and indicates that
-        //     the message should be marked as processed and deleted.
+        /// <summary>Asynchronously completes the receive operation of a message and 
+        /// indicates that the message should be marked as processed and deleted.</summary> 
+        /// <returns>The asynchronous result of the operation.</returns>
         public Task CompleteAsync()
         {
             this.ThrowIfDisposed();
@@ -1070,8 +1070,8 @@ namespace Microsoft.Azure.ServiceBus
             return this.Receiver.CompleteAsync(new Guid[] {this.LockToken});
         }
 
-        // Summary:
-        //     Asynchronously moves the message to the dead letter queue.
+        /// <summary>Asynchronously moves the message to the dead letter queue.</summary>
+        /// <returns>The asynchronous result of the operation.</returns>
         public Task DeadLetterAsync()
         {
             this.ThrowIfDisposed();
@@ -1080,8 +1080,8 @@ namespace Microsoft.Azure.ServiceBus
             return this.Receiver.DeadLetterAsync(new Guid[] { this.LockToken });
         }
 
-        // Summary:
-        //     Asynchronously indicates that the receiver wants to defer the processing for this message.
+        /// <summary>Asynchronously indicates that the receiver wants to defer the processing for this message.</summary>
+        /// <returns>The asynchronous result of the operation.</returns>
         public Task DeferAsync()
         {
             this.ThrowIfDisposed();
@@ -1090,8 +1090,8 @@ namespace Microsoft.Azure.ServiceBus
             return this.Receiver.DeferAsync(new Guid[] { this.LockToken });
         }
 
-        // Summary:
-        //     Asynchronously indicates that the receiver wants to renew the lock for the message.
+        /// <summary>Specifies the time period within which the host renews its lock on a message.</summary>
+        /// <returns>The host that is being locked.</returns>
         public Task RenewLockAsync()
         {
             this.ThrowIfDisposed();
