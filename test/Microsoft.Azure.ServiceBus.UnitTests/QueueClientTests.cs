@@ -29,7 +29,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        public async Task BrokeredMessageOperationsTest()
+        async Task BrokeredMessageOperationsTest()
         {
             // Create QueueClient with ReceiveDelete, 
             // Send and Receive a message, Try to Complete/Abandon/Defer/DeadLetter should throw InvalidOperationException()
@@ -72,7 +72,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        public async Task BasicPeekLockTest()
+        async Task BasicPeekLockTest()
         {
             const int MessageCount = 10;
 
@@ -92,7 +92,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        public async Task BasicReceiveDeleteTest()
+        async Task BasicReceiveDeleteTest()
         {
             const int MessageCount = 10;
 
@@ -109,7 +109,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        public async Task PeekLockWithAbandonTest()
+        async Task PeekLockWithAbandonTest()
         {
             const int MessageCount = 10;
 
@@ -139,7 +139,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        public async Task PeekLockWithDeadLetterTest()
+        async Task PeekLockWithDeadLetterTest()
         {
             const int MessageCount = 10;
             IEnumerable<BrokeredMessage> receivedMessages = null;
@@ -176,7 +176,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        public async Task PeekLockDeferTest()
+        async Task PeekLockDeferTest()
         {
             const int MessageCount = 10;
 
@@ -202,7 +202,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             // Once Request response link is implemented,  Call ReceiveBySequenceNumber() here and complete the rest of the 5 messages
         }
 
-        public async Task SendMessagesAsync(QueueClient queueClient, int messageCount)
+        async Task SendMessagesAsync(QueueClient queueClient, int messageCount)
         {
             if (messageCount == 0)
             {
@@ -221,7 +221,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             this.Log(string.Format("Sent {0} messages", messageCount));
         }
 
-        public async Task<IEnumerable<BrokeredMessage>> ReceiveMessagesAsync(QueueClient queueClient, int messageCount)
+        async Task<IEnumerable<BrokeredMessage>> ReceiveMessagesAsync(QueueClient queueClient, int messageCount)
         {
             int receiveAttempts = 0;
             List<BrokeredMessage> messagesToReturn = new List<BrokeredMessage>(); 
@@ -240,25 +240,25 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             return messagesToReturn;
         }
 
-        public async Task CompleteMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
+        async Task CompleteMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
         {
             await queueClient.CompleteAsync(messages.Select(message => message.LockToken));
             this.Log(string.Format("Completed {0} messages", messages.Count()));
         }
 
-        public async Task AbandonMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
+        async Task AbandonMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
         {
             await queueClient.AbandonAsync(messages.Select(message => message.LockToken));
             this.Log(string.Format("Abandoned {0} messages", messages.Count()));
         }
 
-        public async Task DeadLetterMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
+        async Task DeadLetterMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
         {
             await queueClient.DeadLetterAsync(messages.Select(message => message.LockToken));
             this.Log(string.Format("Deadlettered {0} messages", messages.Count()));
         }
 
-        public async Task DeferMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
+        async Task DeferMessagesAsync(QueueClient queueClient, IEnumerable<BrokeredMessage> messages)
         {
             await queueClient.DeferAsync(messages.Select(message => message.LockToken));
             this.Log(string.Format("Deferred {0} messages", messages.Count()));
