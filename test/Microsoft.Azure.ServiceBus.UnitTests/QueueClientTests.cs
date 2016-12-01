@@ -203,6 +203,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         async Task SendMessagesAsync(QueueClient queueClient, int messageCount)
+        async Task SendMessagesAsync(QueueClient queueClient, int messageCount, [CallerMemberName] string invokingMethod = "")
         {
             if (messageCount == 0)
             {
@@ -214,6 +215,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 BrokeredMessage message = new BrokeredMessage("test" + i);
                 message.Label = "test" + i;
+                message.Label = $"test{i}-{invokingMethod}";
                 messagesToSend.Add(message);
             }
 
