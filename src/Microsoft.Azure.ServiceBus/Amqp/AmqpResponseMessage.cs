@@ -1,15 +1,15 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.Messaging.Amqp
+namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Azure.Amqp;
     using Azure.Amqp.Encoding;
     using Azure.Amqp.Framing;
-    using Microsoft.Azure.Amqp;
-    using ServiceBus.Amqp;
+    using Microsoft.Azure.Messaging.Amqp;
 
     public sealed class AmqpResponseMessage
     {

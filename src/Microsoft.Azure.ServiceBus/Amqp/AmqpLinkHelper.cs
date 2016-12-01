@@ -5,10 +5,10 @@ namespace Microsoft.Azure.Messaging.Amqp
 {
     using System;
     using System.Threading.Tasks;
-    using Azure.Amqp;
-    using Azure.Amqp.Framing;
-    using ServiceBus;
-    using ServiceBus.Amqp;
+    using Microsoft.Azure.Amqp;
+    using Microsoft.Azure.Amqp.Framing;
+    using Microsoft.Azure.ServiceBus;
+    using Microsoft.Azure.ServiceBus.Amqp;
 
     public class AmqpLinkHelper
     {

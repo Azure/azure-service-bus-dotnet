@@ -4,7 +4,6 @@
 
 namespace Microsoft.Azure.Messaging.Amqp
 {
-    using System;
     using Microsoft.Azure.Amqp.Encoding;
 
     static class ManagementConstants

@@ -35,7 +35,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             //Create QueueClient with ReceiveDelete, 
             //Send and Receive a message, Try to Complete/Abandon/Defer/DeadLetter should throw InvalidOperationException()
-            Log($"ConnectionString: {this.ConnectionString}");
             QueueClient queueClient = QueueClient.Create(this.ConnectionString, ReceiveMode.ReceiveAndDelete);
             await this.SendMessagesAsync(queueClient, 1);
             BrokeredMessage message = await queueClient.ReceiveAsync();
@@ -83,8 +82,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             const int messageCount = 10;
 
-            Log($"ConnectionString: {this.ConnectionString}");
-
             //Create QueueClient With PeekLock
             QueueClient queueClient = QueueClient.Create(this.ConnectionString);
 
@@ -126,8 +123,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             const int messageCount = 10;
 
-            Log($"ConnectionString: {this.ConnectionString}");
-
             //Create QueueClient With PeekLock
             QueueClient queueClient = QueueClient.Create(this.ConnectionString);
 
@@ -160,8 +155,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task PeekLockWithDeadLetterTest()
         {
-
-            Log($"ConnectionString: {this.ConnectionString}");
             const int messageCount = 10;
             IEnumerable<BrokeredMessage> receivedMessages = null;
 
@@ -202,7 +195,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task PeekLockDeferTest()
         {
-            Log($"ConnectionString: {this.ConnectionString}");
             const int messageCount = 10;
 
             //Create QueueClient With PeekLock
@@ -243,7 +235,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task BasicRenewLockTest()
         {
-            Log($"ConnectionString: {this.ConnectionString}");
             const int messageCount = 1;
 
             //Create QueueClient With PeekLock

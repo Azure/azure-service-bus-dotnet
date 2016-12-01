@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Linq;
     using System.Threading.Tasks;
 
-    abstract class MessageSender : ClientEntity
+    public abstract class MessageSender : ClientEntity
     {
         readonly TimeSpan operationTimeout;
 

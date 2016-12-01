@@ -8,10 +8,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.Linq;
     using System.Threading.Tasks;
     using Azure.Amqp.Encoding;
-    using Messaging.Amqp;
-    using Messaging.Primitives;
+    using Microsoft.Azure.Messaging.Amqp;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Framing;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
     sealed class AmqpMessageReceiver : MessageReceiver
     {
@@ -316,7 +316,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        internal override async Task<AmqpResponseMessage> OnExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
+        protected override async Task<AmqpResponseMessage> OnExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
         {
             AmqpMessage amqpMessage = amqpRequestMessage.AmqpMessage;
             var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);

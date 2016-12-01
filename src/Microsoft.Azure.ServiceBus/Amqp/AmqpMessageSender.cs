@@ -7,7 +7,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Messaging.Amqp;
+    using Microsoft.Azure.Messaging.Amqp;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Framing;
 

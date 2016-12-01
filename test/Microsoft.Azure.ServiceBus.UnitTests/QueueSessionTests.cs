@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
     using System.Threading.Tasks;
@@ -66,7 +65,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task GetAndSetStateTest()
         {
-            Log($"ConnectionString: {this.ConnectionString}");
             QueueClient queueClient = QueueClient.Create(this.ConnectionString);
 
             string messageId = "test-message1";

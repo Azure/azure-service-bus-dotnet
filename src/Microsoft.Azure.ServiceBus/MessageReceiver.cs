@@ -7,8 +7,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Linq;
-    using Azure.Amqp;
-    using Messaging.Amqp;
+    using Microsoft.Azure.ServiceBus.Amqp;
 
     public abstract class MessageReceiver : ClientEntity
     {
@@ -105,7 +104,7 @@ namespace Microsoft.Azure.ServiceBus
 
         protected abstract Task<DateTime> OnRenewLockAsync(Guid lockToken);
 
-        internal abstract Task<AmqpResponseMessage> OnExecuteRequestResponseAsync(AmqpRequestMessage requestAmqpMessage);
+        protected abstract Task<AmqpResponseMessage> OnExecuteRequestResponseAsync(AmqpRequestMessage requestAmqpMessage);
 
         internal Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
         {

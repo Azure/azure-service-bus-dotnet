@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus
     public abstract class MessageSession : MessageReceiver
     {
         /// <summary>Represents a message session that allows grouping of related messages for processing in a single transaction.</summary>
-        public MessageSession(ReceiveMode receiveMode, string sessionId, DateTime lockedUntilUtc, MessageReceiver innerReceiver) 
+        protected MessageSession(ReceiveMode receiveMode, string sessionId, DateTime lockedUntilUtc, MessageReceiver innerReceiver) 
             : base(receiveMode, innerReceiver.OperationTimeout)
         {
             if (innerReceiver == null)
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus
             get { return this.InnerMessageReceiver.Path;  }
         }
 
-        internal MessageReceiver InnerMessageReceiver { get; set; }
+        protected MessageReceiver InnerMessageReceiver { get; set; }
 
         public override async Task CloseAsync()
         {
@@ -102,7 +102,7 @@ namespace Microsoft.Azure.ServiceBus
             return this.InnerMessageReceiver.RenewLockAsync(lockToken);
         }
 
-        internal override Task<AmqpResponseMessage> OnExecuteRequestResponseAsync(AmqpRequestMessage requestAmqpMessage)
+        protected override Task<AmqpResponseMessage> OnExecuteRequestResponseAsync(AmqpRequestMessage requestAmqpMessage)
         {
             throw new NotImplementedException();
         }

@@ -314,21 +314,21 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        internal MessageSender CreateMessageSender()
+        protected MessageSender CreateMessageSender()
         {
             return this.OnCreateMessageSender();
         }
 
-        internal MessageReceiver CreateMessageReceiver()
+        protected MessageReceiver CreateMessageReceiver()
         {
             return this.OnCreateMessageReceiver();
         }
 
-        internal abstract MessageSender OnCreateMessageSender();
+        protected abstract MessageSender OnCreateMessageSender();
 
-        internal abstract MessageReceiver OnCreateMessageReceiver();
+        protected abstract MessageReceiver OnCreateMessageReceiver();
 
-        internal abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId);
+        protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId);
 
         protected abstract Task OnCloseAsync();
     }

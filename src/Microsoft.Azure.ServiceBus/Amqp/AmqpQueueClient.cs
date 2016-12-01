@@ -41,17 +41,17 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         TokenProvider TokenProvider { get; }
 
-        internal override MessageSender OnCreateMessageSender()
+        protected override MessageSender OnCreateMessageSender()
         {
             return new AmqpMessageSender(this);
         }
 
-        internal override MessageReceiver OnCreateMessageReceiver()
+        protected override MessageReceiver OnCreateMessageReceiver()
         {
             return new AmqpMessageReceiver(this);
         }
 
-        internal override async Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId)
+        protected override async Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId)
         {
             AmqpMessageReceiver receiver = new AmqpMessageReceiver(this, sessionId, true);
             try
