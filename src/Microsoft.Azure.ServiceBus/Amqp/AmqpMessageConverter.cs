@@ -91,7 +91,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
             else if ((amqpMessage.BodyType & SectionFlag.AmqpValue) != 0)
             {
-                object netObject = null;
+                object netObject;
                 if (!TryGetNetObjectFromAmqpObject(amqpMessage.ValueBody.Value, MappingType.MessageBody, out netObject))
                 {
                     netObject = amqpMessage.ValueBody.Value;
@@ -167,7 +167,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 foreach (var pair in amqpMessage.ApplicationProperties.Map)
                 {
-                    object netObject = null;
+                    object netObject;
                     if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out netObject))
                     {
                         brokeredMessage.Properties[pair.Key.ToString()] = netObject;
@@ -210,7 +210,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             brokeredMessage.DeadLetterSource = (string)pair.Value;
                             break;
                         default:
-                            object netObject = null;
+                            object netObject;
                             if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out netObject))
                             {
                                 brokeredMessage.Properties[key] = netObject;
@@ -287,7 +287,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             foreach (KeyValuePair<string, object> pair in brokeredMessage.Properties)
             {
-                object amqpObject = null;
+                object amqpObject;
                 if (TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
                 {
                     amqpMessage.ApplicationProperties.Map.Add(pair.Key, amqpObject);

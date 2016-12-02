@@ -143,7 +143,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task PeekLockWithDeadLetterTest()
         {
             const int MessageCount = 10;
-            IEnumerable<BrokeredMessage> receivedMessages = null;
+            IEnumerable<BrokeredMessage> receivedMessages;
 
             // Create QueueClient With PeekLock
             QueueClient queueClient = QueueClient.Create(this.connectionString);
