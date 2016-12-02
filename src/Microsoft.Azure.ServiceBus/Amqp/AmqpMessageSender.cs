@@ -50,7 +50,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                 }
 
-                Outcome outcome = await amqpLink.SendMessageAsync(amqpMessage, this.GetNextDeliveryTag(), AmqpConstants.NullBinary, timeoutHelper.RemainingTime());
+                Outcome outcome = await amqpLink.SendMessageAsync(amqpMessage, this.GetNextDeliveryTag(), AmqpConstants.NullBinary, timeoutHelper.RemainingTime()).ConfigureAwait(false);
                 if (outcome.DescriptorCode != Accepted.Code)
                 {
                     Rejected rejected = (Rejected)outcome;
@@ -88,7 +88,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 var sessionSettings = new AmqpSessionSettings { Properties = new Fields() };
                 ////sessionSettings.Properties[AmqpClientConstants.BatchFlushIntervalName] = (uint)connectionSettings.BatchFlushInterval.TotalMilliseconds;
                 session = connection.CreateSession(sessionSettings);
-                await session.OpenAsync(timeoutHelper.RemainingTime());
+                await session.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
                 // Create our Link
                 var linkSettings = new AmqpLinkSettings();

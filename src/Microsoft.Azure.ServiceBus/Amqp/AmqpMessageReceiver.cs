@@ -199,7 +199,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 linkSettings.LinkName = $"{amqpQueueClient.ContainerId};{connection.Identifier}:{session.Identifier}:{link.Identifier}";
                 link.AttachTo(session);
 
-                await link.OpenAsync(timeoutHelper.RemainingTime());
+                await link.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
                 succeeded = true;
                 return link;
             }

@@ -174,7 +174,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                return await this.InnerReceiver.ReceiveAsync(maxMessageCount);
+                return await this.InnerReceiver.ReceiveAsync(maxMessageCount).ConfigureAwait(false);
             }
             catch (Exception)
             {
