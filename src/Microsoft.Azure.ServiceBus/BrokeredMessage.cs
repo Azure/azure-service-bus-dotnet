@@ -1006,7 +1006,7 @@ namespace Microsoft.Azure.ServiceBus
             this.ThrowIfDisposed();
             this.ThrowIfNotLocked();
 
-            return this.Receiver.AbandonAsync(new Guid[] { this.LockToken });
+            return this.Receiver.AbandonAsync(new[] { this.LockToken });
         }
 
         // Summary:
@@ -1017,7 +1017,7 @@ namespace Microsoft.Azure.ServiceBus
             this.ThrowIfDisposed();
             this.ThrowIfNotLocked();
 
-            return this.Receiver.CompleteAsync(new Guid[] { this.LockToken });
+            return this.Receiver.CompleteAsync(new[] { this.LockToken });
         }
 
         // Summary:
@@ -1027,7 +1027,7 @@ namespace Microsoft.Azure.ServiceBus
             this.ThrowIfDisposed();
             this.ThrowIfNotLocked();
 
-            return this.Receiver.DeadLetterAsync(new Guid[] { this.LockToken });
+            return this.Receiver.DeadLetterAsync(new[] { this.LockToken });
         }
 
         // Summary:
@@ -1037,7 +1037,7 @@ namespace Microsoft.Azure.ServiceBus
             this.ThrowIfDisposed();
             this.ThrowIfNotLocked();
 
-            return this.Receiver.DeferAsync(new Guid[] { this.LockToken });
+            return this.Receiver.DeferAsync(new[] { this.LockToken });
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

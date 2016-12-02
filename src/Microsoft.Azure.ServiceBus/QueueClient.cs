@@ -184,7 +184,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task CompleteAsync(Guid lockToken)
         {
-            return this.CompleteAsync(new Guid[] { lockToken });
+            return this.CompleteAsync(new[] { lockToken });
         }
 
         public async Task CompleteAsync(IEnumerable<Guid> lockTokens)
@@ -202,7 +202,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task AbandonAsync(Guid lockToken)
         {
-            return this.AbandonAsync(new Guid[] { lockToken });
+            return this.AbandonAsync(new[] { lockToken });
         }
 
         public async Task AbandonAsync(IEnumerable<Guid> lockTokens)
@@ -220,7 +220,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task DeferAsync(Guid lockToken)
         {
-            return this.DeferAsync(new Guid[] { lockToken });
+            return this.DeferAsync(new[] { lockToken });
         }
 
         public async Task DeferAsync(IEnumerable<Guid> lockTokens)
@@ -238,7 +238,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task DeadLetterAsync(Guid lockToken)
         {
-            return this.DeadLetterAsync(new Guid[] { lockToken });
+            return this.DeadLetterAsync(new[] { lockToken });
         }
 
         public async Task DeadLetterAsync(IEnumerable<Guid> lockTokens)
