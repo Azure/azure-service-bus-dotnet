@@ -49,7 +49,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 IEnumerable<AmqpMessage> amqpMessages = null;
                 bool hasMessages = await Task.Factory.FromAsync(
                     (c, s) => receiveLink.BeginReceiveRemoteMessages(maxMessageCount, AmqpMessageReceiver.DefaultBatchFlushInterval, timeoutHelper.RemainingTime(), c, s),
-                    (a) => receiveLink.EndReceiveMessages(a, out amqpMessages),
+                    a => receiveLink.EndReceiveMessages(a, out amqpMessages),
                     this).ConfigureAwait(false);
 
                 if (receiveLink.TerminalException != null)
@@ -150,7 +150,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 disposeMessageTasks[i++] = Task.Factory.FromAsync(
                         (c, s) => receiveLink.BeginDisposeMessage(deliveryTag, outcome, true, timeoutHelper.RemainingTime(), c, s),
-                        (a) => receiveLink.EndDisposeMessage(a),
+                        a => receiveLink.EndDisposeMessage(a),
                         this);
             }
 
