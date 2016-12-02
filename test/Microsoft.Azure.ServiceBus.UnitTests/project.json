@@ -4,7 +4,7 @@
 
   "buildOptions": {
     "warningsAsErrors": true,
-    "additionalArguments": [ "/ruleset:./../../StyleCop/StyleCop.Analyzers.ruleset", "/additionalfile:./../../StyleCop/stylecop.json" ]
+    "additionalArguments": [ "/ruleset:./../../build/StyleCop.Analyzers.ruleset", "/additionalfile:./../../build/stylecop.json" ]
   },
 
   "dependencies": {

@@ -9,7 +9,7 @@
     "delaySign": true,
     "publicSign": false,
     "keyFile": "../../build/MSSharedLibSN1024.snk",
-    "additionalArguments": [ "/ruleset:./../../StyleCop/StyleCop.Analyzers.ruleset", "/additionalfile:./../../StyleCop/stylecop.json" ]
+    "additionalArguments": [ "/ruleset:./../../build/StyleCop.Analyzers.ruleset", "/additionalfile:./../../build/stylecop.json" ]
   },
 
   "packOptions": {
