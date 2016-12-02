@@ -15,7 +15,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         int deliveryCount;
 
         internal AmqpMessageSender(AmqpQueueClient queueClient)
-            : base()
         {
             this.QueueClient = queueClient;
             this.Path = this.QueueClient.QueueName;
