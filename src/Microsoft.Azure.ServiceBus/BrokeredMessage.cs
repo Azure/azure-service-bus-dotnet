@@ -89,7 +89,7 @@ namespace Microsoft.Azure.ServiceBus
                 if (serializer == null)
                 {
                     ////throw FxTrace.Exception.AsError(new ArgumentNullException("serializer"));
-                    throw new ArgumentNullException("serializer");
+                    throw new ArgumentNullException(nameof(serializer));
                 }
 
                 MemoryStream stream = new MemoryStream(256);
@@ -965,7 +965,7 @@ namespace Microsoft.Azure.ServiceBus
             if (serializer == null)
             {
                 // TODO: throw FxTrace.Exception.AsError(new ArgumentNullException("serializer"));
-                throw new ArgumentNullException("serializer");
+                throw new ArgumentNullException(nameof(serializer));
             }
 
             this.ThrowIfDisposed();
