@@ -461,15 +461,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         if (describedType.Descriptor is AmqpSymbol)
                         {
                             AmqpSymbol symbol = (AmqpSymbol)describedType.Descriptor;
-                            if (symbol.Equals((AmqpSymbol)UriName))
+                            if (symbol.Equals(UriName))
                             {
                                 netObject = new Uri((string)describedType.Value);
                             }
-                            else if (symbol.Equals((AmqpSymbol)TimeSpanName))
+                            else if (symbol.Equals(TimeSpanName))
                             {
                                 netObject = new TimeSpan((long)describedType.Value);
                             }
-                            else if (symbol.Equals((AmqpSymbol)DateTimeOffsetName))
+                            else if (symbol.Equals(DateTimeOffsetName))
                             {
                                 netObject = new DateTimeOffset(new DateTime((long)describedType.Value, DateTimeKind.Utc));
                             }
