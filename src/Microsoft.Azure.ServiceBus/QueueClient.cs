@@ -121,7 +121,8 @@ namespace Microsoft.Azure.ServiceBus
             {
                 throw Fx.Exception.ArgumentNull(nameof(connectionSettings));
             }
-            else if (string.IsNullOrWhiteSpace(connectionSettings.EntityPath))
+
+            if (string.IsNullOrWhiteSpace(connectionSettings.EntityPath))
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(connectionSettings.EntityPath));
             }

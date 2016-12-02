@@ -671,10 +671,8 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     return TimeSpan.MaxValue;
                 }
-                else
-                {
-                    return this.timeToLive;
-                }
+
+                return this.timeToLive;
             }
 
             set
@@ -940,15 +938,14 @@ namespace Microsoft.Azure.ServiceBus
                 this.SetGetBodyCalled();
                 return (T)(object)this.BodyStream;
             }
-            else if (this.bodyObjectDecoded && this.bodyObject != null)
+
+            if (this.bodyObjectDecoded && this.bodyObject != null)
             {
                 this.SetGetBodyCalled();
                 return (T)this.bodyObject;
             }
-            else
-            {
-                return this.GetBody<T>(new DataContractBinarySerializer(typeof(T)));
-            }
+
+            return this.GetBody<T>(new DataContractBinarySerializer(typeof(T)));
         }
 
         /// <summary>Deserializes the BrokeredMessage body into an object of the specified type using 
@@ -981,7 +978,8 @@ namespace Microsoft.Azure.ServiceBus
                 
                 return default(T);
             }
-            else if (this.BodyStream.CanSeek)
+
+            if (this.BodyStream.CanSeek)
             {
                 if (this.BodyStream.Length == 0)
                 {

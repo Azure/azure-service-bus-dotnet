@@ -79,10 +79,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                     return brokeredMessages;
                 }
-                else
-                {
-                    return null;
-                }
+
+                return null;
             }
             catch (AmqpException amqpException)
             {
