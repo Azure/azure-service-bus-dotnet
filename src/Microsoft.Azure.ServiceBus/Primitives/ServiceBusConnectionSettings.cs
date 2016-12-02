@@ -134,9 +134,11 @@ namespace Microsoft.Azure.ServiceBus
 
         public ServiceBusConnectionSettings Clone()
         {
-            var clone = new ServiceBusConnectionSettings(this.ToString());
-            clone.OperationTimeout = this.OperationTimeout;
-            clone.RetryPolicy = this.RetryPolicy;
+            var clone = new ServiceBusConnectionSettings(this.ToString())
+            {
+                OperationTimeout = this.OperationTimeout,
+                RetryPolicy = this.RetryPolicy
+            };
             return clone;
         }
 
