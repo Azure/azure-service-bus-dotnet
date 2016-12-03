@@ -15,6 +15,8 @@ namespace Microsoft.Azure.ServiceBus
     /// <summary>Represents the unit of communication between ServiceBus client and Service.</summary>
     public sealed class BrokeredMessage : IDisposable
     {
+        static Func<string> idGeneratorFunc = () => (string)null;
+
         readonly object disposablesSyncObject = new object();
         readonly bool ownsBodyStream;
         readonly bool bodyObjectDecoded;
@@ -55,6 +57,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>Initializes a new instance of the <see cref="BrokeredMessage" /> class.</summary>
         public BrokeredMessage()
         {
+            this.messageId = idGeneratorFunc();
         }
 
         /// <summary>Initializes a new instance of the
@@ -1438,6 +1441,11 @@ namespace Microsoft.Azure.ServiceBus
             /// <summary> Gets or sets the enqueued sequence number. </summary>
             /// <value> The Enqueued sequence number. </value>
             public long EnqueuedSequenceNumber { get; set; }
+        }
+
+        public static void SetMessageIdGenerator(Func<string> idGenerator)
+        {
+            idGeneratorFunc = idGenerator;
         }
     }
 }
