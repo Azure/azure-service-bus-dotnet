@@ -316,7 +316,7 @@ namespace Microsoft.Azure.ServiceBus
                         if (string.IsNullOrEmpty(diagnosis))
                         {
                             ////throw Fx.Exception.ArgumentNullOrEmpty("diagnosis");
-                            throw new ArgumentNullException("diagnosis");
+                            throw new ArgumentNullException(nameof(diagnosis));
                         }
 
                         this.exceptionType = exceptionType;
