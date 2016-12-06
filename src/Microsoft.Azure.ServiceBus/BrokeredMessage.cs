@@ -57,7 +57,14 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>Initializes a new instance of the <see cref="BrokeredMessage" /> class.</summary>
         public BrokeredMessage()
         {
-            this.messageId = idGeneratorFunc();
+            try
+            {
+                this.messageId = idGeneratorFunc();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("BrokeredMessage ID generator function has failed.", ex);
+            }
         }
 
         /// <summary>Initializes a new instance of the
@@ -1445,6 +1452,10 @@ namespace Microsoft.Azure.ServiceBus
 
         public static void SetMessageIdGenerator(Func<string> idGenerator)
         {
+            if (idGenerator == null)
+            {
+                throw new ArgumentNullException(nameof(idGenerator));
+            }
             idGeneratorFunc = idGenerator;
         }
     }
