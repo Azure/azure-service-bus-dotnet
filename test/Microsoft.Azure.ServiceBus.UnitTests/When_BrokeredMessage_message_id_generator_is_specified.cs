@@ -1,8 +1,10 @@
-﻿using System;
-using Xunit;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
+    using Xunit;
+
     public class When_BrokeredMessage_message_id_generator_is_specified
     {
         [Fact]
@@ -16,6 +18,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             Assert.Equal("id1", message1.MessageId);
             Assert.Equal("id2", message2.MessageId);
-        }           
+        }
     }
 }

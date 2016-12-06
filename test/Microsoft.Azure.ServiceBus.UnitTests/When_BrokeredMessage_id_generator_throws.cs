@@ -1,8 +1,11 @@
-﻿using System;
-using Xunit;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
+    using System;
+    using Xunit;
+
     public class When_BrokeredMessage_id_generator_throws
     {
         [Fact]
@@ -17,6 +20,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             var exception = Assert.Throws<InvalidOperationException>(() => new BrokeredMessage());
             Assert.Equal(exceptionToThrow, exception.InnerException);
-        }           
+        }
     }
 }

@@ -912,6 +912,15 @@ namespace Microsoft.Azure.ServiceBus
 
         internal MessageReceiver Receiver { get; set; }
 
+        public static void SetMessageIdGenerator(Func<string> idGenerator)
+        {
+            if (idGenerator == null)
+            {
+                throw new ArgumentNullException(nameof(idGenerator));
+            }
+            idGeneratorFunc = idGenerator;
+        }
+
         /// <summary>Deserializes the brokered message body into an object of the specified type by using the
         /// <see cref="System.Runtime.Serialization.DataContractSerializer" /> with a binary
         /// <see cref="System.Xml.XmlDictionaryReader" />.</summary>
@@ -1448,15 +1457,6 @@ namespace Microsoft.Azure.ServiceBus
             /// <summary> Gets or sets the enqueued sequence number. </summary>
             /// <value> The Enqueued sequence number. </value>
             public long EnqueuedSequenceNumber { get; set; }
-        }
-
-        public static void SetMessageIdGenerator(Func<string> idGenerator)
-        {
-            if (idGenerator == null)
-            {
-                throw new ArgumentNullException(nameof(idGenerator));
-            }
-            idGeneratorFunc = idGenerator;
         }
     }
 }
