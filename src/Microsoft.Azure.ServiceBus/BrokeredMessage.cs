@@ -15,7 +15,7 @@ namespace Microsoft.Azure.ServiceBus
     /// <summary>Represents the unit of communication between ServiceBus client and Service.</summary>
     public sealed class BrokeredMessage : IDisposable
     {
-        static Func<string> idGeneratorFunc = () => (string)null;
+        static Func<string> messageIdGeneratorFunc = () => (string)null;
 
         readonly object disposablesSyncObject = new object();
         readonly bool ownsBodyStream;
@@ -59,7 +59,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                this.messageId = idGeneratorFunc();
+                this.messageId = messageIdGeneratorFunc();
             }
             catch (Exception ex)
             {
@@ -912,13 +912,13 @@ namespace Microsoft.Azure.ServiceBus
 
         internal MessageReceiver Receiver { get; set; }
 
-        public static void SetMessageIdGenerator(Func<string> idGenerator)
+        public static void SetMessageIdGenerator(Func<string> messageIdGenerator)
         {
-            if (idGenerator == null)
+            if (messageIdGenerator == null)
             {
-                throw new ArgumentNullException(nameof(idGenerator));
+                throw new ArgumentNullException(nameof(messageIdGenerator));
             }
-            idGeneratorFunc = idGenerator;
+            messageIdGeneratorFunc = messageIdGenerator;
         }
 
         /// <summary>Deserializes the brokered message body into an object of the specified type by using the
