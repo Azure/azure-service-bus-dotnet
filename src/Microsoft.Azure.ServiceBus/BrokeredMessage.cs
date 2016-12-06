@@ -912,6 +912,11 @@ namespace Microsoft.Azure.ServiceBus
 
         internal MessageReceiver Receiver { get; set; }
 
+        /// <summary>Specify generator to be used to generate BrokeredMessage.MessageId value.
+        /// <param name="messageIdGenerator">Message ID generator.</param>
+        /// <remarks>Be default, no value is assigned.</remarks>
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if invoked with null.</exception>
         public static void SetMessageIdGenerator(Func<string> messageIdGenerator)
         {
             if (messageIdGenerator == null)
