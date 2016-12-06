@@ -10,5 +10,7 @@
     <Rule Id="SA1652" Action="None" />
     <!--Turning off the need for documentation while in early development-->
     <!--SA1652EnableXmlDocumentationOutput - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1652.md-->
+	<Rule Id="SA1518" Action="Omit" />
+	<!--SA1518UseLineEndingsCorrectlyAtEndOfFile - https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1518.md-->
   </Rules>
 </RuleSet>
