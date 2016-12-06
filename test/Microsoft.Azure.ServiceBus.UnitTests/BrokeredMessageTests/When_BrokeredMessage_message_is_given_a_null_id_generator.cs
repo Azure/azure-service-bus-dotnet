@@ -3,16 +3,15 @@
 
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
+    using System;
     using Xunit;
 
-    public class When_BrokeredMessage_message_id_generator_is_not_specified
+    public class When_BrokeredMessage_message_is_given_a_null_id_generator
     {
         [Fact]
-        public void Message_should_have_MessageId_set()
+        public void Should_throw_an_exception()
         {
-            var message = new BrokeredMessage();
-
-            Assert.Null(message.MessageId);
+            Assert.Throws<ArgumentNullException>(() => BrokeredMessage.SetMessageIdGenerator(null));
         }
     }
 }
