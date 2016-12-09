@@ -15,17 +15,21 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     {
         int deliveryCount;
 
-        internal AmqpMessageSender(AmqpQueueClient queueClient)
-            : base(queueClient.ConnectionSettings.OperationTimeout)
+        internal AmqpMessageSender(string entityName, MessagingEntityType entityType, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider)
+            : base(serviceBusConnection.OperationTimeout)
         {
-            this.QueueClient = queueClient;
-            this.Path = this.QueueClient.QueueName;
+            this.Path = entityName;
+            this.EntityType = entityType;
+            this.ServiceBusConnection = serviceBusConnection;
+            this.CbsTokenProvider = cbsTokenProvider;
             this.SendLinkManager = new FaultTolerantAmqpObject<SendingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
         }
 
-        QueueClient QueueClient { get; }
-
         string Path { get; }
+
+        ServiceBusConnection ServiceBusConnection { get; }
+
+        ICbsTokenProvider CbsTokenProvider { get; }
 
         FaultTolerantAmqpObject<SendingAmqpLink> SendLinkManager { get; }
 
@@ -74,11 +78,12 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 Role = false,
                 InitialDeliveryCount = 0,
                 Target = new Target {Address = this.Path},
-                Source = new Source {Address = this.ClientId}
+                Source = new Source {Address = this.ClientId},
             };
-            linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)MessagingEntityType.Queue);
+            linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int) this.EntityType);
 
-            SendingAmqpLink sendingAmqpLink = (SendingAmqpLink) await AmqpLinkHelper.CreateAndOpenAmqpLinkAsync((AmqpQueueClient) this.QueueClient, this.Path, new[] { ClaimConstants.Send }, linkSettings, false).ConfigureAwait(false);
+            AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] {ClaimConstants.Send}, this.CbsTokenProvider, linkSettings);
+            SendingAmqpLink sendingAmqpLink = (SendingAmqpLink) await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync();
             return sendingAmqpLink;
         }
 

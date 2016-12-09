@@ -18,9 +18,16 @@ namespace Microsoft.Azure.ServiceBus
             this.operationTimeout = operationTimeout;
         }
 
+        protected MessagingEntityType EntityType { get; set; }
+
         internal TimeSpan OperationTimeout
         {
             get { return this.operationTimeout; }
+        }
+
+        public Task SendAsync(BrokeredMessage brokeredMessage)
+        {
+            return this.SendAsync(new BrokeredMessage[] { brokeredMessage });
         }
 
         public Task SendAsync(IEnumerable<BrokeredMessage> brokeredMessages)

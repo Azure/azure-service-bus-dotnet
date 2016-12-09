@@ -12,6 +12,7 @@ namespace Microsoft.Azure.ServiceBus
     public abstract class MessageReceiver : ClientEntity
     {
         readonly TimeSpan operationTimeout;
+        int prefetchCount;
 
         protected MessageReceiver(ReceiveMode receiveMode, TimeSpan operationTimeout)
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString())
@@ -23,6 +24,26 @@ namespace Microsoft.Azure.ServiceBus
         public abstract string Path { get; }
 
         public ReceiveMode ReceiveMode { get; protected set; }
+
+        protected MessagingEntityType EntityType { get; set; }
+
+        public virtual int PrefetchCount
+        {
+            get
+            {
+                return this.prefetchCount;
+            }
+
+            set
+            {
+                if (value < 0)
+                {
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(PrefetchCount), value, "Value must be greater than 0");
+                }
+
+                this.prefetchCount = value;
+            }
+        }
 
         internal TimeSpan OperationTimeout
         {

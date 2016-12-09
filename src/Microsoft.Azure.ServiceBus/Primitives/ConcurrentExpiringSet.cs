@@ -56,15 +56,12 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 this.cleanupScheduled = false;
             }
 
-            if (!this.dictionary.IsEmpty)
+            foreach (TKey key in this.dictionary.Keys)
             {
-                foreach (TKey key in this.dictionary.Keys)
+                if (DateTime.UtcNow > this.dictionary[key])
                 {
-                    if (DateTime.UtcNow > this.dictionary[key])
-                    { 
-                        DateTime entry;
-                        this.dictionary.TryRemove(key, out entry);
-                    }
+                    DateTime entry;
+                    this.dictionary.TryRemove(key, out entry);
                 }
             }
 

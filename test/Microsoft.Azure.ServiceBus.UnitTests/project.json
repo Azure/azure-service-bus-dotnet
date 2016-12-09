@@ -10,19 +10,22 @@
     "dotnet-test-xunit": "2.2.0-preview2-build1029"
   },
   "frameworks": {
-      "netcoreapp1.0": {
-        "dependencies": {
-          "Microsoft.NETCore.App": {
-            "type": "platform",
-            "version": "1.0.0"
-          }
-        },
-        "imports": [
-          "dnxcore50",
-          "portable-net46+win8"
-        ]
+    "netcoreapp1.0": {
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "type": "platform",
+          "version": "1.0.0"
+        }
       },
+      "imports": [
+        "dnxcore50",
+        "portable-net46+win8"
+      ]
+    },
     "net451": {
     }
+  },
+  "buildOptions": {
+    "keyFile": "keyfile.snk"
   }
 }

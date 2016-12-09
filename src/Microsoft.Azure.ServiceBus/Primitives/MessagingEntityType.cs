@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
-    enum MessagingEntityType
+    public enum MessagingEntityType
     {
         Queue = 0,
         Topic = 1,
