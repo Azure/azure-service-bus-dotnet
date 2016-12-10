@@ -10,10 +10,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public ServiceBusEntityConnection(string entityConnectionString)
             : this(entityConnectionString, ServiceBusConnection.DefaultOperationTimeout, RetryPolicy.Default)
         {
-            
         }
 
-        public ServiceBusEntityConnection(string entityConnectionString, TimeSpan operationTimeout, RetryPolicy retryPolicy) 
+        public ServiceBusEntityConnection(string entityConnectionString, TimeSpan operationTimeout, RetryPolicy retryPolicy)
             : base(operationTimeout, retryPolicy)
         {
             if (string.IsNullOrWhiteSpace(entityConnectionString))

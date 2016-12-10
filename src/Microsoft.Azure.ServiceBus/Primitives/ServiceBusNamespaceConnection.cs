@@ -10,7 +10,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public ServiceBusNamespaceConnection(string namespaceConnectionString)
             : this(namespaceConnectionString, ServiceBusConnection.DefaultOperationTimeout, RetryPolicy.Default)
         {
-            
         }
 
         public ServiceBusNamespaceConnection(string namespaceConnectionString, TimeSpan operationTimeout, RetryPolicy retryPolicy)

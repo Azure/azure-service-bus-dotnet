@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus
     public abstract class MessageSession : MessageReceiver
     {
         /// <summary>Represents a message session that allows grouping of related messages for processing in a single transaction.</summary>
-        protected MessageSession(ReceiveMode receiveMode, string sessionId, DateTime lockedUntilUtc, MessageReceiver innerReceiver) 
+        protected MessageSession(ReceiveMode receiveMode, string sessionId, DateTime lockedUntilUtc, MessageReceiver innerReceiver)
             : base(receiveMode, innerReceiver.OperationTimeout)
         {
             if (innerReceiver == null)
@@ -106,6 +106,5 @@ namespace Microsoft.Azure.ServiceBus
         {
             throw new NotImplementedException();
         }
-
     }
 }

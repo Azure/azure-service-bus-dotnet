@@ -1,22 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.ServiceBus.Primitives
 {
+    using System;
     using System.Text;
 
     public class ServiceBusConnectionStringBuilder
     {
-        public static readonly string EndpointScheme = "amqps";
-        public static readonly string EndpointFormat = EndpointScheme + "://{0}.servicebus.windows.net";
+        const char KeyValueSeparator = '=';
+        const char KeyValuePairDelimiter = ';';
+        static readonly string EndpointScheme = "amqps";
+        static readonly string EndpointFormat = EndpointScheme + "://{0}.servicebus.windows.net";
         static readonly string EndpointConfigName = "Endpoint";
         static readonly string SharedAccessKeyNameConfigName = "SharedAccessKeyName";
         static readonly string SharedAccessKeyConfigName = "SharedAccessKey";
         static readonly string EntityPathConfigName = "EntityPath";
-        const char KeyValueSeparator = '=';
-        const char KeyValuePairDelimiter = ';';
+
+        public ServiceBusConnectionStringBuilder(string connectionString)
+        {
+            if (!string.IsNullOrWhiteSpace(connectionString))
+            {
+                this.ParseConnectionString(connectionString);
+            }
+        }
 
         public Uri Endpoint { get; set; }
 
@@ -35,14 +42,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// </summary>
         /// <value>Shared Access Signature key</value>
         public string SasKey { get; set; }
-
-        public ServiceBusConnectionStringBuilder(string connectionString)
-        {
-            if (!string.IsNullOrWhiteSpace(connectionString))
-            {
-                this.ParseConnectionString(connectionString);
-            }
-        }
 
         public string GetConnectionString(string namespaceName, string entityPath, string sharedAccessKeyName, string sharedAccessKey)
         {
@@ -70,44 +69,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             this.SasKey = sharedAccessKey;
 
             return this.ToString();
-        }
-
-        void ParseConnectionString(string connectionString)
-        {
-            // First split based on ';'
-            string[] keyValuePairs = connectionString.Split(new[] {KeyValuePairDelimiter}, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var keyValuePair in keyValuePairs)
-            {
-                // Now split based on the _first_ '='
-                string[] keyAndValue = keyValuePair.Split(new[] {KeyValueSeparator}, 2);
-                string key = keyAndValue[0];
-                if (keyAndValue.Length != 2)
-                {
-                    throw Fx.Exception.Argument(nameof(connectionString), $"Value for the connection string parameter name '{key}' was not found.");
-                }
-
-                string value = keyAndValue[1];
-                if (key.Equals(EndpointConfigName, StringComparison.OrdinalIgnoreCase))
-                {
-                    this.Endpoint = new Uri(value);
-                }
-                else if (key.Equals(SharedAccessKeyNameConfigName, StringComparison.OrdinalIgnoreCase))
-                {
-                    this.SasKeyName = value;
-                }
-                else if (key.Equals(EntityPathConfigName, StringComparison.OrdinalIgnoreCase))
-                {
-                    this.EntityPath = value;
-                }
-                else if (key.Equals(SharedAccessKeyConfigName, StringComparison.OrdinalIgnoreCase))
-                {
-                    this.SasKey = value;
-                }
-                else
-                {
-                    throw Fx.Exception.Argument(nameof(connectionString), $"Illegal connection string parameter name '{key}'");
-                }
-            }
         }
 
         /// <summary>
@@ -138,6 +99,44 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             }
 
             return connectionStringBuilder.ToString();
+        }
+
+        void ParseConnectionString(string connectionString)
+        {
+            // First split based on ';'
+            string[] keyValuePairs = connectionString.Split(new[] { KeyValuePairDelimiter }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var keyValuePair in keyValuePairs)
+            {
+                // Now split based on the _first_ '='
+                string[] keyAndValue = keyValuePair.Split(new[] { KeyValueSeparator }, 2);
+                string key = keyAndValue[0];
+                if (keyAndValue.Length != 2)
+                {
+                    throw Fx.Exception.Argument(nameof(connectionString), $"Value for the connection string parameter name '{key}' was not found.");
+                }
+
+                string value = keyAndValue[1];
+                if (key.Equals(EndpointConfigName, StringComparison.OrdinalIgnoreCase))
+                {
+                    this.Endpoint = new Uri(value);
+                }
+                else if (key.Equals(SharedAccessKeyNameConfigName, StringComparison.OrdinalIgnoreCase))
+                {
+                    this.SasKeyName = value;
+                }
+                else if (key.Equals(EntityPathConfigName, StringComparison.OrdinalIgnoreCase))
+                {
+                    this.EntityPath = value;
+                }
+                else if (key.Equals(SharedAccessKeyConfigName, StringComparison.OrdinalIgnoreCase))
+                {
+                    this.SasKey = value;
+                }
+                else
+                {
+                    throw Fx.Exception.Argument(nameof(connectionString), $"Illegal connection string parameter name '{key}'");
+                }
+            }
         }
     }
 }

@@ -39,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
             catch (AmqpException exception)
             {
-                //ToDo: Abort the Receiver here
+                // ToDo: Abort the Receiver here
                 AmqpExceptionHelper.ToMessagingContract(exception.Error, false);
             }
             MessageSession session = new AmqpMessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver);

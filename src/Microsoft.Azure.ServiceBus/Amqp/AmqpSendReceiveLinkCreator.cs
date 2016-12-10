@@ -7,7 +7,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
     public class AmqpSendReceiveLinkCreator : AmqpLinkCreator
     {
-        public AmqpSendReceiveLinkCreator(string entityPath, ServiceBusConnection serviceBusConnection, string[] requiredClaims, ICbsTokenProvider cbsTokenProvider, AmqpLinkSettings linkSettings) 
+        public AmqpSendReceiveLinkCreator(string entityPath, ServiceBusConnection serviceBusConnection, string[] requiredClaims, ICbsTokenProvider cbsTokenProvider, AmqpLinkSettings linkSettings)
             : base(entityPath, serviceBusConnection, requiredClaims, cbsTokenProvider, linkSettings)
         {
         }

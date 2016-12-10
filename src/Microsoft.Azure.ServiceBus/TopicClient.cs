@@ -12,7 +12,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         MessageSender innerSender;
 
-        protected TopicClient(ServiceBusConnection serviceBusConnection, string entityPath) 
+        protected TopicClient(ServiceBusConnection serviceBusConnection, string entityPath)
             : base($"{nameof(TopicClient)}{ClientEntity.GetNextId()}({entityPath})")
         {
             this.ServiceBusConnection = serviceBusConnection;
@@ -20,10 +20,6 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         public string TopicName { get; }
-
-        protected ServiceBusConnection ServiceBusConnection { get; }
-
-        protected object ThisLock { get; } = new object();
 
         internal MessageSender InnerSender
         {
@@ -43,6 +39,10 @@ namespace Microsoft.Azure.ServiceBus
                 return this.innerSender;
             }
         }
+
+        protected ServiceBusConnection ServiceBusConnection { get; }
+
+        protected object ThisLock { get; } = new object();
 
         public static TopicClient CreateFromConnectionString(string entityConnectionString)
         {
@@ -91,7 +91,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Send <see cref="BrokeredMessage"/> to Queue. 
+        /// Send <see cref="BrokeredMessage"/> to Queue.
         /// <see cref="SendAsync(BrokeredMessage)"/> sends the <see cref="BrokeredMessage"/> to a Service Gateway, which in-turn will forward the BrokeredMessage to the queue.
         /// </summary>
         /// <param name="brokeredMessage">the <see cref="BrokeredMessage"/> to be sent.</param>
@@ -109,7 +109,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Send Exception
+                // TODO: Log Send Exception
                 throw;
             }
         }

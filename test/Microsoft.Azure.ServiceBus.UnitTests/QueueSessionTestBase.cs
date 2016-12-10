@@ -29,24 +29,24 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 string messageId1 = "test-message1";
                 string sessionId1 = "sessionId1";
-                await queueClient.SendAsync(new BrokeredMessage() {MessageId = messageId1, SessionId = sessionId1});
+                await queueClient.SendAsync(new BrokeredMessage() { MessageId = messageId1, SessionId = sessionId1 });
                 TestUtility.Log(this.Output, $"Sent Message: {messageId1} to Session: {sessionId1}");
 
                 string messageId2 = "test-message2";
                 string sessionId2 = "sessionId2";
-                await queueClient.SendAsync(new BrokeredMessage() {MessageId = messageId2, SessionId = sessionId2});
+                await queueClient.SendAsync(new BrokeredMessage() { MessageId = messageId2, SessionId = sessionId2 });
                 TestUtility.Log(this.Output, $"Sent Message: {messageId2} to Session: {sessionId2}");
 
-                //Receive Message, Complete and Close with SessionId - sessionId 1
+                // Receive Message, Complete and Close with SessionId - sessionId 1
                 await this.AcceptAndCompleteSessionsAsync(queueClient, sessionId1, messageId1);
 
-                //Receive Message, Complete and Close with SessionId - sessionId 2
+                // Receive Message, Complete and Close with SessionId - sessionId 2
                 await this.AcceptAndCompleteSessionsAsync(queueClient, sessionId2, messageId2);
 
-                //Receive Message, Complete and Close - With Null SessionId specified
+                // Receive Message, Complete and Close - With Null SessionId specified
                 string messageId3 = "test-message3";
                 string sessionId3 = "sessionId3";
-                await queueClient.SendAsync(new BrokeredMessage() {MessageId = messageId3, SessionId = sessionId3});
+                await queueClient.SendAsync(new BrokeredMessage() { MessageId = messageId3, SessionId = sessionId3 });
 
                 await this.AcceptAndCompleteSessionsAsync(queueClient, null, messageId3);
             }
@@ -85,7 +85,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     Assert.Equal(sessionStateString, returnedSessionStateString);
                 }
 
-                //Complete message using Session Receiver 
+                // Complete message using Session Receiver
                 await sessionReceiver.CompleteAsync(new Guid[] { message.LockToken });
                 TestUtility.Log(this.Output, $"Completed Message: {message.MessageId} for Session: {sessionReceiver.SessionId}");
 
@@ -104,7 +104,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
                 await sessionReceiver.CloseAsync();
             }
-            finally 
+            finally
             {
                 queueClient.Close();
             }
@@ -146,7 +146,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log(this.Output, $"Completed Message: {message.MessageId} for Session: {sessionReceiver.SessionId}");
                 await sessionReceiver.CloseAsync();
             }
-            finally 
+            finally
             {
                 queueClient.Close();
             }

@@ -12,7 +12,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
     static class AmqpExceptionHelper
     {
-        static readonly Dictionary<string, AmqpResponseStatusCode> conditionToStatusMap = new Dictionary<string, AmqpResponseStatusCode>()
+        static readonly Dictionary<string, AmqpResponseStatusCode> ConditionToStatusMap = new Dictionary<string, AmqpResponseStatusCode>()
         {
             { AmqpClientConstants.TimeoutError.Value, AmqpResponseStatusCode.RequestTimeout },
             { AmqpErrorCode.NotFound.Value, AmqpResponseStatusCode.NotFound },
@@ -43,19 +43,17 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 return (AmqpSymbol)condition;
             }
-            else
-            {
-                // Most of the time we should have an error condition
-                foreach (var kvp in conditionToStatusMap)
-                {
-                    if (kvp.Value == statusCode)
-                    {
-                        return kvp.Key;
-                    }
-                }
 
-                return AmqpErrorCode.InternalError;
+            // Most of the time we should have an error condition
+            foreach (var kvp in ConditionToStatusMap)
+            {
+                if (kvp.Value == statusCode)
+                {
+                    return kvp.Key;
+                }
             }
+
+            return AmqpErrorCode.InternalError;
         }
 
         public static AmqpResponseStatusCode GetResponseStatusCode(this AmqpMessage responseMessage)
@@ -66,7 +64,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 object statusCodeValue = responseMessage.ApplicationProperties.Map[ManagementConstants.Response.StatusCode] ?? responseMessage.ApplicationProperties.Map[AmqpClientConstants.ResponseStatusCode];
                 if (statusCodeValue is int && Enum.IsDefined(typeof(AmqpResponseStatusCode), statusCodeValue))
                 {
-                    responseStatusCode = (AmqpResponseStatusCode) statusCodeValue;
+                    responseStatusCode = (AmqpResponseStatusCode)statusCodeValue;
                 }
             }
 
@@ -89,61 +87,68 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 return new TimeoutException(message);
             }
-            else if (string.Equals(condition, AmqpErrorCode.NotFound.Value))
+
+            if (string.Equals(condition, AmqpErrorCode.NotFound.Value))
             {
                 if (connectionError)
                 {
                     return new ServiceBusCommunicationException(message, null);
                 }
-                else
-                {
-                    return new MessagingEntityNotFoundException(message, null);
-                }
+
+                return new MessagingEntityNotFoundException(message, null);
             }
-            else if (string.Equals(condition, AmqpErrorCode.NotImplemented.Value))
+
+            if (string.Equals(condition, AmqpErrorCode.NotImplemented.Value))
             {
                 return new NotSupportedException(message);
             }
-            else if (string.Equals(condition, AmqpErrorCode.NotAllowed.Value))
+
+            if (string.Equals(condition, AmqpErrorCode.NotAllowed.Value))
             {
                 return new InvalidOperationException(message);
             }
-            else if (string.Equals(condition, AmqpErrorCode.UnauthorizedAccess.Value))
+
+            if (string.Equals(condition, AmqpErrorCode.UnauthorizedAccess.Value))
             {
                 return new UnauthorizedAccessException(message);
             }
-            else if (string.Equals(condition, AmqpClientConstants.ServerBusyError.Value))
+
+            if (string.Equals(condition, AmqpClientConstants.ServerBusyError.Value))
             {
                 return new ServerBusyException(message);
             }
-            else if (string.Equals(condition, AmqpClientConstants.ArgumentError.Value))
+
+            if (string.Equals(condition, AmqpClientConstants.ArgumentError.Value))
             {
                 return new ArgumentException(message);
             }
-            else if (string.Equals(condition, AmqpClientConstants.ArgumentOutOfRangeError.Value))
+
+            if (string.Equals(condition, AmqpClientConstants.ArgumentOutOfRangeError.Value))
             {
                 return new ArgumentOutOfRangeException(message);
             }
-            else if (string.Equals(condition, AmqpClientConstants.EntityDisabledError.Value))
+
+            if (string.Equals(condition, AmqpClientConstants.EntityDisabledError.Value))
             {
                 return new MessagingEntityDisabledException(message, null);
             }
-            else if (string.Equals(condition, AmqpClientConstants.MessageLockLostError.Value))
+
+            if (string.Equals(condition, AmqpClientConstants.MessageLockLostError.Value))
             {
                 return new MessageLockLostException(message);
             }
-            else if (string.Equals(condition, AmqpClientConstants.SessionLockLostError.Value))
+
+            if (string.Equals(condition, AmqpClientConstants.SessionLockLostError.Value))
             {
                 return new SessionLockLostException(message);
             }
-            else if (string.Equals(condition, AmqpErrorCode.ResourceLimitExceeded.Value))
+
+            if (string.Equals(condition, AmqpErrorCode.ResourceLimitExceeded.Value))
             {
                 return new QuotaExceededException(message);
             }
-            else
-            {
-                return new ServiceBusException(true, message);
-            }
+
+            return new ServiceBusException(true, message);
         }
     }
 }

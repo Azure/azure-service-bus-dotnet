@@ -10,20 +10,19 @@ namespace Microsoft.Azure.ServiceBus
 
     public abstract class MessageSender : ClientEntity
     {
-        readonly TimeSpan operationTimeout;
-
+        [System.Diagnostics.CodeAnalysis.SuppressMessage(
+            "StyleCop.CSharp.ReadabilityRules",
+            "SA1126:PrefixCallsCorrectly",
+            Justification = "This is not a method call, but a type.")]
         protected MessageSender(TimeSpan operationTimeout)
             : base(nameof(MessageSender) + StringUtility.GetRandomString())
         {
-            this.operationTimeout = operationTimeout;
+            this.OperationTimeout = operationTimeout;
         }
+
+        internal TimeSpan OperationTimeout { get; }
 
         protected MessagingEntityType EntityType { get; set; }
-
-        internal TimeSpan OperationTimeout
-        {
-            get { return this.operationTimeout; }
-        }
 
         public Task SendAsync(BrokeredMessage brokeredMessage)
         {
@@ -42,7 +41,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (brokeredMessages == null || !brokeredMessages.Any())
             {
-                throw Fx.Exception.ArgumentNull("brokeredMessages");
+                throw Fx.Exception.ArgumentNull(nameof(brokeredMessages));
             }
 
             if (brokeredMessages.Any(brokeredMessage => brokeredMessage.IsLockTokenSet))

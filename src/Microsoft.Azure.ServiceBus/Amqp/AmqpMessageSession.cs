@@ -14,7 +14,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         public AmqpMessageSession(string sessionId, DateTime lockedUntilUtc, MessageReceiver innerMessageReceiver)
             : base(innerMessageReceiver.ReceiveMode, sessionId, lockedUntilUtc, innerMessageReceiver)
         {
-            
         }
 
         protected override async Task<Stream> OnGetStateAsync()
@@ -31,7 +30,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 {
                     if (amqpResponseMessage.Map[ManagementConstants.Properties.SessionState] != null)
                     {
-                        sessionState = new BufferListStream(new[] { amqpResponseMessage.GetValue<ArraySegment<byte>>(ManagementConstants.Properties.SessionState) }); ;
+                        sessionState = new BufferListStream(new[] { amqpResponseMessage.GetValue<ArraySegment<byte>>(ManagementConstants.Properties.SessionState) });
                     }
                 }
 

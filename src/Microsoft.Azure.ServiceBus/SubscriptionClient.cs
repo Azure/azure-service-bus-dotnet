@@ -41,10 +41,6 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        protected object ThisLock { get; } = new object();
-
-        protected ServiceBusConnection ServiceBusConnection { get; }
-
         internal string SubscriptionPath { get; private set; }
 
         internal MessageReceiver InnerReceiver
@@ -65,6 +61,10 @@ namespace Microsoft.Azure.ServiceBus
                 return this.innerReceiver;
             }
         }
+
+        protected object ThisLock { get; } = new object();
+
+        protected ServiceBusConnection ServiceBusConnection { get; }
 
         public static SubscriptionClient CreateFromConnectionString(string topicEntityConnectionString, string subscriptionName)
         {
@@ -141,7 +141,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Receive Exception
+                // TODO: Log Receive Exception
                 throw;
             }
         }
@@ -165,7 +165,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Receive Exception
+                // TODO: Log Receive Exception
                 throw;
             }
         }
@@ -183,7 +183,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
         }
@@ -201,7 +201,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
         }
@@ -220,7 +220,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
 
@@ -240,7 +240,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
         }
@@ -258,7 +258,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
         }
@@ -271,7 +271,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
         }

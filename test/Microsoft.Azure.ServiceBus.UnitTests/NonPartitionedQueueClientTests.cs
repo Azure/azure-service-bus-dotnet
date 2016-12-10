@@ -5,9 +5,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
     using System.Threading.Tasks;
+    using Microsoft.Azure.ServiceBus.Primitives;
     using Xunit;
     using Xunit.Abstractions;
-    using Microsoft.Azure.ServiceBus.Primitives;
 
     public class NonPartitionedQueueClientTests : QueueClientTestBase
     {
@@ -62,53 +62,53 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await this.QueueClientRenewLockTestCase(messageCount: 1);
         }
 
-        //TODO: Add this to BrokeredMessageTests after merge
-        //[Fact]
-        //async Task BrokeredMessageOperationsTest()
-        //{
-        //    //Create QueueClient with ReceiveDelete, 
-        //    //Send and Receive a message, Try to Complete/Abandon/Defer/DeadLetter should throw InvalidOperationException()
-        //    QueueClient queueClient = QueueClient.CreateFromConnectionString(this.ConnectionString, ReceiveMode.ReceiveAndDelete);
-        //    await this.SendMessagesAsync(queueClient, 1);
-        //    BrokeredMessage message = await queueClient.ReceiveAsync();
-        //    Assert.NotNull((object)message);
+        // TODO: Add this to BrokeredMessageTests after merge
+        [Fact]
+        async Task BrokeredMessageOperationsTest()
+        {
+            // Create QueueClient with ReceiveDelete,
+            // Send and Receive a message, Try to Complete/Abandon/Defer/DeadLetter should throw InvalidOperationException()
+            QueueClient queueClient = QueueClient.CreateFromConnectionString(this.ConnectionString, ReceiveMode.ReceiveAndDelete);
+            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1, this.Output);
+            BrokeredMessage message = await queueClient.ReceiveAsync();
+            Assert.NotNull((object)message);
 
-        //    await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.CompleteAsync());
-        //    await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.AbandonAsync());
-        //    await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.DeferAsync());
-        //    await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.DeadLetterAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.CompleteAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.AbandonAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.DeferAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.DeadLetterAsync());
 
-        //    //Create a PeekLock queueClient and do rest of the operations
-        //    //Send a Message, Receive/ Abandon and Complete it using BrokeredMessage methods
-        //    queueClient = QueueClient.CreateFromConnectionString(this.ConnectionString);
-        //    await this.SendMessagesAsync(queueClient, 1);
-        //    message = await queueClient.ReceiveAsync();
-        //    Assert.NotNull((object)message);
-        //    await message.AbandonAsync();
-        //    await Task.Delay(TimeSpan.FromMilliseconds(100));
-        //    message = await queueClient.ReceiveAsync();
-        //    await message.CompleteAsync();
+            // Create a PeekLock queueClient and do rest of the operations
+            // Send a Message, Receive/ Abandon and Complete it using BrokeredMessage methods
+            queueClient = QueueClient.CreateFromConnectionString(this.ConnectionString);
+            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1, this.Output);
+            message = await queueClient.ReceiveAsync();
+            Assert.NotNull((object)message);
+            await message.AbandonAsync();
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
+            message = await queueClient.ReceiveAsync();
+            await message.CompleteAsync();
 
-        //    // Send a Message, Receive / DeadLetter using BrokeredMessage methods
-        //    await this.SendMessagesAsync(queueClient, 1);
-        //    message = await queueClient.ReceiveAsync();
-        //    await message.DeadLetterAsync();
-        //    ServiceBusConnectionStringBuilder builder = new ServiceBusConnectionStringBuilder(this.ConnectionString);
-        //    builder.EntityPath = EntityNameHelper.FormatDeadLetterPath(queueClient.QueueName);
-        //    QueueClient deadLetterQueueClient = QueueClient.CreateFromConnectionString(builder.ToString());
-        //    message = await deadLetterQueueClient.ReceiveAsync();
-        //    await message.CompleteAsync();
+            // Send a Message, Receive / DeadLetter using BrokeredMessage methods
+            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1, this.Output);
+            message = await queueClient.ReceiveAsync();
+            await message.DeadLetterAsync();
+            ServiceBusConnectionStringBuilder builder = new ServiceBusConnectionStringBuilder(this.ConnectionString);
+            builder.EntityPath = EntityNameHelper.FormatDeadLetterPath(queueClient.QueueName);
+            QueueClient deadLetterQueueClient = QueueClient.CreateFromConnectionString(builder.ToString());
+            message = await deadLetterQueueClient.ReceiveAsync();
+            await message.CompleteAsync();
 
-        //    //Send a Message, Receive/Defer using BrokeredMessage methods
-        //    await this.SendMessagesAsync(queueClient, 1);
-        //    message = await queueClient.ReceiveAsync();
-        //    long deferredSequenceNumber = message.SequenceNumber;
-        //    await message.DeferAsync();
+            // Send a Message, Receive/Defer using BrokeredMessage methods
+            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1, this.Output);
+            message = await queueClient.ReceiveAsync();
+            long deferredSequenceNumber = message.SequenceNumber;
+            await message.DeferAsync();
 
-        //    var deferredMessage = await queueClient.ReceiveBySequenceNumberAsync(deferredSequenceNumber);
-        //    await deferredMessage.CompleteAsync();
+            var deferredMessage = await queueClient.ReceiveBySequenceNumberAsync(deferredSequenceNumber);
+            await deferredMessage.CompleteAsync();
 
-        //    queueClient.Close();
-        //}
+            queueClient.Close();
+        }
     }
 }

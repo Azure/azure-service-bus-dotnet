@@ -11,7 +11,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     public class AmqpConnectionHelper
     {
         const string CbsSaslMechanismName = "MSSBCBS";
-        
+
         public static AmqpSettings CreateAmqpSettings(
             Version amqpVersion,
             bool useSslStreamSecurity,
@@ -66,6 +66,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return settings;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage(
+            "StyleCop.CSharp.NamingRules",
+            "SA1305:FieldNamesMustNotUseHungarianNotation",
+            Justification = "tpSettings is a local variable.")]
         public static TransportSettings CreateTcpTransportSettings(
             string networkHost,
             string hostName,

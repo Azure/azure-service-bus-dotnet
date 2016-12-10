@@ -36,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         internal SharedAccessSignatureTokenProvider(string keyName, string sharedAccessKey, TimeSpan tokenTimeToLive, TokenScope tokenScope)
-            : this(keyName, sharedAccessKey, MessagingTokenProviderKeyEncoder, tokenTimeToLive, tokenScope)
+            : this(keyName, sharedAccessKey, TokenProvider.MessagingTokenProviderKeyEncoder, tokenTimeToLive, tokenScope)
         {
         }
 
@@ -71,7 +71,7 @@ namespace Microsoft.Azure.ServiceBus
             this.tokenTimeToLive = tokenTimeToLive;
             this.encodedSharedAccessKey = customKeyEncoder != null ?
                 customKeyEncoder(sharedAccessKey) :
-                MessagingTokenProviderKeyEncoder(sharedAccessKey);
+                TokenProvider.MessagingTokenProviderKeyEncoder(sharedAccessKey);
         }
 
         protected override Task<SecurityToken> OnGetTokenAsync(string appliesTo, string action, TimeSpan timeout)
@@ -101,7 +101,7 @@ namespace Microsoft.Azure.ServiceBus
                 string targetUri,
                 TimeSpan timeToLive)
             {
-                // Note that target URI is not normalized because in IoT scenario it 
+                // Note that target URI is not normalized because in IoT scenario it
                 // is case sensitive.
                 string expiresOn = BuildExpiresOn(timeToLive);
                 string audienceUri = WebUtility.UrlEncode(targetUri);
@@ -115,13 +115,18 @@ namespace Microsoft.Azure.ServiceBus
                 // Example returned string:
                 // SharedAccessKeySignature
                 // sr=ENCODED(http://mynamespace.servicebus.windows.net/a/b/c?myvalue1=a)&sig=<Signature>&se=<ExpiresOnValue>&skn=<KeyName>
-
-                return string.Format(CultureInfo.InvariantCulture, "{0} {1}={2}&{3}={4}&{5}={6}&{7}={8}",
+                return string.Format(
+                    CultureInfo.InvariantCulture,
+                    "{0} {1}={2}&{3}={4}&{5}={6}&{7}={8}",
                     SharedAccessSignatureToken.SharedAccessSignature,
-                    SharedAccessSignatureToken.SignedResource, audienceUri,
-                    SharedAccessSignatureToken.Signature, WebUtility.UrlEncode(signature),
-                    SharedAccessSignatureToken.SignedExpiry, WebUtility.UrlEncode(expiresOn),
-                    SharedAccessSignatureToken.SignedKeyName, WebUtility.UrlEncode(keyName));
+                    SharedAccessSignatureToken.SignedResource,
+                    audienceUri,
+                    SharedAccessSignatureToken.Signature,
+                    WebUtility.UrlEncode(signature),
+                    SharedAccessSignatureToken.SignedExpiry,
+                    WebUtility.UrlEncode(expiresOn),
+                    SharedAccessSignatureToken.SignedKeyName,
+                    WebUtility.UrlEncode(keyName));
             }
 
             static string BuildExpiresOn(TimeSpan timeToLive)
@@ -198,7 +203,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (string.IsNullOrEmpty(sharedAccessSignature))
                 {
-                    throw new ArgumentNullException("sharedAccessSignature");
+                    throw new ArgumentNullException(nameof(sharedAccessSignature));
                 }
 
                 IDictionary<string, string> parsedFields = ExtractFieldValues(sharedAccessSignature);
@@ -234,17 +239,17 @@ namespace Microsoft.Azure.ServiceBus
 
                 if (!string.Equals(tokenLines[0].Trim(), SharedAccessSignature, StringComparison.OrdinalIgnoreCase) || tokenLines.Length != 2)
                 {
-                    throw new ArgumentNullException("sharedAccessSignature");
+                    throw new ArgumentNullException(nameof(sharedAccessSignature));
                 }
 
                 IDictionary<string, string> parsedFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                string[] tokenFields = tokenLines[1].Trim().Split(new string[] { SasPairSeparator }, StringSplitOptions.None);
+                string[] tokenFields = tokenLines[1].Trim().Split(new[] { SasPairSeparator }, StringSplitOptions.None);
 
                 foreach (string tokenField in tokenFields)
                 {
                     if (tokenField != string.Empty)
                     {
-                        string[] fieldParts = tokenField.Split(new string[] { SasKeyValueSeparator }, StringSplitOptions.None);
+                        string[] fieldParts = tokenField.Split(new[] { SasKeyValueSeparator }, StringSplitOptions.None);
                         if (string.Equals(fieldParts[0], SignedResource, StringComparison.OrdinalIgnoreCase))
                         {
                             // We need to preserve the casing of the escape characters in the audience,

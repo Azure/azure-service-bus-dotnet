@@ -3,13 +3,13 @@
 
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
-    using Xunit.Abstractions;
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus.Primitives;
+    using Xunit.Abstractions;
 
     public abstract class QueueClientTestBase : SenderReceiverClientTestBase
     {
-        protected QueueClientTestBase(ITestOutputHelper output) 
+        protected QueueClientTestBase(ITestOutputHelper output)
             : base(output)
         {
         }
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 await this.ReceiveDeleteTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
             }
-            finally 
+            finally
             {
                 queueClient.Close();
             }
@@ -53,14 +53,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 queueClient.Close();
             }
-            
         }
 
         public async Task QueueClientPeekLockWithDeadLetterTestCase(int messageCount)
         {
             QueueClient queueClient = QueueClient.CreateFromConnectionString(this.ConnectionString);
 
-            //Create DLQ Client To Receive DeadLetteredMessages
+            // Create DLQ Client To Receive DeadLetteredMessages
             ServiceBusConnectionStringBuilder builder = new ServiceBusConnectionStringBuilder(this.ConnectionString);
             builder.EntityPath = EntityNameHelper.FormatDeadLetterPath(queueClient.QueueName);
             QueueClient deadLetterQueueClient = QueueClient.CreateFromConnectionString(builder.ToString());
@@ -69,7 +68,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 await this.PeekLockWithDeadLetterTestCase(queueClient.InnerSender, queueClient.InnerReceiver, deadLetterQueueClient.InnerReceiver, messageCount);
             }
-            finally 
+            finally
             {
                 deadLetterQueueClient.Close();
                 queueClient.Close();
@@ -83,7 +82,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 await this.PeekLockDeferTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
             }
-            finally 
+            finally
             {
                 queueClient.Close();
             }
@@ -96,7 +95,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 await this.RenewLockTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
             }
-            finally 
+            finally
             {
                 queueClient.Close();
             }

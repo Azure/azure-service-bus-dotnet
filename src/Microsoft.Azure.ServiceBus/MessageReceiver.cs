@@ -5,8 +5,8 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
     using System.Collections.Generic;
-    using System.Threading.Tasks;
     using System.Linq;
+    using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus.Amqp;
 
     public abstract class MessageReceiver : ClientEntity
@@ -25,8 +25,6 @@ namespace Microsoft.Azure.ServiceBus
 
         public ReceiveMode ReceiveMode { get; protected set; }
 
-        protected MessagingEntityType EntityType { get; set; }
-
         public virtual int PrefetchCount
         {
             get
@@ -38,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (value < 0)
                 {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(PrefetchCount), value, "Value must be greater than 0");
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value must be greater than 0");
                 }
 
                 this.prefetchCount = value;
@@ -49,6 +47,8 @@ namespace Microsoft.Azure.ServiceBus
         {
             get { return this.operationTimeout; }
         }
+
+        protected MessagingEntityType EntityType { get; set; }
 
         public async Task<BrokeredMessage> ReceiveAsync()
         {
@@ -106,9 +106,14 @@ namespace Microsoft.Azure.ServiceBus
         public Task<DateTime> RenewLockAsync(Guid lockToken)
         {
             this.ThrowIfNotPeekLockMode();
-            MessageReceiver.ValidateLockTokens(new Guid[] {lockToken});
+            MessageReceiver.ValidateLockTokens(new Guid[] { lockToken });
 
             return this.OnRenewLockAsync(lockToken);
+        }
+
+        internal Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
+        {
+            return this.OnExecuteRequestResponseAsync(amqpRequestMessage);
         }
 
         protected abstract Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount);
@@ -127,9 +132,12 @@ namespace Microsoft.Azure.ServiceBus
 
         protected abstract Task<AmqpResponseMessage> OnExecuteRequestResponseAsync(AmqpRequestMessage requestAmqpMessage);
 
-        internal Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
+        static void ValidateLockTokens(IEnumerable<Guid> lockTokens)
         {
-            return this.OnExecuteRequestResponseAsync(amqpRequestMessage);
+            if (lockTokens == null || !lockTokens.Any())
+            {
+                throw Fx.Exception.ArgumentNull(nameof(lockTokens));
+            }
         }
 
         void ThrowIfNotPeekLockMode()
@@ -137,14 +145,6 @@ namespace Microsoft.Azure.ServiceBus
             if (this.ReceiveMode != ReceiveMode.PeekLock)
             {
                 throw Fx.Exception.AsError(new InvalidOperationException("The operation is only supported in 'PeekLock' receive mode."));
-            }
-        }
-
-        static void ValidateLockTokens(IEnumerable<Guid> lockTokens)
-        {
-            if (lockTokens == null || !lockTokens.Any())
-            {
-                throw Fx.Exception.ArgumentNull("lockTokens");
             }
         }
     }

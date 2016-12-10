@@ -3,9 +3,9 @@
 
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
-    using Xunit.Abstractions;
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus.Primitives;
+    using Xunit.Abstractions;
 
     public abstract class TopicClientTestBase : SenderReceiverClientTestBase
     {
@@ -61,7 +61,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 subscriptionClient.Close();
                 topicClient.Close();
             }
-
         }
 
         public async Task TopicClientPeekLockWithDeadLetterTestCase(int messageCount)
@@ -69,7 +68,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             TopicClient topicClient = TopicClient.CreateFromConnectionString(this.ConnectionString);
             SubscriptionClient subscriptionClient = SubscriptionClient.CreateFromConnectionString(this.ConnectionString, this.SubscriptionName);
 
-            //Create DLQ Client To Receive DeadLetteredMessages
+            // Create DLQ Client To Receive DeadLetteredMessages
             ServiceBusConnectionStringBuilder builder = new ServiceBusConnectionStringBuilder(this.ConnectionString);
             string subscriptionDeadletterPath = EntityNameHelper.FormatDeadLetterPath(this.SubscriptionName);
             SubscriptionClient deadLetterSubscriptionClient = SubscriptionClient.CreateFromConnectionString(this.ConnectionString, subscriptionDeadletterPath);

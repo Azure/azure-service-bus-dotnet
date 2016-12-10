@@ -15,7 +15,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
     static class AmqpMessageConverter
     {
-        const int GuidSize = 16;
         public const string EnqueuedTimeUtcName = "x-opt-enqueued-time";
         public const string ScheduledEnqueueTimeUtcName = "x-opt-scheduled-enqueue-time";
         public const string SequenceNumberName = "x-opt-sequence-number";
@@ -31,6 +30,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         public const string TimeSpanName = AmqpConstants.Vendor + ":timespan";
         public const string UriName = AmqpConstants.Vendor + ":uri";
         public const string DateTimeOffsetName = AmqpConstants.Vendor + ":datetime-offset";
+        const int GuidSize = 16;
 
         public static AmqpMessage BrokeredMessagesToAmqpMessage(IEnumerable<BrokeredMessage> brokeredMessages, bool batchable)
         {
@@ -91,7 +91,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
             else if ((amqpMessage.BodyType & SectionFlag.AmqpValue) != 0)
             {
-                object netObject = null;
+                object netObject;
                 if (!TryGetNetObjectFromAmqpObject(amqpMessage.ValueBody.Value, MappingType.MessageBody, out netObject))
                 {
                     netObject = amqpMessage.ValueBody.Value;
@@ -167,7 +167,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 foreach (var pair in amqpMessage.ApplicationProperties.Map)
                 {
-                    object netObject = null;
+                    object netObject;
                     if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out netObject))
                     {
                         brokeredMessage.Properties[pair.Key.ToString()] = netObject;
@@ -210,7 +210,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             brokeredMessage.DeadLetterSource = (string)pair.Value;
                             break;
                         default:
-                            object netObject = null;
+                            object netObject;
                             if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out netObject))
                             {
                                 brokeredMessage.Properties[key] = netObject;
@@ -287,7 +287,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             foreach (KeyValuePair<string, object> pair in brokeredMessage.Properties)
             {
-                object amqpObject = null;
+                object amqpObject;
                 if (TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
                 {
                     amqpMessage.ApplicationProperties.Map.Add(pair.Key, amqpObject);
@@ -317,7 +317,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 if (brokeredMessage.BodyStream.CanSeek && brokeredMessage.BodyStream.Position != 0)
                 {
-                    //TODO:throw new InvalidOperationException(SRClient.CannotSerializeMessageWithPartiallyConsumedBodyStream);
+                    // TODO:throw new InvalidOperationException(SRClient.CannotSerializeMessageWithPartiallyConsumedBodyStream);
                     throw new InvalidOperationException("CannotSerializeMessageWithPartiallyConsumedBodyStream");
                 }
 
@@ -329,23 +329,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
 
             return amqpMessage;
-        }
-
-        static Stream GetMessageBodyStream(AmqpMessage message)
-        {
-            if ((message.BodyType & SectionFlag.Data) != 0 &&
-                message.DataBody != null)
-            {
-                List<ArraySegment<byte>> dataSegments = new List<ArraySegment<byte>>();
-                foreach (Data data in message.DataBody)
-                {
-                    dataSegments.Add((ArraySegment<byte>)data.Value);
-                }
-
-                return new BufferListStream(dataSegments.ToArray());
-            }
-
-            return null;
         }
 
         public static bool TryGetAmqpObjectFromNetObject(object netObject, MappingType mappingType, out object amqpObject)
@@ -401,7 +384,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                     else if (mappingType == MappingType.ApplicationProperty)
                     {
-                        //TODO: throw FxTrace.Exception.AsError(new SerializationException(SRClient.FailedToSerializeUnsupportedType(netObject.GetType().FullName)));
+                        // TODO: throw FxTrace.Exception.AsError(new SerializationException(SRClient.FailedToSerializeUnsupportedType(netObject.GetType().FullName)));
                         throw new SerializationException("netObject.GetType().FullName");
                     }
                     else if (netObject is byte[])
@@ -478,15 +461,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         if (describedType.Descriptor is AmqpSymbol)
                         {
                             AmqpSymbol symbol = (AmqpSymbol)describedType.Descriptor;
-                            if (symbol.Equals((AmqpSymbol)UriName))
+                            if (symbol.Equals(UriName))
                             {
                                 netObject = new Uri((string)describedType.Value);
                             }
-                            else if (symbol.Equals((AmqpSymbol)TimeSpanName))
+                            else if (symbol.Equals(TimeSpanName))
                             {
                                 netObject = new TimeSpan((long)describedType.Value);
                             }
-                            else if (symbol.Equals((AmqpSymbol)DateTimeOffsetName))
+                            else if (symbol.Equals(DateTimeOffsetName))
                             {
                                 netObject = new DateTimeOffset(new DateTime((long)describedType.Value, DateTimeKind.Utc));
                             }
@@ -494,7 +477,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                     else if (mappingType == MappingType.ApplicationProperty)
                     {
-                        //TODO: throw FxTrace.Exception.AsError(new SerializationException(SRClient.FailedToSerializeUnsupportedType(amqpObject.GetType().FullName)));
+                        // TODO: throw FxTrace.Exception.AsError(new SerializationException(SRClient.FailedToSerializeUnsupportedType(amqpObject.GetType().FullName)));
                         throw new SerializationException("netObject.GetType().FullName");
                     }
                     else if (amqpObject is AmqpMap)
@@ -534,6 +517,23 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             memoryStream.Dispose();
             return buffer;
+        }
+
+        static Stream GetMessageBodyStream(AmqpMessage message)
+        {
+            if ((message.BodyType & SectionFlag.Data) != 0 &&
+                message.DataBody != null)
+            {
+                List<ArraySegment<byte>> dataSegments = new List<ArraySegment<byte>>();
+                foreach (Data data in message.DataBody)
+                {
+                    dataSegments.Add((ArraySegment<byte>)data.Value);
+                }
+
+                return new BufferListStream(dataSegments.ToArray());
+            }
+
+            return null;
         }
     }
 }

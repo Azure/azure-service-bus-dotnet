@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
     sealed class AmqpTopicClient : TopicClient
     {
-        public AmqpTopicClient(ServiceBusConnection servicebusConnection, string entityPath) 
+        public AmqpTopicClient(ServiceBusConnection servicebusConnection, string entityPath)
             : base(servicebusConnection, entityPath)
         {
             this.TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.ServiceBusConnection.SasKeyName, this.ServiceBusConnection.SasKey);

@@ -42,6 +42,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public AmqpMap Map { get; }
 
+        public static AmqpResponseMessage CreateResponse(AmqpMessage response)
+        {
+            return new AmqpResponseMessage(response);
+        }
+
         public TValue GetValue<TValue>(MapKey key)
         {
             if (this.Map == null)
@@ -60,7 +65,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 throw new ArgumentException(key.ToString());
             }
 
-            return (TValue) this.Map[key];
+            return (TValue)this.Map[key];
         }
 
         public IEnumerable<TValue> GetListValue<TValue>(MapKey key)
@@ -74,13 +79,5 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             return list.Cast<TValue>();
         }
-
-
-        public static AmqpResponseMessage CreateResponse(AmqpMessage response)
-        {
-            return new AmqpResponseMessage(response);
-        }
     }
 }
-
-

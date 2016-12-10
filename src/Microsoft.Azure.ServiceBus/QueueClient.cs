@@ -42,11 +42,6 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-
-        protected object ThisLock { get; } = new object();
-
-        protected ServiceBusConnection ServiceBusConnection { get; }
-
         internal MessageSender InnerSender
         {
             get
@@ -70,11 +65,11 @@ namespace Microsoft.Azure.ServiceBus
         {
             get
             {
-                if(this.innerReceiver == null)
+                if (this.innerReceiver == null)
                 {
-                    lock(this.ThisLock)
+                    lock (this.ThisLock)
                     {
-                        if(this.innerReceiver == null)
+                        if (this.innerReceiver == null)
                         {
                             this.innerReceiver = this.CreateMessageReceiver();
                         }
@@ -84,6 +79,10 @@ namespace Microsoft.Azure.ServiceBus
                 return this.innerReceiver;
             }
         }
+
+        protected object ThisLock { get; } = new object();
+
+        protected ServiceBusConnection ServiceBusConnection { get; }
 
         public static QueueClient CreateFromConnectionString(string entityConnectionString)
         {
@@ -143,14 +142,14 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Send <see cref="BrokeredMessage"/> to Queue. 
+        /// Send <see cref="BrokeredMessage"/> to Queue.
         /// <see cref="SendAsync(BrokeredMessage)"/> sends the <see cref="BrokeredMessage"/> to a Service Gateway, which in-turn will forward the BrokeredMessage to the queue.
         /// </summary>
         /// <param name="brokeredMessage">the <see cref="BrokeredMessage"/> to be sent.</param>
         /// <returns>A Task that completes when the send operations is done.</returns>
         public Task SendAsync(BrokeredMessage brokeredMessage)
         {
-            return this.SendAsync(new[] { brokeredMessage });
+            return this.SendAsync(new BrokeredMessage[] { brokeredMessage });
         }
 
         public async Task SendAsync(IEnumerable<BrokeredMessage> brokeredMessages)
@@ -161,7 +160,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Send Exception
+                // TODO: Log Send Exception
                 throw;
             }
         }
@@ -183,16 +182,16 @@ namespace Microsoft.Azure.ServiceBus
             {
                 return await this.InnerReceiver.ReceiveAsync(maxMessageCount).ConfigureAwait(false);
             }
-            catch(Exception)
+            catch (Exception)
             {
-                //TODO: Log Receive Exception
+                // TODO: Log Receive Exception
                 throw;
             }
         }
 
         public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
         {
-            IList<BrokeredMessage> messages = await this.ReceiveBySequenceNumberAsync(new long[] {sequenceNumber});
+            IList<BrokeredMessage> messages = await this.ReceiveBySequenceNumberAsync(new long[] { sequenceNumber });
             if (messages != null && messages.Count > 0)
             {
                 return messages[0];
@@ -209,14 +208,14 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Receive Exception
+                // TODO: Log Receive Exception
                 throw;
             }
         }
 
         public Task CompleteAsync(Guid lockToken)
         {
-            return this.CompleteAsync(new Guid[] {lockToken});
+            return this.CompleteAsync(new Guid[] { lockToken });
         }
 
         public async Task CompleteAsync(IEnumerable<Guid> lockTokens)
@@ -227,7 +226,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
         }
@@ -245,7 +244,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
         }
@@ -264,7 +263,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
 
@@ -284,7 +283,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
         }
@@ -302,7 +301,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
         }
@@ -315,7 +314,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception)
             {
-                //TODO: Log Complete Exception
+                // TODO: Log Complete Exception
                 throw;
             }
         }

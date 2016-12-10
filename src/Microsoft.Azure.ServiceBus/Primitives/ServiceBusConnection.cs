@@ -58,7 +58,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (value < 0)
                 {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(PrefetchCount), value, "Value must be greater than 0");
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value must be greater than 0");
                 }
 
                 this.prefetchCount = value;
@@ -66,14 +66,6 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         internal FaultTolerantAmqpObject<AmqpConnection> ConnectionManager { get; set; }
-
-        protected void InitializeConnection(ServiceBusConnectionStringBuilder builder)
-        {
-            this.Endpoint = builder.Endpoint;
-            this.SasKeyName = builder.SasKeyName;
-            this.SasKey = builder.SasKey;
-            this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, this.CloseConnection);
-        }
 
         public QueueClient CreateQueueClient(ServiceBusEntityConnection entityConnection, ReceiveMode mode)
         {
@@ -110,6 +102,14 @@ namespace Microsoft.Azure.ServiceBus
             return this.ConnectionManager.CloseAsync();
         }
 
+        protected void InitializeConnection(ServiceBusConnectionStringBuilder builder)
+        {
+            this.Endpoint = builder.Endpoint;
+            this.SasKeyName = builder.SasKeyName;
+            this.SasKey = builder.SasKey;
+            this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, this.CloseConnection);
+        }
+
         async Task<AmqpConnection> CreateConnectionAsync(TimeSpan timeout)
         {
             string hostName = this.Endpoint.Host;
@@ -132,7 +132,7 @@ namespace Microsoft.Azure.ServiceBus
             var transport = await initiator.ConnectTaskAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
             string containerId = Guid.NewGuid().ToString();
-            var amqpConnectionSettings = AmqpConnectionHelper.CreateAmqpConnectionSettings(AmqpConstants.DefaultMaxFrameSize,containerId , hostName);
+            var amqpConnectionSettings = AmqpConnectionHelper.CreateAmqpConnectionSettings(AmqpConstants.DefaultMaxFrameSize, containerId, hostName);
             var connection = new AmqpConnection(transport, amqpSettings, amqpConnectionSettings);
             await connection.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 

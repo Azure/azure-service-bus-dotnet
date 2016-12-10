@@ -40,13 +40,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await topicClient.SendAsync(new BrokeredMessage() { MessageId = messageId2, SessionId = sessionId2 });
                 TestUtility.Log(this.Output, $"Sent Message: {messageId2} to Session: {sessionId2}");
 
-                //Receive Message, Complete and Close with SessionId - sessionId 1
+                // Receive Message, Complete and Close with SessionId - sessionId 1
                 await this.AcceptAndCompleteSessionsAsync(subscriptionClient, sessionId1, messageId1);
 
-                //Receive Message, Complete and Close with SessionId - sessionId 2
+                // Receive Message, Complete and Close with SessionId - sessionId 2
                 await this.AcceptAndCompleteSessionsAsync(subscriptionClient, sessionId2, messageId2);
 
-                //Receive Message, Complete and Close - With Null SessionId specified
+                // Receive Message, Complete and Close - With Null SessionId specified
                 string messageId3 = "test-message3";
                 string sessionId3 = "sessionId3";
                 await topicClient.SendAsync(new BrokeredMessage() { MessageId = messageId3, SessionId = sessionId3 });
@@ -90,7 +90,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     Assert.Equal(sessionStateString, returnedSessionStateString);
                 }
 
-                //Complete message using Session Receiver 
+                // Complete message using Session Receiver
                 await sessionReceiver.CompleteAsync(new Guid[] { message.LockToken });
                 TestUtility.Log(this.Output, $"Completed Message: {message.MessageId} for Session: {sessionReceiver.SessionId}");
 

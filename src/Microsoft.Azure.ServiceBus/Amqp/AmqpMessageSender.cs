@@ -7,9 +7,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Messaging.Amqp;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Framing;
+    using Microsoft.Azure.Messaging.Amqp;
 
     sealed class AmqpMessageSender : MessageSender
     {
@@ -51,8 +51,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     {
                         // TODO: Add MessageSizeExceededException
                         throw new NotImplementedException("MessageSizeExceededException: " + Resources.AmqpMessageSizeExceeded.FormatForUser(amqpMessage.DeliveryId.Value, size, amqpLink.Settings.MaxMessageSize.Value));
-                        //throw Fx.Exception.AsError(new MessageSizeExceededException(
-                        //    Resources.AmqpMessageSizeExceeded.FormatForUser(amqpMessage.DeliveryId.Value, size, amqpLink.Settings.MaxMessageSize.Value)));
+                        ////throw Fx.Exception.AsError(new MessageSizeExceededException(
+                        ////Resources.AmqpMessageSizeExceeded.FormatForUser(amqpMessage.DeliveryId.Value, size, amqpLink.Settings.MaxMessageSize.Value)));
                     }
                 }
 
@@ -77,13 +77,13 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 Role = false,
                 InitialDeliveryCount = 0,
-                Target = new Target {Address = this.Path},
-                Source = new Source {Address = this.ClientId},
+                Target = new Target { Address = this.Path },
+                Source = new Source { Address = this.ClientId },
             };
-            linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int) this.EntityType);
+            linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)this.EntityType);
 
-            AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] {ClaimConstants.Send}, this.CbsTokenProvider, linkSettings);
-            SendingAmqpLink sendingAmqpLink = (SendingAmqpLink) await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync();
+            AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] { ClaimConstants.Send }, this.CbsTokenProvider, linkSettings);
+            SendingAmqpLink sendingAmqpLink = (SendingAmqpLink)await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync();
             return sendingAmqpLink;
         }
 

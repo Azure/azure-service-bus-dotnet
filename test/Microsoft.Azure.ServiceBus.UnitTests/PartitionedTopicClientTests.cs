@@ -5,9 +5,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
     using System.Threading.Tasks;
+    using Microsoft.Azure.ServiceBus.Primitives;
     using Xunit;
     using Xunit.Abstractions;
-    using Microsoft.Azure.ServiceBus.Primitives;
 
     public class PartitionedTopicClientTests : TopicClientTestBase
     {
