@@ -16,11 +16,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             this.ConnectionString = Environment.GetEnvironmentVariable("NONPARTITIONEDTOPICCLIENTCONNECTIONSTRING");
             this.SubscriptionName = Environment.GetEnvironmentVariable("SESSIONFULSUBSCRIPTIONNAME");
 
-            this.ConnectionString =
-                "Endpoint=sb://newvinsu1028.servicebus.windows.net/;EntityPath=nonPartSessionTopic;SharedAccessKeyName=saspolicy1;SharedAccessKey=JitdGIRhIYJjRlaAWSRKYV3WZDRjAnCbAl609iwcEuA=";
-
-            this.SubscriptionName = "sessionsub1";
-
             if (string.IsNullOrWhiteSpace(this.ConnectionString))
             {
                 throw new InvalidOperationException("TOPICCLIENTCONNECTIONSTRING environment variable was not found!");

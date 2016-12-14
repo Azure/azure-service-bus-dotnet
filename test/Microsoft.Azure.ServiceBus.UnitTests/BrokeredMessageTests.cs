@@ -4,8 +4,6 @@
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
-    using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
     using Xunit;
 
     public class BrokeredMessageTests
@@ -21,14 +19,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        // public class When_BrokeredMessage_message_is_given_a_null_id_generator
-        // {
-        //    [Fact]
-        //    public void Should_throw_an_exception()
-        //    {
-        //        Assert.Throws<ArgumentNullException>(() => BrokeredMessage.SetMessageIdGenerator(null));
-        //    }
-        // }
         public class When_BrokeredMessage_id_generator_throws
         {
             [Fact]

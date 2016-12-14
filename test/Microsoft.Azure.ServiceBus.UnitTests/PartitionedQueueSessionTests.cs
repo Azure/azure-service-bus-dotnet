@@ -15,9 +15,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             this.ConnectionString = Environment.GetEnvironmentVariable("PARTITIONEDSESSIONQUEUECONNECTIONSTRING");
 
-            this.ConnectionString =
-                "Endpoint=sb://newvinsu1028.servicebus.windows.net/;EntityPath=partsessionq;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=7oMVG2as0pelFCFujgSb2JExro7/tZ6oIGcECpljubc=";
-
             if (string.IsNullOrWhiteSpace(this.ConnectionString))
             {
                 throw new InvalidOperationException("SESSIONQUEUECLIENTCONNECTIONSTRING environment variable was not found!");

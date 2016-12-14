@@ -15,12 +15,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             : base(output)
         {
             this.ConnectionString = Environment.GetEnvironmentVariable("NONPARTITIONEDTOPICCLIENTCONNECTIONSTRING");
-
-            this.ConnectionString =
-                "Endpoint=sb://newvinsu1028.servicebus.windows.net/;EntityPath=nonparttopic;SharedAccessKeyName=saspolicy1;SharedAccessKey=14z0d1tulYprfdRyShhiKn9DTNEK0iJLuZhpj/VaLYE=";
-
             this.SubscriptionName = Environment.GetEnvironmentVariable("SUBSCRIPTIONNAME");
-            this.SubscriptionName = "nonsessionsub1";
 
             if (string.IsNullOrWhiteSpace(this.ConnectionString))
             {
