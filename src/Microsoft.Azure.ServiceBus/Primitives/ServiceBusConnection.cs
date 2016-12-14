@@ -67,39 +67,24 @@ namespace Microsoft.Azure.ServiceBus
 
         internal FaultTolerantAmqpObject<AmqpConnection> ConnectionManager { get; set; }
 
-        public QueueClient CreateQueueClient(ServiceBusEntityConnection entityConnection, ReceiveMode mode)
+        public Task CloseAsync()
         {
-            return new AmqpQueueClient(this, entityConnection.EntityPath, mode);
+            return this.ConnectionManager.CloseAsync();
         }
 
-        public QueueClient CreateQueueClient(ServiceBusNamespaceConnection namespaceConnection, string entityPath, ReceiveMode mode)
+        internal QueueClient CreateQueueClient(string entityPath, ReceiveMode mode)
         {
             return new AmqpQueueClient(this, entityPath, mode);
         }
 
-        public TopicClient CreateTopicClient(ServiceBusEntityConnection entityConnection)
-        {
-            return new AmqpTopicClient(this, entityConnection.EntityPath);
-        }
-
-        public TopicClient CreateTopicClient(ServiceBusNamespaceConnection namespaceConnection, string topicPath)
+        internal TopicClient CreateTopicClient(string topicPath)
         {
             return new AmqpTopicClient(this, topicPath);
         }
 
-        public SubscriptionClient CreateSubscriptionClient(ServiceBusEntityConnection entityConnection, string subscriptionName, ReceiveMode mode)
-        {
-            return new AmqpSubscriptionClient(this, entityConnection.EntityPath, subscriptionName, mode);
-        }
-
-        public SubscriptionClient CreateSubscriptionClient(ServiceBusNamespaceConnection namespaceConnection, string topicPath, string subscriptionName, ReceiveMode mode)
+        internal SubscriptionClient CreateSubscriptionClient(string topicPath, string subscriptionName, ReceiveMode mode)
         {
             return new AmqpSubscriptionClient(this, topicPath, subscriptionName, mode);
-        }
-
-        public Task CloseAsync()
-        {
-            return this.ConnectionManager.CloseAsync();
         }
 
         protected void InitializeConnection(ServiceBusConnectionStringBuilder builder)
@@ -107,7 +92,12 @@ namespace Microsoft.Azure.ServiceBus
             this.Endpoint = builder.Endpoint;
             this.SasKeyName = builder.SasKeyName;
             this.SasKey = builder.SasKey;
-            this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, this.CloseConnection);
+            this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, ServiceBusConnection.CloseConnection);
+        }
+
+        static void CloseConnection(AmqpConnection connection)
+        {
+            connection.SafeClose();
         }
 
         async Task<AmqpConnection> CreateConnectionAsync(TimeSpan timeout)
@@ -116,8 +106,8 @@ namespace Microsoft.Azure.ServiceBus
             string networkHost = this.Endpoint.Host;
             int port = this.Endpoint.Port;
 
-            var timeoutHelper = new TimeoutHelper(timeout);
-            var amqpSettings = AmqpConnectionHelper.CreateAmqpSettings(
+            TimeoutHelper timeoutHelper = new TimeoutHelper(timeout);
+            AmqpSettings amqpSettings = AmqpConnectionHelper.CreateAmqpSettings(
                 amqpVersion: ServiceBusConnection.AmqpVersion,
                 useSslStreamSecurity: true,
                 hasTokenProvider: true);
@@ -128,27 +118,22 @@ namespace Microsoft.Azure.ServiceBus
                 port: port,
                 useSslStreamSecurity: true);
 
-            var initiator = new AmqpTransportInitiator(amqpSettings, tpSettings);
-            var transport = await initiator.ConnectTaskAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+            AmqpTransportInitiator initiator = new AmqpTransportInitiator(amqpSettings, tpSettings);
+            TransportBase transport = await initiator.ConnectTaskAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
             string containerId = Guid.NewGuid().ToString();
-            var amqpConnectionSettings = AmqpConnectionHelper.CreateAmqpConnectionSettings(AmqpConstants.DefaultMaxFrameSize, containerId, hostName);
-            var connection = new AmqpConnection(transport, amqpSettings, amqpConnectionSettings);
+            AmqpConnectionSettings amqpConnectionSettings = AmqpConnectionHelper.CreateAmqpConnectionSettings(AmqpConstants.DefaultMaxFrameSize, containerId, hostName);
+            AmqpConnection connection = new AmqpConnection(transport, amqpSettings, amqpConnectionSettings);
             await connection.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
             // Always create the CBS Link + Session
-            var cbsLink = new AmqpCbsLink(connection);
+            AmqpCbsLink cbsLink = new AmqpCbsLink(connection);
             if (connection.Extensions.Find<AmqpCbsLink>() == null)
             {
                 connection.Extensions.Add(cbsLink);
             }
 
             return connection;
-        }
-
-        void CloseConnection(AmqpConnection connection)
-        {
-            connection.SafeClose();
         }
     }
 }

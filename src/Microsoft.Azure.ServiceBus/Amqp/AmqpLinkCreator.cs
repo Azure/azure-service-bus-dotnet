@@ -27,11 +27,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public async Task<AmqpObject> CreateAndOpenAmqpLinkAsync()
         {
-            var timeoutHelper = new TimeoutHelper(this.serviceBusConnection.OperationTimeout);
+            TimeoutHelper timeoutHelper = new TimeoutHelper(this.serviceBusConnection.OperationTimeout);
             AmqpConnection connection = await this.serviceBusConnection.ConnectionManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
             // Authenticate over CBS
-            var cbsLink = connection.Extensions.Find<AmqpCbsLink>();
+            AmqpCbsLink cbsLink = connection.Extensions.Find<AmqpCbsLink>();
             Uri address = new Uri(this.serviceBusConnection.Endpoint, this.entityPath);
             string audience = address.AbsoluteUri;
             string resource = address.AbsoluteUri;
@@ -41,20 +41,19 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             try
             {
                 // Create our Session
-                var sessionSettings = new AmqpSessionSettings { Properties = new Fields() };
+                AmqpSessionSettings sessionSettings = new AmqpSessionSettings { Properties = new Fields() };
                 session = connection.CreateSession(sessionSettings);
                 await session.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
                 // Create our Link
                 AmqpObject link = this.OnCreateAmqpLink(connection, this.amqpLinkSettings, session);
-                this.amqpLinkSettings.LinkName = $"{connection.Settings.ContainerId};{connection.Identifier}:{session.Identifier}:{link.Identifier}";
                 await link.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
                 return link;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 session?.Abort();
-                throw e;
+                throw;
             }
         }
 

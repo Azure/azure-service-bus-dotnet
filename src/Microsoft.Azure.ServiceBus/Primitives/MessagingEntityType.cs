@@ -10,13 +10,6 @@ namespace Microsoft.Azure.ServiceBus
         Subscriber = 2,
         Filter = 3,
         Namespace = 4,
-        VolatileTopic = 5,
-        VolatileTopicSubscription = 6,
-        EventHub = 7,
-        ConsumerGroup = 8,
-        Partition = 9,
-        Checkpoint = 10,
-        RevokedPublisher = 11,
         Unknown = (int)0x7FFFFFFE,
     }
 }

@@ -77,7 +77,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <returns>the connection string</returns>
         public override string ToString()
         {
-            var connectionStringBuilder = new StringBuilder();
+            StringBuilder connectionStringBuilder = new StringBuilder();
             if (this.Endpoint != null)
             {
                 connectionStringBuilder.Append($"{EndpointConfigName}{KeyValueSeparator}{this.Endpoint}{KeyValuePairDelimiter}");

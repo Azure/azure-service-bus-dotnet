@@ -40,10 +40,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         protected override async Task OnSendAsync(IEnumerable<BrokeredMessage> brokeredMessages)
         {
-            var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
+            TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
             using (AmqpMessage amqpMessage = AmqpMessageConverter.BrokeredMessagesToAmqpMessage(brokeredMessages, true))
             {
-                var amqpLink = await this.SendLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                SendingAmqpLink amqpLink = await this.SendLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
                 if (amqpLink.Settings.MaxMessageSize.HasValue)
                 {
                     ulong size = (ulong)amqpMessage.SerializedMessageSize;
@@ -73,7 +73,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         async Task<SendingAmqpLink> CreateLinkAsync(TimeSpan timeout)
         {
-            var linkSettings = new AmqpLinkSettings
+            AmqpLinkSettings linkSettings = new AmqpLinkSettings
             {
                 Role = false,
                 InitialDeliveryCount = 0,
@@ -83,7 +83,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)this.EntityType);
 
             AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] { ClaimConstants.Send }, this.CbsTokenProvider, linkSettings);
-            SendingAmqpLink sendingAmqpLink = (SendingAmqpLink)await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync();
+            SendingAmqpLink sendingAmqpLink = (SendingAmqpLink)await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
             return sendingAmqpLink;
         }
 

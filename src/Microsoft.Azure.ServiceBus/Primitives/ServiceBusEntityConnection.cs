@@ -20,7 +20,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(entityConnectionString));
             }
 
-            var builder = new ServiceBusConnectionStringBuilder(entityConnectionString);
+            ServiceBusConnectionStringBuilder builder = new ServiceBusConnectionStringBuilder(entityConnectionString);
 
             if (string.IsNullOrWhiteSpace(builder.EntityPath))
             {

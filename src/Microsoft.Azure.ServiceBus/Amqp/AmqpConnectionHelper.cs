@@ -23,21 +23,21 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             System.Net.Security.RemoteCertificateValidationCallback certificateValidationCallback = null,
             bool forceTokenProvider = true)
         {
-            var settings = new AmqpSettings();
+            AmqpSettings settings = new AmqpSettings();
             if (useSslStreamSecurity && !useWebSockets && sslStreamUpgrade)
             {
-                var tlsSettings = new TlsTransportSettings();
+                TlsTransportSettings tlsSettings = new TlsTransportSettings();
                 tlsSettings.CertificateValidationCallback = certificateValidationCallback;
                 tlsSettings.TargetHost = sslHostName;
 
-                var tlsProvider = new TlsTransportProvider(tlsSettings);
+                TlsTransportProvider tlsProvider = new TlsTransportProvider(tlsSettings);
                 tlsProvider.Versions.Add(new AmqpVersion(amqpVersion));
                 settings.TransportProviders.Add(tlsProvider);
             }
 
             if (hasTokenProvider || networkCredential != null)
             {
-                var saslProvider = new SaslTransportProvider();
+                SaslTransportProvider saslProvider = new SaslTransportProvider();
                 saslProvider.Versions.Add(new AmqpVersion(amqpVersion));
                 settings.TransportProviders.Add(saslProvider);
 
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 }
                 else if (networkCredential != null)
                 {
-                    var plainHandler = new SaslPlainHandler();
+                    SaslPlainHandler plainHandler = new SaslPlainHandler();
                     plainHandler.AuthenticationIdentity = networkCredential.UserName;
                     plainHandler.Password = networkCredential.Password;
                     saslProvider.AddHandler(plainHandler);
@@ -59,7 +59,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 }
             }
 
-            var amqpProvider = new AmqpTransportProvider();
+            AmqpTransportProvider amqpProvider = new AmqpTransportProvider();
             amqpProvider.Versions.Add(new AmqpVersion(amqpVersion));
             settings.TransportProviders.Add(amqpProvider);
 
@@ -105,7 +105,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static AmqpConnectionSettings CreateAmqpConnectionSettings(uint maxFrameSize, string containerId, string hostName)
         {
-            var connectionSettings = new AmqpConnectionSettings
+            AmqpConnectionSettings connectionSettings = new AmqpConnectionSettings
             {
                 MaxFrameSize = maxFrameSize,
                 ContainerId = containerId,

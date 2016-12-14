@@ -97,7 +97,7 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             ServiceBusEntityConnection entityConnection = new ServiceBusEntityConnection(entityConnectionString);
-            return entityConnection.CreateQueueClient(entityConnection, mode);
+            return entityConnection.CreateQueueClient(entityConnection.EntityPath, mode);
         }
 
         public static QueueClient Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath)
@@ -117,7 +117,7 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.Argument(nameof(namespaceConnection), "Entity Path is null");
             }
 
-            return namespaceConnection.CreateQueueClient(namespaceConnection, entityPath, mode);
+            return namespaceConnection.CreateQueueClient(entityPath, mode);
         }
 
         public static QueueClient Create(ServiceBusEntityConnection entityConnection)
@@ -132,7 +132,7 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.Argument(nameof(entityConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
             }
 
-            return entityConnection.CreateQueueClient(entityConnection, mode);
+            return entityConnection.CreateQueueClient(entityConnection.EntityPath, mode);
         }
 
         public sealed override async Task CloseAsync()
