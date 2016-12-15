@@ -8,22 +8,28 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
-    using Xunit;
-    using Xunit.Abstractions;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
-    public class TestUtility
+    class TestUtility
     {
-        const int MaxAttemptsCount = 5;
-
-        public static void Log(ITestOutputHelper output, string message)
+        internal static string GetEntityConnectionString(string entityName)
         {
-            var formattedMessage = string.Format("{0} {1}", DateTime.Now.TimeOfDay, message);
-            output.WriteLine(formattedMessage);
+            var connectionString = LoadConnectionString();
+            var connectionStringBuilder = new ServiceBusConnectionStringBuilder(connectionString)
+            {
+                EntityPath = entityName
+            };
+            return connectionStringBuilder.ToString();
+        }
+
+        internal static void Log(string message)
+        {
+            var formattedMessage = $"{DateTime.Now.TimeOfDay}: {message}";
             Debug.WriteLine(formattedMessage);
             Console.WriteLine(formattedMessage);
         }
 
-        public static async Task SendMessagesAsync(MessageSender messageSender, int messageCount, ITestOutputHelper output)
+        internal static async Task SendMessagesAsync(MessageSender messageSender, int messageCount)
         {
             if (messageCount == 0)
             {
@@ -39,15 +45,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
 
             await messageSender.SendAsync(messagesToSend);
-            Log(output, string.Format("Sent {0} messages", messageCount));
+            Log($"Sent {messageCount} messages");
         }
 
-        public static async Task<IEnumerable<BrokeredMessage>> ReceiveMessagesAsync(MessageReceiver messageReceiver, int messageCount, ITestOutputHelper output)
+        internal static async Task<IEnumerable<BrokeredMessage>> ReceiveMessagesAsync(MessageReceiver messageReceiver, int messageCount)
         {
             int receiveAttempts = 0;
             List<BrokeredMessage> messagesToReturn = new List<BrokeredMessage>();
 
-            while (receiveAttempts++ < TestUtility.MaxAttemptsCount && messagesToReturn.Count < messageCount)
+            while (receiveAttempts++ < Constants.MaxAttemptsCount && messagesToReturn.Count < messageCount)
             {
                 var messages = await messageReceiver.ReceiveAsync(messageCount);
                 if (messages != null)
@@ -56,32 +62,44 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 }
             }
 
-            Log(output, string.Format("Received {0} messages", messagesToReturn.Count));
+            Log($"Received {messagesToReturn.Count} messages");
             return messagesToReturn;
         }
 
-        public static async Task CompleteMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages, ITestOutputHelper output)
+        internal static async Task CompleteMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
             await messageReceiver.CompleteAsync(messages.Select(message => message.LockToken));
-            Log(output, string.Format("Completed {0} messages", messages.Count()));
+            Log($"Completed {messages.Count()} messages");
         }
 
-        public static async Task AbandonMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages, ITestOutputHelper output)
+        internal static async Task AbandonMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
             await messageReceiver.AbandonAsync(messages.Select(message => message.LockToken));
-            Log(output, string.Format("Abandoned {0} messages", messages.Count()));
+            Log($"Abandoned {messages.Count()} messages");
         }
 
-        public static async Task DeadLetterMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages, ITestOutputHelper output)
+        internal static async Task DeadLetterMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
             await messageReceiver.DeadLetterAsync(messages.Select(message => message.LockToken));
-            Log(output, string.Format("Deadlettered {0} messages", messages.Count()));
+            Log($"Deadlettered {messages.Count()} messages");
         }
 
-        public static async Task DeferMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages, ITestOutputHelper output)
+        internal static async Task DeferMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
             await messageReceiver.DeferAsync(messages.Select(message => message.LockToken));
-            Log(output, string.Format("Deferred {0} messages", messages.Count()));
+            Log($"Deferred {messages.Count()} messages");
+        }
+
+        static string LoadConnectionString()
+        {
+            var envConnectionString = Environment.GetEnvironmentVariable(Constants.ConnectionStringEnvironmentVariable);
+            if (string.IsNullOrWhiteSpace(envConnectionString))
+            {
+                throw new InvalidOperationException($"'{nameof(Constants.ConnectionStringEnvironmentVariable)}' environment variable was not found!");
+            }
+
+            // Validate the connection string
+            return new ServiceBusConnectionStringBuilder(envConnectionString).ToString();
         }
     }
 }

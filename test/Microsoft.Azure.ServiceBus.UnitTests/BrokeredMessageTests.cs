@@ -4,14 +4,72 @@
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
+    using System.Threading.Tasks;
+    using Primitives;
     using Xunit;
 
     public class BrokeredMessageTests
     {
+        [Fact]
+        async Task BrokeredMessageOperationsTest()
+        {
+            // Create QueueClient with ReceiveDelete,
+            // Send and Receive a message, Try to Complete/Abandon/Defer/DeadLetter should throw InvalidOperationException()
+            var queueClient = QueueClient.CreateFromConnectionString(
+                TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName),
+                ReceiveMode.ReceiveAndDelete);
+
+            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+            var message = await queueClient.ReceiveAsync();
+            Assert.NotNull((object)message);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.CompleteAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.AbandonAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.DeferAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.DeadLetterAsync());
+
+            // Create a PeekLock queueClient and do rest of the operations
+            // Send a Message, Receive/ Abandon and Complete it using BrokeredMessage methods
+            queueClient = QueueClient.CreateFromConnectionString(
+                TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName),
+                ReceiveMode.ReceiveAndDelete);
+
+            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+            message = await queueClient.ReceiveAsync();
+            Assert.NotNull((object)message);
+            await message.AbandonAsync();
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
+            message = await queueClient.ReceiveAsync();
+            await message.CompleteAsync();
+
+            // Send a Message, Receive / DeadLetter using BrokeredMessage methods
+            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+            message = await queueClient.ReceiveAsync();
+            await message.DeadLetterAsync();
+
+            var builder = new ServiceBusConnectionStringBuilder(TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName));
+            builder.EntityPath = EntityNameHelper.FormatDeadLetterPath(queueClient.QueueName);
+            QueueClient deadLetterQueueClient = QueueClient.CreateFromConnectionString(builder.ToString());
+            message = await deadLetterQueueClient.ReceiveAsync();
+            await message.CompleteAsync();
+
+            // Send a Message, Receive/Defer using BrokeredMessage methods
+            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+            message = await queueClient.ReceiveAsync();
+            long deferredSequenceNumber = message.SequenceNumber;
+            await message.DeferAsync();
+
+            var deferredMessage = await queueClient.ReceiveBySequenceNumberAsync(deferredSequenceNumber);
+            await deferredMessage.CompleteAsync();
+
+            queueClient.Close();
+        }
+
         public class When_BrokeredMessage_message_id_generator_is_not_specified
         {
             [Fact]
-            public void Message_should_have_MessageId_set()
+            [DisplayTestMethodName]
+            void Message_should_have_MessageId_set()
             {
                 var message = new BrokeredMessage();
 
@@ -22,7 +80,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         public class When_BrokeredMessage_id_generator_throws
         {
             [Fact]
-            public void Should_throw_with_original_exception_included()
+            [DisplayTestMethodName]
+            void Should_throw_with_original_exception_included()
             {
                 var exceptionToThrow = new Exception("boom!");
                 Func<string> idGenerator = () =>
@@ -41,7 +100,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         public class When_BrokeredMessage_message_id_generator_is_specified
         {
             [Fact]
-            public void Message_should_have_MessageId_set()
+            [DisplayTestMethodName]
+            void Message_should_have_MessageId_set()
             {
                 var seed = 1;
                 BrokeredMessage.SetMessageIdGenerator(() => $"id-{seed++}");

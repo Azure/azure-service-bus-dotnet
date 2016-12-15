@@ -8,33 +8,25 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus.Primitives;
     using Xunit;
-    using Xunit.Abstractions;
 
-    public class TopicClientTests : SenderReceiverClientTestBase
+    public sealed class TopicClientTests : SenderReceiverClientTestBase
     {
-        public TopicClientTests(ITestOutputHelper output)
-            : base(output)
+        public static IEnumerable<object> TestPermutations => new object[]
         {
-        }
-
-        public static IEnumerable<object[]> EnvironmentVariablesData => new[]
-        {
-            new object[] { "NONPARTITIONEDTOPICCLIENTCONNECTIONSTRING", "SUBSCRIPTIONNAME" },
-            new object[] { "PARTITIONEDTOPICCLIENTCONNECTIONSTRING", "SUBSCRIPTIONNAME" }
+            new object[] { Constants.NonPartitionedTopicName },
+            new object[] { Constants.PartitionedTopicName }
         };
 
-        protected string ConnectionString { get; set; }
-
-        protected string SubscriptionName { get; set; }
+        string SubscriptionName => Constants.SubscriptionName;
 
         [Theory]
-        [MemberData("EnvironmentVariablesData")]
-        public async Task PeekLockTest(string connectionStringEnvVar, string subscriptionEnvVar, int messageCount = 10)
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        async Task PeekLockTest(string topicName, int messageCount = 10)
         {
-            this.AssignConnectionStringAndSubscription(connectionStringEnvVar, subscriptionEnvVar);
-
-            var topicClient = TopicClient.CreateFromConnectionString(this.ConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(this.ConnectionString, this.SubscriptionName);
+            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
+            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
+            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName);
             try
             {
                 await this.PeekLockTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
@@ -47,13 +39,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Theory]
-        [MemberData("EnvironmentVariablesData")]
-        public async Task TopicClientReceiveDeleteTestCase(string connectionStringEnvVar, string subscriptionEnvVar, int messageCount = 10)
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        async Task TopicClientReceiveDeleteTestCase(string topicName, int messageCount = 10)
         {
-            this.AssignConnectionStringAndSubscription(connectionStringEnvVar, subscriptionEnvVar);
-
-            var topicClient = TopicClient.CreateFromConnectionString(this.ConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(this.ConnectionString, this.SubscriptionName, ReceiveMode.ReceiveAndDelete);
+            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
+            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
+            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName, ReceiveMode.ReceiveAndDelete);
             try
             {
                 await this.ReceiveDeleteTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
@@ -66,13 +58,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Theory]
-        [MemberData("EnvironmentVariablesData")]
-        public async Task TopicClientPeekLockWithAbandonTestCase(string connectionStringEnvVar, string subscriptionEnvVar, int messageCount = 10)
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        async Task TopicClientPeekLockWithAbandonTestCase(string topicName, int messageCount = 10)
         {
-            this.AssignConnectionStringAndSubscription(connectionStringEnvVar, subscriptionEnvVar);
-
-            var topicClient = TopicClient.CreateFromConnectionString(this.ConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(this.ConnectionString, this.SubscriptionName);
+            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
+            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
+            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName);
             try
             {
                 await this.PeekLockWithAbandonTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
@@ -85,18 +77,18 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Theory]
-        [MemberData("EnvironmentVariablesData")]
-        public async Task TopicClientPeekLockWithDeadLetterTestCase(string connectionStringEnvVar, string subscriptionEnvVar, int messageCount = 10)
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        async Task TopicClientPeekLockWithDeadLetterTestCase(string topicName, int messageCount = 10)
         {
-            this.AssignConnectionStringAndSubscription(connectionStringEnvVar, subscriptionEnvVar);
-
-            var topicClient = TopicClient.CreateFromConnectionString(this.ConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(this.ConnectionString, this.SubscriptionName);
+            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
+            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
+            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName);
 
             // Create DLQ Client To Receive DeadLetteredMessages
-            ServiceBusConnectionStringBuilder builder = new ServiceBusConnectionStringBuilder(this.ConnectionString);
-            string subscriptionDeadletterPath = EntityNameHelper.FormatDeadLetterPath(this.SubscriptionName);
-            SubscriptionClient deadLetterSubscriptionClient = SubscriptionClient.CreateFromConnectionString(this.ConnectionString, subscriptionDeadletterPath);
+            var builder = new ServiceBusConnectionStringBuilder(TestUtility.GetEntityConnectionString(topicName));
+            var subscriptionDeadletterPath = EntityNameHelper.FormatDeadLetterPath(this.SubscriptionName);
+            var deadLetterSubscriptionClient = SubscriptionClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(topicName), subscriptionDeadletterPath);
 
             try
             {
@@ -110,13 +102,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Theory]
-        [MemberData("EnvironmentVariablesData")]
-        public async Task TopicClientPeekLockDeferTestCase(string connectionStringEnvVar, string subscriptionEnvVar, int messageCount = 10)
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        async Task TopicClientPeekLockDeferTestCase(string topicName, int messageCount = 10)
         {
-            this.AssignConnectionStringAndSubscription(connectionStringEnvVar, subscriptionEnvVar);
-
-            var topicClient = TopicClient.CreateFromConnectionString(this.ConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(this.ConnectionString, this.SubscriptionName);
+            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
+            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
+            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName);
             try
             {
                 await this.PeekLockDeferTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
@@ -129,13 +121,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Theory]
-        [MemberData("EnvironmentVariablesData")]
-        public async Task TopicClientRenewLockTestCase(string connectionStringEnvVar, string subscriptionEnvVar, int messageCount = 1)
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        async Task TopicClientRenewLockTestCase(string topicName, int messageCount = 10)
         {
-            this.AssignConnectionStringAndSubscription(connectionStringEnvVar, subscriptionEnvVar);
-
-            var topicClient = TopicClient.CreateFromConnectionString(this.ConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(this.ConnectionString, this.SubscriptionName);
+            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
+            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
+            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName);
             try
             {
                 await this.RenewLockTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
@@ -144,22 +136,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 await subscriptionClient.CloseAsync();
                 await topicClient.CloseAsync();
-            }
-        }
-
-        private void AssignConnectionStringAndSubscription(string connectionStringEnvVar, string subscriptionEnvVar)
-        {
-            this.ConnectionString = Environment.GetEnvironmentVariable(connectionStringEnvVar);
-            this.SubscriptionName = Environment.GetEnvironmentVariable(subscriptionEnvVar);
-
-            if (string.IsNullOrWhiteSpace(this.ConnectionString))
-            {
-                throw new InvalidOperationException($"'{connectionStringEnvVar}' environment variable was not found!");
-            }
-
-            if (string.IsNullOrWhiteSpace(this.SubscriptionName))
-            {
-                throw new InvalidOperationException($"'{connectionStringEnvVar}' environment variable was not found!");
             }
         }
     }
