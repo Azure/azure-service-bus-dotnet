@@ -52,7 +52,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                queueClient.Close();
+                await queueClient.CloseAsync();
             }
         }
 
@@ -75,7 +75,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log($"Received Message: {message.MessageId} from Session: {sessionReceiver.SessionId}");
                 Assert.True(message.MessageId == messageId);
 
-                string sessionStateString = "Received Message From Session!";
+                var sessionStateString = "Received Message From Session!";
                 var sessionState = new MemoryStream(Encoding.UTF8.GetBytes(sessionStateString));
                 await sessionReceiver.SetStateAsync(sessionState);
                 TestUtility.Log($"Set Session State: {sessionStateString} for Session: {sessionReceiver.SessionId}");
@@ -109,7 +109,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                queueClient.Close();
+                await queueClient.CloseAsync();
             }
         }
 
@@ -154,7 +154,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                queueClient.Close();
+                await queueClient.CloseAsync();
             }
         }
 

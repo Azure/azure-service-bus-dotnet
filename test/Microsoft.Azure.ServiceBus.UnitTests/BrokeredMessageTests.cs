@@ -62,7 +62,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var deferredMessage = await queueClient.ReceiveBySequenceNumberAsync(deferredSequenceNumber);
             await deferredMessage.CompleteAsync();
 
-            queueClient.Close();
+            await queueClient.CloseAsync();
         }
 
         public class When_BrokeredMessage_message_id_generator_is_not_specified

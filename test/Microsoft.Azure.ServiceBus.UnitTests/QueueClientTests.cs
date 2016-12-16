@@ -29,7 +29,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                queueClient.Close();
+                await queueClient.CloseAsync();
             }
         }
 
@@ -45,7 +45,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                queueClient.Close();
+                await queueClient.CloseAsync();
             }
         }
 
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                queueClient.Close();
+                await queueClient.CloseAsync();
             }
         }
 
@@ -83,8 +83,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                deadLetterQueueClient.Close();
-                queueClient.Close();
+                await deadLetterQueueClient.CloseAsync();
+                await queueClient.CloseAsync();
             }
         }
 
@@ -100,7 +100,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                queueClient.Close();
+                await queueClient.CloseAsync();
             }
         }
 
@@ -116,7 +116,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                queueClient.Close();
+                await queueClient.CloseAsync();
             }
         }
     }
