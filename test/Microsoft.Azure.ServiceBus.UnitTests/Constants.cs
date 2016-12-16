@@ -9,16 +9,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         internal const string ConnectionStringEnvironmentVariable = "SERVICEBUSCONNECTIONSTRING";
 
-        internal const string PartitionedQueueName = "partitionedqueue";
-        internal const string NonPartitionedQueueName = "nonpartitionedqueue";
+        internal const string PartitionedQueueName = "partitioned-queue";
+        internal const string NonPartitionedQueueName = "non-partitioned-queue";
 
-        internal const string SessionPartitionedQueueName = "partitionedsessionqueue";
-        internal const string SessionNonPartitionedQueueName = "nonpartitionedsessionqueue";
+        internal const string SessionPartitionedQueueName = "partitioned-session-queue";
+        internal const string SessionNonPartitionedQueueName = "non-partitioned-session-queue";
 
-        internal const string PartitionedTopicName = "partitionedtopic";
-        internal const string NonPartitionedTopicName = "nonpartitionedtopic";
+        internal const string PartitionedTopicName = "partitioned-topic";
+        internal const string NonPartitionedTopicName = "non-partitioned-topic";
 
         internal const string SubscriptionName = "subscription";
-        internal const string SessionSubscriptionName = "sessionsubscription";
+        internal const string SessionSubscriptionName = "session-subscription";
     }
 }

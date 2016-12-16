@@ -10,14 +10,14 @@
 		}
 	},
 	"variables": {
-		"partitionedQueueName": "partitionedqueue",
-		"nonPartitionedQueueName": "nonpartitionedqueue",
-		"sessionPartitionedQueueName": "partitionedsessionqueue",
-		"sessionNonPartitionedQueueName": "nonpartitionedsessionqueue",
-		"partitionedTopicName": "partitionedtopic",
-		"nonPartitionedTopicName": "nonpartitionedtopic",
+		"partitionedQueueName": "partitioned-queue",
+		"nonPartitionedQueueName": "non-partitioned-queue",
+		"sessionPartitionedQueueName": "partitioned-session-queue",
+		"sessionNonPartitionedQueueName": "non-partitioned-session-queue",
+		"partitionedTopicName": "partitioned-topic",
+		"nonPartitionedTopicName": "non-partitioned-topic",
 		"subscriptionName": "subscription",
-		"sessionSubscriptionName": "sessionsubscription",
+		"sessionSubscriptionName": "session-subscription",
 
 		"location": "[resourceGroup().location]",
 		"sbVersion": "2015-08-01",
