@@ -12,10 +12,24 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     class TestUtility
     {
+        static readonly string ConnectionString;
+
+        static TestUtility()
+        {
+            var envConnectionString = Environment.GetEnvironmentVariable(Constants.ConnectionStringEnvironmentVariable);
+            if (string.IsNullOrWhiteSpace(envConnectionString))
+            {
+                throw new InvalidOperationException($"'{nameof(Constants.ConnectionStringEnvironmentVariable)}' environment variable was not found!");
+            }
+
+            // Validate the connection string
+            TestUtility.ConnectionString = new ServiceBusConnectionStringBuilder(envConnectionString).ToString();
+        }
+
         internal static string GetEntityConnectionString(string entityName)
         {
-            var connectionString = LoadConnectionString();
-            var connectionStringBuilder = new ServiceBusConnectionStringBuilder(connectionString)
+            // If the entity name is populated in the connection string, it will be overridden.
+            var connectionStringBuilder = new ServiceBusConnectionStringBuilder(TestUtility.ConnectionString)
             {
                 EntityPath = entityName
             };
@@ -36,10 +50,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await Task.FromResult(false);
             }
 
-            List<BrokeredMessage> messagesToSend = new List<BrokeredMessage>();
+            var messagesToSend = new List<BrokeredMessage>();
             for (int i = 0; i < messageCount; i++)
             {
-                BrokeredMessage message = new BrokeredMessage("test" + i);
+                var message = new BrokeredMessage("test" + i);
                 message.Label = "test" + i;
                 messagesToSend.Add(message);
             }
@@ -51,7 +65,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         internal static async Task<IEnumerable<BrokeredMessage>> ReceiveMessagesAsync(MessageReceiver messageReceiver, int messageCount)
         {
             int receiveAttempts = 0;
-            List<BrokeredMessage> messagesToReturn = new List<BrokeredMessage>();
+            var messagesToReturn = new List<BrokeredMessage>();
 
             while (receiveAttempts++ < Constants.MaxAttemptsCount && messagesToReturn.Count < messageCount)
             {
@@ -88,18 +102,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             await messageReceiver.DeferAsync(messages.Select(message => message.LockToken));
             Log($"Deferred {messages.Count()} messages");
-        }
-
-        static string LoadConnectionString()
-        {
-            var envConnectionString = Environment.GetEnvironmentVariable(Constants.ConnectionStringEnvironmentVariable);
-            if (string.IsNullOrWhiteSpace(envConnectionString))
-            {
-                throw new InvalidOperationException($"'{nameof(Constants.ConnectionStringEnvironmentVariable)}' environment variable was not found!");
-            }
-
-            // Validate the connection string
-            return new ServiceBusConnectionStringBuilder(envConnectionString).ToString();
         }
     }
 }
