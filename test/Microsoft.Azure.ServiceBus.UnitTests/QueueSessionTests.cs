@@ -69,7 +69,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await queueClient.SendAsync(new BrokeredMessage() { MessageId = messageId, SessionId = sessionId });
                 TestUtility.Log($"Sent Message: {messageId} to Session: {sessionId}");
 
-                MessageSession sessionReceiver = await queueClient.AcceptMessageSessionAsync(sessionId);
+                var sessionReceiver = await queueClient.AcceptMessageSessionAsync(sessionId);
                 Assert.NotNull((object)sessionReceiver);
                 var message = await sessionReceiver.ReceiveAsync();
                 TestUtility.Log($"Received Message: {message.MessageId} from Session: {sessionReceiver.SessionId}");
@@ -80,10 +80,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await sessionReceiver.SetStateAsync(sessionState);
                 TestUtility.Log($"Set Session State: {sessionStateString} for Session: {sessionReceiver.SessionId}");
 
-                Stream returnedSessionState = await sessionReceiver.GetStateAsync();
-                using (StreamReader reader = new StreamReader(returnedSessionState, Encoding.UTF8))
+                var returnedSessionState = await sessionReceiver.GetStateAsync();
+                using (var reader = new StreamReader(returnedSessionState, Encoding.UTF8))
                 {
-                    string returnedSessionStateString = reader.ReadToEnd();
+                    var returnedSessionStateString = await reader.ReadToEndAsync();
                     TestUtility.Log($"Get Session State Returned: {returnedSessionStateString} for Session: {sessionReceiver.SessionId}");
                     Assert.Equal(sessionStateString, returnedSessionStateString);
                 }
@@ -98,9 +98,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log($"Set Session State: {sessionStateString} for Session: {sessionReceiver.SessionId}");
 
                 returnedSessionState = await sessionReceiver.GetStateAsync();
-                using (StreamReader reader = new StreamReader(returnedSessionState, Encoding.UTF8))
+                using (var reader = new StreamReader(returnedSessionState, Encoding.UTF8))
                 {
-                    string returnedSessionStateString = reader.ReadToEnd();
+                    var returnedSessionStateString = await reader.ReadToEndAsync();
                     TestUtility.Log($"Get Session State Returned: {returnedSessionStateString} for Session: {sessionReceiver.SessionId}");
                     Assert.Equal(sessionStateString, returnedSessionStateString);
                 }
@@ -126,7 +126,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await queueClient.SendAsync(new BrokeredMessage() { MessageId = messageId, SessionId = sessionId });
                 TestUtility.Log($"Sent Message: {messageId} to Session: {sessionId}");
 
-                MessageSession sessionReceiver = await queueClient.AcceptMessageSessionAsync(sessionId);
+                var sessionReceiver = await queueClient.AcceptMessageSessionAsync(sessionId);
                 Assert.NotNull((object)sessionReceiver);
                 DateTime initialSessionLockedUntilTime = sessionReceiver.LockedUntilUtc;
                 TestUtility.Log($"Session LockedUntilUTC: {initialSessionLockedUntilTime} for Session: {sessionReceiver.SessionId}");
