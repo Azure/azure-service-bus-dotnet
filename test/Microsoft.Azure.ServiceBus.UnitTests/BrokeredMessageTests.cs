@@ -32,7 +32,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             // Send a Message, Receive/ Abandon and Complete it using BrokeredMessage methods
             queueClient = QueueClient.CreateFromConnectionString(
                 TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName),
-                ReceiveMode.ReceiveAndDelete);
+                ReceiveMode.PeekLock);
 
             await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
             message = await queueClient.ReceiveAsync();
@@ -65,55 +65,46 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await queueClient.CloseAsync();
         }
 
-        public class When_BrokeredMessage_message_id_generator_is_not_specified
+        [Fact]
+        [DisplayTestMethodName]
+        void DefaultMessageIdGenerator()
         {
-            [Fact]
-            [DisplayTestMethodName]
-            void Message_should_have_MessageId_set()
-            {
-                var message = new BrokeredMessage();
+            var message = new BrokeredMessage();
 
-                Assert.Null(message.MessageId);
-            }
+            Assert.Null(message.MessageId);
         }
 
-        public class When_BrokeredMessage_id_generator_throws
+        [Fact]
+        [DisplayTestMethodName]
+        void InvalidMessageIdGenerator()
         {
-            [Fact]
-            [DisplayTestMethodName]
-            void Should_throw_with_original_exception_included()
+            var exceptionToThrow = new Exception("boom!");
+            Func<string> idGenerator = () =>
             {
-                var exceptionToThrow = new Exception("boom!");
-                Func<string> idGenerator = () =>
-                {
-                    throw exceptionToThrow;
-                };
-                BrokeredMessage.SetMessageIdGenerator(idGenerator);
+                throw exceptionToThrow;
+            };
+            BrokeredMessage.SetMessageIdGenerator(idGenerator);
 
-                var exception = Assert.Throws<InvalidOperationException>(() => new BrokeredMessage());
-                Assert.Equal(exceptionToThrow, exception.InnerException);
+            var exception = Assert.Throws<InvalidOperationException>(() => new BrokeredMessage());
+            Assert.Equal(exceptionToThrow, exception.InnerException);
 
-                BrokeredMessage.SetMessageIdGenerator(null);
-            }
+            BrokeredMessage.SetMessageIdGenerator(null);
         }
 
-        public class When_BrokeredMessage_message_id_generator_is_specified
+        [Fact]
+        [DisplayTestMethodName]
+        void CustomMessageIdGenerator()
         {
-            [Fact]
-            [DisplayTestMethodName]
-            void Message_should_have_MessageId_set()
-            {
-                var seed = 1;
-                BrokeredMessage.SetMessageIdGenerator(() => $"id-{seed++}");
+            var seed = 1;
+            BrokeredMessage.SetMessageIdGenerator(() => $"id-{seed++}");
 
-                var message1 = new BrokeredMessage();
-                var message2 = new BrokeredMessage();
+            var message1 = new BrokeredMessage();
+            var message2 = new BrokeredMessage();
 
-                Assert.Equal("id-1", message1.MessageId);
-                Assert.Equal("id-2", message2.MessageId);
+            Assert.Equal("id-1", message1.MessageId);
+            Assert.Equal("id-2", message2.MessageId);
 
-                BrokeredMessage.SetMessageIdGenerator(null);
-            }
+            BrokeredMessage.SetMessageIdGenerator(null);
         }
     }
 }
