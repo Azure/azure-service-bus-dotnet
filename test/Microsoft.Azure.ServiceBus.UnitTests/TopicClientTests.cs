@@ -98,6 +98,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 await deadLetterSubscriptionClient.CloseAsync();
                 await topicClient.CloseAsync();
+                await subscriptionClient.CloseAsync();
             }
         }
 
