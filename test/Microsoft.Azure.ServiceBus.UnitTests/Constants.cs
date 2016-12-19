@@ -7,7 +7,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         internal const int MaxAttemptsCount = 5;
 
-        internal const string ConnectionStringEnvironmentVariable = "SERVICEBUSCONNECTIONSTRING";
+        internal const string ConnectionStringEnvironmentVariable = "azure-service-bus-dotnet/connectionstring";
 
         internal const string PartitionedQueueName = "partitioned-queue";
         internal const string NonPartitionedQueueName = "non-partitioned-queue";
