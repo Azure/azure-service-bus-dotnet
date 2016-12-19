@@ -135,7 +135,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 Assert.True(message.MessageId == messageId);
 
                 TestUtility.Log("Sleeping 10 seconds...");
-                Thread.Sleep(TimeSpan.FromSeconds(10));
+                await Task.Delay(TimeSpan.FromSeconds(10));
 
                 await sessionReceiver.RenewLockAsync();
                 DateTime firstLockedUntilUtcTime = sessionReceiver.LockedUntilUtc;
@@ -143,7 +143,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 Assert.True(firstLockedUntilUtcTime >= initialSessionLockedUntilTime + TimeSpan.FromSeconds(10));
 
                 TestUtility.Log("Sleeping 5 seconds...");
-                Thread.Sleep(TimeSpan.FromSeconds(5));
+                await Task.Delay(TimeSpan.FromSeconds(5));
 
                 await sessionReceiver.RenewLockAsync();
                 TestUtility.Log($"After Second Renew Session LockedUntilUTC: {sessionReceiver.LockedUntilUtc} for Session: {sessionReceiver.SessionId}");
