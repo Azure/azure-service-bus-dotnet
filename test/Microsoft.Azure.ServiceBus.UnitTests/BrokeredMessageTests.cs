@@ -49,14 +49,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             var builder = new ServiceBusConnectionStringBuilder(TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName));
             builder.EntityPath = EntityNameHelper.FormatDeadLetterPath(queueClient.QueueName);
-            QueueClient deadLetterQueueClient = QueueClient.CreateFromConnectionString(builder.ToString());
+            var deadLetterQueueClient = QueueClient.CreateFromConnectionString(builder.ToString());
             message = await deadLetterQueueClient.ReceiveAsync();
             await message.CompleteAsync();
 
             // Send a Message, Receive/Defer using BrokeredMessage methods
             await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
             message = await queueClient.ReceiveAsync();
-            long deferredSequenceNumber = message.SequenceNumber;
+            var deferredSequenceNumber = message.SequenceNumber;
             await message.DeferAsync();
 
             var deferredMessage = await queueClient.ReceiveBySequenceNumberAsync(deferredSequenceNumber);

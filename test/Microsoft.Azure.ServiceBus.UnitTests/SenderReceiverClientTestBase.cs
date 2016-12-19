@@ -5,11 +5,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
     using Xunit;
 
     public abstract class SenderReceiverClientTestBase
@@ -61,7 +58,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             // Receive 5 messages and Deadletter them
             int deadLetterMessageCount = 5;
-            IEnumerable<BrokeredMessage> receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, deadLetterMessageCount);
+            var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, deadLetterMessageCount);
             Assert.True(receivedMessages.Count() == deadLetterMessageCount);
 
             await TestUtility.DeadLetterMessagesAsync(messageReceiver, receivedMessages);
@@ -87,7 +84,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             // Receive 5 messages And Defer them
             int deferMessagesCount = 5;
-            IEnumerable<BrokeredMessage> receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, deferMessagesCount);
+            var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, deferMessagesCount);
             Assert.True(receivedMessages.Count() == deferMessagesCount);
             var sequenceNumbers = receivedMessages.Select(receivedMessage => receivedMessage.SequenceNumber);
             await TestUtility.DeferMessagesAsync(messageReceiver, receivedMessages);
@@ -117,7 +114,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
 
             // Receive messages
-            IEnumerable<BrokeredMessage> receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
+            var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
 
             BrokeredMessage message = receivedMessages.First();
             DateTime firstLockedUntilUtcTime = message.LockedUntilUtc;
