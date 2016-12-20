@@ -28,13 +28,13 @@ To get started receiving messages with Service Bus refer to [Get started receivi
 
 In order to run the unit tests, you will need to do the following:
 
-1. Deploy the ARM template located at [/templates/azuredeploy.json](/templates/azuredeploy.json) or click the following button:
+1. Deploy the ARM template located at [/templates/azuredeploy.json](/templates/azuredeploy.json), which will provision the required entities for the unit tests, or click the following button:
 
     <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-service-bus-dotnet%2Fmaster%2Ftemplates%2Fazuredeploy.json" target="_blank">
         <img src="http://azuredeploy.net/deploybutton.png"/>
     </a>
 
-1. Add an Environment Variable named `azure-service-bus-dotnet/connectionstring` and set the value as the connection string of the newly created namespace. **Please note that if you are using Visual Studio, you must restart Visual Studio in order to use new variables.**
+1. Add an Environment Variable named `azure-service-bus-dotnet/connectionstring` and set the value as the connection string of the newly created namespace. **Please note that if you are using Visual Studio, you must restart Visual Studio in order to use new Environment Variables.**
 
 ## How to provide feedback
 
