@@ -75,5 +75,5 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
   * Request/Response features:
       * Add/Remove Rule
       * Browse messages and sessions
-  * Scheduled messages specific API (This can be done today through the Queue/Topic client, but this item is to add specific API's for scheduled messages)
+  * Scheduled messages specific API (Scheduling of messages can be done today through the Queue/Topic client, but this item is to add specific API's for scheduled messages)
   * OnMessage/OnSession handlers
