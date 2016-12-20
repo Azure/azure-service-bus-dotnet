@@ -20,21 +20,22 @@ namespace ReceiveSample
 
         private static async Task MainAsync(string[] args)
         {
-            // Creates an ServiceBusConnectionStringBuilder object from a the connection string, and sets the EntityPath.
-            // Typically the connection string should have the Entity Path in it, but for the sake of this simple scenario
-            // we are using the connection string from the namespace.
+            // Creates a ServiceBusConnectionStringBuilder object from the connection string, and sets the EntityPath.
             var connectionStringBuilder = new ServiceBusConnectionStringBuilder(ServiceBusConnectionString)
             {
                 EntityPath = QueueName
             };
 
+            // Initializes the static QueueClient variable that will be used in the ReceiveMessages method.
             queueClient = QueueClient.CreateFromConnectionString(connectionStringBuilder.ToString());
 
             await ReceiveMessages();
 
+            // Close the client after the ReceiveMessages method has exited.
             await queueClient.CloseAsync();
         }
 
+        // Receives messages from the queue in a loop
         private static async Task ReceiveMessages()
         {
             Console.WriteLine("Press ctrl-c to exit receive loop.");
@@ -42,8 +43,13 @@ namespace ReceiveSample
             {
                 try
                 {
+                    // Receive the next message from the queue
                     var message = await queueClient.ReceiveAsync();
+                    
+                    // Write the message body to the console
                     Console.WriteLine($"Received message: {message.GetBody<string>()}");
+
+                    // Complete the messgage so that it is not received again
                     await message.CompleteAsync();
                 }
                 catch (Exception exception)
@@ -51,6 +57,7 @@ namespace ReceiveSample
                     Console.WriteLine($"{DateTime.Now} > Exception: {exception.Message}");
                 }
 
+                // Delay by 10 milliseconds so that the console can keep up
                 await Task.Delay(10);
             }
         }
