@@ -30,7 +30,7 @@ namespace SendSample
 
             queueClient = QueueClient.CreateFromConnectionString(connectionStringBuilder.ToString());
 
-            await SendMessagesToQueue(100);
+            await SendMessagesToQueue(10);
 
             await queueClient.CloseAsync();
 

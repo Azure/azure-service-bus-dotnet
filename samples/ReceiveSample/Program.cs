@@ -33,9 +33,6 @@ namespace ReceiveSample
             await ReceiveMessages();
 
             await queueClient.CloseAsync();
-
-            Console.WriteLine("Press any key to exit.");
-            Console.ReadLine();
         }
 
         private static async Task ReceiveMessages()
