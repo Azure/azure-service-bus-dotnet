@@ -10,7 +10,7 @@ This is the next generation Service Bus .NET client library that focuses on Queu
 * [Event Hubs](https://github.com/azure/azure-event-hubs-dotnet)
 * [Relay](https://github.com/azure/azure-relay-dotnet)
  
-For information on the current set of implemented features and features to come, see our [Road map](#Roadmap)
+For information on the current set of implemented features and features to come, see our [Road map](#road-map)
 
 Azure Service Bus Messaging is an asynchronous messaging cloud platform that enables you to send messages between decoupled systems. Microsoft offers this feature as a service, which means that you do not need to host any of your own hardware in order to use it.
 
@@ -28,13 +28,13 @@ To get started receiving messages with Service Bus refer to [Get started receivi
 
 In order to run the unit tests, you will need to do the following:
 
-1. Deploy the ARM template located at [/templates/azuredeploy.json](/templates/azuredeploy.json) or click the following button:
+1. Deploy the ARM template located at [/templates/azuredeploy.json](/templates/azuredeploy.json), which will provision the required entities for the unit tests, or click the following button:
 
     <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-service-bus-dotnet%2Fmaster%2Ftemplates%2Fazuredeploy.json" target="_blank">
         <img src="http://azuredeploy.net/deploybutton.png"/>
     </a>
 
-1. Add an Environment Variable named `azure-service-bus-dotnet/connectionstring` and set the value as the connection string of the newly created namespace. **Please note that if you are using Visual Studio, you must restart Visual Studio in order to use new variables.**
+1. Add an Environment Variable named `azure-service-bus-dotnet/connectionstring` and set the value as the connection string of the newly created namespace. **Please note that if you are using Visual Studio, you must restart Visual Studio in order to use new Environment Variables.**
 
 ## How to provide feedback
 
@@ -46,12 +46,13 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 ## Road map
 
 - [x] Sprint 1: **Complete**
-All runtime operations for queues (not topics / subscriptions)
-  * Send
-  * Receive/Peeklock (without receive by sequence number)
-  * Abandon
-  * Deadletter
-  * Defer
+
+  All runtime operations for queues (not topics / subscriptions)
+    * Send
+    * Receive/Peeklock (without receive by sequence number)
+    * Abandon
+    * Deadletter
+    * Defer
   
 - [x] Sprint 2: **Complete**
   * RenewLock (Request/Response)
@@ -66,13 +67,13 @@ All runtime operations for queues (not topics / subscriptions)
     * Session Receive/ReceiveBatch
 	
 - [x] Sprint 4: **Complete**
-  * Add major error conditions (ex. preventing all operations that are not supported, for Ex Transaction scenarios, etc)
   * Retry policy
-  * Sessions
   * Receive by sequence number
 
 - [ ] Sprint 5: Early 2017
-	- Request/Response features:
+  * Add major error conditions (ex. preventing all operations that are not supported, for Ex Transaction scenarios, etc)
+  * Request/Response features:
       * Add/Remove Rule
-      * Scheduled messages
       * Browse messages and sessions
+  * Scheduled messages specific API (Scheduling of messages can be done today through the Queue/Topic client, but this item is to add specific API's for scheduled messages)
+  * OnMessage/OnSession handlers
