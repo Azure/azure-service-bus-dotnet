@@ -1,24 +1,4 @@
----
-title: Get started with Service Bus queues | Microsoft Docs
-description: How to write a C# console application for Service Bus messaging
-services: service-bus-messaging
-documentationcenter: .net
-author: jtaubensee
-manager: timlt
-editor: ''
-
-ms.assetid: 68a34c00-5600-43f6-bbcc-fea599d500da
-ms.service: service-bus-messaging
-ms.devlang: tbd
-ms.topic: hero-article
-ms.tgt_pltfrm: dotnet
-ms.workload: na
-ms.date: 11/30/2016
-ms.author: jotaub;sethm
-
----
-# Get started with Service Bus queues
-[!INCLUDE [service-bus-selector-queues](../../includes/service-bus-selector-queues.md)]
+# Get started with sending to Service Bus queues
 
 ## What will be accomplished
 In this tutorial, we will complete the following:
@@ -29,146 +9,105 @@ In this tutorial, we will complete the following:
 4. Write a console application to receive messages.
 
 ## Prerequisites
-1. [Visual Studio 2013 or Visual Studio 2015](http://www.visualstudio.com). The examples in this tutorial use Visual Studio 2015.
+1. [.NET Core](https://www.microsoft.com/net/core)
 2. An Azure subscription.
+3. [A Service Bus namespace](https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-create-namespace-portal) 
+4. [A Service Bus queue] (https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dotnet-get-started-with-queues#2-create-a-queue-using-the-azure-portal)
 
-[!INCLUDE [create-account-note](../../includes/create-account-note.md)]
-
-## 1. Create a namespace using the Azure portal
-If you already have a Service Bus namespace created, jump to the [Create a queue using the Azure portal](#2-create-a-queue-using-the-azure-portal) section.
-
-[!INCLUDE [service-bus-create-namespace-portal](../../includes/service-bus-create-namespace-portal.md)]
-
-## 2. Create a queue using the Azure portal
-If you already have a Service Bus queue created, jump to the [Send messages to the queue](#3-send-messages-to-the-queue) section.
-
-[!INCLUDE [service-bus-create-queue-portal](../../includes/service-bus-create-queue-portal.md)]
-
-## 3. Send messages to the queue
-To send messages to the queue, we will write a C# console application using Visual Studio.
+## 1. Send messages to the queue
+To send messages to the queue, we will write a C# console application.
 
 ### Create a console application
 
-- Launch Visual Studio and create a new Console application.
+- Create a new .NET Core application. Check out [this link](https://docs.microsoft.com/en-us/dotnet/articles/core/getting-started) with help to create a new application on your operating system.
 
-### Add the Service Bus NuGet package
-1. Right-click the newly created project and select **Manage NuGet Packages**.
-2. Click the **Browse** tab, then search for “Microsoft Azure Service Bus” and select the **Microsoft Azure Service Bus** item. Click **Install** to complete the installation, then close this dialog box.
-   
-    ![Select a NuGet package][nuget-pkg]
+## Add the Service Bus NuGet client reference
+
+1. Add the following to your project.json
+
+    ```json
+        "Microsoft.Azure.ServiceBus": {
+            "target": "project"
+        }
+    ```
 
 ### Write some code to send a message to the queue
 1. Add the following using statement to the top of the Program.cs file.
    
     ```csharp
-    using Microsoft.ServiceBus.Messaging;
+    using Microsoft.Azure.ServiceBus;
     ```
-2. Add the following code to the `Main` method, set the **connectionString** variable as the connection string that was obtained when creating the namespace, and set **queueName** as the queue name that used when creating the queue.
-   
+1. Add the following private variables to the `Program` class, and replace the placeholder values:
     ```csharp
-    var connectionString = "<Your connection string>";
-    var queueName = "<Your queue name>";
-   
-    var client = QueueClient.CreateFromConnectionString(connectionString, queueName);
-    var message = new BrokeredMessage("This is a test message!");
-    client.Send(message);
+    private static QueueClient queueClient;
+    private const string ServiceBusConnectionString = "{Service Bus connection string}";
+    private const string QueueName = "{Queue path/name}";
     ```
-   
-    Here is what your Program.cs should look like.
-   
+
+1. Create a new method called `SendMessagesToQueue` with the following code:
+
     ```csharp
-    using System;
-    using Microsoft.ServiceBus.Messaging;
-   
-    namespace GettingStartedWithQueues
+    // Creates a Queue client and sends 10 messages to the queue.
+    private static async Task SendMessagesToQueue(int numMessagesToSend)
     {
-        class Program
+        for (var i = 0; i < numMessagesToSend; i++)
         {
-            static void Main(string[] args)
+            try
             {
-                var connectionString = "<Your connection string>";
-                var queueName = "<Your queue name>";
-   
-                var client = QueueClient.CreateFromConnectionString(connectionString, queueName);
-                var message = new BrokeredMessage("This is a test message!");
-   
-                client.Send(message);
+                // Create a new brokered message to send to the queue
+                var message = new BrokeredMessage($"Message {i}");
+
+                // Write the body of the message to the console
+                Console.WriteLine($"Sending message: {message.GetBody<string>()}");
+
+                // Send the message to the queue
+                await queueClient.SendAsync(message);
             }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"{DateTime.Now} > Exception: {exception.Message}");
+            }
+
+            // Delay by 10 milliseconds so that the console can keep up
+            await Task.Delay(10);
         }
+
+        Console.WriteLine($"{numMessagesToSend} messages sent.");
     }
     ```
-3. Run the program, and check the Azure portal. Click the name of your queue in the namespace **Overview** blade. Notice that the **Active message count** value should now be 1.
-   
-      ![Message count][queue-message]
 
-## 4. Receive messages from the queue
-1. Create a new console application and add a reference to the Service Bus NuGet package, similar to the previous sending application.
-2. Add the following `using` statement to the top of the Program.cs file.
+1. Create a new method called `MainAsync` with the following code:
    
     ```csharp
-    using Microsoft.ServiceBus.Messaging;
-    ```
-3. Add the following code to the `Main` method, set the **connectionString** variable as the connection string that was obtained when creating the namespace, and set **queueName** as the queue name that you used when creating the queue.
-   
-    ```csharp
-    var connectionString = "";
-    var queueName = "samplequeue";
-   
-    var client = QueueClient.CreateFromConnectionString(connectionString, queueName);
-   
-    client.OnMessage(message =>
+    private static async Task MainAsync(string[] args)
     {
-      Console.WriteLine(String.Format("Message body: {0}", message.GetBody<String>()));
-      Console.WriteLine(String.Format("Message id: {0}", message.MessageId));
-    });
-   
-    Console.ReadLine();
-    ```
-   
-    Here is what your Program.cs file should look like:
-   
-    ```csharp
-    using System;
-    using Microsoft.ServiceBus.Messaging;
-   
-    namespace GettingStartedWithQueues
-    {
-      class Program
-      {
-        static void Main(string[] args)
+        // Creates a ServiceBusConnectionStringBuilder object from the connection string, and sets the EntityPath.
+        var connectionStringBuilder = new ServiceBusConnectionStringBuilder(ServiceBusConnectionString)
         {
-          var connectionString = "";
-          var queueName = "samplequeue";
-   
-          var client = QueueClient.CreateFromConnectionString(connectionString, queueName);
-   
-          client.OnMessage(message =>
-          {
-            Console.WriteLine(String.Format("Message body: {0}", message.GetBody<String>()));
-            Console.WriteLine(String.Format("Message id: {0}", message.MessageId));
-          });
-   
-          Console.ReadLine();
-        }
-      }
+            EntityPath = QueueName
+        };
+
+        // Initializes the static QueueClient variable that will be used in the ReceiveMessages method.
+        queueClient = QueueClient.CreateFromConnectionString(connectionStringBuilder.ToString());
+
+        await SendMessagesToQueue(10);
+
+        // Close the client after the ReceiveMessages method has exited.
+        await queueClient.CloseAsync();
+
+        Console.WriteLine("Press any key to exit.");
+        Console.ReadLine();
     }
     ```
-4. Run the program, and check the portal. Notice that the **Queue Length** value should now be 0.
-   
-    ![Queue length][queue-message-receive]
 
-Congratulations! You have now created a queue, sent a message, and received a message.
+1. Add the following code to the `Main` method:
+    ```csharp
+    MainAsync(args).GetAwaiter().GetResult();
+    ```
+
+3. Run the program, and check the Azure portal. Click the name of your queue in the namespace **Overview** blade. Notice that the **Active message count** value should now be 10.
+   
+Congratulations! You have now sent messages to a Service Bus queue, using .NET Core.
 
 ## Next steps
-Check out our [GitHub repository with samples](https://github.com/Azure-Samples/azure-servicebus-messaging-samples) that demonstrate some of the more advanced features of Azure Service Bus Messaging.
-
-<!--Image references-->
-
-[nuget-pkg]: ./media/service-bus-dotnet-get-started-with-queues/nuget-package.png
-[queue-message]: ./media/service-bus-dotnet-get-started-with-queues/queue-message.png
-[queue-message-receive]: ./media/service-bus-dotnet-get-started-with-queues/queue-message-receive.png
-
-
-<!--Reference style links - using these makes the source content way more readable than using inline links-->
-
-[github-samples]: https://github.com/Azure-Samples/azure-servicebus-messaging-samples
+  * [Receive messages from a Service Bus queue](./,,/ReceiveSample/readme.md)
