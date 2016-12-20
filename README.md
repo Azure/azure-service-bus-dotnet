@@ -1,4 +1,4 @@
-﻿﻿<p align="center">
+﻿<p align="center">
   <img src="service-bus.png" alt="Microsoft Azure Relay" width="100"/>
 </p>
 
