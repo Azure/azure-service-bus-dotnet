@@ -4,11 +4,15 @@
 
 # Microsoft Azure Service Bus Client for .NET
 
-**Please be aware that this library is currently in active development, and is not yet supported by Microsoft**
+**Please be aware that this library is currently in active development, and is not intended for production**
 
-This is the next generation Service Bus .NET client library that focuses on Queues & Topics. For information on the current set of implemented features and features to come, see our [Road map](#Roadmap)
+This is the next generation Service Bus .NET client library that focuses on Queues & Topics. If you are looking for Event Hubs and Relay clients, follow the below links:
+* [Event Hubs](https://github.com/azure/azure-event-hubs-dotnet)
+* [Relay](https://github.com/azure/azure-relay-dotnet)
+ 
+For information on the current set of implemented features and features to come, see our [Road map](#Roadmap)
 
-Azure Service Bus Messaging is an asynchronous messaging cloud platform that enables you to send data between decoupled systems. Microsoft offers this feature as a service, which means that you do not need to host any of your own hardware in order to use it.
+Azure Service Bus Messaging is an asynchronous messaging cloud platform that enables you to send messages between decoupled systems. Microsoft offers this feature as a service, which means that you do not need to host any of your own hardware in order to use it.
 
 Refer to the [online documentation](https://azure.microsoft.com/services/service-bus/) to learn more about Service Bus.
 
@@ -30,7 +34,7 @@ In order to run the unit tests, you will need to do the following:
         <img src="http://azuredeploy.net/deploybutton.png"/>
     </a>
 
-1. Add an Environment Variable named `azure-service-bus-dotnet/connectionstring` and set the value as the connection string of the newly created namespace.
+1. Add an Environment Variable named `azure-service-bus-dotnet/connectionstring` and set the value as the connection string of the newly created namespace. **Please note that if you are using Visual Studio, you must restart Visual Studio in order to use new variables.**
 
 ## How to provide feedback
 
@@ -41,7 +45,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ## Road map
 
-- [x] Sprint 1:
+- [x] Sprint 1: **Complete**
 All runtime operations for queues (not topics / subscriptions)
   * Send
   * Receive/Peeklock (without receive by sequence number)
@@ -49,25 +53,25 @@ All runtime operations for queues (not topics / subscriptions)
   * Deadletter
   * Defer
   
-- [x] Sprint 2:
+- [x] Sprint 2: **Complete**
   * RenewLock (Request/Response)
   * Batch operation  - Explicit batching only
   * Runtime operation only
   * Linux testing setup/investigation
 
-- [x] Sprint 3:
+- [x] Sprint 3: **Complete**
   * Add topic/subscription support
   * Session support
     * Accept session
     * Session Receive/ReceiveBatch
 	
-- [x] Sprint 4:
+- [x] Sprint 4: **Complete**
   * Add major error conditions (ex. preventing all operations that are not supported, for Ex Transaction scenarios, etc)
   * Retry policy
   * Sessions
   * Receive by sequence number
 
-- [ ] Sprint 5 (Early 2017):
+- [ ] Sprint 5: Early 2017
 	- Request/Response features:
       * Add/Remove Rule
       * Scheduled messages
