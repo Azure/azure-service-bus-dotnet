@@ -1,19 +1,20 @@
-# Get started with receiving from Service Bus queues
+# Get started receiving from Service Bus queues
 
 In order to run the sample in this directory, replace the following bracketed values in the `Program.cs` file.
 
-    ```csharp
-    private const string ServiceBusConnectionString = "{Service Bus connection string}";
-    private const string QueueName = "{Queue path/name}";
-    ```
+```
+private const string ServiceBusConnectionString = "{Service Bus connection string}";
+private const string QueueName = "{Queue path/name}";
+```
 
-Once you replace the above values run the following:
+
+Once you replace the above values run the following from a command prompt:
    
-    ```
-    dotnet restore
-    dotnet build
-    dotnet run
-    ```
+```
+dotnet restore
+dotnet build
+dotnet run
+```
 
 For further information on how to create this sample on your own, follow the rest of the tutorial.
 
@@ -46,7 +47,9 @@ In this tutorial, we will write a console application to receive messages from a
     ```csharp
     using Microsoft.Azure.ServiceBus;
     ```
+
 1. Add the following private variables to the `Program` class, and replace the placeholder values:
+    
     ```csharp
     private static QueueClient queueClient;
     private const string ServiceBusConnectionString = "{Service Bus connection string}";
@@ -106,6 +109,7 @@ In this tutorial, we will write a console application to receive messages from a
     ```
 
 1. Add the following code to the `Main` method:
+    
     ```csharp
     MainAsync(args).GetAwaiter().GetResult();
     ```
