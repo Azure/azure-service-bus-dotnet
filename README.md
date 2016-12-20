@@ -47,12 +47,12 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 - [x] Sprint 1: **Complete**
 
-All runtime operations for queues (not topics / subscriptions)
-  * Send
-  * Receive/Peeklock (without receive by sequence number)
-  * Abandon
-  * Deadletter
-  * Defer
+  All runtime operations for queues (not topics / subscriptions)
+    * Send
+    * Receive/Peeklock (without receive by sequence number)
+    * Abandon
+    * Deadletter
+    * Defer
   
 - [x] Sprint 2: **Complete**
   * RenewLock (Request/Response)
