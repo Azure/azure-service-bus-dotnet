@@ -2,7 +2,7 @@
 
 In order to run the sample in this directory, replace the following bracketed values in the `Program.cs` file.
 
-```
+```csharp
 private const string ServiceBusConnectionString = "{Service Bus connection string}";
 private const string QueueName = "{Queue path/name}";
 ```
