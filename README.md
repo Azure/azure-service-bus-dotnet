@@ -68,11 +68,10 @@ All runtime operations for queues (not topics / subscriptions)
 - [x] Sprint 4: **Complete**
   * Add major error conditions (ex. preventing all operations that are not supported, for Ex Transaction scenarios, etc)
   * Retry policy
-  * Sessions
   * Receive by sequence number
 
 - [ ] Sprint 5: Early 2017
-	- Request/Response features:
+  * Request/Response features:
       * Add/Remove Rule
       * Scheduled messages
       * Browse messages and sessions
