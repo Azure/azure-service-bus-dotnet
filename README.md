@@ -66,12 +66,13 @@ All runtime operations for queues (not topics / subscriptions)
     * Session Receive/ReceiveBatch
 	
 - [x] Sprint 4: **Complete**
-  * Add major error conditions (ex. preventing all operations that are not supported, for Ex Transaction scenarios, etc)
   * Retry policy
   * Receive by sequence number
 
 - [ ] Sprint 5: Early 2017
+  * Add major error conditions (ex. preventing all operations that are not supported, for Ex Transaction scenarios, etc)
   * Request/Response features:
       * Add/Remove Rule
-      * Scheduled messages
       * Browse messages and sessions
+  * Scheduled messages specific API (This can be done today through the Queue/Topic client, but this item is to add specific API's for scheduled messages)
+  * OnMessage/OnSession handlers
