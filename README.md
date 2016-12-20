@@ -14,15 +14,15 @@ For information on the current set of implemented features and features to come,
 
 Azure Service Bus Messaging is an asynchronous messaging cloud platform that enables you to send messages between decoupled systems. Microsoft offers this feature as a service, which means that you do not need to host any of your own hardware in order to use it.
 
-Refer to the [online documentation](https://azure.microsoft.com/services/service-bus/) to learn more about Service Bus.
+Refer to [docs.microsoft.com](https://azure.microsoft.com/services/service-bus/) to learn more about Service Bus.
 
 This library is built using .NET Standard 1.3. For more information on what platforms are supported see [.NET Platforms Support](https://docs.microsoft.com/en-us/dotnet/articles/standard/library#net-platforms-support).
 
 ### Getting Started
 
-To get started sending messages to Service Bus refer to [Get started with sending to Service Bus queues](./samples/SendSample/readme.md).
+To get started sending messages to Service Bus refer to [Get started sending to Service Bus queues](./samples/SendSample/readme.md).
 
-To get started receiving messages with Service Bus refer to [Get started sending messages to Service Bus in .NET Core](./samples/ReceiveSample/readme.md).  
+To get started receiving messages with Service Bus refer to [Get started receiving from Service Bus queues](./samples/ReceiveSample/readme.md).  
 
 ### Running the unit tests 
 

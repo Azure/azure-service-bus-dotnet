@@ -122,4 +122,4 @@ In this tutorial, we will write a console application to send messages to a Serv
 Congratulations! You have now sent messages to a Service Bus queue, using .NET Core.
 
 ## Next steps
-  * [Receive messages from a Service Bus queue](./,,/ReceiveSample/readme.md)
+  * [Receive messages from a Service Bus queue](../ReceiveSample/readme.md)
