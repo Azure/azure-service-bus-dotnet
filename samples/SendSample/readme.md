@@ -1,5 +1,22 @@
 # Get started with sending to Service Bus queues
 
+In order to run the sample in this directory, replace the following bracketed values in the `Program.cs` file.
+
+    ```csharp
+    private const string ServiceBusConnectionString = "{Service Bus connection string}";
+    private const string QueueName = "{Queue path/name}";
+    ```
+
+Once you replace the above values run the following:
+   
+    ```
+    dotnet restore
+    dotnet build
+    dotnet run
+    ```
+
+For further information on how to create this sample on your own, follow the rest of the tutorial.
+
 ## What will be accomplished
 In this tutorial, we will complete the following:
 
@@ -12,7 +29,7 @@ In this tutorial, we will complete the following:
 1. [.NET Core](https://www.microsoft.com/net/core)
 2. An Azure subscription.
 3. [A Service Bus namespace](https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-create-namespace-portal) 
-4. [A Service Bus queue] (https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dotnet-get-started-with-queues#2-create-a-queue-using-the-azure-portal)
+4. [A Service Bus queue](https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dotnet-get-started-with-queues#2-create-a-queue-using-the-azure-portal)
 
 ## 1. Send messages to the queue
 To send messages to the queue, we will write a C# console application.
@@ -23,12 +40,12 @@ To send messages to the queue, we will write a C# console application.
 
 ## Add the Service Bus NuGet client reference
 
-1. Add the following to your project.json
+1. Add the following to your project.json, making sure that the solution references the `Microsoft.Azure.ServiceBus` project.
 
     ```json
-        "Microsoft.Azure.ServiceBus": {
-            "target": "project"
-        }
+    "Microsoft.Azure.ServiceBus": {
+        "target": "project"
+    }
     ```
 
 ### Write some code to send a message to the queue
