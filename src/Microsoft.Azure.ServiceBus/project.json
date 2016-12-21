@@ -6,9 +6,7 @@
 
   "buildOptions": {
     "warningsAsErrors": true,
-    "delaySign": true,
-    "publicSign": false,
-    "keyFile": "../../build/MSSharedLibSN1024.snk",
+    "keyFile": "../../build/Microsoft.Azure.ServiceBus.snk",
     "additionalArguments": [ "/ruleset:./../../build/StyleCop.Analyzers.ruleset", "/additionalfile:./../../build/stylecop.json" ]
   },
 
