@@ -46,5 +46,5 @@ The following guidelines must be followed in **EVERY** pull request that is open
 
 - Pull request includes test coverage for the included changes
 - Tests must use xunit
-- Test code should not contain hard coded values for resource names, or similar values
+- Test code should not contain hard coded values for resource names or similar values
 - Test should not use App.config files for settings
