@@ -18,7 +18,7 @@ You can find all of the issues that have been filed in the [Issues](https://gith
 
 If you encounter any bugs, please file an issue [here](https://github.com/Azure/azure-service-bus-dotnet/issues/new) and make sure to fill out the provided template with the requested information.
 
-To suggest a new feature or changes that could be made to Azure PowerShell, file an issue the same way you would for a bug, but remove the provided template and replace it with information about your suggestion.
+To suggest a new feature or changes that could be made, file an issue the same way you would for a bug, but remove the provided template and replace it with information about your suggestion.
 
 ### Pull Requests
 
