@@ -10,7 +10,7 @@ This is the next generation Service Bus .NET client library that focuses on Queu
 * [Event Hubs](https://github.com/azure/azure-event-hubs-dotnet)
 * [Relay](https://github.com/azure/azure-relay-dotnet)
  
-For information on the current set of implemented features and features to come, see our [Road map](#road-map)
+For information on the current set of implemented features and features to come, see our [Road map](#road-map).
 
 Azure Service Bus Messaging is an asynchronous messaging cloud platform that enables you to send messages between decoupled systems. Microsoft offers this feature as a service, which means that you do not need to host any of your own hardware in order to use it.
 
@@ -38,10 +38,7 @@ In order to run the unit tests, you will need to do the following:
 
 ## How to provide feedback
 
-If you find issues in this library or have suggestions for improvement of code or documentation, you can file an [issue in this repository](https://github.com/Azure/azure-service-bus-dotnet/issues). Issues related to runtime behavior of the service, such as 
-sporadic exceptions or apparent service-side performance or reliability issues can not be handled here.
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+See our [Contribution Guidelines](./.github/CONTRIBUTING.md).
 
 ## Road map
 
