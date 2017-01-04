@@ -106,5 +106,16 @@ namespace Microsoft.Azure.ServiceBus
         {
             throw new NotImplementedException();
         }
+
+        protected override async Task<IEnumerable<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
+        {
+            List<BrokeredMessage> peekedMessages = new List<BrokeredMessage>(messageCount);
+            for (int i = 0; i < messageCount; i++)
+            {
+                peekedMessages.Add(await this.InnerMessageReceiver.PeekAsync(fromSequenceNumber));
+            }
+
+            return peekedMessages;
+        }
     }
 }

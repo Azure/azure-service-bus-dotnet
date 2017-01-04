@@ -79,6 +79,23 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             return messagesToReturn;
         }
 
+        internal static async Task<IEnumerable<BrokeredMessage>> PeekMessagesAsync(MessageReceiver messageReceiver, int messageCount)
+        {
+            var peekedMessages = new List<BrokeredMessage>();
+
+            while (peekedMessages.Count < messageCount)
+            {
+                var message = await messageReceiver.PeekAsync();
+                if (message != null)
+                {
+                    peekedMessages.Add(message);
+                }
+            }
+
+            Log($"Peeked {peekedMessages.Count} messages");
+            return peekedMessages;
+        }
+
         internal static async Task CompleteMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
             await messageReceiver.CompleteAsync(messages.Select(message => message.LockToken));

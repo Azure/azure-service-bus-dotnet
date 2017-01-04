@@ -13,6 +13,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         readonly TimeSpan operationTimeout;
         int prefetchCount;
+        long lastPeekedSequenceNumber;
 
         protected MessageReceiver(ReceiveMode receiveMode, TimeSpan operationTimeout)
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString())
@@ -40,6 +41,24 @@ namespace Microsoft.Azure.ServiceBus
                 }
 
                 this.prefetchCount = value;
+            }
+        }
+
+        public virtual long LastPeekedSequenceNumber
+        {
+            get
+            {
+                return this.lastPeekedSequenceNumber;
+            }
+
+            internal set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentOutOfRangeException("LastPeekedSequenceNumber", value.ToString());
+                }
+
+                this.lastPeekedSequenceNumber = value;
             }
         }
 
@@ -111,6 +130,17 @@ namespace Microsoft.Azure.ServiceBus
             return this.OnRenewLockAsync(lockToken);
         }
 
+        public Task<BrokeredMessage> PeekAsync()
+        {
+            return this.PeekAsync(this.lastPeekedSequenceNumber + 1);
+        }
+
+        public async Task<BrokeredMessage> PeekAsync(long fromSequenceNumber)
+        {
+            var messages = await this.OnPeekAsync(fromSequenceNumber, messageCount: 1).ConfigureAwait(false);
+            return messages?.FirstOrDefault();
+        }
+
         internal Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
         {
             return this.OnExecuteRequestResponseAsync(amqpRequestMessage);
@@ -131,6 +161,8 @@ namespace Microsoft.Azure.ServiceBus
         protected abstract Task<DateTime> OnRenewLockAsync(Guid lockToken);
 
         protected abstract Task<AmqpResponseMessage> OnExecuteRequestResponseAsync(AmqpRequestMessage requestAmqpMessage);
+
+        protected abstract Task<IEnumerable<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1);
 
         static void ValidateLockTokens(IEnumerable<Guid> lockTokens)
         {

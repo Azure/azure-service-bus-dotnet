@@ -160,6 +160,77 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
+        protected override async Task<IEnumerable<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
+        {
+            try
+            {
+                TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
+                RequestResponseAmqpLink requestResponseAmqpLink =
+                    await
+                        this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime())
+                            .ConfigureAwait(false);
+
+                AmqpRequestMessage requestMessage =
+                    AmqpRequestMessage.CreateRequest(
+                        ManagementConstants.Operations.PeekMessageOperation,
+                        timeoutHelper.RemainingTime(),
+                        null);
+
+                requestMessage.Map[ManagementConstants.Properties.FromSequenceNumber] = fromSequenceNumber;
+                requestMessage.Map[ManagementConstants.Properties.MessageCount] = messageCount;
+
+                if (!string.IsNullOrWhiteSpace(this.sessionId))
+                {
+                    requestMessage.Map[ManagementConstants.Properties.SessionId] = this.sessionId;
+                }
+
+                AmqpMessage responseMessage = await Task.Factory.FromAsync(
+                    (c, s) =>
+                        requestResponseAmqpLink.BeginRequest(
+                            requestMessage.AmqpMessage,
+                            timeoutHelper.RemainingTime(),
+                            c,
+                            s),
+                    a => requestResponseAmqpLink.EndRequest(a),
+                    this).ConfigureAwait(false);
+
+                if (requestResponseAmqpLink.TerminalException != null)
+                {
+                    throw requestResponseAmqpLink.TerminalException;
+                }
+
+                List<BrokeredMessage> messages = new List<BrokeredMessage>();
+
+                var response = AmqpResponseMessage.CreateResponse(responseMessage);
+                if (response.StatusCode == AmqpResponseStatusCode.OK)
+                {
+                    BrokeredMessage brokeredMessage = null;
+                    var messageList = response.GetListValue<AmqpMap>(ManagementConstants.Properties.Messages);
+                    foreach (AmqpMap entry in messageList)
+                    {
+                        var payload = (ArraySegment<byte>)entry[ManagementConstants.Properties.Message];
+                        AmqpMessage amqpMessage =
+                            AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(new[] { payload }), true);
+                        brokeredMessage = AmqpMessageConverter.ClientGetMessage(amqpMessage);
+                        messages.Add(brokeredMessage);
+                    }
+
+                    if (brokeredMessage != null)
+                    {
+                        this.LastPeekedSequenceNumber = brokeredMessage.SequenceNumber;
+                    }
+
+                    return messages;
+                }
+            }
+            catch (AmqpException amqpException)
+            {
+                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+            }
+
+            return null;
+        }
+
         protected override async Task<IList<BrokeredMessage>> OnReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
         {
             List<BrokeredMessage> messages = new List<BrokeredMessage>();
