@@ -6,6 +6,8 @@
 
 **Please be aware that this library is currently in active development, and is not intended for production**
 
+[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/master)
+
 This is the next generation Service Bus .NET client library that focuses on Queues & Topics. If you are looking for Event Hubs and Relay clients, follow the below links:
 * [Event Hubs](https://github.com/azure/azure-event-hubs-dotnet)
 * [Relay](https://github.com/azure/azure-relay-dotnet)
