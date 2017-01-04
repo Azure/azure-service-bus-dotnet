@@ -57,7 +57,7 @@ function Deploy-AzureResources
 
         Write-Host "Service Bus namespace: $NamespaceName"
         
-        $ConnectionString = $settings.Outputs.Get_Item("NamespaceConnectionString").Value
+        $ConnectionString = $settings.Outputs.Get_Item("namespaceConnectionString").Value
         [Environment]::SetEnvironmentVariable('azure-service-bus-dotnet/connectionstring', $ConnectionString)
 
         Write-Host "Completed creating Azure resources"
@@ -73,7 +73,7 @@ function Deploy-AzureResources
 
 function Run-UnitTests
 {
-    if ([bool][Environment]::GetEnvironmentVariable('azure-service-bus-dotnet/connectionstring'))
+    if ([bool][Environment]::GetEnvironmentVariable('azure-service-bus-dotnet/connectionstring', "User"))
     {
         Write-Host "Running unit tests."
 
