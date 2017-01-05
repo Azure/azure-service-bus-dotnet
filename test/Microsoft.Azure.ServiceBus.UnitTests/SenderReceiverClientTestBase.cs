@@ -151,7 +151,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             long lastSequenceNumber = -1;
             foreach (BrokeredMessage message in peekedMessages)
             {
-                Assert.True(message.SequenceNumber > lastSequenceNumber);
+                Assert.True(message.SequenceNumber != lastSequenceNumber);
                 lastSequenceNumber = message.SequenceNumber;
             }
 
