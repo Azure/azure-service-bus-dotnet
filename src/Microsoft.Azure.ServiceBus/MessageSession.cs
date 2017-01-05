@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
@@ -107,15 +109,9 @@ namespace Microsoft.Azure.ServiceBus
             throw new NotImplementedException();
         }
 
-        protected override async Task<IEnumerable<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
+        protected override Task<IEnumerable<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
         {
-            List<BrokeredMessage> peekedMessages = new List<BrokeredMessage>(messageCount);
-            for (int i = 0; i < messageCount; i++)
-            {
-                peekedMessages.Add(await this.InnerMessageReceiver.PeekBySequenceNumberAsync(fromSequenceNumber));
-            }
-
-            return peekedMessages;
+            return this.InnerMessageReceiver.PeekAsync(messageCount);
         }
     }
 }
