@@ -20,6 +20,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ReceiveMode = receiveMode;
             this.operationTimeout = operationTimeout;
+            this.lastPeekedSequenceNumber = Constants.DefaultLastPeekedSequenceNumber;
         }
 
         public abstract string Path { get; }
