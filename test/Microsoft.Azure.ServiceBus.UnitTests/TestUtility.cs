@@ -88,14 +88,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         internal static async Task<IEnumerable<BrokeredMessage>> PeekMessagesAsync(MessageReceiver messageReceiver, int messageCount)
         {
+            int receiveAttempts = 0;
             var peekedMessages = new List<BrokeredMessage>();
 
-            while (peekedMessages.Count < messageCount)
+            while (receiveAttempts++ < Constants.MaxAttemptsCount && peekedMessages.Count < messageCount)
             {
-                var message = await messageReceiver.PeekAsync();
+                var message = await messageReceiver.PeekAsync(messageCount);
                 if (message != null)
                 {
-                    peekedMessages.Add(message);
+                    peekedMessages.AddRange(message);
                 }
             }
 

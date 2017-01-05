@@ -150,14 +150,5 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             return new ServiceBusException(true, message);
         }
-
-        public static Exception ToMessagingContractException(this AmqpMessage responseMessage, AmqpResponseStatusCode statusCode)
-        {
-            AmqpSymbol errorCondition = AmqpExceptionHelper.GetResponseErrorCondition(responseMessage, statusCode);
-            var statusDescription = responseMessage.ApplicationProperties.Map[ManagementConstants.Response.StatusDescription] ?? responseMessage.ApplicationProperties.Map[AmqpClientConstants.ResponseStatusDescription];
-            Exception exception = AmqpExceptionHelper.ToMessagingContract(errorCondition.Value, statusDescription as string ?? errorCondition.Value);
-
-            return exception;
-        }
     }
 }

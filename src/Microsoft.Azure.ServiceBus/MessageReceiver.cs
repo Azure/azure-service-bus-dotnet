@@ -135,7 +135,7 @@ namespace Microsoft.Azure.ServiceBus
             return this.PeekBySequenceNumberAsync(this.lastPeekedSequenceNumber + 1);
         }
 
-        public async Task<IEnumerable<BrokeredMessage>> PeekAsync(int maxMessageCount)
+        public async Task<IList<BrokeredMessage>> PeekAsync(int maxMessageCount)
         {
             return await this.OnPeekAsync(this.lastPeekedSequenceNumber + 1, maxMessageCount).ConfigureAwait(false);
         }
@@ -144,11 +144,6 @@ namespace Microsoft.Azure.ServiceBus
         {
             var messages = await this.OnPeekAsync(fromSequenceNumber, messageCount: 1).ConfigureAwait(false);
             return messages?.FirstOrDefault();
-        }
-
-        internal Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
-        {
-            return this.OnExecuteRequestResponseAsync(amqpRequestMessage);
         }
 
         protected abstract Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount);
@@ -165,9 +160,7 @@ namespace Microsoft.Azure.ServiceBus
 
         protected abstract Task<DateTime> OnRenewLockAsync(Guid lockToken);
 
-        protected abstract Task<AmqpResponseMessage> OnExecuteRequestResponseAsync(AmqpRequestMessage requestAmqpMessage);
-
-        protected abstract Task<IEnumerable<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1);
+        protected abstract Task<IList<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1);
 
         static void ValidateLockTokens(IEnumerable<Guid> lockTokens)
         {

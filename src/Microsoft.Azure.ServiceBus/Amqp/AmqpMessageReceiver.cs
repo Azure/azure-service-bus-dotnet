@@ -112,6 +112,21 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             this.lockedUntilUtc = receivingAmqpLink.Settings.Properties.TryGetValue(AmqpClientConstants.LockedUntilUtc, out lockedUntilUtcTicks) ? new DateTime(lockedUntilUtcTicks, DateTimeKind.Utc) : DateTime.MinValue;
         }
 
+        internal async Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
+        {
+            AmqpMessage amqpMessage = amqpRequestMessage.AmqpMessage;
+            TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
+            RequestResponseAmqpLink requestResponseAmqpLink = await this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+
+            AmqpMessage responseAmqpMessage = await Task.Factory.FromAsync(
+                (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, timeoutHelper.RemainingTime(), c, s),
+                (a) => requestResponseAmqpLink.EndRequest(a),
+                this).ConfigureAwait(false);
+
+            AmqpResponseMessage responseMessage = AmqpResponseMessage.CreateResponse(responseAmqpMessage);
+            return responseMessage;
+        }
+
         protected override async Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount)
         {
             try
@@ -160,20 +175,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected override async Task<IEnumerable<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
+        protected override async Task<IList<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
         {
             try
             {
-                TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-                RequestResponseAmqpLink requestResponseAmqpLink =
-                    await
-                        this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime())
-                            .ConfigureAwait(false);
-
                 AmqpRequestMessage requestMessage =
                     AmqpRequestMessage.CreateRequest(
                         ManagementConstants.Operations.PeekMessageOperation,
-                        timeoutHelper.RemainingTime(),
+                        this.OperationTimeout,
                         null);
 
                 requestMessage.Map[ManagementConstants.Properties.FromSequenceNumber] = fromSequenceNumber;
@@ -184,24 +193,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     requestMessage.Map[ManagementConstants.Properties.SessionId] = this.sessionId;
                 }
 
-                AmqpMessage responseMessage = await Task.Factory.FromAsync(
-                    (c, s) =>
-                        requestResponseAmqpLink.BeginRequest(
-                            requestMessage.AmqpMessage,
-                            timeoutHelper.RemainingTime(),
-                            c,
-                            s),
-                    a => requestResponseAmqpLink.EndRequest(a),
-                    this).ConfigureAwait(false);
-
-                if (requestResponseAmqpLink.TerminalException != null)
-                {
-                    throw requestResponseAmqpLink.TerminalException;
-                }
-
                 List<BrokeredMessage> messages = new List<BrokeredMessage>();
 
-                var response = AmqpResponseMessage.CreateResponse(responseMessage);
+                AmqpResponseMessage response = await this.ExecuteRequestResponseAsync(requestMessage);
                 if (response.StatusCode == AmqpResponseStatusCode.OK)
                 {
                     BrokeredMessage brokeredMessage = null;
@@ -369,21 +363,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
 
             return lockedUntilUtc;
-        }
-
-        protected override async Task<AmqpResponseMessage> OnExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
-        {
-            AmqpMessage amqpMessage = amqpRequestMessage.AmqpMessage;
-            TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-            RequestResponseAmqpLink requestResponseAmqpLink = await this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
-
-            AmqpMessage responseAmqpMessage = await Task.Factory.FromAsync(
-                (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, timeoutHelper.RemainingTime(), c, s),
-                (a) => requestResponseAmqpLink.EndRequest(a),
-                this).ConfigureAwait(false);
-
-            AmqpResponseMessage responseMessage = AmqpResponseMessage.CreateResponse(responseAmqpMessage);
-            return responseMessage;
         }
 
         async Task DisposeMessagesAsync(IEnumerable<Guid> lockTokens, Outcome outcome)

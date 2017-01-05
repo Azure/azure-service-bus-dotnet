@@ -86,10 +86,5 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             return condition is AmqpSymbol ? (AmqpSymbol)condition : null;
         }
-
-        public Exception ToMessagingContractException()
-        {
-            return this.responseMessage.ToMessagingContractException(this.StatusCode);
-        }
     }
 }
