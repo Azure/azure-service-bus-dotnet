@@ -68,7 +68,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             while (receiveAttempts++ < Constants.MaxAttemptsCount && messagesToReturn.Count < messageCount)
             {
-                var messages = await messageReceiver.ReceiveAsync(messageCount);
+                var messages = await messageReceiver.ReceiveAsync(messageCount - messagesToReturn.Count);
                 if (messages != null)
                 {
                     messagesToReturn.AddRange(messages);
@@ -93,7 +93,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             while (receiveAttempts++ < Constants.MaxAttemptsCount && peekedMessages.Count < messageCount)
             {
-                var message = await messageReceiver.PeekAsync(messageCount);
+                var message = await messageReceiver.PeekAsync(messageCount - peekedMessages.Count);
                 if (message != null)
                 {
                     peekedMessages.AddRange(message);
