@@ -132,10 +132,15 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task<BrokeredMessage> PeekAsync()
         {
-            return this.PeekAsync(this.lastPeekedSequenceNumber + 1);
+            return this.PeekBySequenceNumberAsync(this.lastPeekedSequenceNumber + 1);
         }
 
-        public async Task<BrokeredMessage> PeekAsync(long fromSequenceNumber)
+        public async Task<IEnumerable<BrokeredMessage>> PeekAsync(int maxMessageCount)
+        {
+            return await this.OnPeekAsync(this.lastPeekedSequenceNumber + 1, maxMessageCount).ConfigureAwait(false);
+        }
+
+        public async Task<BrokeredMessage> PeekBySequenceNumberAsync(long fromSequenceNumber)
         {
             var messages = await this.OnPeekAsync(fromSequenceNumber, messageCount: 1).ConfigureAwait(false);
             return messages?.FirstOrDefault();

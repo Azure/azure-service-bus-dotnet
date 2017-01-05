@@ -143,8 +143,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         protected async Task PeekAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
         {
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
+            List<BrokeredMessage> peekedMessages = new List<BrokeredMessage>();
+            peekedMessages.Add(await TestUtility.PeekMessageAsync(messageReceiver));
+            peekedMessages.AddRange(await TestUtility.PeekMessagesAsync(messageReceiver, messageCount - 1));
 
-            IEnumerable<BrokeredMessage> peekedMessages = await TestUtility.PeekMessagesAsync(messageReceiver, messageCount);
             Assert.True(messageCount == peekedMessages.Count());
             long lastSequenceNumber = -1;
             foreach (BrokeredMessage message in peekedMessages)

@@ -112,7 +112,7 @@ namespace Microsoft.Azure.ServiceBus
             List<BrokeredMessage> peekedMessages = new List<BrokeredMessage>(messageCount);
             for (int i = 0; i < messageCount; i++)
             {
-                peekedMessages.Add(await this.InnerMessageReceiver.PeekAsync(fromSequenceNumber));
+                peekedMessages.Add(await this.InnerMessageReceiver.PeekBySequenceNumberAsync(fromSequenceNumber));
             }
 
             return peekedMessages;
