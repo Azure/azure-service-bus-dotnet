@@ -56,7 +56,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (value < 0)
                 {
-                    throw new ArgumentOutOfRangeException("LastPeekedSequenceNumber", value.ToString());
+                    throw new ArgumentOutOfRangeException(nameof(LastPeekedSequenceNumber), value.ToString());
                 }
 
                 this.lastPeekedSequenceNumber = value;
