@@ -8,7 +8,7 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/master)
 
-This is the next generation Service Bus .NET client library that focuses on Queues & Topics. If you are looking for Event Hubs and Relay clients, follow the below links:
+This is the next generation Service Bus .NET client library that focuses on queues & topics. If you are looking for Event Hubs and Relay clients, follow the below links:
 * [Event Hubs](https://github.com/azure/azure-event-hubs-dotnet)
 * [Relay](https://github.com/azure/azure-relay-dotnet)
  
@@ -88,5 +88,5 @@ The standard way to manage Azure resources is by using [Azure Resource Manager](
   * Request/Response features:
       * Add/Remove Rule
       * Browse messages and sessions
-  * Scheduled messages specific API (Scheduling of messages can be done today through the Queue/Topic client, but this item is to add specific API's for scheduled messages)
+  * Scheduled messages specific API (Scheduling of messages can be done today through the queue/topic client, but this item is to add specific API's for scheduled messages)
   * OnMessage/OnSession handlers
