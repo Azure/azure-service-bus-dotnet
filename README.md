@@ -8,7 +8,7 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/master)
 
-This is the next generation Service Bus .NET client library that focuses on Queues & Topics. If you are looking for Event Hubs and Relay clients, follow the below links:
+This is the next generation Service Bus .NET client library that focuses on queues & topics. If you are looking for Event Hubs and Relay clients, follow the below links:
 * [Event Hubs](https://github.com/azure/azure-event-hubs-dotnet)
 * [Relay](https://github.com/azure/azure-relay-dotnet)
  
@@ -16,31 +16,45 @@ For information on the current set of implemented features and features to come,
 
 Azure Service Bus Messaging is an asynchronous messaging cloud platform that enables you to send messages between decoupled systems. Microsoft offers this feature as a service, which means that you do not need to host any of your own hardware in order to use it.
 
-Refer to [docs.microsoft.com](https://azure.microsoft.com/services/service-bus/) to learn more about Service Bus.
+Refer to the [online documentation](https://azure.microsoft.com/services/service-bus/) to learn more about Service Bus.
 
 This library is built using .NET Standard 1.3. For more information on what platforms are supported see [.NET Platforms Support](https://docs.microsoft.com/en-us/dotnet/articles/standard/library#net-platforms-support).
 
-### Getting Started
+## How to provide feedback
 
-To get started sending messages to Service Bus refer to [Get started sending to Service Bus queues](./samples/SendSample/readme.md).
+See our [Contribution Guidelines](./.github/CONTRIBUTING.md).
 
-To get started receiving messages with Service Bus refer to [Get started receiving from Service Bus queues](./samples/ReceiveSample/readme.md).  
+## FAQ
 
-### Running the unit tests 
+### Where can I find examples that use this library?
+
+To get started *sending* messages to Service Bus refer to [Get started sending to Service Bus queues](./samples/SendSample/readme.md).
+
+To get started *receiving* messages with Service Bus refer to [Get started receiving from Service Bus queues](./samples/ReceiveSample/readme.md).  
+
+### How do I run the unit tests? 
 
 In order to run the unit tests, you will need to do the following:
 
-1. Deploy the ARM template located at [/templates/azuredeploy.json](/templates/azuredeploy.json), which will provision the required entities for the unit tests, or click the following button:
+1. Deploy the Azure Resource Manager template located at [/templates/azuredeploy.json](/templates/azuredeploy.json) by clicking the following button:
 
     <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-service-bus-dotnet%2Fmaster%2Ftemplates%2Fazuredeploy.json" target="_blank">
         <img src="http://azuredeploy.net/deploybutton.png"/>
     </a>
 
+    *Running the above template will provision a standard Service Bus namespace along with the required entities to successfully run the unit tests.*
+
 1. Add an Environment Variable named `azure-service-bus-dotnet/connectionstring` and set the value as the connection string of the newly created namespace. **Please note that if you are using Visual Studio, you must restart Visual Studio in order to use new Environment Variables.**
 
-## How to provide feedback
+Once you have completed the above, you can run `dotnet test` from the `/test/Microsoft.Azure.ServiceBus.UnitTests` directory.
 
-See our [Contribution Guidelines](./.github/CONTRIBUTING.md).
+### Can I manage Service Bus entities with this library?
+
+The standard way to manage Azure resources is by using [Azure Resource Manager](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview). In order to use functionality that previously existed in the .NET Framework Service Bus client library, you will need to use the `Microsoft.Azure.Management.ServiceBus` library. This will enable use cases that dynamically create/read/update/delete resources. The following links will provide more information on the new library and how to use it.
+
+* GitHub repo - [https://github.com/Azure/azure-sdk-for-net/tree/AutoRest/src/ResourceManagement/ServiceBus](https://github.com/Azure/azure-sdk-for-net/tree/AutoRest/src/ResourceManagement/ServiceBus)
+* NuGet package - [https://www.nuget.org/packages/Microsoft.Azure.Management.ServiceBus/](https://www.nuget.org/packages/Microsoft.Azure.Management.ServiceBus/)
+* Sample - [https://github.com/Azure-Samples/service-bus-dotnet-management](https://github.com/Azure-Samples/service-bus-dotnet-management)
 
 ## Road map
 
@@ -74,5 +88,5 @@ See our [Contribution Guidelines](./.github/CONTRIBUTING.md).
   * Request/Response features:
       * Add/Remove Rule
       * Browse messages and sessions
-  * Scheduled messages specific API (Scheduling of messages can be done today through the Queue/Topic client, but this item is to add specific API's for scheduled messages)
+  * Scheduled messages specific API (Scheduling of messages can be done today through the queue/topic client, but this item is to add specific API's for scheduled messages)
   * OnMessage/OnSession handlers
