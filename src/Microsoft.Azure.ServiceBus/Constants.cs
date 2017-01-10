@@ -13,8 +13,23 @@ namespace Microsoft.Azure.ServiceBus
 
         public const int MaxSessionIdLength = 128;
 
+        public const string PathDelimiter = @"/";
+
+        public const int RuleNameMaximumLength = 50;
+
         public static readonly int MaximumMessageHeaderPropertySize = ushort.MaxValue;
 
         public static readonly long DefaultLastPeekedSequenceNumber = 0;
+
+        public static class FilterConstants
+        {
+            public const int DefaultCompatibilityLevel = 20; // This is for future side-by-side filter/action versioning support.
+
+            public const int MaximumSqlFilterStatementLength = 1024;
+
+            public const int MaximumSqlRuleActionStatementLength = 1024;
+
+            public const int MaximumRuleActionStatements = 32;
+        }
     }
 }
