@@ -3,8 +3,10 @@
 
 namespace Microsoft.Azure.ServiceBus.Filters
 {
-    /// <summary>Represents the filter actions which are allowed for the transformation
-    /// of a message that have been matched by a filter expression.</summary>
+    /// <summary>
+    /// Represents the filter actions which are allowed for the transformation
+    /// of a message that have been matched by a filter expression.
+    /// </summary>
     /// <remarks>
     /// Filter actions allow for the transformation of a message that have been matched by a filter expression.
     /// The typical use case for filter acions is to append or update the properties that are attached to a message,

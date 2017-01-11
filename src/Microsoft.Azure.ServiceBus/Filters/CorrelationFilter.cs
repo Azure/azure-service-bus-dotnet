@@ -15,7 +15,6 @@ namespace Microsoft.Azure.ServiceBus.Filters
     /// Not only will correlation filters be optimized at declaration time, but they will also be optimized at runtime.
     /// Correlation filter matching can be reduced to a hashtable lookup, which aggregates the complexity of the set of defined correlation filters to O(1).
     /// </remarks>
-    /// <seealso cref="System.DateTimeOffset"/>
     public sealed class CorrelationFilter : Filter
     {
         private PropertyDictionary properties;
@@ -28,15 +27,13 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Initializes a new instance of the
-        /// <see cref="CorrelationFilter" /> class with the specified correlation identifier.
+        /// Initializes a new instance of the <see cref="CorrelationFilter" /> class with the specified correlation identifier.
         /// </summary>
         /// <param name="correlationId">The identifier for the correlation.</param>
         /// <exception cref="System.ArgumentException">Thrown when the <paramref name="correlationId" /> is null or empty.</exception>
         public CorrelationFilter(string correlationId)
             : this()
         {
-            // Add the same checks in Validate() method. Constructor is not invoked during deserialization.
             if (string.IsNullOrWhiteSpace(correlationId))
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace("correlationId");
@@ -46,7 +43,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Gets the identifier of the correlation.
+        /// Identifier of the correlation.
         /// </summary>
         /// <value>The identifier of the correlation.</value>
         public string CorrelationId
@@ -56,7 +53,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Gets the identifier of the message.
+        /// Identifier of the message.
         /// </summary>
         /// <value>The identifier of the message.</value>
         public string MessageId
@@ -66,7 +63,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Gets the address to send to.
+        /// Address to send to.
         /// </summary>
         /// <value>The address to send to.</value>
         public string To
@@ -76,7 +73,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Gets the address of the queue to reply to.
+        /// Address of the queue to reply to.
         /// </summary>
         /// <value>The address of the queue to reply to.</value>
         public string ReplyTo
@@ -86,7 +83,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Gets the application specific label.
+        /// Application specific label.
         /// </summary>
         /// <value>The application specific label.</value>
         public string Label
@@ -96,7 +93,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Gets the session identifier.
+        /// Session identifier.
         /// </summary>
         /// <value>The session identifier.</value>
         public string SessionId
@@ -106,7 +103,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Gets the session identifier to reply to.
+        /// Session identifier to reply to.
         /// </summary>
         /// <value>The session identifier to reply to.</value>
         public string ReplyToSessionId
@@ -116,7 +113,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Gets the content type of the message.
+        /// Content type of the message.
         /// </summary>
         /// <value>The content type of the message.</value>
         public string ContentType
@@ -126,7 +123,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Gets the application specific properties of the message.
+        /// Application specific properties of the message.
         /// </summary>
         /// <value>The application specific properties of the message.</value>
         public IDictionary<string, object> Properties => this.properties ?? (this.properties = new PropertyDictionary());

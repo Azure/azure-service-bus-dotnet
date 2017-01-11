@@ -10,13 +10,17 @@ namespace Microsoft.Azure.ServiceBus.Filters
     {
         internal static readonly TrueFilter Default = new TrueFilter();
 
-        /// <summary>Initializes a new instance of the <see cref="TrueFilter" /> class.</summary>
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TrueFilter" /> class.
+        /// </summary>
         public TrueFilter()
             : base("1=1")
         {
         }
 
-        /// <summary>Converts the value of the current instance to its equivalent string representation.</summary>
+        /// <summary>
+        /// Converts the value of the current instance to its equivalent string representation.
+        /// </summary>
         /// <returns>A string representation of the current instance.</returns>
         public override string ToString()
         {

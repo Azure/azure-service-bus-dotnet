@@ -19,19 +19,18 @@ namespace Microsoft.Azure.ServiceBus.Filters
         /// <param name="sqlExpression">The SQL expression.</param>
         public SqlFilter(string sqlExpression)
         {
-            // Add the same checks in Validate() method. Constructor is not invoked during deserialization.
             if (string.IsNullOrEmpty(sqlExpression))
             {
                 throw Fx.Exception.ArgumentNull("sqlExpression");
             }
 
-            if (sqlExpression.Length > Constants.FilterConstants.MaximumSqlFilterStatementLength)
+            if (sqlExpression.Length > Constants.MaximumSqlFilterStatementLength)
             {
                 throw Fx.Exception.Argument(
                     "sqlExpression",
                     Resources.SqlFilterStatmentTooLong.FormatForUser(
                         sqlExpression.Length,
-                        Constants.FilterConstants.MaximumSqlFilterStatementLength));
+                        Constants.MaximumSqlFilterStatementLength));
             }
 
             this.SqlExpression = sqlExpression;

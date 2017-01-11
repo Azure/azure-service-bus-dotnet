@@ -277,7 +277,9 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        /// <summary>Asynchronously adds a rule to the current subscription with the specified name and filter expression.</summary>
+        /// <summary>
+        /// Asynchronously adds a rule to the current subscription with the specified name and filter expression.
+        /// </summary>
         /// <param name="ruleName">The name of the rule to add.</param>
         /// <param name="filter">The filter expression against which messages will be matched.</param>
         /// <returns>A task instance that represents the asynchronous add rule operation.</returns>
@@ -286,7 +288,9 @@ namespace Microsoft.Azure.ServiceBus
             return this.AddRuleAsync(new RuleDescription(name: ruleName, filter: filter));
         }
 
-        /// <summary>Asynchronously adds a new rule to the subscription using the specified rule description.</summary>
+        /// <summary>
+        /// Asynchronously adds a new rule to the subscription using the specified rule description.
+        /// </summary>
         /// <param name="description">The rule description that provides metadata of the rule to add.</param>
         /// <returns>A task instance that represents the asynchronous add rule operation.</returns>
         public Task AddRuleAsync(RuleDescription description)
@@ -301,7 +305,9 @@ namespace Microsoft.Azure.ServiceBus
             return this.OnAddRuleAsync(description);
         }
 
-        /// <summary>Asynchronously removes the rule described by <paramref name="ruleName" />.</summary>
+        /// <summary>
+        /// Asynchronously removes the rule described by <paramref name="ruleName" />.
+        /// </summary>
         /// <param name="ruleName">The name of the rule.</param>
         /// <returns>A task instance that represents the asynchronous remove rule operation.</returns>
         public Task RemoveRuleAsync(string ruleName)

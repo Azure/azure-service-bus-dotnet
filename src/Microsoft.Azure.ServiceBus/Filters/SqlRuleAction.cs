@@ -13,38 +13,44 @@ namespace Microsoft.Azure.ServiceBus.Filters
     {
         PropertyDictionary parameters;
 
-        /// <summary>Initializes a new instance of the
-        /// <see cref="SqlRuleAction" /> class with the specified SQL expression.</summary>
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SqlRuleAction" /> class with the specified SQL expression.
+        /// </summary>
         /// <param name="sqlExpression">The SQL expression.</param>
         public SqlRuleAction(string sqlExpression)
         {
-            // Add the same checks in Validate() method. Constructor is not invoked during deserialization.
             if (string.IsNullOrEmpty(sqlExpression))
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace("sqlExpression");
             }
 
-            if (sqlExpression.Length > Constants.FilterConstants.MaximumSqlRuleActionStatementLength)
+            if (sqlExpression.Length > Constants.MaximumSqlRuleActionStatementLength)
             {
                 throw Fx.Exception.Argument(
                     "sqlExpression",
                     Resources.SqlFilterActionStatmentTooLong.FormatForUser(
                         sqlExpression.Length,
-                        Constants.FilterConstants.MaximumSqlRuleActionStatementLength));
+                        Constants.MaximumSqlRuleActionStatementLength));
             }
 
             this.SqlExpression = sqlExpression;
         }
 
-        /// <summary>Gets the SQL expression.</summary>
+        /// <summary>
+        /// Gets the SQL expression.
+        /// </summary>
         /// <value>The SQL expression.</value>
         public string SqlExpression { get; private set; }
 
-        /// <summary>Sets the value of a rule action.</summary>
+        /// <summary>
+        /// Sets the value of a rule action.
+        /// </summary>
         /// <value>The value of a rule action.</value>
         public IDictionary<string, object> Parameters => this.parameters ?? (this.parameters = new PropertyDictionary());
 
-        /// <summary>Returns a string representation of <see cref="SqlRuleAction" />.</summary>
+        /// <summary>
+        /// Returns a string representation of <see cref="SqlRuleAction" />.
+        /// </summary>
         /// <returns>The string representation of <see cref="SqlRuleAction" />.</returns>
         public override string ToString()
         {
