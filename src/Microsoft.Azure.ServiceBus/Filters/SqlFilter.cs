@@ -18,11 +18,6 @@ namespace Microsoft.Azure.ServiceBus.Filters
         /// </summary>
         /// <param name="sqlExpression">The SQL expression.</param>
         public SqlFilter(string sqlExpression)
-            : this(sqlExpression, Constants.FilterConstants.DefaultCompatibilityLevel)
-        {
-        }
-
-        SqlFilter(string sqlExpression, int compatibilityLevel)
         {
             // Add the same checks in Validate() method. Constructor is not invoked during deserialization.
             if (string.IsNullOrEmpty(sqlExpression))
@@ -40,7 +35,6 @@ namespace Microsoft.Azure.ServiceBus.Filters
             }
 
             this.SqlExpression = sqlExpression;
-            this.CompatibilityLevel = compatibilityLevel;
         }
 
         /// <summary>
@@ -48,13 +42,6 @@ namespace Microsoft.Azure.ServiceBus.Filters
         /// </summary>
         /// <value>The SQL expression.</value>
         public string SqlExpression { get; private set; }
-
-        /// <summary>
-        /// This property is reserved for future use. An integer value showing the compatibility level, currently hard-coded to 20.
-        /// </summary>
-        /// <value>The compatibility level.</value>
-        /// <remarks>This property is reserved for future use.</remarks>
-        public int CompatibilityLevel { get; private set; }
 
         /// <summary>
         /// Sets the value of a filter expression.

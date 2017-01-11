@@ -11,7 +11,6 @@ namespace Microsoft.Azure.ServiceBus.Filters
     /// for example assigning a group ID based on the correlation ID of a message.
     /// </remarks>
     /// <seealso cref="SqlRuleAction"/>
-    /// <seealso cref="EmptyRuleAction"/>
     public abstract class RuleAction
     {
         internal RuleAction()

@@ -23,8 +23,6 @@ namespace Microsoft.Azure.ServiceBus
 
         public static class FilterConstants
         {
-            public const int DefaultCompatibilityLevel = 20; // This is for future side-by-side filter/action versioning support.
-
             public const int MaximumSqlFilterStatementLength = 1024;
 
             public const int MaximumSqlRuleActionStatementLength = 1024;

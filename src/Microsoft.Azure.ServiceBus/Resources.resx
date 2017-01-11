@@ -129,15 +129,6 @@
   <data name="ArgumentStringTooBig" xml:space="preserve">
     <value>The argument '{0}' cannot exceed {1} characters.</value>
   </data>
-  <data name="BrokeredMessageListIsNullOrEmpty" xml:space="preserve">
-    <value>There are no brokeredMessages supplied. Please make sure input messages are not empty.</value>
-  </data>
-  <data name="CannotSendAnEmptyMessage" xml:space="preserve">
-    <value>Sending empty {0} is not a valid operation.</value>
-  </data>
-  <data name="FailedToSerializeUnsupportedType" xml:space="preserve">
-    <value>Serialization operation failed due to unsupported type {0}.</value>
-  </data>
   <data name="InvalidEncoding" xml:space="preserve">
     <value>The string has an invalid encoding format.</value>
   </data>
@@ -156,41 +147,8 @@
   <data name="NotSupportedPropertyType" xml:space="preserve">
     <value>'{0}' is not a supported type.</value>
   </data>
-  <data name="EmptyPropertyInCorrelationFilter" xml:space="preserve">
-    <value>At least one system or user property must be set for a correlation filter.</value>
-  </data>
-  <data name="NotSupportedPropertyType1" xml:space="preserve">
-    <value>'{0}' is not a supported type.</value>
-  </data>
-  <data name="FilterExpressionTooComplex" xml:space="preserve">
-    <value>The filter expression computation time exceeded the allowed value. Reduce the complexity of the expression.</value>
-  </data>
-  <data name="PropertyIsNullOrEmpty" xml:space="preserve">
-    <value>The property '{0}' is null or empty.</value>
-  </data>
   <data name="SqlFilterStatmentTooLong" xml:space="preserve">
     <value>The length of the filter statement is {0}, which exceeds the maximum length of {1}</value>
-  </data>
-  <data name="FilterMustBeProcessed" xml:space="preserve">
-    <value>The filter must be processed.</value>
-  </data>
-  <data name="NotSupportedCompatibilityLevel" xml:space="preserve">
-    <value>The specified compatibility level ({0}) is not supported.</value>
-  </data>
-  <data name="ExtraParameterSpecifiedForSqlExpression" xml:space="preserve">
-    <value>The specified parameter ({0}) in Parameters property was not used in the expression specified in SqlExpression.</value>
-  </data>
-  <data name="ParameterNotSpecifiedForSqlExpression" xml:space="preserve">
-    <value>A parameter ({0}) used in the expression specified in SqlExpression is missing from the Parameters property.</value>
-  </data>
-  <data name="SQLSyntaxError" xml:space="preserve">
-    <value>There was an error parsing the SQL expression. [Token line={0}, column={1}, Token in error= {2}]</value>
-  </data>
-  <data name="SQLSyntaxErrorDetailed" xml:space="preserve">
-    <value>There was an error parsing the SQL expression. [Token line={0}, column={1}, Token in error= {2}, Additional details= {3}] </value>
-  </data>
-  <data name="FilterActionTooManyStatements" xml:space="preserve">
-    <value>There are {0} statements defined in the filter action, which exceeds the allowed maximum of {1}.</value>
   </data>
   <data name="SqlFilterActionStatmentTooLong" xml:space="preserve">
     <value>The length of the filter action statement is {0}, which exceeds the maximum length of {1}.</value>

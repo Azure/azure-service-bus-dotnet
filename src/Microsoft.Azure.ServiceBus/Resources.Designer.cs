@@ -96,24 +96,6 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to There are no brokeredMessages supplied. Please make sure input messages are not empty..
-        /// </summary>
-        public static string BrokeredMessageListIsNullOrEmpty {
-            get {
-                return ResourceManager.GetString("BrokeredMessageListIsNullOrEmpty", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to Sending empty {0} is not a valid operation..
-        /// </summary>
-        public static string CannotSendAnEmptyMessage {
-            get {
-                return ResourceManager.GetString("CannotSendAnEmptyMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///    Looks up a localized string similar to &apos;{0}&apos; contained character &apos;{1}&apos; which is not allowed because it is reserved in the Uri scheme..
         /// </summary>
         public static string CharacterReservedForUriScheme {
@@ -123,65 +105,11 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to At least one system or user property must be set for a correlation filter..
-        /// </summary>
-        public static string EmptyPropertyInCorrelationFilter {
-            get {
-                return ResourceManager.GetString("EmptyPropertyInCorrelationFilter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///    Looks up a localized string similar to The entity path/name &apos;{0}&apos; exceeds the &apos;{1}&apos; character limit..
         /// </summary>
         public static string EntityNameLengthExceedsLimit {
             get {
                 return ResourceManager.GetString("EntityNameLengthExceedsLimit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to The specified parameter ({0}) in Parameters property was not used in the expression specified in SqlExpression..
-        /// </summary>
-        public static string ExtraParameterSpecifiedForSqlExpression {
-            get {
-                return ResourceManager.GetString("ExtraParameterSpecifiedForSqlExpression", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to Serialization operation failed due to unsupported type {0}..
-        /// </summary>
-        public static string FailedToSerializeUnsupportedType {
-            get {
-                return ResourceManager.GetString("FailedToSerializeUnsupportedType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to There are {0} statements defined in the filter action, which exceeds the allowed maximum of {1}..
-        /// </summary>
-        public static string FilterActionTooManyStatements {
-            get {
-                return ResourceManager.GetString("FilterActionTooManyStatements", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to The filter expression computation time exceeded the allowed value. Reduce the complexity of the expression..
-        /// </summary>
-        public static string FilterExpressionTooComplex {
-            get {
-                return ResourceManager.GetString("FilterExpressionTooComplex", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to The filter must be processed..
-        /// </summary>
-        public static string FilterMustBeProcessed {
-            get {
-                return ResourceManager.GetString("FilterMustBeProcessed", resourceCulture);
             }
         }
         
@@ -204,47 +132,11 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to The specified compatibility level ({0}) is not supported..
-        /// </summary>
-        public static string NotSupportedCompatibilityLevel {
-            get {
-                return ResourceManager.GetString("NotSupportedCompatibilityLevel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///    Looks up a localized string similar to &apos;{0}&apos; is not a supported type..
         /// </summary>
         public static string NotSupportedPropertyType {
             get {
                 return ResourceManager.GetString("NotSupportedPropertyType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to &apos;{0}&apos; is not a supported type..
-        /// </summary>
-        public static string NotSupportedPropertyType1 {
-            get {
-                return ResourceManager.GetString("NotSupportedPropertyType1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to A parameter ({0}) used in the expression specified in SqlExpression is missing from the Parameters property..
-        /// </summary>
-        public static string ParameterNotSpecifiedForSqlExpression {
-            get {
-                return ResourceManager.GetString("ParameterNotSpecifiedForSqlExpression", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to The property &apos;{0}&apos; is null or empty..
-        /// </summary>
-        public static string PropertyIsNullOrEmpty {
-            get {
-                return ResourceManager.GetString("PropertyIsNullOrEmpty", resourceCulture);
             }
         }
         
@@ -263,24 +155,6 @@ namespace Microsoft.Azure.ServiceBus {
         public static string SqlFilterStatmentTooLong {
             get {
                 return ResourceManager.GetString("SqlFilterStatmentTooLong", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to There was an error parsing the SQL expression. [Token line={0}, column={1}, Token in error= {2}].
-        /// </summary>
-        public static string SQLSyntaxError {
-            get {
-                return ResourceManager.GetString("SQLSyntaxError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to There was an error parsing the SQL expression. [Token line={0}, column={1}, Token in error= {2}, Additional details= {3}] .
-        /// </summary>
-        public static string SQLSyntaxErrorDetailed {
-            get {
-                return ResourceManager.GetString("SQLSyntaxErrorDetailed", resourceCulture);
             }
         }
         

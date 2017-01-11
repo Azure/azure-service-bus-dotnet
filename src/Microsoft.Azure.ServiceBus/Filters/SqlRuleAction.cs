@@ -17,15 +17,6 @@ namespace Microsoft.Azure.ServiceBus.Filters
         /// <see cref="SqlRuleAction" /> class with the specified SQL expression.</summary>
         /// <param name="sqlExpression">The SQL expression.</param>
         public SqlRuleAction(string sqlExpression)
-            : this(sqlExpression, Constants.FilterConstants.DefaultCompatibilityLevel)
-        {
-        }
-
-        /// <summary>Initializes a new instance of the
-        /// <see cref="SqlRuleAction" /> class with the specified SQL expression and compatibility level.</summary>
-        /// <param name="sqlExpression">The SQL expression.</param>
-        /// <param name="compatibilityLevel">Reserved for future use. An integer value showing compatibility level. Currently hard-coded to 20.</param>
-        public SqlRuleAction(string sqlExpression, int compatibilityLevel)
         {
             // Add the same checks in Validate() method. Constructor is not invoked during deserialization.
             if (string.IsNullOrEmpty(sqlExpression))
@@ -43,17 +34,11 @@ namespace Microsoft.Azure.ServiceBus.Filters
             }
 
             this.SqlExpression = sqlExpression;
-            this.CompatibilityLevel = compatibilityLevel;
         }
 
         /// <summary>Gets the SQL expression.</summary>
         /// <value>The SQL expression.</value>
         public string SqlExpression { get; private set; }
-
-        /// <summary>This property is reserved for future use. An integer value showing the compatibility level, currently hard-coded to 20.</summary>
-        /// <value>An integer value showing the compatibility level</value>
-        /// <remarks>This property is reserved for future use.</remarks>
-        public int CompatibilityLevel { get; private set; }
 
         /// <summary>Sets the value of a rule action.</summary>
         /// <value>The value of a rule action.</value>

@@ -3,20 +3,12 @@
 
 namespace Microsoft.Azure.ServiceBus.Filters
 {
-    using System.Runtime.Serialization;
-
     /// <summary>
     /// Represents a description of a rule.
     /// </summary>
     public sealed class RuleDescription
     {
-        /// <summary>
-        /// The default name used in creating default rule when adding subscriptions
-        /// to a topic. The name is "$Default".
-        /// </summary>
-        public const string DefaultRuleName = "$Default";
         Filter filter;
-        RuleAction action;
         string name;
 
         /// <summary>
@@ -82,7 +74,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
             {
                 if (value == null)
                 {
-                    throw Fx.Exception.ArgumentNull(nameof(value));
+                    throw Fx.Exception.ArgumentNull(nameof(this.Filter));
                 }
 
                 this.filter = value;
@@ -93,18 +85,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         /// Gets or sets the action to perform if the message satisfies the filtering expression.
         /// </summary>
         /// <value>The action to perform if the message satisfies the filtering expression.</value>
-        public RuleAction Action
-        {
-            get
-            {
-                return this.action;
-            }
-
-            set
-            {
-                this.action = value;
-            }
-        }
+        public RuleAction Action { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the rule.
@@ -126,12 +107,6 @@ namespace Microsoft.Azure.ServiceBus.Filters
 
                 this.name = value;
             }
-        }
-
-        internal string Tag
-        {
-            get;
-            set;
         }
 
         internal void ValidateDescriptionName()
