@@ -11,6 +11,7 @@ namespace Microsoft.Azure.ServiceBus
 
     public abstract class SubscriptionClient : ClientEntity
     {
+        public const string DefaultRule = "$Default";
         MessageReceiver innerReceiver;
 
         protected SubscriptionClient(ServiceBusConnection serviceBusConnection, string topicPath, string name, ReceiveMode receiveMode)
