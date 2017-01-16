@@ -4,13 +4,39 @@
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
+    using System.Text;
 
     static class StringUtility
     {
         public static string GetRandomString()
         {
             return Guid.NewGuid().ToString().Substring(0, 6);
+        }
+
+        public static string GetFormattedLockToken(IEnumerable<Guid> lockTokens)
+        {
+            StringBuilder lockTokenBuilder = new StringBuilder();
+            foreach (Guid lockToken in lockTokens)
+            {
+                lockTokenBuilder.AppendLine(
+                    string.Format(CultureInfo.InvariantCulture, "<LockToken>{0}</LockToken>", lockToken));
+            }
+
+            return lockTokenBuilder.ToString();
+        }
+
+        public static string GetFormattedSequenceNumbers(IEnumerable<long> sequenceNumbers)
+        {
+            StringBuilder sequenceNumberBuilder = new StringBuilder();
+            foreach (long sequenceNumber in sequenceNumbers)
+            {
+                sequenceNumberBuilder.AppendLine(
+                    string.Format(CultureInfo.InvariantCulture, "<SequenceNumber>{0}</SequenceNumber>", sequenceNumber));
+            }
+
+            return sequenceNumberBuilder.ToString();
         }
 
         /// <summary>
