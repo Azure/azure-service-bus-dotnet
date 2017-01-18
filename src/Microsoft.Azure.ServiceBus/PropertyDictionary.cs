@@ -39,33 +39,19 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                if (value != null)
+                if (this.IsSupportedObject(value))
                 {
-                    var type = value.GetType();
-
-                    if (!SerializationUtilities.IsSupportedPropertyType(type))
-                    {
-                        throw new ArgumentException(Resources.NotSupportedPropertyType.FormatForUser(type), nameof(value));
-                    }
+                    this.inner[key] = value;
                 }
-
-                this.inner[key] = value;
             }
         }
 
         public void Add(string key, object value)
         {
-            if (value != null)
+            if (this.IsSupportedObject(value))
             {
-                var type = value.GetType();
-
-                if (!SerializationUtilities.IsSupportedPropertyType(type))
-                {
-                    throw new ArgumentException(Resources.NotSupportedPropertyType.FormatForUser(type), nameof(value));
-                }
+                this.inner.Add(key, value);
             }
-
-            this.inner.Add(key, value);
         }
 
         public bool ContainsKey(string key)
@@ -116,6 +102,21 @@ namespace Microsoft.Azure.ServiceBus
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.inner.GetEnumerator();
+        }
+
+        bool IsSupportedObject(object value)
+        {
+            if (value != null)
+            {
+                var type = value.GetType();
+
+                if (!SerializationUtilities.IsSupportedPropertyType(type))
+                {
+                    throw new ArgumentException(Resources.NotSupportedPropertyType.FormatForUser(type), nameof(value));
+                }
+            }
+
+            return true;
         }
     }
 }
