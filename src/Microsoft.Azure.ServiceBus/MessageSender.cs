@@ -35,7 +35,28 @@ namespace Microsoft.Azure.ServiceBus
             return this.OnSendAsync(brokeredMessages);
         }
 
+        public Task<long> ScheduleMessageAsync(BrokeredMessage message, DateTimeOffset scheduleEnqueueTimeUtc)
+        {
+            if (message == null)
+            {
+                throw Fx.Exception.ArgumentNull(nameof(message));
+            }
+
+            message.ScheduledEnqueueTimeUtc = scheduleEnqueueTimeUtc.UtcDateTime;
+            MessageSender.ValidateMessage(message);
+            return this.OnScheduleMessageAsync(message);
+        }
+
+        public Task CancelScheduledMessageAsync(long sequenceNumber)
+        {
+            return this.OnCancelScheduledMessageAsync(sequenceNumber);
+        }
+
         protected abstract Task OnSendAsync(IEnumerable<BrokeredMessage> brokeredMessages);
+
+        protected abstract Task<long> OnScheduleMessageAsync(BrokeredMessage brokeredMessage);
+
+        protected abstract Task OnCancelScheduledMessageAsync(long sequenceNumber);
 
         static void ValidateMessages(IEnumerable<BrokeredMessage> brokeredMessages)
         {
@@ -44,9 +65,17 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNull(nameof(brokeredMessages));
             }
 
-            if (brokeredMessages.Any(brokeredMessage => brokeredMessage.IsLockTokenSet))
+            foreach (var brokeredMessage in brokeredMessages)
             {
-                throw Fx.Exception.Argument(nameof(brokeredMessages), "Cannot Send ReceivedMessages");
+                ValidateMessage(brokeredMessage);
+            }
+        }
+
+        static void ValidateMessage(BrokeredMessage brokeredMessage)
+        {
+            if (brokeredMessage.IsLockTokenSet)
+            {
+                throw Fx.Exception.Argument(nameof(brokeredMessage), "Cannot Send ReceivedMessages");
             }
         }
     }
