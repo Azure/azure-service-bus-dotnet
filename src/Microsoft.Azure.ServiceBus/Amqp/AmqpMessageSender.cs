@@ -186,7 +186,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             AmqpRequestResponseLinkCreator requestResponseLinkCreator = new AmqpRequestResponseLinkCreator(
                 entityPath,
                 this.ServiceBusConnection,
-                new[] { ClaimConstants.Manage, ClaimConstants.Listen },
+                new[] { ClaimConstants.Manage, ClaimConstants.Send },
                 this.CbsTokenProvider,
                 linkSettings);
 
