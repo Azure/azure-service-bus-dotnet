@@ -202,9 +202,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             // Sending a dummy message so that ReceiveAsync(2) returns immediately after getting 1 message
             // instead of waiting for connection timeout on a single message.
             await messageSender.SendAsync(new BrokeredMessage("Dummy") { MessageId = "Dummy" });
-            var message = await messageReceiver.ReceiveAsync(2);
-            Assert.True(message.Count == 1);
-            Assert.True(message.First().MessageId == "Dummy");
+            IList<BrokeredMessage> messages = null;
+            int retryCount = 5;
+            while (messages == null && --retryCount > 0)
+            {
+                messages = await messageReceiver.ReceiveAsync(2);
+            }
+
+            Assert.NotNull(messages);
+            Assert.True(messages.Count == 1);
+            Assert.True(messages.First().MessageId == "Dummy");
         }
     }
 }
