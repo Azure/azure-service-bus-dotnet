@@ -500,5 +500,38 @@ namespace Microsoft.Azure.ServiceBus
                 this.WriteEvent(41);
             }
         }
+
+        [Event(42, Level = EventLevel.Informational, Message = "{0}: MessageBrowseAsync start. SequenceNumber = {1}, MessageCount = {2}")]
+        public void MessageBrowseStart(string clientId, long sequenceNumber, int messageCount)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(42, clientId, sequenceNumber, messageCount);
+            }
+        }
+
+        [Event(43, Level = EventLevel.Informational, Message = "{0}: MessageBrowseAsync done.")]
+        public void MessageBrowseStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(43, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void MessageBrowseException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageBrowseException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(44, Level = EventLevel.Informational, Message = "{0}: MessageBrowseAsync Exception: {1}.")]
+        void MessageBrowseException(string clientId, string exception)
+        {
+            this.WriteEvent(44, clientId, exception);
+        }
     }
 }

@@ -239,9 +239,9 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         /// <param name="maxMessageCount">The number of messages.</param>
         /// <returns>The asynchronous operation that returns a list of <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> to be read.</returns>
-        public async Task<IList<BrokeredMessage>> PeekAsync(int maxMessageCount)
+        public Task<IList<BrokeredMessage>> PeekAsync(int maxMessageCount)
         {
-            return await this.OnPeekAsync(this.lastPeekedSequenceNumber + 1, maxMessageCount).ConfigureAwait(false);
+            return this.PeekBySequenceNumberAsync(this.lastPeekedSequenceNumber + 1, maxMessageCount);
         }
 
         /// <summary>
@@ -251,8 +251,32 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
         public async Task<BrokeredMessage> PeekBySequenceNumberAsync(long fromSequenceNumber)
         {
-            var messages = await this.OnPeekAsync(fromSequenceNumber, messageCount: 1).ConfigureAwait(false);
+            var messages = await this.PeekBySequenceNumberAsync(fromSequenceNumber, 1).ConfigureAwait(false);
             return messages?.FirstOrDefault();
+        }
+
+        /// <summary>Peeks a batch of messages.</summary>
+        /// <param name="fromSequenceNumber">The starting point from which to browse a batch of messages.</param>
+        /// <param name="messageCount">The number of messages.</param>
+        /// <returns>A batch of messages peeked.</returns>
+        public async Task<IList<BrokeredMessage>> PeekBySequenceNumberAsync(long fromSequenceNumber, int messageCount)
+        {
+            IList<BrokeredMessage> messages = null;
+
+            MessagingEventSource.Log.MessageBrowseStart(this.ClientId, fromSequenceNumber, messageCount);
+            try
+            {
+                messages = await this.OnPeekAsync(fromSequenceNumber, messageCount).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                MessagingEventSource.Log.MessageBrowseException(this.ClientId, exception);
+                throw;
+            }
+
+            MessagingEventSource.Log.MessageBrowseStop(this.ClientId);
+
+            return messages;
         }
 
         protected abstract Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount);

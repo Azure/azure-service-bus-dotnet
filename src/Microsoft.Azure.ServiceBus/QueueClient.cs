@@ -195,15 +195,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
         public Task<BrokeredMessage> PeekAsync()
         {
-            try
-            {
-                return this.innerReceiver.PeekAsync();
-            }
-            catch (Exception)
-            {
-                // TODO: Log Peek Exception
-                throw;
-            }
+            return this.innerReceiver.PeekAsync();
         }
 
         /// <summary>
@@ -213,15 +205,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The asynchronous operation that returns a list of <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> to be read.</returns>
         public Task<IList<BrokeredMessage>> PeekAsync(int maxMessageCount)
         {
-            try
-            {
-                return this.innerReceiver.PeekAsync(maxMessageCount);
-            }
-            catch (Exception)
-            {
-                // TODO: Log Receive Exception
-                throw;
-            }
+            return this.innerReceiver.PeekAsync(maxMessageCount);
         }
 
         /// <summary>
@@ -231,15 +215,16 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
         public Task<BrokeredMessage> PeekBySequenceNumberAsync(long fromSequenceNumber)
         {
-            try
-            {
-                return this.innerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber);
-            }
-            catch (Exception)
-            {
-                // TODO: Log Receive Exception
-                throw;
-            }
+            return this.innerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber);
+        }
+
+        /// <summary>Peeks a batch of messages.</summary>
+        /// <param name="fromSequenceNumber">The starting point from which to browse a batch of messages.</param>
+        /// <param name="messageCount">The number of messages.</param>
+        /// <returns>A batch of messages peeked.</returns>
+        public Task<IList<BrokeredMessage>> PeekBySequenceNumberAsync(long fromSequenceNumber, int messageCount)
+        {
+            return this.innerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber, messageCount);
         }
 
         public Task CompleteAsync(Guid lockToken)
