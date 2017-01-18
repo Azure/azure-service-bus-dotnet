@@ -189,6 +189,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 new[] { ClaimConstants.Manage, ClaimConstants.Listen },
                 this.CbsTokenProvider,
                 linkSettings);
+
             RequestResponseAmqpLink requestResponseAmqpLink =
                 (RequestResponseAmqpLink)await requestResponseLinkCreator.CreateAndOpenAmqpLinkAsync()
                 .ConfigureAwait(false);

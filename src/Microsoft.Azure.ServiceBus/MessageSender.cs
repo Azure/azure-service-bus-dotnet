@@ -42,6 +42,14 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNull(nameof(message));
             }
 
+            if (scheduleEnqueueTimeUtc.CompareTo(DateTimeOffset.UtcNow) < 0)
+            {
+                throw Fx.Exception.ArgumentOutOfRange(
+                    nameof(scheduleEnqueueTimeUtc),
+                    scheduleEnqueueTimeUtc.ToString(),
+                    "Cannot schedule messages in the past");
+            }
+
             message.ScheduledEnqueueTimeUtc = scheduleEnqueueTimeUtc.UtcDateTime;
             MessageSender.ValidateMessage(message);
             return this.OnScheduleMessageAsync(message);
