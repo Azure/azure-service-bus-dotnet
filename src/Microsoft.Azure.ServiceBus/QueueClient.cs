@@ -239,12 +239,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task AbandonAsync(Guid lockToken)
         {
-            return this.AbandonAsync(new Guid[] { lockToken });
-        }
-
-        public Task AbandonAsync(IEnumerable<Guid> lockTokens)
-        {
-            return this.InnerReceiver.AbandonAsync(lockTokens);
+            return this.InnerReceiver.AbandonAsync(new Guid[] { lockToken });
         }
 
         public Task<MessageSession> AcceptMessageSessionAsync()
@@ -274,22 +269,12 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task DeferAsync(Guid lockToken)
         {
-            return this.DeferAsync(new Guid[] { lockToken });
-        }
-
-        public Task DeferAsync(IEnumerable<Guid> lockTokens)
-        {
-            return this.InnerReceiver.DeferAsync(lockTokens);
+            return this.InnerReceiver.DeferAsync(new Guid[] { lockToken });
         }
 
         public Task DeadLetterAsync(Guid lockToken)
         {
-            return this.DeadLetterAsync(new Guid[] { lockToken });
-        }
-
-        public Task DeadLetterAsync(IEnumerable<Guid> lockTokens)
-        {
-            return this.InnerReceiver.DeadLetterAsync(lockTokens);
+            return this.InnerReceiver.DeadLetterAsync(new Guid[] { lockToken });
         }
 
         public Task<DateTime> RenewMessageLockAsync(Guid lockToken)
