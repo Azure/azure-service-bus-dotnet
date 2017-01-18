@@ -36,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         {
             if (string.IsNullOrWhiteSpace(correlationId))
             {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace("correlationId");
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(correlationId));
             }
 
             this.CorrelationId = correlationId;

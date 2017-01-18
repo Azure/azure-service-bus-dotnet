@@ -520,7 +520,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
             else
             {
-                throw new NotSupportedException();
+                throw new NotSupportedException(
+                    Resources.RuleFilterNotSupported.FormatForUser(
+                        description.Filter.GetType(),
+                        nameof(SqlFilter),
+                        nameof(CorrelationFilter)));
             }
 
             AmqpMap amqpAction = GetRuleActionMap(description.Action as SqlRuleAction);
@@ -562,14 +566,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return null;
         }
 
-        private static AmqpMap GetSqlFilterMap(SqlFilter sqlFilter)
+        static AmqpMap GetSqlFilterMap(SqlFilter sqlFilter)
         {
             AmqpMap amqpFilterMap = new AmqpMap();
             amqpFilterMap[ManagementConstants.Properties.Expression] = sqlFilter.SqlExpression;
             return amqpFilterMap;
         }
 
-        private static AmqpMap GetCorrelationFilterMap(CorrelationFilter correlationFilter)
+        static AmqpMap GetCorrelationFilterMap(CorrelationFilter correlationFilter)
         {
             AmqpMap correlationFilterMap = new AmqpMap
             {
@@ -594,7 +598,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return correlationFilterMap;
         }
 
-        private static AmqpMap GetRuleActionMap(SqlRuleAction sqlRuleAction)
+        static AmqpMap GetRuleActionMap(SqlRuleAction sqlRuleAction)
         {
             AmqpMap ruleActionMap;
             if (sqlRuleAction != null)

@@ -96,7 +96,7 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to &apos;{0}&apos; contained character &apos;{1}&apos; which is not allowed because it is reserved in the Uri scheme..
+        ///    Looks up a localized string similar to &apos;{0}&apos; contains character &apos;{1}&apos; which is not allowed because it is reserved in the Uri scheme..
         /// </summary>
         public static string CharacterReservedForUriScheme {
             get {
@@ -137,6 +137,15 @@ namespace Microsoft.Azure.ServiceBus {
         public static string NotSupportedPropertyType {
             get {
                 return ResourceManager.GetString("NotSupportedPropertyType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///    Looks up a localized string similar to Provided rule filter {0} is not supported. Supported values are: {1}, {2}.
+        /// </summary>
+        public static string RuleFilterNotSupported {
+            get {
+                return ResourceManager.GetString("RuleFilterNotSupported", resourceCulture);
             }
         }
         

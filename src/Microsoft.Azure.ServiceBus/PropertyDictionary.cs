@@ -39,6 +39,16 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
+                if (value != null)
+                {
+                    var type = value.GetType();
+
+                    if (!SerializationUtilities.IsSupportedPropertyType(type))
+                    {
+                        throw new ArgumentException(Resources.NotSupportedPropertyType.FormatForUser(type), nameof(value));
+                    }
+                }
+
                 this.inner[key] = value;
             }
         }

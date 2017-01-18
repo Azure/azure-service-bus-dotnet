@@ -36,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         {
             if (filter == null)
             {
-                throw Fx.Exception.ArgumentNull("Filter");
+                throw Fx.Exception.ArgumentNull(nameof(filter));
             }
 
             this.Filter = filter;
@@ -51,7 +51,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         {
             if (filter == null)
             {
-                throw Fx.Exception.ArgumentNull("Filter");
+                throw Fx.Exception.ArgumentNull(nameof(filter));
             }
 
             this.Filter = filter;
@@ -113,17 +113,22 @@ namespace Microsoft.Azure.ServiceBus.Filters
         {
             if (string.IsNullOrWhiteSpace(this.name))
             {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace("description.Name");
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.name));
             }
 
             if (this.name.Length > Constants.RuleNameMaximumLength)
             {
-                throw Fx.Exception.ArgumentOutOfRange("description.Name", this.name, Resources.EntityNameLengthExceedsLimit.FormatForUser(this.name, Constants.RuleNameMaximumLength));
+                throw Fx.Exception.ArgumentOutOfRange(
+                    nameof(this.name),
+                    this.name,
+                    Resources.EntityNameLengthExceedsLimit.FormatForUser(this.name, Constants.RuleNameMaximumLength));
             }
 
             if (this.name.Contains(Constants.PathDelimiter) || this.name.Contains(@"\"))
             {
-                throw Fx.Exception.Argument("description.Name", Resources.InvalidCharacterInEntityName.FormatForUser(Constants.PathDelimiter, this.name));
+                throw Fx.Exception.Argument(
+                    nameof(this.name),
+                    Resources.InvalidCharacterInEntityName.FormatForUser(Constants.PathDelimiter, this.name));
             }
 
             string[] uriSchemeKeys = { "@", "?", "#" };
@@ -132,7 +137,8 @@ namespace Microsoft.Azure.ServiceBus.Filters
                 if (this.name.Contains(uriSchemeKey))
                 {
                     throw Fx.Exception.Argument(
-                        "description.Name", Resources.CharacterReservedForUriScheme.FormatForUser("description.Name", uriSchemeKey));
+                        nameof(this.name),
+                        Resources.CharacterReservedForUriScheme.FormatForUser(nameof(this.name), uriSchemeKey));
                 }
             }
         }
