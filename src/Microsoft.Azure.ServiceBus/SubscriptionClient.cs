@@ -183,6 +183,15 @@ namespace Microsoft.Azure.ServiceBus
             return this.innerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber);
         }
 
+        /// <summary>Peeks a batch of messages.</summary>
+        /// <param name="fromSequenceNumber">The starting point from which to browse a batch of messages.</param>
+        /// <param name="messageCount">The number of messages.</param>
+        /// <returns>A batch of messages peeked.</returns>
+        public Task<IList<BrokeredMessage>> PeekBySequenceNumberAsync(long fromSequenceNumber, int messageCount)
+        {
+            return this.innerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber, messageCount);
+        }
+
         public Task CompleteAsync(Guid lockToken)
         {
             return this.CompleteAsync(new Guid[] { lockToken });

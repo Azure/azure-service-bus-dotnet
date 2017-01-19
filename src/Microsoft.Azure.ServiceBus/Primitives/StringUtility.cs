@@ -15,13 +15,12 @@ namespace Microsoft.Azure.ServiceBus
             return Guid.NewGuid().ToString().Substring(0, 6);
         }
 
-        public static string GetFormattedLockToken(IEnumerable<Guid> lockTokens)
+        public static string GetFormattedLockTokens(IEnumerable<Guid> lockTokens)
         {
             StringBuilder lockTokenBuilder = new StringBuilder();
             foreach (Guid lockToken in lockTokens)
             {
-                lockTokenBuilder.AppendLine(
-                    string.Format(CultureInfo.InvariantCulture, "<LockToken>{0}</LockToken>", lockToken));
+                lockTokenBuilder.AppendFormat(CultureInfo.InvariantCulture, "<LockToken>{0}</LockToken>", lockToken);
             }
 
             return lockTokenBuilder.ToString();
@@ -32,8 +31,7 @@ namespace Microsoft.Azure.ServiceBus
             StringBuilder sequenceNumberBuilder = new StringBuilder();
             foreach (long sequenceNumber in sequenceNumbers)
             {
-                sequenceNumberBuilder.AppendLine(
-                    string.Format(CultureInfo.InvariantCulture, "<SequenceNumber>{0}</SequenceNumber>", sequenceNumber));
+                sequenceNumberBuilder.AppendFormat(CultureInfo.InvariantCulture, "<SequenceNumber>{0}</SequenceNumber>", sequenceNumber);
             }
 
             return sequenceNumberBuilder.ToString();

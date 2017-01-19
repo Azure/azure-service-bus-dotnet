@@ -97,7 +97,7 @@ namespace Microsoft.Azure.ServiceBus
                 throw;
             }
 
-            MessagingEventSource.Log.MessageReceiveStop(this.ClientId);
+            MessagingEventSource.Log.MessageReceiveStop(this.ClientId, messages?.Count ?? 0);
             return messages;
         }
 
@@ -119,7 +119,7 @@ namespace Microsoft.Azure.ServiceBus
                 throw;
             }
 
-            MessagingEventSource.Log.MessageReceiveBySequenceNumberStop(this.ClientId);
+            MessagingEventSource.Log.MessageReceiveBySequenceNumberStop(this.ClientId, messages?.Count ?? 0);
 
             return messages;
         }
@@ -206,7 +206,6 @@ namespace Microsoft.Azure.ServiceBus
         public async Task<DateTime> RenewLockAsync(Guid lockToken)
         {
             this.ThrowIfNotPeekLockMode();
-            int count = MessageReceiver.ValidateLockTokens(new Guid[] { lockToken });
 
             MessagingEventSource.Log.MessageRenewLockStart(this.ClientId, 1, new Guid[] { lockToken });
 
@@ -263,18 +262,18 @@ namespace Microsoft.Azure.ServiceBus
         {
             IList<BrokeredMessage> messages = null;
 
-            MessagingEventSource.Log.MessageBrowseStart(this.ClientId, fromSequenceNumber, messageCount);
+            MessagingEventSource.Log.MessagePeekStart(this.ClientId, fromSequenceNumber, messageCount);
             try
             {
                 messages = await this.OnPeekAsync(fromSequenceNumber, messageCount).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.MessageBrowseException(this.ClientId, exception);
+                MessagingEventSource.Log.MessagePeekException(this.ClientId, exception);
                 throw;
             }
 
-            MessagingEventSource.Log.MessageBrowseStop(this.ClientId);
+            MessagingEventSource.Log.MessagePeekStop(this.ClientId, messages?.Count ?? 0);
 
             return messages;
         }

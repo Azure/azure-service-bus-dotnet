@@ -13,8 +13,8 @@ namespace Microsoft.Azure.ServiceBus
         "Microsoft.StyleCop.CSharp.OrderingRules",
         "SA1202:ElementsMustBeOrderedByAccess",
         Justification = "Following this rule here will mix up the EventIds and make it confusing")]
-    [EventSource(Name = "Microsoft-Azure-Messaging")]
-    public class MessagingEventSource : EventSource
+    [EventSource(Name = "Microsoft-Azure-ServiceBus")]
+    public sealed class MessagingEventSource : EventSource
     {
         public static MessagingEventSource Log { get; } = new MessagingEventSource();
 
@@ -99,7 +99,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(9, Level = EventLevel.Informational, Message = "{0}: SendAsync Exception: {1}.")]
+        [Event(9, Level = EventLevel.Error, Message = "{0}: SendAsync Exception: {1}.")]
         void MessageSendException(string clientId, string exception)
         {
             this.WriteEvent(9, clientId, exception);
@@ -114,12 +114,12 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(11, Level = EventLevel.Informational, Message = "{0}: ReceiveAsync done.")]
-        public void MessageReceiveStop(string clientId)
+        [Event(11, Level = EventLevel.Informational, Message = "{0}: ReceiveAsync done. Received '{1}' messages")]
+        public void MessageReceiveStop(string clientId, int messageCount)
         {
             if (this.IsEnabled())
             {
-                this.WriteEvent(11, clientId);
+                this.WriteEvent(11, clientId, messageCount);
             }
         }
 
@@ -132,7 +132,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(12, Level = EventLevel.Informational, Message = "{0}: ReceiveAsync Exception: {1}.")]
+        [Event(12, Level = EventLevel.Error, Message = "{0}: ReceiveAsync Exception: {1}.")]
         void MessageReceiveException(string clientId, string exception)
         {
             this.WriteEvent(12, clientId, exception);
@@ -143,7 +143,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockToken(lockTokens);
+                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
                 this.MessageCompleteStart(clientId, messageCount, formattedLockTokens);
             }
         }
@@ -172,7 +172,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(15, Level = EventLevel.Informational, Message = "{0}: CompleteAsync Exception: {1}.")]
+        [Event(15, Level = EventLevel.Error, Message = "{0}: CompleteAsync Exception: {1}.")]
         void MessageCompleteException(string clientId, string exception)
         {
             this.WriteEvent(15, clientId, exception);
@@ -183,7 +183,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockToken(lockTokens);
+                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
                 this.MessageAbandonStart(clientId, messageCount, formattedLockTokens);
             }
         }
@@ -212,7 +212,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(18, Level = EventLevel.Informational, Message = "{0}: AbandonAsync Exception: {1}.")]
+        [Event(18, Level = EventLevel.Error, Message = "{0}: AbandonAsync Exception: {1}.")]
         void MessageAbandonException(string clientId, string exception)
         {
             this.WriteEvent(18, clientId, exception);
@@ -223,7 +223,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockToken(lockTokens);
+                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
                 this.MessageDeferStart(clientId, messageCount, formattedLockTokens);
             }
         }
@@ -252,7 +252,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(21, Level = EventLevel.Informational, Message = "{0}: DeferAsync Exception: {1}.")]
+        [Event(21, Level = EventLevel.Error, Message = "{0}: DeferAsync Exception: {1}.")]
         void MessageDeferException(string clientId, string exception)
         {
             this.WriteEvent(21, clientId, exception);
@@ -263,7 +263,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockToken(lockTokens);
+                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
                 this.MessageDeadLetterStart(clientId, messageCount, formattedLockTokens);
             }
         }
@@ -292,7 +292,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(24, Level = EventLevel.Informational, Message = "{0}: DeadLetterAsync Exception: {1}.")]
+        [Event(24, Level = EventLevel.Error, Message = "{0}: DeadLetterAsync Exception: {1}.")]
         void MessageDeadLetterException(string clientId, string exception)
         {
             this.WriteEvent(24, clientId, exception);
@@ -303,7 +303,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockToken(lockTokens);
+                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
                 this.MessageRenewLockStart(clientId, messageCount, formattedLockTokens);
             }
         }
@@ -332,7 +332,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(27, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync Exception: {1}.")]
+        [Event(27, Level = EventLevel.Error, Message = "{0}: RenewLockAsync Exception: {1}.")]
         void MessageRenewLockException(string clientId, string exception)
         {
             this.WriteEvent(27, clientId, exception);
@@ -354,12 +354,12 @@ namespace Microsoft.Azure.ServiceBus
             this.WriteEvent(28, clientId, messageCount, sequenceNumbers);
         }
 
-        [Event(29, Level = EventLevel.Informational, Message = "{0}: ReceiveBySequenceNumberAsync done.")]
-        public void MessageReceiveBySequenceNumberStop(string clientId)
+        [Event(29, Level = EventLevel.Informational, Message = "{0}: ReceiveBySequenceNumberAsync done. Received '{1}' messages")]
+        public void MessageReceiveBySequenceNumberStop(string clientId, int messageCount)
         {
             if (this.IsEnabled())
             {
-                this.WriteEvent(29, clientId);
+                this.WriteEvent(29, clientId, messageCount);
             }
         }
 
@@ -372,7 +372,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(30, Level = EventLevel.Informational, Message = "{0}: ReceiveBySequenceNumberAsync Exception: {1}.")]
+        [Event(30, Level = EventLevel.Error, Message = "{0}: ReceiveBySequenceNumberAsync Exception: {1}.")]
         void MessageReceiveBySequenceNumberException(string clientId, string exception)
         {
             this.WriteEvent(30, clientId, exception);
@@ -405,7 +405,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(33, Level = EventLevel.Informational, Message = "{0}: AcceptMessageSessionAsync Exception: {1}.")]
+        [Event(33, Level = EventLevel.Error, Message = "{0}: AcceptMessageSessionAsync Exception: {1}.")]
         void AcceptMessageSessionException(string clientId, string exception)
         {
             this.WriteEvent(33, clientId, exception);
@@ -501,8 +501,8 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(42, Level = EventLevel.Informational, Message = "{0}: MessageBrowseAsync start. SequenceNumber = {1}, MessageCount = {2}")]
-        public void MessageBrowseStart(string clientId, long sequenceNumber, int messageCount)
+        [Event(42, Level = EventLevel.Informational, Message = "{0}: MessagePeekAsync start. SequenceNumber = {1}, MessageCount = {2}")]
+        public void MessagePeekStart(string clientId, long sequenceNumber, int messageCount)
         {
             if (this.IsEnabled())
             {
@@ -510,26 +510,26 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(43, Level = EventLevel.Informational, Message = "{0}: MessageBrowseAsync done.")]
-        public void MessageBrowseStop(string clientId)
+        [Event(43, Level = EventLevel.Informational, Message = "{0}: MessagePeekAsync done. Peeked '{1}' messages")]
+        public void MessagePeekStop(string clientId, int messageCount)
         {
             if (this.IsEnabled())
             {
-                this.WriteEvent(43, clientId);
+                this.WriteEvent(43, clientId, messageCount);
             }
         }
 
         [NonEvent]
-        public void MessageBrowseException(string clientId, Exception exception)
+        public void MessagePeekException(string clientId, Exception exception)
         {
             if (this.IsEnabled())
             {
-                this.MessageBrowseException(clientId, exception.ToString());
+                this.MessagePeekException(clientId, exception.ToString());
             }
         }
 
-        [Event(44, Level = EventLevel.Informational, Message = "{0}: MessageBrowseAsync Exception: {1}.")]
-        void MessageBrowseException(string clientId, string exception)
+        [Event(44, Level = EventLevel.Error, Message = "{0}: MessagePeekAsync Exception: {1}.")]
+        void MessagePeekException(string clientId, string exception)
         {
             this.WriteEvent(44, clientId, exception);
         }
