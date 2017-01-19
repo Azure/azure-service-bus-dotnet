@@ -6,7 +6,7 @@
 
   "buildOptions": {
     "warningsAsErrors": true,
-    "keyFile": "../../build/Microsoft.Azure.ServiceBus.snk",
+    "keyFile": "../../build/keyfile.snk",
     "additionalArguments": [ "/ruleset:./../../build/StyleCop.Analyzers.ruleset", "/additionalfile:./../../build/stylecop.json" ]
   },
 
