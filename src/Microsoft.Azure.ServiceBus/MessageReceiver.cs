@@ -81,6 +81,11 @@ namespace Microsoft.Azure.ServiceBus
             return null;
         }
 
+        /// <summary>
+        /// Asynchronously receives a message. />.
+        /// </summary>
+        /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
+        /// <returns>The asynchronous operation.</returns>
         public async Task<BrokeredMessage> ReceiveAsync(TimeSpan serverWaitTime)
         {
             IList<BrokeredMessage> messages = await this.ReceiveAsync(1, serverWaitTime).ConfigureAwait(false);
@@ -97,6 +102,12 @@ namespace Microsoft.Azure.ServiceBus
             return this.OnReceiveAsync(maxMessageCount, this.OperationTimeout);
         }
 
+        /// <summary>
+        /// Asynchronously receives a message. />.
+        /// </summary>
+        /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
+        /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
+        /// <returns>The asynchronous operation.</returns>
         public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
         {
             return this.OnReceiveAsync(maxMessageCount, serverWaitTime);
