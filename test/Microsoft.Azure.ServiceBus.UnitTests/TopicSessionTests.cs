@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Text;
     using System.Threading;
@@ -199,6 +200,29 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 await subscriptionClient.CloseAsync();
                 await topicClient.CloseAsync();
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        async Task ServerWaitTimeoutTest(string topicName, int messageCount = 1)
+        {
+            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
+            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName, ReceiveMode.ReceiveAndDelete);
+            try
+            {
+                Stopwatch timer = Stopwatch.StartNew();
+                var sessionReceiver = await subscriptionClient.AcceptMessageSessionAsync(TimeSpan.FromSeconds(2));
+                timer.Stop();
+
+                // If sessionId is not null, then the queue needs to be cleaned up before running the timeout test.
+                Assert.Null(sessionReceiver.SessionId);
+                Assert.True(timer.Elapsed.TotalSeconds < 4);
+            }
+            finally
+            {
+                await subscriptionClient.CloseAsync();
             }
         }
 
