@@ -264,12 +264,33 @@ namespace Microsoft.Azure.ServiceBus
             return this.AcceptMessageSessionAsync(null);
         }
 
+        public Task<MessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime)
+        {
+            return this.AcceptMessageSessionAsync(null, serverWaitTime);
+        }
+
         public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
         {
             MessageSession session = null;
             try
             {
                 session = await this.OnAcceptMessageSessionAsync(sessionId).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // TODO: Log Complete Exception
+                throw;
+            }
+
+            return session;
+        }
+
+        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
+        {
+            MessageSession session = null;
+            try
+            {
+                session = await this.OnAcceptMessageSessionAsync(sessionId, serverWaitTime).ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -337,6 +358,8 @@ namespace Microsoft.Azure.ServiceBus
         protected abstract MessageReceiver OnCreateMessageReceiver();
 
         protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId);
+
+        protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime);
 
         protected abstract Task OnCloseAsync();
     }

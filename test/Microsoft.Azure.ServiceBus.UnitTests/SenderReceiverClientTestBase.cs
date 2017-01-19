@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
     using Xunit;
@@ -156,6 +157,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
 
             var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
+        }
+
+        protected async Task ServerWaitTimeoutTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        {
+            Stopwatch timer = Stopwatch.StartNew();
+            var message = await messageReceiver.ReceiveAsync(TimeSpan.FromSeconds(2));
+            timer.Stop();
+
+            // If message is not null, then the queue needs to be cleaned up before running the timeout test.
+            Assert.Null(message);
+            Assert.True(timer.Elapsed.TotalSeconds < 4);
         }
     }
 }

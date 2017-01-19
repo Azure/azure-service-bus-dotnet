@@ -81,9 +81,25 @@ namespace Microsoft.Azure.ServiceBus
             return null;
         }
 
+        public async Task<BrokeredMessage> ReceiveAsync(TimeSpan serverWaitTime)
+        {
+            IList<BrokeredMessage> messages = await this.ReceiveAsync(1, serverWaitTime).ConfigureAwait(false);
+            if (messages != null && messages.Count > 0)
+            {
+                return messages[0];
+            }
+
+            return null;
+        }
+
         public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
         {
-            return this.OnReceiveAsync(maxMessageCount);
+            return this.OnReceiveAsync(maxMessageCount, this.OperationTimeout);
+        }
+
+        public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
+        {
+            return this.OnReceiveAsync(maxMessageCount, serverWaitTime);
         }
 
         public Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
@@ -161,7 +177,7 @@ namespace Microsoft.Azure.ServiceBus
             return messages?.FirstOrDefault();
         }
 
-        protected abstract Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount);
+        protected abstract Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime);
 
         protected abstract Task<IList<BrokeredMessage>> OnReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers);
 

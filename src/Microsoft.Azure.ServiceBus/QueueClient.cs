@@ -176,11 +176,32 @@ namespace Microsoft.Azure.ServiceBus
             return null;
         }
 
+        /// <summary>Asynchronously receives a message using the <see cref="MessageReceiver" />.</summary>
+        /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
+        /// <returns>The asynchronous operation.</returns>
+        public Task<BrokeredMessage> ReceiveAsync(TimeSpan serverWaitTime)
+        {
+            return this.InnerReceiver.ReceiveAsync(serverWaitTime);
+        }
+
         public async Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
         {
             try
             {
                 return await this.InnerReceiver.ReceiveAsync(maxMessageCount).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // TODO: Log Receive Exception
+                throw;
+            }
+        }
+
+        public async Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
+        {
+            try
+            {
+                return await this.InnerReceiver.ReceiveAsync(maxMessageCount, serverWaitTime).ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -307,12 +328,33 @@ namespace Microsoft.Azure.ServiceBus
             return this.AcceptMessageSessionAsync(null);
         }
 
+        public Task<MessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime)
+        {
+            return this.AcceptMessageSessionAsync(null, serverWaitTime);
+        }
+
         public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
         {
             MessageSession session = null;
             try
             {
                 session = await this.OnAcceptMessageSessionAsync(sessionId).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // TODO: Log Complete Exception
+                throw;
+            }
+
+            return session;
+        }
+
+        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
+        {
+            MessageSession session = null;
+            try
+            {
+                session = await this.OnAcceptMessageSessionAsync(sessionId, serverWaitTime).ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -387,6 +429,8 @@ namespace Microsoft.Azure.ServiceBus
         protected abstract MessageReceiver OnCreateMessageReceiver();
 
         protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId);
+
+        protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime);
 
         protected abstract Task OnCloseAsync();
     }
