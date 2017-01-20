@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
+    using System;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.ServiceBus.Primitives;
@@ -37,10 +38,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 await receiver.GetSessionReceiverLinkAsync().ConfigureAwait(false);
             }
-            catch (AmqpException exception)
+            catch (Exception exception)
             {
-                // ToDo: Abort the Receiver here
-                AmqpExceptionHelper.ToMessagingContract(exception.Error, false);
+                await receiver.CloseAsync();
+                throw AmqpExceptionHelper.GetClientException(exception);
             }
             MessageSession session = new AmqpMessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver);
             return session;
