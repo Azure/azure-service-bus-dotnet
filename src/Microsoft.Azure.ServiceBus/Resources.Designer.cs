@@ -114,6 +114,15 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to Failed to serialize the session state because its state stream has been partially consumed..
+        /// </summary>
+        public static string CannotSerializeSessionStateWithPartiallyConsumedStream {
+            get {
+                return ResourceManager.GetString("CannotSerializeSessionStateWithPartiallyConsumedStream", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to Serialization operation failed due to unsupported type {0}..
         /// </summary>
         public static string FailedToSerializeUnsupportedType {
@@ -128,6 +137,24 @@ namespace Microsoft.Azure.ServiceBus {
         public static string InvalidEncoding {
             get {
                 return ResourceManager.GetString("InvalidEncoding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///    Looks up a localized string similar to The lock supplied is invalid. Either the lock expired, or the message has already been removed from the queue..
+        /// </summary>
+        public static string MessageLockLost {
+            get {
+                return ResourceManager.GetString("MessageLockLost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///    Looks up a localized string similar to The session lock has expired on the MessageSession. Accept a new MessageSession..
+        /// </summary>
+        public static string SessionLockExpiredOnMessageSession {
+            get {
+                return ResourceManager.GetString("SessionLockExpiredOnMessageSession", resourceCulture);
             }
         }
         
@@ -168,4 +195,3 @@ namespace Microsoft.Azure.ServiceBus {
         }
     }
 }
-
