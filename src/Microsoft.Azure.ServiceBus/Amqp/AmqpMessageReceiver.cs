@@ -380,8 +380,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     var disposedOutcome = item.DescriptorCode == Rejected.Code && ((error = ((Rejected)item).Error) != null) ? item : null;
                     if (disposedOutcome != null)
                     {
-                        if (error.Condition.Equals(AmqpClientConstants.MessageLockLostError) ||
-                            error.Condition.Equals(AmqpErrorCode.NotFound))
+                        if (error.Condition.Equals(AmqpErrorCode.NotFound))
                         {
                             if (this.isSessionReceiver)
                             {
@@ -393,8 +392,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             }
                         }
 
-                        // No need to go through all the outcomes.
-                        break;
+                        throw AmqpExceptionHelper.ToMessagingContractException(error);
                     }
                 }
             }
