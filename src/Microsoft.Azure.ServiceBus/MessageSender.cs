@@ -79,17 +79,21 @@ namespace Microsoft.Azure.ServiceBus
 
         protected abstract Task OnCancelScheduledMessageAsync(long sequenceNumber);
 
-        static void ValidateMessages(IEnumerable<BrokeredMessage> brokeredMessages)
+        static int ValidateMessages(IEnumerable<BrokeredMessage> brokeredMessages)
         {
-            if (brokeredMessages == null || !brokeredMessages.Any())
+            int count = 0;
+            if (brokeredMessages == null)
             {
                 throw Fx.Exception.ArgumentNull(nameof(brokeredMessages));
             }
 
-            foreach (var brokeredMessage in brokeredMessages)
+            foreach (var message in brokeredMessages)
             {
-                ValidateMessage(brokeredMessage);
+                count++;
+                ValidateMessage(message);
             }
+
+            return count;
         }
 
         static void ValidateMessage(BrokeredMessage brokeredMessage)
@@ -99,8 +103,5 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.Argument(nameof(brokeredMessage), "Cannot send a message that was already received.");
             }
         }
-
-            
-                    
     }
 }
