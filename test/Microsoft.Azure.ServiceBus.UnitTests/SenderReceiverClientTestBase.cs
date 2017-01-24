@@ -184,7 +184,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         protected async Task CancelScheduledMessagesAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
         {
-            var scheduleTime = new DateTimeOffset(DateTime.UtcNow).AddSeconds(20);
+            var scheduleTime = new DateTimeOffset(DateTime.UtcNow).AddSeconds(30);
             var brokeredMessage = new BrokeredMessage("Test1") { MessageId = Guid.NewGuid().ToString() };
             TestUtility.Log(
                 $"Sending message with schedule time: {scheduleTime.UtcDateTime} and messageID {brokeredMessage.MessageId}");
@@ -196,8 +196,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             TestUtility.Log("Cancelling scheduled message");
             await messageSender.CancelScheduledMessageAsync(sequenceNumber);
 
-            TestUtility.Log("Sleeping for 20 seconds...");
-            Thread.Sleep(TimeSpan.FromSeconds(20));
+            TestUtility.Log("Sleeping for 30 seconds...");
+            Thread.Sleep(TimeSpan.FromSeconds(30));
 
             // Sending a dummy message so that ReceiveAsync(2) returns immediately after getting 1 message
             // instead of waiting for connection timeout on a single message.
