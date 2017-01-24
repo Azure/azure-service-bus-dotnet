@@ -173,7 +173,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.True(sequenceNumber > 0);
 
             TestUtility.Log("Sleeping for 5 seconds...");
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(5));
 
             var message = await messageReceiver.ReceiveAsync();
 
@@ -197,7 +197,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await messageSender.CancelScheduledMessageAsync(sequenceNumber);
 
             TestUtility.Log("Sleeping for 30 seconds...");
-            Thread.Sleep(TimeSpan.FromSeconds(30));
+            await Task.Delay(TimeSpan.FromSeconds(30));
 
             // Sending a dummy message so that ReceiveAsync(2) returns immediately after getting 1 message
             // instead of waiting for connection timeout on a single message.
