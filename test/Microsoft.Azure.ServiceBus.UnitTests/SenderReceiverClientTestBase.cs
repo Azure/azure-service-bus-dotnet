@@ -159,7 +159,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
         }
 
-        protected async Task ScheduleMessagesAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        protected async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
         {
             var startTime = DateTime.UtcNow;
             var scheduleTime = new DateTimeOffset(DateTime.UtcNow).AddSeconds(5);

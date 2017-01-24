@@ -89,14 +89,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         protected override async Task<long> OnScheduleMessageAsync(BrokeredMessage brokeredMessage)
         {
             // TODO: Ensure System.Transactions.Transaction.Current is null. Transactions are not supported by 1.0.0 version of dotnet core.
-            TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
             using (AmqpMessage amqpMessage = AmqpMessageConverter.ClientGetMessage(brokeredMessage))
             {
-                RequestResponseAmqpLink amqpLink =
-                    await
-                        this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime())
-                            .ConfigureAwait(false);
-
                 var request = AmqpRequestMessage.CreateRequest(
                     ManagementConstants.Operations.ScheduleMessageOperation,
                     this.OperationTimeout,
@@ -138,13 +132,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         protected override async Task OnCancelScheduledMessageAsync(long sequenceNumber)
         {
             // TODO: Ensure System.Transactions.Transaction.Current is null. Transactions are not supported by 1.0.0 version of dotnet core.
-            TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-
-            RequestResponseAmqpLink amqpLink =
-                await
-                    this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime())
-                        .ConfigureAwait(false);
-
             var request =
                 AmqpRequestMessage.CreateRequest(
                     ManagementConstants.Operations.CancelScheduledMessageOperation,

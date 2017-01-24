@@ -83,7 +83,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (brokeredMessage.IsLockTokenSet)
             {
-                throw Fx.Exception.Argument(nameof(brokeredMessage), "Cannot Send ReceivedMessages");
+                throw Fx.Exception.Argument(nameof(brokeredMessage), "Cannot send a message that was already received.");
             }
         }
     }
