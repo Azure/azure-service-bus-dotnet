@@ -170,7 +170,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
                 }
                 else
                 {
-                    builder.Append(" And ");
+                    builder.Append(" AND ");
                 }
 
                 builder.AppendFormat("{0} = '{1}'", propertyName, value);

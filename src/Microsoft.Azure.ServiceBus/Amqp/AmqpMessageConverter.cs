@@ -568,8 +568,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         static AmqpMap GetSqlFilterMap(SqlFilter sqlFilter)
         {
-            AmqpMap amqpFilterMap = new AmqpMap();
-            amqpFilterMap[ManagementConstants.Properties.Expression] = sqlFilter.SqlExpression;
+            AmqpMap amqpFilterMap = new AmqpMap
+            {
+                [ManagementConstants.Properties.Expression] = sqlFilter.SqlExpression
+            };
             return amqpFilterMap;
         }
 
@@ -600,14 +602,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         static AmqpMap GetRuleActionMap(SqlRuleAction sqlRuleAction)
         {
-            AmqpMap ruleActionMap;
+            AmqpMap ruleActionMap = null;
             if (sqlRuleAction != null)
             {
                 ruleActionMap = new AmqpMap { [ManagementConstants.Properties.Expression] = sqlRuleAction.SqlExpression };
-            }
-            else
-            {
-                ruleActionMap = null;
             }
 
             return ruleActionMap;
