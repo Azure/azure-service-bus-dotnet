@@ -414,6 +414,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         async Task<ReceivingAmqpLink> CreateLinkAsync(TimeSpan timeout)
         {
             FilterSet filterMap = null;
+
+            MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, false, this.EntityType, this.Path);
+
             if (this.isSessionReceiver)
             {
                 filterMap = new FilterSet { { AmqpClientConstants.SessionFilterName, this.sessionId } };
@@ -434,6 +437,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] { ClaimConstants.Listen }, this.CbsTokenProvider, linkSettings);
             ReceivingAmqpLink receivingAmqpLink = (ReceivingAmqpLink)await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
 
+            MessagingEventSource.Log.AmqpReceiveLinkCreateStop(this.ClientId);
+
             return receivingAmqpLink;
         }
 
@@ -441,11 +446,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         async Task<RequestResponseAmqpLink> CreateRequestResponseLinkAsync(TimeSpan timeout)
         {
             string entityPath = this.Path + '/' + AmqpClientConstants.ManagementAddress;
+
+            MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, true, this.EntityType, entityPath);
             AmqpLinkSettings linkSettings = new AmqpLinkSettings();
             linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, AmqpClientConstants.EntityTypeManagement);
 
             AmqpRequestResponseLinkCreator requestResponseLinkCreator = new AmqpRequestResponseLinkCreator(entityPath, this.ServiceBusConnection, new[] { ClaimConstants.Manage, ClaimConstants.Listen }, this.CbsTokenProvider, linkSettings);
             RequestResponseAmqpLink requestResponseAmqpLink = (RequestResponseAmqpLink)await requestResponseLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
+
+            MessagingEventSource.Log.AmqpReceiveLinkCreateStop(this.ClientId);
             return requestResponseAmqpLink;
         }
 
