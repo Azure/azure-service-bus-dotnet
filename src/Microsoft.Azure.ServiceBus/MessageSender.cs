@@ -6,6 +6,7 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public abstract class MessageSender : ClientEntity
@@ -29,10 +30,22 @@ namespace Microsoft.Azure.ServiceBus
             return this.SendAsync(new BrokeredMessage[] { brokeredMessage });
         }
 
-        public Task SendAsync(IEnumerable<BrokeredMessage> brokeredMessages)
+        public async Task SendAsync(IEnumerable<BrokeredMessage> brokeredMessages)
         {
-            MessageSender.ValidateMessages(brokeredMessages);
-            return this.OnSendAsync(brokeredMessages);
+            int count = MessageSender.ValidateMessages(brokeredMessages);
+            MessagingEventSource.Log.MessageSendStart(this.ClientId, count);
+
+            try
+            {
+                await this.OnSendAsync(brokeredMessages).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                MessagingEventSource.Log.MessageSendException(this.ClientId, exception);
+                throw;
+            }
+
+            MessagingEventSource.Log.MessageSendStop(this.ClientId);
         }
 
         public Task<long> ScheduleMessageAsync(BrokeredMessage message, DateTimeOffset scheduleEnqueueTimeUtc)
@@ -86,5 +99,8 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.Argument(nameof(brokeredMessage), "Cannot send a message that was already received.");
             }
         }
+
+            
+                    
     }
 }
