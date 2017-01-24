@@ -189,17 +189,9 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
         /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
         /// <returns>The asynchronous operation.</returns>
-        public async Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
+        public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
         {
-            try
-            {
-                return await this.InnerReceiver.ReceiveAsync(maxMessageCount, serverWaitTime).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                // TODO: Log Receive Exception
-                throw;
-            }
+            return this.InnerReceiver.ReceiveAsync(maxMessageCount, serverWaitTime);
         }
 
         public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
@@ -304,16 +296,20 @@ namespace Microsoft.Azure.ServiceBus
         public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
             MessageSession session = null;
+
+            MessagingEventSource.Log.AcceptMessageSessionStart(this.ClientId, sessionId);
+
             try
             {
                 session = await this.OnAcceptMessageSessionAsync(sessionId, serverWaitTime).ConfigureAwait(false);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                // TODO: Log Complete Exception
+                MessagingEventSource.Log.AcceptMessageSessionException(this.ClientId, exception);
                 throw;
             }
 
+            MessagingEventSource.Log.AcceptMessageSessionStop(this.ClientId);
             return session;
         }
 
