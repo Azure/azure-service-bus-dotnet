@@ -278,7 +278,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
         {
-            return this.AcceptMessageSessionAsync(sessionId, InnerReceiver.OperationTimeout);
+            return this.AcceptMessageSessionAsync(sessionId, this.InnerReceiver.OperationTimeout);
         }
 
         public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
