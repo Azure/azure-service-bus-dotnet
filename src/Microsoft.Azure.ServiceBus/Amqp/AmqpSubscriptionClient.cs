@@ -35,7 +35,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
             catch (Exception exception)
             {
-                await receiver.CloseAsync();
+                await receiver.CloseAsync().ConfigureAwait(false);
                 throw AmqpExceptionHelper.GetClientException(exception);
             }
             MessageSession session = new AmqpMessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver);
