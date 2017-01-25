@@ -69,15 +69,13 @@ namespace Microsoft.Azure.ServiceBus
 
         protected MessagingEntityType EntityType { get; set; }
 
-        public async Task<BrokeredMessage> ReceiveAsync()
+        /// <summary>
+        /// Asynchronously receives a message using the <see cref="MessageReceiver" />.
+        /// </summary>
+        /// <returns>The asynchronous operation.</returns>
+        public Task<BrokeredMessage> ReceiveAsync()
         {
-            IList<BrokeredMessage> messages = await this.ReceiveAsync(1).ConfigureAwait(false);
-            if (messages != null && messages.Count > 0)
-            {
-                return messages[0];
-            }
-
-            return null;
+            return this.ReceiveAsync(this.OperationTimeout);
         }
 
         /// <summary>
@@ -96,23 +94,14 @@ namespace Microsoft.Azure.ServiceBus
             return null;
         }
 
-        public async Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
+        /// <summary>
+        /// Asynchronously receives a message using the <see cref="MessageReceiver" />.
+        /// </summary>
+        /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
+        /// <returns>The asynchronous operation.</returns>
+        public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
         {
-            MessagingEventSource.Log.MessageReceiveStart(this.ClientId, maxMessageCount);
-
-            IList<BrokeredMessage> messages = null;
-            try
-            {
-                 messages = await this.OnReceiveAsync(maxMessageCount, this.OperationTimeout).ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                MessagingEventSource.Log.MessageReceiveException(this.ClientId, exception);
-                throw;
-            }
-
-            MessagingEventSource.Log.MessageReceiveStop(this.ClientId, messages?.Count ?? 0);
-            return messages;
+            return this.ReceiveAsync(maxMessageCount, this.OperationTimeout);
         }
 
         /// <summary>

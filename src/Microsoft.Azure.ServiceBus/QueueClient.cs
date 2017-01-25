@@ -10,7 +10,7 @@ namespace Microsoft.Azure.ServiceBus
 
     /// <summary>
     /// Anchor class - all Queue client operations start here.
-    /// See <see cref="QueueClient.Create(string)"/>
+    /// See <see cref="QueueClient.CreateFromConnectionString(string)"/>
     /// </summary>
     public abstract class QueueClient : ClientEntity
     {
@@ -157,15 +157,13 @@ namespace Microsoft.Azure.ServiceBus
             return this.InnerSender.SendAsync(brokeredMessages);
         }
 
-        public async Task<BrokeredMessage> ReceiveAsync()
+        /// <summary>
+        /// Asynchronously receives a message using the <see cref="MessageReceiver" />.
+        /// </summary>
+        /// <returns>The asynchronous operation.</returns>
+        public Task<BrokeredMessage> ReceiveAsync()
         {
-            IList<BrokeredMessage> messages = await this.ReceiveAsync(1).ConfigureAwait(false);
-            if (messages != null && messages.Count > 0)
-            {
-                return messages[0];
-            }
-
-            return null;
+            return this.ReceiveAsync();
         }
 
         /// <summary>
@@ -178,9 +176,14 @@ namespace Microsoft.Azure.ServiceBus
             return this.InnerReceiver.ReceiveAsync(serverWaitTime);
         }
 
+        /// <summary>
+        /// Asynchronously receives a message using the <see cref="MessageReceiver" />.
+        /// </summary>
+        /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
+        /// <returns>The asynchronous operation.</returns>
         public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
         {
-            return this.InnerReceiver.ReceiveAsync(maxMessageCount);
+            return this.InnerReceiver.ReceiveAsync(maxMessageCount, this.InnerReceiver.OperationTimeout);
         }
 
         /// <summary>
@@ -273,24 +276,9 @@ namespace Microsoft.Azure.ServiceBus
             return this.AcceptMessageSessionAsync(null, serverWaitTime);
         }
 
-        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
+        public Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
         {
-            MessageSession session = null;
-
-            MessagingEventSource.Log.AcceptMessageSessionStart(this.ClientId, sessionId);
-
-            try
-            {
-                session = await this.OnAcceptMessageSessionAsync(sessionId).ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                MessagingEventSource.Log.AcceptMessageSessionException(this.ClientId, exception);
-                throw;
-            }
-
-            MessagingEventSource.Log.AcceptMessageSessionStop(this.ClientId);
-            return session;
+            return this.AcceptMessageSessionAsync(sessionId, InnerReceiver.OperationTimeout);
         }
 
         public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
@@ -341,8 +329,6 @@ namespace Microsoft.Azure.ServiceBus
         protected abstract MessageSender OnCreateMessageSender();
 
         protected abstract MessageReceiver OnCreateMessageReceiver();
-
-        protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId);
 
         protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime);
 

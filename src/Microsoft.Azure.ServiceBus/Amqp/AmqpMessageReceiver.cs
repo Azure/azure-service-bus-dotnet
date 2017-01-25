@@ -97,11 +97,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
         }
 
-        internal Task GetSessionReceiverLinkAsync()
-        {
-            return this.GetSessionReceiverLinkAsync(this.OperationTimeout);
-        }
-
         internal async Task GetSessionReceiverLinkAsync(TimeSpan serverWaitTime)
         {
             TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);

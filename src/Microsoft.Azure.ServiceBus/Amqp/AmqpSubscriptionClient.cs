@@ -26,22 +26,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return new AmqpMessageReceiver(this.SubscriptionPath, MessagingEntityType.Subscriber, this.Mode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider);
         }
 
-        protected override async Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId)
-        {
-            AmqpMessageReceiver receiver = new AmqpMessageReceiver(this.SubscriptionPath, MessagingEntityType.Subscriber, this.Mode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider, sessionId, true);
-            try
-            {
-                await receiver.GetSessionReceiverLinkAsync().ConfigureAwait(false);
-            }
-            catch (AmqpException exception)
-            {
-                // ToDo: Abort the Receiver here
-                AmqpExceptionHelper.ToMessagingContract(exception.Error, false);
-            }
-            MessageSession session = new AmqpMessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver);
-            return session;
-        }
-
         protected override async Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
             AmqpMessageReceiver receiver = new AmqpMessageReceiver(this.SubscriptionPath, MessagingEntityType.Subscriber, this.Mode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider, sessionId, true);
