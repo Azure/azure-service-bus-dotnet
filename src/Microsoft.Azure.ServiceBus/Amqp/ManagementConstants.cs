@@ -17,8 +17,7 @@ namespace Microsoft.Azure.Messaging.Amqp
         public static class Response
         {
             public const string StatusCode = "statusCode";
-            public const string StatusDescription = "statusDescription";
-            public const string ErrorCondition = "errorCondition";
+            public const string StatusDescription = "statusDescription";            public const string ErrorCondition = "errorCondition";
         }
 
         public static class Operations
@@ -32,6 +31,8 @@ namespace Microsoft.Azure.Messaging.Amqp
             public const string PeekMessageOperation = Microsoft + ":peek-message";
             public const string AddRuleOperation = Microsoft + ":add-rule";
             public const string RemoveRuleOperation = Microsoft + ":remove-rule";
+            public const string ScheduleMessageOperation = Microsoft + ":schedule-message";
+            public const string CancelScheduledMessageOperation = Microsoft + ":cancel-scheduled-message";
         }
 
         public static class Properties
@@ -46,6 +47,8 @@ namespace Microsoft.Azure.Messaging.Amqp
             public static readonly MapKey Expirations = new MapKey("expirations");
             public static readonly MapKey Expiration = new MapKey("expiration");
             public static readonly MapKey SessionId = new MapKey("session-id");
+            public static readonly MapKey MessageId = new MapKey("message-id");
+            public static readonly MapKey PartitionKey = new MapKey("partition-key");
 
             public static readonly MapKey ReceiverSettleMode = new MapKey("receiver-settle-mode");
             public static readonly MapKey Message = new MapKey("message");
