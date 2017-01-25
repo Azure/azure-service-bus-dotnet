@@ -163,7 +163,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The asynchronous operation.</returns>
         public Task<BrokeredMessage> ReceiveAsync()
         {
-            return this.ReceiveAsync();
+            return this.InnerReceiver.ReceiveAsync();
         }
 
         /// <summary>
