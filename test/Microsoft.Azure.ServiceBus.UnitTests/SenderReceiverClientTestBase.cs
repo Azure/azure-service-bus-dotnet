@@ -170,8 +170,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.Null(message);
 
             // Ensuring total time taken is less than 60 seconds, which is the default timeout for receive.
-            // Keeping the value of 15 to avoid flakiness in test infrastructure which may lead to extended time taken.
-            Assert.True(timer.Elapsed.TotalSeconds < 15);
+            // Keeping the value of 40 to avoid flakiness in test infrastructure which may lead to extended time taken.
+            // Todo: Change this value to a lower number once test infra is performant.
+            Assert.True(timer.Elapsed.TotalSeconds < 40);
         }
 
         protected async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)

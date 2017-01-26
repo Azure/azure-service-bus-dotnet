@@ -192,7 +192,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task ServerWaitTimeoutTest(string queueName, int messageCount = 1)
+        async Task AcceptSessionShouldReturnNoLaterThanServerWaitTimeTestCase(string queueName, int messageCount = 1)
         {
             var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
@@ -203,7 +203,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
                 // If sessionId is not null, then the queue needs to be cleaned up before running the timeout test.
                 Assert.Null(sessionReceiver.SessionId);
-                Assert.True(timer.Elapsed.TotalSeconds < 4);
+
+                // Ensuring total time taken is less than 60 seconds, which is the default timeout for AcceptMessageSessionAsync.
+                // Keeping the value of 40 to avoid flakiness in test infrastructure which may lead to extended time taken.
+                // Todo: Change this value to a lower number once test infra is performant.
+                Assert.True(timer.Elapsed.TotalSeconds < 40);
             }
             finally
             {
