@@ -7,6 +7,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Xunit;
 
@@ -168,6 +169,61 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             // If message is not null, then the queue needs to be cleaned up before running the timeout test.
             Assert.Null(message);
             Assert.True(timer.Elapsed.TotalSeconds < 4);
+        }
+
+        protected async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        {
+            var startTime = DateTime.UtcNow;
+            var scheduleTime = new DateTimeOffset(DateTime.UtcNow).AddSeconds(5);
+            TestUtility.Log($"Sending message with schedule time: {scheduleTime.UtcDateTime}");
+
+            var sequenceNumber =
+                await
+                    messageSender.ScheduleMessageAsync(
+                        new BrokeredMessage("Test") { MessageId = "randomId", Label = "randomLabel" }, scheduleTime);
+            TestUtility.Log($"Received sequence number: {sequenceNumber}");
+            Assert.True(sequenceNumber > 0);
+
+            TestUtility.Log("Sleeping for 5 seconds...");
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
+            var message = await messageReceiver.ReceiveAsync();
+
+            // Asserting using Math.Ceiling since TotalSeconds usually ends up being around 4.999 due to precision of
+            // the scheduleTime in requestMessage and responseMessage.
+            Assert.True(Math.Ceiling(message.ScheduledEnqueueTimeUtc.Subtract(startTime).TotalSeconds) >= 5);
+        }
+
+        protected async Task CancelScheduledMessagesAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        {
+            var scheduleTime = new DateTimeOffset(DateTime.UtcNow).AddSeconds(30);
+            var brokeredMessage = new BrokeredMessage("Test1") { MessageId = Guid.NewGuid().ToString() };
+            TestUtility.Log(
+                $"Sending message with schedule time: {scheduleTime.UtcDateTime} and messageID {brokeredMessage.MessageId}");
+
+            var sequenceNumber = await messageSender.ScheduleMessageAsync(brokeredMessage, scheduleTime);
+            TestUtility.Log($"Received sequence number: {sequenceNumber}");
+            Assert.True(sequenceNumber > 0);
+
+            TestUtility.Log("Cancelling scheduled message");
+            await messageSender.CancelScheduledMessageAsync(sequenceNumber);
+
+            TestUtility.Log("Sleeping for 30 seconds...");
+            await Task.Delay(TimeSpan.FromSeconds(30));
+
+            // Sending a dummy message so that ReceiveAsync(2) returns immediately after getting 1 message
+            // instead of waiting for connection timeout on a single message.
+            await messageSender.SendAsync(new BrokeredMessage("Dummy") { MessageId = "Dummy" });
+            IList<BrokeredMessage> messages = null;
+            int retryCount = 5;
+            while (messages == null && --retryCount > 0)
+            {
+                messages = await messageReceiver.ReceiveAsync(2);
+            }
+
+            Assert.NotNull(messages);
+            Assert.True(messages.Count == 1);
+            Assert.True(messages.First().MessageId == "Dummy");
         }
     }
 }
