@@ -85,10 +85,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     await
                         ((AmqpMessageReceiver)this.InnerReceiver).ExecuteRequestResponseAsync(amqpRequestMessage)
                             .ConfigureAwait(false);
+
+                if (response.StatusCode != AmqpResponseStatusCode.OK)
+                {
+                    throw response.ToMessagingContractException();
+                }
             }
-            catch (AmqpException amqpException)
+            catch (Exception exception)
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                throw AmqpExceptionHelper.GetClientException(exception);
             }
         }
 
@@ -107,10 +112,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     await
                         ((AmqpMessageReceiver)this.InnerReceiver).ExecuteRequestResponseAsync(amqpRequestMessage)
                             .ConfigureAwait(false);
+
+                if (response.StatusCode != AmqpResponseStatusCode.OK)
+                {
+                    throw response.ToMessagingContractException();
+                }
             }
-            catch (AmqpException amqpException)
+            catch (Exception exception)
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                throw AmqpExceptionHelper.GetClientException(exception);
             }
         }
     }
