@@ -65,7 +65,6 @@ namespace Microsoft.Azure.Messaging.Amqp
             public static readonly MapKey CorrelationFilter = new MapKey("correlation-filter");
             public static readonly MapKey Expression = new MapKey("expression");
             public static readonly MapKey CorrelationId = new MapKey("correlation-id");
-            public static readonly MapKey MessageId = new MapKey("message-id");
             public static readonly MapKey To = new MapKey("to");
             public static readonly MapKey ReplyTo = new MapKey("reply-to");
             public static readonly MapKey Label = new MapKey("label");
