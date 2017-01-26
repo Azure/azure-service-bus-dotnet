@@ -10,7 +10,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
     sealed class AmqpQueueClient : QueueClient
     {
-        public AmqpQueueClient(ServiceBusConnection servicebusConnection, string entityPath, ReceiveMode mode)
+        internal AmqpQueueClient(ServiceBusConnection servicebusConnection, string entityPath, ReceiveMode mode)
             : base(servicebusConnection, entityPath, mode)
         {
             this.TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.ServiceBusConnection.SasKeyName, this.ServiceBusConnection.SasKey);
@@ -28,12 +28,12 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         protected override MessageReceiver OnCreateMessageReceiver()
         {
-            return new AmqpMessageReceiver(this.QueueName, MessagingEntityType.Queue, this.Mode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider);
+            return new AmqpMessageReceiver(this.QueueName, MessagingEntityType.Queue, this.ReceiveMode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider);
         }
 
         protected override async Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
-            AmqpMessageReceiver receiver = new AmqpMessageReceiver(this.QueueName, MessagingEntityType.Queue, this.Mode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider, sessionId, true);
+            AmqpMessageReceiver receiver = new AmqpMessageReceiver(this.QueueName, MessagingEntityType.Queue, this.ReceiveMode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider, sessionId, true);
             try
             {
                 await receiver.GetSessionReceiverLinkAsync(serverWaitTime).ConfigureAwait(false);

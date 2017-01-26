@@ -114,19 +114,28 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         internal static async Task AbandonMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            await messageReceiver.AbandonAsync(messages.Select(message => message.LockToken));
+            foreach (Guid lockToken in messages.Select(message => message.LockToken))
+            {
+                await messageReceiver.AbandonAsync(lockToken);
+            }
             Log($"Abandoned {messages.Count()} messages");
         }
 
         internal static async Task DeadLetterMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            await messageReceiver.DeadLetterAsync(messages.Select(message => message.LockToken));
+            foreach (Guid lockToken in messages.Select(message => message.LockToken))
+            {
+                await messageReceiver.DeadLetterAsync(lockToken);
+            }
             Log($"Deadlettered {messages.Count()} messages");
         }
 
         internal static async Task DeferMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            await messageReceiver.DeferAsync(messages.Select(message => message.LockToken));
+            foreach (Guid lockToken in messages.Select(message => message.LockToken))
+            {
+                await messageReceiver.DeferAsync(lockToken);
+            }
             Log($"Deferred {messages.Count()} messages");
         }
 

@@ -12,7 +12,7 @@ namespace Microsoft.Azure.ServiceBus
     /// Anchor class - all Queue client operations start here.
     /// See <see cref="QueueClient.CreateFromConnectionString(string)"/>
     /// </summary>
-    public abstract class QueueClient : ClientEntity
+    public abstract class QueueClient : ClientEntity, IMessageReceiver
     {
         MessageSender innerSender;
         MessageReceiver innerReceiver;
@@ -22,12 +22,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ServiceBusConnection = serviceBusConnection;
             this.QueueName = entityPath;
-            this.Mode = receiveMode;
+            this.ReceiveMode = receiveMode;
         }
 
         public string QueueName { get; }
 
-        public ReceiveMode Mode { get; private set; }
+        public ReceiveMode ReceiveMode { get; private set; }
+
+        public string Path => this.QueueName;
 
         public int PrefetchCount
         {
@@ -41,6 +43,8 @@ namespace Microsoft.Azure.ServiceBus
                 this.InnerReceiver.PrefetchCount = value;
             }
         }
+
+        public long LastPeekedSequenceNumber => this.InnerReceiver.LastPeekedSequenceNumber;
 
         internal MessageSender InnerSender
         {
@@ -263,7 +267,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task AbandonAsync(Guid lockToken)
         {
-            return this.InnerReceiver.AbandonAsync(new[] { lockToken });
+            return this.InnerReceiver.AbandonAsync(lockToken);
         }
 
         public Task<MessageSession> AcceptMessageSessionAsync()
@@ -303,15 +307,15 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task DeferAsync(Guid lockToken)
         {
-            return this.InnerReceiver.DeferAsync(new[] { lockToken });
+            return this.InnerReceiver.DeferAsync(lockToken);
         }
 
         public Task DeadLetterAsync(Guid lockToken)
         {
-            return this.InnerReceiver.DeadLetterAsync(new[] { lockToken });
+            return this.InnerReceiver.DeadLetterAsync(lockToken);
         }
 
-        public Task<DateTime> RenewMessageLockAsync(Guid lockToken)
+        public Task<DateTime> RenewLockAsync(Guid lockToken)
         {
             return this.InnerReceiver.RenewLockAsync(lockToken);
         }

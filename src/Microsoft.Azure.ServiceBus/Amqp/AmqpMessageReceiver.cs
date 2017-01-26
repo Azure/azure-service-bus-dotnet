@@ -25,12 +25,12 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         string sessionId;
         DateTime lockedUntilUtc;
 
-        public AmqpMessageReceiver(string entityName, MessagingEntityType entityType, ReceiveMode mode, int prefetchCount, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider)
+        internal AmqpMessageReceiver(string entityName, MessagingEntityType? entityType, ReceiveMode mode, int prefetchCount, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider)
             : this(entityName, entityType, mode, prefetchCount, serviceBusConnection, cbsTokenProvider, null)
         {
         }
 
-        public AmqpMessageReceiver(string entityName, MessagingEntityType entityType, ReceiveMode mode, int prefetchCount, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider, string sessionId, bool isSessionReceiver = false)
+        internal AmqpMessageReceiver(string entityName, MessagingEntityType? entityType, ReceiveMode mode, int prefetchCount, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider, string sessionId, bool isSessionReceiver = false)
             : base(mode, serviceBusConnection.OperationTimeout)
         {
             this.entityName = entityName;
@@ -290,9 +290,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected override async Task OnAbandonAsync(IEnumerable<Guid> lockTokens)
+        protected override async Task OnAbandonAsync(Guid lockToken)
         {
-                if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
+            IEnumerable<Guid> lockTokens = new[] { lockToken };
             {
                 await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Abandoned).ConfigureAwait(false);
             }
@@ -302,9 +302,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected override async Task OnDeferAsync(IEnumerable<Guid> lockTokens)
+        protected override async Task OnDeferAsync(Guid lockToken)
         {
-                if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
+            IEnumerable<Guid> lockTokens = new[] { lockToken };
             {
                 await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Defered).ConfigureAwait(false);
             }
@@ -314,9 +314,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected override async Task OnDeadLetterAsync(IEnumerable<Guid> lockTokens)
+        protected override async Task OnDeadLetterAsync(Guid lockToken)
         {
-                if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
+            IEnumerable<Guid> lockTokens = new[] { lockToken };
             {
                 await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended).ConfigureAwait(false);
             }
@@ -462,7 +462,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 SettleType = (this.ReceiveMode == ReceiveMode.PeekLock) ? SettleMode.SettleOnDispose : SettleMode.SettleOnSend
             };
 
-            linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)this.EntityType);
+            if (this.EntityType != null)
+            {
+                linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)this.EntityType);
+            }
+
             linkSettings.AddProperty(AmqpClientConstants.TimeoutName, (uint)timeout.TotalMilliseconds);
 
             AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] { ClaimConstants.Listen }, this.CbsTokenProvider, linkSettings);

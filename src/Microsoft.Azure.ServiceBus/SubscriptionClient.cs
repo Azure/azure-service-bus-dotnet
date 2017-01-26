@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.ServiceBus.Filters;
     using Microsoft.Azure.ServiceBus.Primitives;
 
-    public abstract class SubscriptionClient : ClientEntity
+    public abstract class SubscriptionClient : ClientEntity, IMessageReceiver
     {
         public const string DefaultRule = "$Default";
         MessageReceiver innerReceiver;
@@ -21,14 +21,18 @@ namespace Microsoft.Azure.ServiceBus
             this.TopicPath = topicPath;
             this.Name = name;
             this.SubscriptionPath = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.Name);
-            this.Mode = receiveMode;
+            this.ReceiveMode = receiveMode;
         }
 
         public string TopicPath { get; private set; }
 
+        public string Path => this.TopicPath;
+
         public string Name { get; }
 
-        public ReceiveMode Mode { get; private set; }
+        public ReceiveMode ReceiveMode { get; private set; }
+
+        public long LastPeekedSequenceNumber => this.InnerReceiver.LastPeekedSequenceNumber;
 
         public int PrefetchCount
         {
@@ -230,7 +234,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task AbandonAsync(Guid lockToken)
         {
-            return this.InnerReceiver.AbandonAsync(new[] { lockToken });
+            return this.InnerReceiver.AbandonAsync(lockToken);
         }
 
         public Task<MessageSession> AcceptMessageSessionAsync()
@@ -270,15 +274,15 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task DeferAsync(Guid lockToken)
         {
-            return this.InnerReceiver.DeferAsync(new[] { lockToken });
+            return this.InnerReceiver.DeferAsync(lockToken);
         }
 
         public Task DeadLetterAsync(Guid lockToken)
         {
-            return this.InnerReceiver.DeadLetterAsync(new[] { lockToken });
+            return this.InnerReceiver.DeadLetterAsync(lockToken);
         }
 
-        public Task<DateTime> RenewMessageLockAsync(Guid lockToken)
+        public Task<DateTime> RenewLockAsync(Guid lockToken)
         {
             return this.InnerReceiver.RenewLockAsync(lockToken);
         }
