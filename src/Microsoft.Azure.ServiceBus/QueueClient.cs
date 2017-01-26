@@ -141,6 +141,26 @@ namespace Microsoft.Azure.ServiceBus
             await this.OnCloseAsync().ConfigureAwait(false);
         }
 
+        public void OnMessage(Action<BrokeredMessage> callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnMessage(Action<BrokeredMessage> callback, OnMessageOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnMessageAsync(Action<BrokeredMessage> callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnMessageAsync(Action<BrokeredMessage> callback, OnMessageOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Send <see cref="BrokeredMessage"/> to Queue.
         /// <see cref="SendAsync(BrokeredMessage)"/> sends the <see cref="BrokeredMessage"/> to a Service Gateway, which in-turn will forward the BrokeredMessage to the queue.

@@ -124,6 +124,26 @@ namespace Microsoft.Azure.ServiceBus
             await this.OnCloseAsync().ConfigureAwait(false);
         }
 
+        public void OnMessage(Action<BrokeredMessage> callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnMessage(Action<BrokeredMessage> callback, OnMessageOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnMessageAsync(Action<BrokeredMessage> callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnMessageAsync(Action<BrokeredMessage> callback, OnMessageOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<BrokeredMessage> ReceiveAsync()
         {
             IList<BrokeredMessage> messages = await this.ReceiveAsync(1).ConfigureAwait(false);
