@@ -17,7 +17,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     {
         int deliveryCount;
 
-        internal AmqpMessageSender(string entityName, MessagingEntityType entityType, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider)
+        internal AmqpMessageSender(string entityName, MessagingEntityType? entityType, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider)
             : base(serviceBusConnection.OperationTimeout)
         {
             this.Path = entityName;
@@ -159,7 +159,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 Target = new Target { Address = this.Path },
                 Source = new Source { Address = this.ClientId },
             };
-            linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)this.EntityType);
+            if (this.EntityType != null)
+            {
+                linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)this.EntityType);
+            }
 
             AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] { ClaimConstants.Send }, this.CbsTokenProvider, linkSettings);
             SendingAmqpLink sendingAmqpLink = (SendingAmqpLink)await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);

@@ -22,12 +22,12 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         protected override MessageReceiver OnCreateMessageReceiver()
         {
-            return new AmqpMessageReceiver(this.SubscriptionPath, MessagingEntityType.Subscriber, this.Mode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider);
+            return new AmqpMessageReceiver(this.SubscriptionPath, MessagingEntityType.Subscriber, this.ReceiveMode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider);
         }
 
         protected override async Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId)
         {
-            AmqpMessageReceiver receiver = new AmqpMessageReceiver(this.SubscriptionPath, MessagingEntityType.Subscriber, this.Mode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider, sessionId, true);
+            AmqpMessageReceiver receiver = new AmqpMessageReceiver(this.SubscriptionPath, MessagingEntityType.Subscriber, this.ReceiveMode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider, sessionId, true);
             try
             {
                 await receiver.GetSessionReceiverLinkAsync().ConfigureAwait(false);

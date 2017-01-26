@@ -96,6 +96,26 @@ namespace Microsoft.Azure.ServiceBus
             return subscriptionClient;
         }
 
+        internal MessageSender CreateMessageSender(string entityPath)
+        {
+            MessagingEventSource.Log.MessageSenderCreateStart(this.Endpoint.Host, entityPath);
+            TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
+            var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
+            AmqpMessageSender messageSender = new AmqpMessageSender(entityPath, null, this, cbsTokenProvider);
+            MessagingEventSource.Log.MessageSenderCreateStop(this.Endpoint.Host, entityPath);
+            return messageSender;
+        }
+
+        internal MessageReceiver CreateMessageReceiver(string entityPath, ReceiveMode mode)
+        {
+            MessagingEventSource.Log.MessageSenderCreateStart(this.Endpoint.Host, entityPath);
+            TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
+            var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
+            AmqpMessageReceiver messageReceiver = new AmqpMessageReceiver(entityPath, null, mode, this.PrefetchCount, this, cbsTokenProvider);
+            MessagingEventSource.Log.MessageSenderCreateStop(this.Endpoint.Host, entityPath);
+            return messageReceiver;
+        }
+
         protected void InitializeConnection(ServiceBusConnectionStringBuilder builder)
         {
             this.Endpoint = builder.Endpoint;

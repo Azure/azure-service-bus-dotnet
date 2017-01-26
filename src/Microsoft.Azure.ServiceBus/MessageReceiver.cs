@@ -6,11 +6,10 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Amqp;
+    using Primitives;
 
-    public abstract class MessageReceiver : ClientEntity
+    public abstract class MessageReceiver : ClientEntity, IMessageReceiver
     {
         readonly TimeSpan operationTimeout;
         int prefetchCount;
@@ -69,7 +68,58 @@ namespace Microsoft.Azure.ServiceBus
             get { return this.operationTimeout; }
         }
 
-        protected MessagingEntityType EntityType { get; set; }
+        protected MessagingEntityType? EntityType { get; set; }
+
+        public static MessageReceiver CreateFromConnectionString(string entityConnectionString)
+        {
+            return CreateFromConnectionString(entityConnectionString, ReceiveMode.PeekLock);
+        }
+
+        public static MessageReceiver CreateFromConnectionString(string entityConnectionString, ReceiveMode mode)
+        {
+            if (string.IsNullOrWhiteSpace(entityConnectionString))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(entityConnectionString));
+            }
+
+            ServiceBusEntityConnection entityConnection = new ServiceBusEntityConnection(entityConnectionString);
+            return entityConnection.CreateMessageReceiver(entityConnection.EntityPath, mode);
+        }
+
+        public static MessageReceiver Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath)
+        {
+            return MessageReceiver.Create(namespaceConnection, entityPath, ReceiveMode.PeekLock);
+        }
+
+        public static MessageReceiver Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath, ReceiveMode mode)
+        {
+            if (namespaceConnection == null)
+            {
+                throw Fx.Exception.Argument(nameof(namespaceConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
+            }
+
+            if (string.IsNullOrWhiteSpace(entityPath))
+            {
+                throw Fx.Exception.Argument(nameof(namespaceConnection), "Entity Path is null");
+            }
+
+            return namespaceConnection.CreateMessageReceiver(entityPath, mode);
+        }
+
+        public static MessageReceiver Create(ServiceBusEntityConnection entityConnection)
+        {
+            return MessageReceiver.Create(entityConnection, ReceiveMode.PeekLock);
+        }
+
+        public static MessageReceiver Create(ServiceBusEntityConnection entityConnection, ReceiveMode mode)
+        {
+            if (entityConnection == null)
+            {
+                throw Fx.Exception.Argument(nameof(entityConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
+            }
+
+            return entityConnection.CreateMessageReceiver(entityConnection.EntityPath, mode);
+        }
 
         public async Task<BrokeredMessage> ReceiveAsync()
         {
@@ -144,15 +194,14 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageCompleteStop(this.ClientId);
         }
 
-        public async Task AbandonAsync(IEnumerable<Guid> lockTokens)
+        public async Task AbandonAsync(Guid lockToken)
         {
             this.ThrowIfNotPeekLockMode();
-            int count = MessageReceiver.ValidateLockTokens(lockTokens);
 
-            MessagingEventSource.Log.MessageAbandonStart(this.ClientId, count, lockTokens);
+            MessagingEventSource.Log.MessageAbandonStart(this.ClientId, 1, lockToken);
             try
             {
-                await this.OnAbandonAsync(lockTokens).ConfigureAwait(false);
+                await this.OnAbandonAsync(lockToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -163,16 +212,15 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageAbandonStop(this.ClientId);
         }
 
-        public async Task DeferAsync(IEnumerable<Guid> lockTokens)
+        public async Task DeferAsync(Guid lockToken)
         {
             this.ThrowIfNotPeekLockMode();
-            int count = MessageReceiver.ValidateLockTokens(lockTokens);
 
-            MessagingEventSource.Log.MessageDeferStart(this.ClientId, count, lockTokens);
+            MessagingEventSource.Log.MessageDeferStart(this.ClientId, 1, lockToken);
 
             try
             {
-                await this.OnDeferAsync(lockTokens).ConfigureAwait(false);
+                await this.OnDeferAsync(lockToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -183,16 +231,15 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageDeferStop(this.ClientId);
         }
 
-        public async Task DeadLetterAsync(IEnumerable<Guid> lockTokens)
+        public async Task DeadLetterAsync(Guid lockToken)
         {
             this.ThrowIfNotPeekLockMode();
-            int count = MessageReceiver.ValidateLockTokens(lockTokens);
 
-            MessagingEventSource.Log.MessageDeadLetterStart(this.ClientId, count, lockTokens);
+            MessagingEventSource.Log.MessageDeadLetterStart(this.ClientId, 1, lockToken);
 
             try
             {
-                await this.OnDeadLetterAsync(lockTokens).ConfigureAwait(false);
+                await this.OnDeadLetterAsync(lockToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -207,7 +254,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ThrowIfNotPeekLockMode();
 
-            MessagingEventSource.Log.MessageRenewLockStart(this.ClientId, 1, new Guid[] { lockToken });
+            MessagingEventSource.Log.MessageRenewLockStart(this.ClientId, 1, lockToken);
 
             DateTime lockedUntilUtc = DateTime.MinValue;
             try
@@ -284,11 +331,11 @@ namespace Microsoft.Azure.ServiceBus
 
         protected abstract Task OnCompleteAsync(IEnumerable<Guid> lockTokens);
 
-        protected abstract Task OnAbandonAsync(IEnumerable<Guid> lockTokens);
+        protected abstract Task OnAbandonAsync(Guid lockToken);
 
-        protected abstract Task OnDeferAsync(IEnumerable<Guid> lockTokens);
+        protected abstract Task OnDeferAsync(Guid lockToken);
 
-        protected abstract Task OnDeadLetterAsync(IEnumerable<Guid> lockTokens);
+        protected abstract Task OnDeadLetterAsync(Guid lockToken);
 
         protected abstract Task<DateTime> OnRenewLockAsync(Guid lockToken);
 
