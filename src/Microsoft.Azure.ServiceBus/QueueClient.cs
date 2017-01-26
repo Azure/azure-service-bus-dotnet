@@ -158,7 +158,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Asynchronously receives a message using the <see cref="MessageReceiver" />.
+        /// Receives a message using the <see cref="MessageReceiver" />.
         /// </summary>
         /// <returns>The asynchronous operation.</returns>
         public Task<BrokeredMessage> ReceiveAsync()
@@ -167,7 +167,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Asynchronously receives a message using the <see cref="MessageReceiver" />.
+        /// Receives a message using the <see cref="MessageReceiver" />.
         /// </summary>
         /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
         /// <returns>The asynchronous operation.</returns>
@@ -177,7 +177,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Asynchronously receives a message using the <see cref="MessageReceiver" />.
+        /// Receives a message using the <see cref="MessageReceiver" />.
         /// </summary>
         /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
         /// <returns>The asynchronous operation.</returns>
@@ -187,7 +187,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Asynchronously receives a message using the <see cref="MessageReceiver" />.
+        /// Receives a message using the <see cref="MessageReceiver" />.
         /// </summary>
         /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
         /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
