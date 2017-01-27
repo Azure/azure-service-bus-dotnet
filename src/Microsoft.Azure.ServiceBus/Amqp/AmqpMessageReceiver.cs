@@ -134,7 +134,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             try
             {
                 TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);
-                ReceivingAmqpLink receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
                 IEnumerable<AmqpMessage> amqpMessages = null;
                 bool hasMessages = await Task.Factory.FromAsync(
