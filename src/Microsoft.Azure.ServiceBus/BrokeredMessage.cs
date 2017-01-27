@@ -707,7 +707,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>Specifies if message is a received message or not.</summary>
-        public bool IsReceived => this.IsLockTokenSet;
+        public bool IsReceived => this.receiverHeaders != null;
 
         internal short PartitionId
         {
