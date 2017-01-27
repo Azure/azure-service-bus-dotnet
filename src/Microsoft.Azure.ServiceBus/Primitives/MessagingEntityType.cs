@@ -10,6 +10,6 @@ namespace Microsoft.Azure.ServiceBus
         Subscriber = 2,
         Filter = 3,
         Namespace = 4,
-        Unknown = (int)0x7FFFFFFE,
+        Unknown = 0x7FFFFFFE,
     }
 }
