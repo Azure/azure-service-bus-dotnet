@@ -7,9 +7,8 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.IO;
     using System.Threading.Tasks;
-    using Amqp;
 
-    public abstract class MessageSession : MessageReceiver
+    public abstract class MessageSession : MessageReceiver, IMessageSession
     {
         /// <summary>Represents a message session that allows grouping of related messages for processing in a single transaction.</summary>
         protected MessageSession(ReceiveMode receiveMode, string sessionId, DateTime lockedUntilUtc, MessageReceiver innerReceiver)

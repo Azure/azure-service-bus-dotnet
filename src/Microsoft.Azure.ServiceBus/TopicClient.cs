@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus.Primitives;
 
-    public abstract class TopicClient : ClientEntity
+    public abstract class TopicClient : ClientEntity, IMessageSender
     {
         MessageSender innerSender;
 

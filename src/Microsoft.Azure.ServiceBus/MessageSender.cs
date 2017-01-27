@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Threading.Tasks;
     using Primitives;
 
-    public abstract class MessageSender : ClientEntity
+    public abstract class MessageSender : ClientEntity, IMessageSender
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
             "StyleCop.CSharp.ReadabilityRules",
