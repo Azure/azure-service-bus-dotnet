@@ -113,6 +113,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         void Should_return_false_for_message_that_was_not_sent_and_received()
         {
             var message = new BrokeredMessage();
+            message.Properties["dummy"] = "dummy";
             Assert.False(message.IsReceived);
         }
 
