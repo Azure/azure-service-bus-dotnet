@@ -6,13 +6,11 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>
     /// Anchor class - all Queue client operations start here.
-    /// See <see cref="QueueClient.CreateFromConnectionString(string)"/>
     /// </summary>
-    public abstract class QueueClient : ClientEntity, IMessageReceiver, IMessageSender, IMessageSessionEntity
+    public abstract class QueueClient : ClientEntity, IQueueClient
     {
         MessageSender innerSender;
         MessageReceiver innerReceiver;
@@ -87,57 +85,6 @@ namespace Microsoft.Azure.ServiceBus
         protected object ThisLock { get; } = new object();
 
         protected ServiceBusConnection ServiceBusConnection { get; }
-
-        public static QueueClient CreateFromConnectionString(string entityConnectionString)
-        {
-            return CreateFromConnectionString(entityConnectionString, ReceiveMode.PeekLock);
-        }
-
-        public static QueueClient CreateFromConnectionString(string entityConnectionString, ReceiveMode mode)
-        {
-            if (string.IsNullOrWhiteSpace(entityConnectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(entityConnectionString));
-            }
-
-            ServiceBusEntityConnection entityConnection = new ServiceBusEntityConnection(entityConnectionString);
-            return entityConnection.CreateQueueClient(entityConnection.EntityPath, mode);
-        }
-
-        public static QueueClient Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath)
-        {
-            return QueueClient.Create(namespaceConnection, entityPath, ReceiveMode.PeekLock);
-        }
-
-        public static QueueClient Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath, ReceiveMode mode)
-        {
-            if (namespaceConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Entity Path is null");
-            }
-
-            return namespaceConnection.CreateQueueClient(entityPath, mode);
-        }
-
-        public static QueueClient Create(ServiceBusEntityConnection entityConnection)
-        {
-            return QueueClient.Create(entityConnection, ReceiveMode.PeekLock);
-        }
-
-        public static QueueClient Create(ServiceBusEntityConnection entityConnection, ReceiveMode mode)
-        {
-            if (entityConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(entityConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            return entityConnection.CreateQueueClient(entityConnection.EntityPath, mode);
-        }
 
         public sealed override async Task CloseAsync()
         {

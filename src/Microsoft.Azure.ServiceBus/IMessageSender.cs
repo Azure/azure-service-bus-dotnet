@@ -7,7 +7,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public interface IMessageSender
+    public interface IMessageSender : IClientEntity
     {
         Task SendAsync(BrokeredMessage brokeredMessage);
 

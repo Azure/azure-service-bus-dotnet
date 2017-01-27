@@ -7,9 +7,8 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus.Filters;
-    using Microsoft.Azure.ServiceBus.Primitives;
 
-    public abstract class SubscriptionClient : ClientEntity, IMessageReceiver, IMessageSessionEntity
+    public abstract class SubscriptionClient : ClientEntity, ISubscriptionClient
     {
         public const string DefaultRule = "$Default";
         MessageReceiver innerReceiver;
@@ -71,57 +70,6 @@ namespace Microsoft.Azure.ServiceBus
         protected object ThisLock { get; } = new object();
 
         protected ServiceBusConnection ServiceBusConnection { get; }
-
-        public static SubscriptionClient CreateFromConnectionString(string topicEntityConnectionString, string subscriptionName)
-        {
-            return CreateFromConnectionString(topicEntityConnectionString, subscriptionName, ReceiveMode.PeekLock);
-        }
-
-        public static SubscriptionClient CreateFromConnectionString(string topicEntityConnectionString, string subscriptionName, ReceiveMode mode)
-        {
-            if (string.IsNullOrWhiteSpace(topicEntityConnectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(topicEntityConnectionString));
-            }
-
-            ServiceBusEntityConnection topicConnection = new ServiceBusEntityConnection(topicEntityConnectionString);
-            return topicConnection.CreateSubscriptionClient(topicConnection.EntityPath, subscriptionName, mode);
-        }
-
-        public static SubscriptionClient Create(ServiceBusNamespaceConnection namespaceConnection, string topicPath, string subscriptionName)
-        {
-            return SubscriptionClient.Create(namespaceConnection, topicPath, subscriptionName, ReceiveMode.PeekLock);
-        }
-
-        public static SubscriptionClient Create(ServiceBusNamespaceConnection namespaceConnection, string topicPath, string subscriptionName, ReceiveMode mode)
-        {
-            if (namespaceConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            if (string.IsNullOrWhiteSpace(topicPath))
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Topic Path is null");
-            }
-
-            return namespaceConnection.CreateSubscriptionClient(topicPath, subscriptionName, mode);
-        }
-
-        public static SubscriptionClient Create(ServiceBusEntityConnection topicConnection, string subscriptionName)
-        {
-            return SubscriptionClient.Create(topicConnection, subscriptionName, ReceiveMode.PeekLock);
-        }
-
-        public static SubscriptionClient Create(ServiceBusEntityConnection topicConnection, string subscriptionName, ReceiveMode mode)
-        {
-            if (topicConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(topicConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            return topicConnection.CreateSubscriptionClient(topicConnection.EntityPath, subscriptionName, mode);
-        }
 
         public sealed override async Task CloseAsync()
         {

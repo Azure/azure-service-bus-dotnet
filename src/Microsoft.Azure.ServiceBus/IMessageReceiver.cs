@@ -7,7 +7,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public interface IMessageReceiver
+    public interface IMessageReceiver : IClientEntity
     {
         string Path { get; }
 
@@ -21,7 +21,11 @@ namespace Microsoft.Azure.ServiceBus
 
         Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount);
 
+        Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber);
+
         Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers);
+
+        Task CompleteAsync(Guid lockToken);
 
         Task CompleteAsync(IEnumerable<Guid> lockTokens);
 

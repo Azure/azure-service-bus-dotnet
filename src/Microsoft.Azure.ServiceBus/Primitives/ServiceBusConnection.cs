@@ -72,7 +72,7 @@ namespace Microsoft.Azure.ServiceBus
             return this.ConnectionManager.CloseAsync();
         }
 
-        internal QueueClient CreateQueueClient(string entityPath, ReceiveMode mode)
+        internal IQueueClient CreateQueueClient(string entityPath, ReceiveMode mode)
         {
             MessagingEventSource.Log.QueueClientCreateStart(this.Endpoint.Host, entityPath, mode.ToString());
             AmqpQueueClient queueClient = new AmqpQueueClient(this, entityPath, mode);
@@ -80,7 +80,7 @@ namespace Microsoft.Azure.ServiceBus
             return queueClient;
         }
 
-        internal TopicClient CreateTopicClient(string topicPath)
+        internal ITopicClient CreateTopicClient(string topicPath)
         {
             MessagingEventSource.Log.TopicClientCreateStart(this.Endpoint.Host, topicPath);
             AmqpTopicClient topicClient = new AmqpTopicClient(this, topicPath);
@@ -88,7 +88,7 @@ namespace Microsoft.Azure.ServiceBus
             return topicClient;
         }
 
-        internal SubscriptionClient CreateSubscriptionClient(string topicPath, string subscriptionName, ReceiveMode mode)
+        internal ISubscriptionClient CreateSubscriptionClient(string topicPath, string subscriptionName, ReceiveMode mode)
         {
             MessagingEventSource.Log.SubscriptionClientCreateStart(this.Endpoint.Host, topicPath, subscriptionName, mode.ToString());
             AmqpSubscriptionClient subscriptionClient = new AmqpSubscriptionClient(this, topicPath, subscriptionName, mode);
@@ -96,7 +96,7 @@ namespace Microsoft.Azure.ServiceBus
             return subscriptionClient;
         }
 
-        internal MessageSender CreateMessageSender(string entityPath)
+        internal IMessageSender CreateMessageSender(string entityPath)
         {
             MessagingEventSource.Log.MessageSenderCreateStart(this.Endpoint.Host, entityPath);
             TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
@@ -106,7 +106,7 @@ namespace Microsoft.Azure.ServiceBus
             return messageSender;
         }
 
-        internal MessageReceiver CreateMessageReceiver(string entityPath, ReceiveMode mode)
+        internal IMessageReceiver CreateMessageReceiver(string entityPath, ReceiveMode mode)
         {
             MessagingEventSource.Log.MessageSenderCreateStart(this.Endpoint.Host, entityPath);
             TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);

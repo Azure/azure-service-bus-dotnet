@@ -70,57 +70,6 @@ namespace Microsoft.Azure.ServiceBus
 
         protected MessagingEntityType? EntityType { get; set; }
 
-        public static MessageReceiver CreateFromConnectionString(string entityConnectionString)
-        {
-            return CreateFromConnectionString(entityConnectionString, ReceiveMode.PeekLock);
-        }
-
-        public static MessageReceiver CreateFromConnectionString(string entityConnectionString, ReceiveMode mode)
-        {
-            if (string.IsNullOrWhiteSpace(entityConnectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(entityConnectionString));
-            }
-
-            ServiceBusEntityConnection entityConnection = new ServiceBusEntityConnection(entityConnectionString);
-            return entityConnection.CreateMessageReceiver(entityConnection.EntityPath, mode);
-        }
-
-        public static MessageReceiver Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath)
-        {
-            return MessageReceiver.Create(namespaceConnection, entityPath, ReceiveMode.PeekLock);
-        }
-
-        public static MessageReceiver Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath, ReceiveMode mode)
-        {
-            if (namespaceConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Entity Path is null");
-            }
-
-            return namespaceConnection.CreateMessageReceiver(entityPath, mode);
-        }
-
-        public static MessageReceiver Create(ServiceBusEntityConnection entityConnection)
-        {
-            return MessageReceiver.Create(entityConnection, ReceiveMode.PeekLock);
-        }
-
-        public static MessageReceiver Create(ServiceBusEntityConnection entityConnection, ReceiveMode mode)
-        {
-            if (entityConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(entityConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            return entityConnection.CreateMessageReceiver(entityConnection.EntityPath, mode);
-        }
-
         public async Task<BrokeredMessage> ReceiveAsync()
         {
             IList<BrokeredMessage> messages = await this.ReceiveAsync(1).ConfigureAwait(false);
@@ -151,6 +100,17 @@ namespace Microsoft.Azure.ServiceBus
             return messages;
         }
 
+        public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
+        {
+            IList<BrokeredMessage> messages = await this.ReceiveBySequenceNumberAsync(new long[] { sequenceNumber });
+            if (messages != null && messages.Count > 0)
+            {
+                return messages[0];
+            }
+
+            return null;
+        }
+
         public async Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
         {
             this.ThrowIfNotPeekLockMode();
@@ -172,6 +132,11 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageReceiveBySequenceNumberStop(this.ClientId, messages?.Count ?? 0);
 
             return messages;
+        }
+
+        public Task CompleteAsync(Guid lockToken)
+        {
+            return this.CompleteAsync(new[] { lockToken });
         }
 
         public async Task CompleteAsync(IEnumerable<Guid> lockTokens)
