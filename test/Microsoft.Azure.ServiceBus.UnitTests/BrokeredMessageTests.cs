@@ -4,6 +4,8 @@
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Xunit;
 
@@ -104,6 +106,36 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.Equal("id-2", message2.MessageId);
 
             BrokeredMessage.SetMessageIdGenerator(null);
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        void Should_return_false_for_message_that_was_not_sent_and_received()
+        {
+            var message = new BrokeredMessage();
+            Assert.False(message.IsReceived);
+        }
+
+        [Theory]
+        [DisplayTestMethodName]
+        [InlineData(ReceiveMode.ReceiveAndDelete)]
+        [InlineData(ReceiveMode.PeekLock)]
+        async Task Should_return_true_for_message_that_was_sent_and_received(ReceiveMode receiveMode)
+        {
+            var message = new BrokeredMessage();
+            Assert.False(message.IsReceived);
+
+            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName), receiveMode);
+            try
+            {
+                await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+                var receivedMessages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerReceiver, 1);
+                Assert.True(receivedMessages.First().IsReceived);
+            }
+            finally
+            {
+                await queueClient.CloseAsync();
+            }
         }
     }
 }
