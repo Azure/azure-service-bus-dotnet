@@ -98,9 +98,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
         }
 
-        internal async Task GetSessionReceiverLinkAsync()
+        internal async Task GetSessionReceiverLinkAsync(TimeSpan serverWaitTime)
         {
-            TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
+            TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);
             ReceivingAmqpLink receivingAmqpLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
             Source source = (Source)receivingAmqpLink.Settings.Source;
             if (!source.FilterSet.TryGetValue<string>(AmqpClientConstants.SessionFilterName, out this.sessionId))
@@ -128,13 +128,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return responseMessage;
         }
 
-        protected override async Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount)
+        protected override async Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
         {
             ReceivingAmqpLink receiveLink = null;
             try
             {
-                TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-                receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);
+                ReceivingAmqpLink receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+
                 IEnumerable<AmqpMessage> amqpMessages = null;
                 bool hasMessages = await Task.Factory.FromAsync(
                     (c, s) => receiveLink.BeginReceiveRemoteMessages(maxMessageCount, AmqpMessageReceiver.DefaultBatchFlushInterval, timeoutHelper.RemainingTime(), c, s),

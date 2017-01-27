@@ -39,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 this.CbsTokenProvider);
         }
 
-        protected override async Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId)
+        protected override async Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
             AmqpMessageReceiver receiver = new AmqpMessageReceiver(
                 this.SubscriptionPath,
@@ -52,7 +52,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 true);
             try
             {
-                await receiver.GetSessionReceiverLinkAsync().ConfigureAwait(false);
+                await receiver.GetSessionReceiverLinkAsync(serverWaitTime).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
