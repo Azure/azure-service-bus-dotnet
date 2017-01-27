@@ -46,7 +46,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await queueClient.SendAsync(new BrokeredMessage() { MessageId = messageId, SessionId = sessionId });
             TestUtility.Log($"Sent Message: {messageId} to Session: {sessionId}");
 
-            MessageSession messageSession = await queueClient.AcceptMessageSessionAsync();
+            MessageSession messageSession = await queueClient.AcceptMessageSessionAsync(sessionId);
             Assert.NotNull((object)messageSession);
 
             var message = await messageSession.ReceiveAsync();
@@ -59,7 +59,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             // Complete should throw
             await Assert.ThrowsAsync<SessionLockLostException>(async () => await message.CompleteAsync());
 
-            messageSession = await queueClient.AcceptMessageSessionAsync();
+            messageSession = await queueClient.AcceptMessageSessionAsync(sessionId);
             Assert.NotNull((object)messageSession);
 
             message = await messageSession.ReceiveAsync();
