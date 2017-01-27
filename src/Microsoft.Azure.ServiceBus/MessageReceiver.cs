@@ -181,6 +181,17 @@ namespace Microsoft.Azure.ServiceBus
             return messages;
         }
 
+        public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
+        {
+            IList<BrokeredMessage> messages = await this.ReceiveBySequenceNumberAsync(new long[] { sequenceNumber });
+            if (messages != null && messages.Count > 0)
+            {
+                return messages[0];
+            }
+
+            return null;
+        }
+
         public async Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
         {
             this.ThrowIfNotPeekLockMode();
@@ -202,6 +213,11 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageReceiveBySequenceNumberStop(this.ClientId, messages?.Count ?? 0);
 
             return messages;
+        }
+
+        public Task CompleteAsync(Guid lockToken)
+        {
+            return this.CompleteAsync(new[] { lockToken });
         }
 
         public async Task CompleteAsync(IEnumerable<Guid> lockTokens)

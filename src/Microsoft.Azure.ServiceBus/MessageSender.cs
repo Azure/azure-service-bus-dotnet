@@ -24,46 +24,6 @@ namespace Microsoft.Azure.ServiceBus
 
         protected MessagingEntityType? EntityType { get; set; }
 
-        public static MessageSender CreateFromConnectionString(string entityConnectionString)
-        {
-            if (string.IsNullOrWhiteSpace(entityConnectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(entityConnectionString));
-            }
-
-            ServiceBusEntityConnection entityConnection = new ServiceBusEntityConnection(entityConnectionString);
-            return entityConnection.CreateMessageSender(entityConnection.EntityPath);
-        }
-
-        public static MessageSender Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath)
-        {
-            if (namespaceConnection == null)
-            {
-                throw Fx.Exception.Argument(
-                    nameof(namespaceConnection),
-                    $"Namespace Connection is null. Create a connection using the {nameof(ServiceBusNamespaceConnection)} class");
-            }
-
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Entity Path is null");
-            }
-
-            return namespaceConnection.CreateMessageSender(entityPath);
-        }
-
-        public static MessageSender Create(ServiceBusEntityConnection entityConnection)
-        {
-            if (entityConnection == null)
-            {
-                throw Fx.Exception.Argument(
-                    nameof(entityConnection),
-                    $"Entity Connection is null. Create a connection using the {nameof(ServiceBusEntityConnection)} class");
-            }
-
-            return entityConnection.CreateMessageSender(entityConnection.EntityPath);
-        }
-
         public Task SendAsync(BrokeredMessage brokeredMessage)
         {
             return this.SendAsync(new[] { brokeredMessage });
