@@ -12,7 +12,7 @@ namespace Microsoft.Azure.ServiceBus
     /// Anchor class - all Queue client operations start here.
     /// See <see cref="QueueClient.CreateFromConnectionString(string)"/>
     /// </summary>
-    public abstract class QueueClient : ClientEntity, IMessageReceiver
+    public abstract class QueueClient : ClientEntity, IMessageReceiver, IMessageSender, IMessageSessionEntity
     {
         MessageSender innerSender;
         MessageReceiver innerReceiver;

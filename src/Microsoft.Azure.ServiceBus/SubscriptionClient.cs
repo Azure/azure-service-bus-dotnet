@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.ServiceBus.Filters;
     using Microsoft.Azure.ServiceBus.Primitives;
 
-    public abstract class SubscriptionClient : ClientEntity, IMessageReceiver
+    public abstract class SubscriptionClient : ClientEntity, IMessageReceiver, IMessageSessionEntity
     {
         public const string DefaultRule = "$Default";
         MessageReceiver innerReceiver;
@@ -26,7 +26,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public string TopicPath { get; private set; }
 
-        public string Path => this.TopicPath;
+        public string Path => EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.Name);
 
         public string Name { get; }
 
