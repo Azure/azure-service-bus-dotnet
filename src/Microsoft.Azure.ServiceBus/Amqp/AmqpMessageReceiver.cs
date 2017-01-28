@@ -198,7 +198,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                 List<BrokeredMessage> messages = new List<BrokeredMessage>();
 
-                AmqpResponseMessage response = await this.ExecuteRequestResponseAsync(requestMessage);
+                AmqpResponseMessage response = await this.ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
                 if (response.StatusCode == AmqpResponseStatusCode.OK)
                 {
                     BrokeredMessage brokeredMessage = null;
@@ -425,7 +425,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 requestMessage.Map[ManagementConstants.Properties.LockTokens] = lockTokens.ToArray();
                 requestMessage.Map[ManagementConstants.Properties.DispositionStatus] = dispositionStatus.ToString().ToLowerInvariant();
 
-                AmqpResponseMessage amqpResponseMessage = await this.ExecuteRequestResponseAsync(requestMessage);
+                AmqpResponseMessage amqpResponseMessage = await this.ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
                 if (amqpResponseMessage.StatusCode != AmqpResponseStatusCode.OK)
                 {
                     throw amqpResponseMessage.ToMessagingContractException();
