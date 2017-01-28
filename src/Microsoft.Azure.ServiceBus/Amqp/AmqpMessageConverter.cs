@@ -16,21 +16,21 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
     static class AmqpMessageConverter
     {
-        private const string EnqueuedTimeUtcName = "x-opt-enqueued-time";
-        private const string ScheduledEnqueueTimeUtcName = "x-opt-scheduled-enqueue-time";
-        private const string SequenceNumberName = "x-opt-sequence-number";
-        private const string OffsetName = "x-opt-offset";
-        private const string LockTokenName = "x-opt-lock-token";
-        private const string LockedUntilName = "x-opt-locked-until";
-        private const string PublisherName = "x-opt-publisher";
-        private const string PartitionKeyName = "x-opt-partition-key";
-        private const string PartitionIdName = "x-opt-partition-id";
-        private const string PrefilteredMessageHeadersName = "x-opt-prefiltered-headers";
-        private const string PrefilteredMessagePropertiesName = "x-opt-prefiltered-properties";
-        private const string DeadLetterSourceName = "x-opt-deadletter-source";
-        private const string TimeSpanName = AmqpConstants.Vendor + ":timespan";
-        private const string UriName = AmqpConstants.Vendor + ":uri";
-        private const string DateTimeOffsetName = AmqpConstants.Vendor + ":datetime-offset";
+        const string EnqueuedTimeUtcName = "x-opt-enqueued-time";
+        const string ScheduledEnqueueTimeUtcName = "x-opt-scheduled-enqueue-time";
+        const string SequenceNumberName = "x-opt-sequence-number";
+        const string OffsetName = "x-opt-offset";
+        const string LockTokenName = "x-opt-lock-token";
+        const string LockedUntilName = "x-opt-locked-until";
+        const string PublisherName = "x-opt-publisher";
+        const string PartitionKeyName = "x-opt-partition-key";
+        const string PartitionIdName = "x-opt-partition-id";
+        const string PrefilteredMessageHeadersName = "x-opt-prefiltered-headers";
+        const string PrefilteredMessagePropertiesName = "x-opt-prefiltered-properties";
+        const string DeadLetterSourceName = "x-opt-deadletter-source";
+        const string TimeSpanName = AmqpConstants.Vendor + ":timespan";
+        const string UriName = AmqpConstants.Vendor + ":uri";
+        const string DateTimeOffsetName = AmqpConstants.Vendor + ":datetime-offset";
         const int GuidSize = 16;
 
         public static AmqpMessage BrokeredMessagesToAmqpMessage(IEnumerable<BrokeredMessage> brokeredMessages, bool batchable)

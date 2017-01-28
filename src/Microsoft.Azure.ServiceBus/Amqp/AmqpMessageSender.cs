@@ -147,7 +147,13 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     null);
             request.Map[ManagementConstants.Properties.SequenceNumbers] = new[] { sequenceNumber };
 
-            await this.ExecuteRequestResponseAsync(request);
+            var response = await this.ExecuteRequestResponseAsync(request);
+
+            // TODO: no idea what code and exception should be thrown, but the should be
+            if (response.StatusCode != AmqpResponseStatusCode.OK)
+            {
+                // throw
+            }
         }
 
         ArraySegment<byte> GetNextDeliveryTag()
