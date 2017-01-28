@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using Xunit;
@@ -108,34 +107,53 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             BrokeredMessage.SetMessageIdGenerator(null);
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        void Should_return_false_for_message_that_was_not_sent_and_received()
+        public class When_querying_IsReceived_property
         {
-            var message = new BrokeredMessage();
-            message.Properties["dummy"] = "dummy";
-            Assert.False(message.IsReceived);
-        }
-
-        [Theory]
-        [DisplayTestMethodName]
-        [InlineData(ReceiveMode.ReceiveAndDelete)]
-        [InlineData(ReceiveMode.PeekLock)]
-        async Task Should_return_true_for_message_that_was_sent_and_received(ReceiveMode receiveMode)
-        {
-            var message = new BrokeredMessage();
-            Assert.False(message.IsReceived);
-
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName), receiveMode);
-            try
+            [Fact]
+            [DisplayTestMethodName]
+            void Should_return_false_for_message_that_was_not_sent_and_received()
             {
-                await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
-                var receivedMessages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerReceiver, 1);
-                Assert.True(receivedMessages.First().IsReceived);
+                var message = new BrokeredMessage();
+                message.Properties["dummy"] = "dummy";
+                Assert.False(message.IsReceived);
             }
-            finally
+
+            [Theory]
+                [DisplayTestMethodName]
+                [InlineData(ReceiveMode.ReceiveAndDelete)]
+                [InlineData(ReceiveMode.PeekLock)]
+            async Task Should_return_true_for_message_that_was_sent_and_received(ReceiveMode receiveMode)
             {
-                await queueClient.CloseAsync();
+                var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName), receiveMode);
+                try
+                {
+                    await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+                    var receivedMessages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerReceiver, 1);
+                    Assert.True(receivedMessages.First().IsReceived);
+                }
+                finally
+                {
+                    await queueClient.CloseAsync();
+                }
+            }
+
+            [Fact]
+                [DisplayTestMethodName]
+            async Task Should_return_true_for_peeked_message()
+            {
+                var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName), ReceiveMode.PeekLock);
+                try
+                {
+                    await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+                    var peekedMessage = await TestUtility.PeekMessageAsync(queueClient.InnerReceiver);
+                    var result = peekedMessage.IsReceived;
+                    await TestUtility.CompleteMessagesAsync(queueClient.InnerReceiver, new[] { peekedMessage });
+                    Assert.True(result);
+                }
+                finally
+                {
+                    await queueClient.CloseAsync();
+                }
             }
         }
     }
