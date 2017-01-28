@@ -58,6 +58,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             // Complete should throw
             await Assert.ThrowsAsync<SessionLockLostException>(async () => await message.CompleteAsync());
+            try
+            {
+                await messageSession.CloseAsync();
+            }
+            catch (Exception e)
+            {
+                TestUtility.Log($"Got Exception on Session Close(): SessionId: {messageSession.SessionId}, Exception: {e.Message}");
+            }
 
             messageSession = await queueClient.AcceptMessageSessionAsync(sessionId);
             Assert.NotNull((object)messageSession);
