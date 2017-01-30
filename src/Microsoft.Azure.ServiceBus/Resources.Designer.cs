@@ -132,6 +132,15 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to The operation is only supported in &apos;PeekLock&apos; receive mode..
+        /// </summary>
+        public static string PeekLockModeRequired {
+            get {
+                return ResourceManager.GetString("PeekLockModeRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to Argument {0} must be a non-negative timeout value. The provided value was {1}..
         /// </summary>
         public static string TimeoutMustBeNonNegative {
@@ -168,4 +177,3 @@ namespace Microsoft.Azure.ServiceBus {
         }
     }
 }
-

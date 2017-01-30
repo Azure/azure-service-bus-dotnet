@@ -141,6 +141,9 @@
   <data name="InvalidEncoding" xml:space="preserve">
     <value>The string has an invalid encoding format.</value>
   </data>
+  <data name="PeekLockModeRequired" xml:space="preserve">
+    <value>The operation is only supported in 'PeekLock' receive mode.</value>
+  </data>
   <data name="TimeoutMustBeNonNegative" xml:space="preserve">
     <value>Argument {0} must be a non-negative timeout value. The provided value was {1}.</value>
   </data>
