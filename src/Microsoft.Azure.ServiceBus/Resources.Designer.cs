@@ -96,29 +96,37 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to There are no brokeredMessages supplied. Please make sure input messages are not empty..
+        ///    Looks up a localized string similar to &apos;{0}&apos; contains character &apos;{1}&apos; which is not allowed because it is reserved in the Uri scheme..
         /// </summary>
-        public static string BrokeredMessageListIsNullOrEmpty {
+        public static string CharacterReservedForUriScheme {
             get {
-                return ResourceManager.GetString("BrokeredMessageListIsNullOrEmpty", resourceCulture);
+                return ResourceManager.GetString("CharacterReservedForUriScheme", resourceCulture);
             }
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to Sending empty {0} is not a valid operation..
+        ///    Looks up a localized string similar to The entity path/name &apos;{0}&apos; exceeds the &apos;{1}&apos; character limit..
         /// </summary>
-        public static string CannotSendAnEmptyMessage {
+        public static string EntityNameLengthExceedsLimit {
             get {
-                return ResourceManager.GetString("CannotSendAnEmptyMessage", resourceCulture);
+                return ResourceManager.GetString("EntityNameLengthExceedsLimit", resourceCulture);
             }
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to Serialization operation failed due to unsupported type {0}..
+        ///    Looks up a localized string similar to Failed to serialize the session state because its state stream has been partially consumed..
         /// </summary>
-        public static string FailedToSerializeUnsupportedType {
+        public static string CannotSerializeSessionStateWithPartiallyConsumedStream {
             get {
-                return ResourceManager.GetString("FailedToSerializeUnsupportedType", resourceCulture);
+                return ResourceManager.GetString("CannotSerializeSessionStateWithPartiallyConsumedStream", resourceCulture);
+            }
+        }
+        
+        ///    Looks up a localized string similar to The entity name or path contains an invalid character &apos;{0}&apos;. The supplied value is &apos;{1}&apos;..
+        /// </summary>
+        public static string InvalidCharacterInEntityName {
+            get {
+                return ResourceManager.GetString("InvalidCharacterInEntityName", resourceCulture);
             }
         }
         
@@ -132,11 +140,54 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to The operation is only supported in &apos;PeekLock&apos; receive mode..
+        ///    Looks up a localized string similar to The lock supplied is invalid. Either the lock expired, or the message has already been removed from the queue..
         /// </summary>
-        public static string PeekLockModeRequired {
+        public static string MessageLockLost {
             get {
-                return ResourceManager.GetString("PeekLockModeRequired", resourceCulture);
+                return ResourceManager.GetString("MessageLockLost", resourceCulture);
+            }
+        }
+        
+        ///    Looks up a localized string similar to &apos;{0}&apos; is not a supported type..
+        /// </summary>
+        public static string NotSupportedPropertyType {
+            get {
+                return ResourceManager.GetString("NotSupportedPropertyType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///    Looks up a localized string similar to The session lock has expired on the MessageSession. Accept a new MessageSession..
+        /// </summary>
+        public static string SessionLockExpiredOnMessageSession {
+            get {
+                return ResourceManager.GetString("SessionLockExpiredOnMessageSession", resourceCulture);
+            }
+        }
+        
+        ///    Looks up a localized string similar to Provided rule filter {0} is not supported. Supported values are: {1}, {2}.
+        /// </summary>
+        public static string RuleFilterNotSupported {
+            get {
+                return ResourceManager.GetString("RuleFilterNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///    Looks up a localized string similar to The length of the filter action statement is {0}, which exceeds the maximum length of {1}..
+        /// </summary>
+        public static string SqlFilterActionStatmentTooLong {
+            get {
+                return ResourceManager.GetString("SqlFilterActionStatmentTooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///    Looks up a localized string similar to The length of the filter statement is {0}, which exceeds the maximum length of {1}.
+        /// </summary>
+        public static string SqlFilterStatmentTooLong {
+            get {
+                return ResourceManager.GetString("SqlFilterStatmentTooLong", resourceCulture);
             }
         }
         

@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
+    using System;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.ServiceBus.Primitives;
@@ -30,17 +31,17 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return new AmqpMessageReceiver(this.QueueName, MessagingEntityType.Queue, this.Mode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider);
         }
 
-        protected override async Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId)
+        protected override async Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
             AmqpMessageReceiver receiver = new AmqpMessageReceiver(this.QueueName, MessagingEntityType.Queue, this.Mode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider, sessionId, true);
             try
             {
-                await receiver.GetSessionReceiverLinkAsync().ConfigureAwait(false);
+                await receiver.GetSessionReceiverLinkAsync(serverWaitTime).ConfigureAwait(false);
             }
-            catch (AmqpException exception)
+            catch (Exception exception)
             {
-                // ToDo: Abort the Receiver here
-                AmqpExceptionHelper.ToMessagingContract(exception.Error, false);
+                await receiver.CloseAsync().ConfigureAwait(false);
+                throw AmqpExceptionHelper.GetClientException(exception);
             }
             MessageSession session = new AmqpMessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver);
             return session;

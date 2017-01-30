@@ -6,10 +6,12 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Azure.ServiceBus.Filters;
     using Microsoft.Azure.ServiceBus.Primitives;
 
     public abstract class SubscriptionClient : ClientEntity
     {
+        public const string DefaultRule = "$Default";
         MessageReceiver innerReceiver;
 
         protected SubscriptionClient(ServiceBusConnection serviceBusConnection, string topicPath, string name, ReceiveMode receiveMode)
@@ -122,20 +124,44 @@ namespace Microsoft.Azure.ServiceBus
             await this.OnCloseAsync().ConfigureAwait(false);
         }
 
-        public async Task<BrokeredMessage> ReceiveAsync()
+        /// <summary>
+        /// Receives a message using the <see cref="MessageReceiver" />.
+        /// </summary>
+        /// <returns>The asynchronous operation.</returns>
+        public Task<BrokeredMessage> ReceiveAsync()
         {
-            IList<BrokeredMessage> messages = await this.ReceiveAsync(1).ConfigureAwait(false);
-            if (messages != null && messages.Count > 0)
-            {
-                return messages[0];
-            }
-
-            return null;
+            return this.InnerReceiver.ReceiveAsync();
         }
 
+        /// <summary>
+        /// Receives a message using the <see cref="MessageReceiver" />.
+        /// </summary>
+        /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
+        /// <returns>The asynchronous operation.</returns>
+        public Task<BrokeredMessage> ReceiveAsync(TimeSpan serverWaitTime)
+        {
+            return this.InnerReceiver.ReceiveAsync(serverWaitTime);
+        }
+
+        /// <summary>
+        /// Receives a message using the <see cref="MessageReceiver" />.
+        /// </summary>
+        /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
+        /// <returns>The asynchronous operation.</returns>
         public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
         {
             return this.InnerReceiver.ReceiveAsync(maxMessageCount);
+        }
+
+        /// <summary>
+        /// Receives a message using the <see cref="MessageReceiver" />.
+        /// </summary>
+        /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
+        /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
+        /// <returns>The asynchronous operation.</returns>
+        public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
+        {
+            return this.InnerReceiver.ReceiveAsync(maxMessageCount, serverWaitTime);
         }
 
         public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
@@ -212,7 +238,17 @@ namespace Microsoft.Azure.ServiceBus
             return this.AcceptMessageSessionAsync(null);
         }
 
-        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
+        public Task<MessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime)
+        {
+            return this.AcceptMessageSessionAsync(null, serverWaitTime);
+        }
+
+        public Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
+        {
+            return this.AcceptMessageSessionAsync(sessionId, this.InnerReceiver.OperationTimeout);
+        }
+
+        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
             MessageSession session = null;
 
@@ -220,7 +256,7 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
-                session = await this.OnAcceptMessageSessionAsync(sessionId).ConfigureAwait(false);
+                session = await this.OnAcceptMessageSessionAsync(sessionId, serverWaitTime).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -247,6 +283,49 @@ namespace Microsoft.Azure.ServiceBus
             return this.InnerReceiver.RenewLockAsync(lockToken);
         }
 
+        /// <summary>
+        /// Asynchronously adds a rule to the current subscription with the specified name and filter expression.
+        /// </summary>
+        /// <param name="ruleName">The name of the rule to add.</param>
+        /// <param name="filter">The filter expression against which messages will be matched.</param>
+        /// <returns>A task instance that represents the asynchronous add rule operation.</returns>
+        public Task AddRuleAsync(string ruleName, Filter filter)
+        {
+            return this.AddRuleAsync(new RuleDescription(name: ruleName, filter: filter));
+        }
+
+        /// <summary>
+        /// Asynchronously adds a new rule to the subscription using the specified rule description.
+        /// </summary>
+        /// <param name="description">The rule description that provides metadata of the rule to add.</param>
+        /// <returns>A task instance that represents the asynchronous add rule operation.</returns>
+        public Task AddRuleAsync(RuleDescription description)
+        {
+            if (description == null)
+            {
+                throw Fx.Exception.ArgumentNull(nameof(description));
+            }
+
+            description.ValidateDescriptionName();
+
+            return this.OnAddRuleAsync(description);
+        }
+
+        /// <summary>
+        /// Asynchronously removes the rule described by <paramref name="ruleName" />.
+        /// </summary>
+        /// <param name="ruleName">The name of the rule.</param>
+        /// <returns>A task instance that represents the asynchronous remove rule operation.</returns>
+        public Task RemoveRuleAsync(string ruleName)
+        {
+            if (string.IsNullOrWhiteSpace(ruleName))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(ruleName));
+            }
+
+            return this.OnRemoveRuleAsync(ruleName);
+        }
+
         protected MessageReceiver CreateMessageReceiver()
         {
             return this.OnCreateMessageReceiver();
@@ -254,8 +333,12 @@ namespace Microsoft.Azure.ServiceBus
 
         protected abstract MessageReceiver OnCreateMessageReceiver();
 
-        protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId);
+        protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime);
 
         protected abstract Task OnCloseAsync();
+
+        protected abstract Task OnAddRuleAsync(RuleDescription description);
+
+        protected abstract Task OnRemoveRuleAsync(string ruleName);
     }
 }
