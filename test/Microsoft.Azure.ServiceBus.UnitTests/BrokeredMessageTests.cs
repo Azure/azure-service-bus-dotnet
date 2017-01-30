@@ -20,6 +20,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
             var message = await queueClient.PeekAsync();
+            Assert.NotNull(message);
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.CompleteAsync());
 
             message = await queueClient.ReceiveAsync();
