@@ -116,8 +116,7 @@ namespace Microsoft.Azure.ServiceBus {
         /// <summary>
         ///    Looks up a localized string similar to Failed to serialize the session state because its state stream has been partially consumed..
         /// </summary>
-        public static string CannotSerializeSessionStateWithPartiallyConsumedStream
-        {
+        public static string CannotSerializeSessionStateWithPartiallyConsumedStream {
             get {
                 return ResourceManager.GetString("CannotSerializeSessionStateWithPartiallyConsumedStream", resourceCulture);
             }
@@ -162,10 +161,8 @@ namespace Microsoft.Azure.ServiceBus {
         /// <summary>
         ///    Looks up a localized string similar to The session lock has expired on the MessageSession. Accept a new MessageSession..
         /// </summary>
-        public static string SessionLockExpiredOnMessageSession
-        {
-            get
-            {
+        public static string SessionLockExpiredOnMessageSession {
+            get {
                 return ResourceManager.GetString("SessionLockExpiredOnMessageSession", resourceCulture);
             }
         }
@@ -182,10 +179,8 @@ namespace Microsoft.Azure.ServiceBus {
         /// <summary>
         ///    Looks up a localized string similar to This operation is only supported for a message receiver in &apos;PeekLock&apos; receive mode..
         /// </summary>
-        public static string PeekLockModeRequired
-        {
-            get
-            {
+        public static string PeekLockModeRequired {
+            get {
                 return ResourceManager.GetString("PeekLockModeRequired", resourceCulture);
             }
         }
