@@ -147,12 +147,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     null);
             request.Map[ManagementConstants.Properties.SequenceNumbers] = new[] { sequenceNumber };
 
-            var response = await this.ExecuteRequestResponseAsync(request);
+            var response = await this.ExecuteRequestResponseAsync(request).ConfigureAwait(false);
 
-            // TODO: no idea what code and exception should be thrown, but the should be
             if (response.StatusCode != AmqpResponseStatusCode.OK)
             {
-                // throw
+                throw response.ToMessagingContractException();
             }
         }
 

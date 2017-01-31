@@ -109,7 +109,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 amqpRequestMessage.Map[ManagementConstants.Properties.RuleName] = ruleName;
 
                 var response = await ((AmqpMessageReceiver)this.InnerReceiver).ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
-                
+
                 if (response.StatusCode != AmqpResponseStatusCode.OK)
                 {
                     throw response.ToMessagingContractException();
