@@ -19,7 +19,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 ReceiveMode.ReceiveAndDelete);
 
             await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
-            message = await queueClient.ReceiveAsync();
+            var message = await queueClient.ReceiveAsync();
             Assert.NotNull((object)message);
 
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.CompleteAsync());
