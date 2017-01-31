@@ -12,7 +12,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task BrokeredMessageOperationsTest()
         {
-            var messagingFactory = new MessagingFactory();
+            var messagingFactory = new ServiceBusFactory();
 
             // Create QueueClient with ReceiveDelete,
             // Send and Receive a message, Try to Complete/Abandon/Defer/DeadLetter should throw InvalidOperationException()

@@ -15,7 +15,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task MessageLockLostExceptionTest()
         {
             const int messageCount = 2;
-            var messagingFactory = new MessagingFactory();
+            var messagingFactory = new ServiceBusFactory();
             var queueClient =
                 (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
                     TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName));
@@ -40,7 +40,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task SessionLockLostExceptionTest()
         {
-            var messagingFactory = new MessagingFactory();
+            var messagingFactory = new ServiceBusFactory();
             var queueClient =
                 (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
                     TestUtility.GetEntityConnectionString(Constants.SessionNonPartitionedQueueName));
