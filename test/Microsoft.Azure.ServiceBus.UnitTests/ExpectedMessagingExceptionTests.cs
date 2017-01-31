@@ -15,8 +15,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task MessageLockLostExceptionTest()
         {
             const int messageCount = 2;
-            var queueClient = QueueClient.CreateFromConnectionString(
-                TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName));
+            var messagingFactory = new MessagingFactory();
+            var queueClient =
+                (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
+                    TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName));
 
             await TestUtility.SendMessagesAsync(queueClient.InnerSender, messageCount);
             var receivedMessages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerReceiver, messageCount);
@@ -38,8 +40,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task SessionLockLostExceptionTest()
         {
-            var queueClient = QueueClient.CreateFromConnectionString(
-                TestUtility.GetEntityConnectionString(Constants.SessionNonPartitionedQueueName));
+            var messagingFactory = new MessagingFactory();
+            var queueClient =
+                (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
+                    TestUtility.GetEntityConnectionString(Constants.SessionNonPartitionedQueueName));
 
             var messageId = "test-message1";
             var sessionId = Guid.NewGuid().ToString();

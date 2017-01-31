@@ -280,80 +280,52 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         protected override async Task OnCompleteAsync(IEnumerable<Guid> lockTokens)
         {
-            try
+            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
             {
-                if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
-                {
-                    await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Completed).ConfigureAwait(false);
-                }
-                else
-                {
-                    await this.DisposeMessagesAsync(lockTokens, AmqpConstants.AcceptedOutcome).ConfigureAwait(false);
-                }
+                await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Completed).ConfigureAwait(false);
             }
-            catch (AmqpException amqpException)
+            else
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                await this.DisposeMessagesAsync(lockTokens, AmqpConstants.AcceptedOutcome).ConfigureAwait(false);
             }
         }
 
         protected override async Task OnAbandonAsync(Guid lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { lockToken };
-            try
+            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
             {
-                if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
-                {
-                    await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Abandoned).ConfigureAwait(false);
-                }
-                else
-                {
-                    await this.DisposeMessagesAsync(lockTokens, new Modified()).ConfigureAwait(false);
-                }
+                await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Abandoned).ConfigureAwait(false);
             }
-            catch (AmqpException amqpException)
+            else
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                await this.DisposeMessagesAsync(lockTokens, new Modified()).ConfigureAwait(false);
             }
         }
 
         protected override async Task OnDeferAsync(Guid lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { lockToken };
-            try
+            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
             {
-                if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
-                {
-                    await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Defered).ConfigureAwait(false);
-                }
-                else
-                {
-                    await this.DisposeMessagesAsync(lockTokens, new Modified() { UndeliverableHere = true }).ConfigureAwait(false);
-                }
+                await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Defered).ConfigureAwait(false);
             }
-            catch (AmqpException amqpException)
+            else
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                await this.DisposeMessagesAsync(lockTokens, new Modified() { UndeliverableHere = true }).ConfigureAwait(false);
             }
         }
 
         protected override async Task OnDeadLetterAsync(Guid lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { lockToken };
-            try
+            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
             {
-                if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
-                {
-                    await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended).ConfigureAwait(false);
-                }
-                else
-                {
-                    await this.DisposeMessagesAsync(lockTokens, AmqpConstants.RejectedOutcome).ConfigureAwait(false);
-                }
+                await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended).ConfigureAwait(false);
             }
-            catch (AmqpException amqpException)
+            else
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                await this.DisposeMessagesAsync(lockTokens, AmqpConstants.RejectedOutcome).ConfigureAwait(false);
             }
         }
 
