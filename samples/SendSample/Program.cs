@@ -27,7 +27,7 @@ namespace SendSample
             };
 
             // Initializes the static QueueClient variable that will be used in the ReceiveMessages method.
-            var messagingFactory = new MessagingFactory();
+            var messagingFactory = new ServiceBusFactory();
             queueClient = messagingFactory.CreateQueueClientFromConnectionString(connectionStringBuilder.ToString());
 
             await SendMessagesToQueue(10);

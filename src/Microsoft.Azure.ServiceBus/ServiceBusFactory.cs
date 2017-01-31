@@ -5,7 +5,7 @@ namespace Microsoft.Azure.ServiceBus
 {
     using Primitives;
 
-    public class MessagingFactory : IMessagingFactory
+    public class ServiceBusFactory : IServiceBusFactory
     {
         public IQueueClient CreateQueueClientFromConnectionString(string entityConnectionString)
         {
