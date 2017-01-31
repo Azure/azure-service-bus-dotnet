@@ -3,6 +3,33 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    /// <summary>
+    /// Interface used to access a Topic to perform run-time operations.
+    /// </summary>
+    /// <example>
+    /// <code>
+    ///
+    /// // Create the TopicClient
+    /// var connectionStringBuilder = new ServiceBusConnectionStringBuilder(serviceBusConnectionString)
+    ///     {
+    ///          EntityPath = TopicName
+    ///     };
+    /// ServiceBusFactory factory = new ServiceBusFactory();
+    /// ITopicClient myTopicClient = factory.CreateTopicClientFromConnectionString(connectionStringBuilder.ToString());
+    ///
+    /// //********************************************************************************
+    /// //                          Sending messages to a Topic
+    /// //********************************************************************************
+    ///
+    /// // Send messages
+    /// List &lt;object&gt; Issues = new List &lt;object&gt;();
+    /// foreach (var issue in Issues)
+    /// {
+    ///    myTopicClient.Send(new BrokeredMessage(issue));
+    /// }
+    /// </code>
+    /// </example>
+    /// <seealso cref="ServiceBusFactory"/>
     public interface ITopicClient : IMessageSender
     {
         string TopicName { get; }

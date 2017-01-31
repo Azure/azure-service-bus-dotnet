@@ -10,7 +10,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         string TopicPath { get; }
 
-        string Name { get; }
+        string SubscriptionName { get; }
 
         /// <summary>
         /// Asynchronously adds a rule to the current subscription with the specified name and filter expression.
