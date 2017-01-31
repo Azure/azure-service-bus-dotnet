@@ -19,7 +19,22 @@ namespace Microsoft.Azure.ServiceBus
 
         Task<BrokeredMessage> ReceiveAsync();
 
+        /// <summary>
+        /// Receives a message using the <see cref="MessageReceiver" />.
+        /// </summary>
+        /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
+        /// <returns>The asynchronous operation.</returns>
+        Task<BrokeredMessage> ReceiveAsync(TimeSpan serverWaitTime);
+
         Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount);
+
+        /// <summary>
+        /// Receives a message using the <see cref="MessageReceiver" />.
+        /// </summary>
+        /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
+        /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
+        /// <returns>The asynchronous operation.</returns>
+        Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime);
 
         Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber);
 
