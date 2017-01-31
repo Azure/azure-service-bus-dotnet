@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
@@ -97,9 +98,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
         }
 
-        internal async Task GetSessionReceiverLinkAsync()
+        internal async Task GetSessionReceiverLinkAsync(TimeSpan serverWaitTime)
         {
-            TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
+            TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);
             ReceivingAmqpLink receivingAmqpLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
             Source source = (Source)receivingAmqpLink.Settings.Source;
             if (!source.FilterSet.TryGetValue<string>(AmqpClientConstants.SessionFilterName, out this.sessionId))
@@ -127,12 +128,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return responseMessage;
         }
 
-        protected override async Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount)
+        protected override async Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
         {
+            ReceivingAmqpLink receiveLink = null;
             try
             {
-                TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-                ReceivingAmqpLink receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);
+                receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+
                 IEnumerable<AmqpMessage> amqpMessages = null;
                 bool hasMessages = await Task.Factory.FromAsync(
                     (c, s) => receiveLink.BeginReceiveRemoteMessages(maxMessageCount, AmqpMessageReceiver.DefaultBatchFlushInterval, timeoutHelper.RemainingTime(), c, s),
@@ -169,9 +172,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                 return null;
             }
-            catch (AmqpException amqpException)
+            catch (Exception exception)
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                throw AmqpExceptionHelper.GetClientException(exception, receiveLink?.GetTrackingId());
             }
         }
 
@@ -195,7 +198,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                 List<BrokeredMessage> messages = new List<BrokeredMessage>();
 
-                AmqpResponseMessage response = await this.ExecuteRequestResponseAsync(requestMessage);
+                AmqpResponseMessage response = await this.ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
                 if (response.StatusCode == AmqpResponseStatusCode.OK)
                 {
                     BrokeredMessage brokeredMessage = null;
@@ -216,13 +219,20 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                     return messages;
                 }
+                else if (response.StatusCode == AmqpResponseStatusCode.NoContent ||
+                        (response.StatusCode == AmqpResponseStatusCode.NotFound && AmqpSymbol.Equals(AmqpClientConstants.MessageNotFoundError, response.GetResponseErrorCondition())))
+                {
+                    return messages;
+                }
+                else
+                {
+                    throw response.ToMessagingContractException();
+                }
             }
-            catch (AmqpException amqpException)
+            catch (Exception exception)
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                throw AmqpExceptionHelper.GetClientException(exception);
             }
-
-            return null;
         }
 
         protected override async Task<IList<BrokeredMessage>> OnReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
@@ -255,10 +265,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         messages.Add(brokeredMessage);
                     }
                 }
+                else
+                {
+                    throw response.ToMessagingContractException();
+                }
             }
-            catch (AmqpException amqpException)
+            catch (Exception exception)
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                throw AmqpExceptionHelper.GetClientException(exception);
             }
 
             return messages;
@@ -359,10 +373,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     IEnumerable<DateTime> lockedUntilUtcTimes = response.GetValue<IEnumerable<DateTime>>(ManagementConstants.Properties.Expirations);
                     lockedUntilUtc = lockedUntilUtcTimes.First();
                 }
+                else
+                {
+                    throw response.ToMessagingContractException();
+                }
             }
-            catch (AmqpException amqpException)
+            catch (Exception exception)
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                throw AmqpExceptionHelper.GetClientException(exception);
             }
 
             return lockedUntilUtc;
@@ -373,18 +391,60 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
             IList<ArraySegment<byte>> deliveryTags = this.ConvertLockTokensToDeliveryTags(lockTokens);
 
-            ReceivingAmqpLink receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
-            Task<Outcome>[] disposeMessageTasks = new Task<Outcome>[deliveryTags.Count];
-            int i = 0;
-            foreach (ArraySegment<byte> deliveryTag in deliveryTags)
+            ReceivingAmqpLink receiveLink = null;
+            try
             {
-                disposeMessageTasks[i++] = Task.Factory.FromAsync(
+                receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                Task<Outcome>[] disposeMessageTasks = new Task<Outcome>[deliveryTags.Count];
+                int i = 0;
+                foreach (ArraySegment<byte> deliveryTag in deliveryTags)
+                {
+                    disposeMessageTasks[i++] = Task.Factory.FromAsync(
                         (c, s) => receiveLink.BeginDisposeMessage(deliveryTag, outcome, true, timeoutHelper.RemainingTime(), c, s),
                         a => receiveLink.EndDisposeMessage(a),
                         this);
-            }
+                }
 
-            await Task.WhenAll(disposeMessageTasks).ConfigureAwait(false);
+                Outcome[] outcomes = await Task.WhenAll(disposeMessageTasks).ConfigureAwait(false);
+                Error error = null;
+                foreach (Outcome item in outcomes)
+                {
+                    var disposedOutcome = item.DescriptorCode == Rejected.Code && ((error = ((Rejected)item).Error) != null) ? item : null;
+                    if (disposedOutcome != null)
+                    {
+                        if (error.Condition.Equals(AmqpErrorCode.NotFound))
+                        {
+                            if (this.isSessionReceiver)
+                            {
+                                throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
+                            }
+                            else
+                            {
+                                throw new MessageLockLostException(Resources.MessageLockLost);
+                            }
+                        }
+
+                        throw AmqpExceptionHelper.ToMessagingContractException(error);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                if (exception is OperationCanceledException &&
+                    receiveLink != null && receiveLink.State != AmqpObjectState.Opened)
+                {
+                    if (this.isSessionReceiver)
+                    {
+                        throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
+                    }
+                    else
+                    {
+                        throw new MessageLockLostException(Resources.MessageLockLost);
+                    }
+                }
+
+                throw AmqpExceptionHelper.GetClientException(exception);
+            }
         }
 
         async Task DisposeMessageRequestResponseAsync(IEnumerable<Guid> lockTokens, DispositionStatus dispositionStatus)
@@ -396,11 +456,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 requestMessage.Map[ManagementConstants.Properties.LockTokens] = lockTokens.ToArray();
                 requestMessage.Map[ManagementConstants.Properties.DispositionStatus] = dispositionStatus.ToString().ToLowerInvariant();
 
-                await this.ExecuteRequestResponseAsync(requestMessage);
+                AmqpResponseMessage amqpResponseMessage = await this.ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
+                if (amqpResponseMessage.StatusCode != AmqpResponseStatusCode.OK)
+                {
+                    throw amqpResponseMessage.ToMessagingContractException();
+                }
             }
-            catch (AmqpException amqpException)
+            catch (Exception exception)
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                throw AmqpExceptionHelper.GetClientException(exception);
             }
         }
 
