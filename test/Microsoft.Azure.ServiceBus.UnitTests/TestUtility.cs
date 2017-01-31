@@ -114,29 +114,35 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         internal static async Task AbandonMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            foreach (Guid lockToken in messages.Select(message => message.LockToken))
+            int count = 0;
+            foreach (var message in messages)
             {
-                await messageReceiver.AbandonAsync(lockToken);
+                await messageReceiver.AbandonAsync(message.LockToken);
+                count++;
             }
-            Log($"Abandoned {messages.Count()} messages");
+            Log($"Abandoned {count} messages");
         }
 
         internal static async Task DeadLetterMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            foreach (Guid lockToken in messages.Select(message => message.LockToken))
+            int count = 0;
+            foreach (var message in messages)
             {
-                await messageReceiver.DeadLetterAsync(lockToken);
+                await messageReceiver.DeadLetterAsync(message.LockToken);
+                count++;
             }
-            Log($"Deadlettered {messages.Count()} messages");
+            Log($"Deadlettered {count} messages");
         }
 
         internal static async Task DeferMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            foreach (Guid lockToken in messages.Select(message => message.LockToken))
+            int count = 0;
+            foreach (var message in messages)
             {
-                await messageReceiver.DeferAsync(lockToken);
+                await messageReceiver.DeferAsync(message.LockToken);
+                count++;
             }
-            Log($"Deferred {messages.Count()} messages");
+            Log($"Deferred {count} messages");
         }
 
         static void VerifyUniqueMessages(List<BrokeredMessage> messages)

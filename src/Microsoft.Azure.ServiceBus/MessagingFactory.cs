@@ -92,11 +92,6 @@ namespace Microsoft.Azure.ServiceBus
 
         public ITopicClient CreateTopicClient(ServiceBusEntityConnection entityConnection)
         {
-            return this.CreateTopicClient(entityConnection, ReceiveMode.PeekLock);
-        }
-
-        public ITopicClient CreateTopicClient(ServiceBusEntityConnection entityConnection, ReceiveMode mode)
-        {
             if (entityConnection == null)
             {
                 throw Fx.Exception.Argument(

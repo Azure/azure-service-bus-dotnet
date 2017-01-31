@@ -547,5 +547,23 @@ namespace Microsoft.Azure.ServiceBus
                 this.WriteEvent(46, namespaceName, entityName);
             }
         }
+
+        [Event(47, Level = EventLevel.Informational, Message = "Creating MessageReceiver (Namespace '{0}'; Entity '{1}'; ReceiveMode '{2}').")]
+        public void MessageReceiverCreateStart(string namespaceName, string entityName, string receiveMode)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(47, namespaceName, entityName);
+            }
+        }
+
+        [Event(48, Level = EventLevel.Informational, Message = "MessageReceiver (Namespace '{0}'; Entity '{1}' created).")]
+        public void MessageReceiverCreateStop(string namespaceName, string entityName)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(48, namespaceName, entityName);
+            }
+        }
     }
 }

@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using Microsoft.Azure.ServiceBus.Filters;
     using Microsoft.Azure.ServiceBus.Primitives;
 
-    public class AmqpSubscriptionClient : SubscriptionClient
+    sealed class AmqpSubscriptionClient : SubscriptionClient
     {
         public AmqpSubscriptionClient(ServiceBusConnection servicebusConnection, string topicPath, string subscriptionName, ReceiveMode mode)
             : base(servicebusConnection, topicPath, subscriptionName, mode)
