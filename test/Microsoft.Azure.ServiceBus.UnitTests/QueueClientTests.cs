@@ -35,6 +35,30 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
+        async Task MessageReceiverAndMessageSenderCreationWorksAsExpected(string queueName, int messageCount = 10)
+        {
+            var messagingFactory = new MessagingFactory();
+            var messageReceiver =
+                (MessageReceiver)messagingFactory.CreateMessageReceiverFromConnectionString(
+                    TestUtility.GetEntityConnectionString(queueName));
+            var messageSender =
+                (MessageSender)messagingFactory.CreateMessageSenderFromConnectionString(
+                    TestUtility.GetEntityConnectionString(queueName));
+
+            try
+            {
+                await this.PeekLockTestCase(messageSender, messageReceiver, messageCount);
+            }
+            finally
+            {
+                await messageSender.CloseAsync();
+                await messageReceiver.CloseAsync();
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
         async Task ReceiveDeleteTest(string queueName, int messageCount = 10)
         {
             var messagingFactory = new MessagingFactory();

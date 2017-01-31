@@ -7,37 +7,57 @@ namespace Microsoft.Azure.ServiceBus
 
     public interface IMessagingFactory
     {
-        IQueueClient CreateQueueClientFromConnectionString(string entityConnectionString);
+        IQueueClient CreateQueueClientFromConnectionString(
+            string entityConnectionString);
 
-        IQueueClient CreateQueueClientFromConnectionString(string entityConnectionString, ReceiveMode mode);
+        IQueueClient CreateQueueClientFromConnectionString(
+            string entityConnectionString,
+            ReceiveMode mode);
 
-        IQueueClient CreateQueueClient(ServiceBusNamespaceConnection namespaceConnection, string entityPath);
+        ITopicClient CreateTopicClientFromConnectionString(
+            string entityConnectionString);
+
+        ISubscriptionClient CreateSubscriptionClientFromConnectionString(
+            string topicEntityConnectionString,
+            string subscriptionName);
+
+        ISubscriptionClient CreateSubscriptionClientFromConnectionString(
+            string topicEntityConnectionString,
+            string subscriptionName,
+            ReceiveMode mode);
+
+        IMessageReceiver CreateMessageReceiverFromConnectionString(
+            string entityConnectionString);
+
+        IMessageReceiver CreateMessageReceiverFromConnectionString(
+            string entityConnectionString,
+            ReceiveMode mode);
+
+        IMessageSender CreateMessageSenderFromConnectionString(
+            string entityConnectionString);
+
+        IQueueClient CreateQueueClient(
+            ServiceBusNamespaceConnection namespaceConnection,
+            string entityPath);
 
         IQueueClient CreateQueueClient(
             ServiceBusNamespaceConnection namespaceConnection,
             string entityPath,
             ReceiveMode mode);
 
-        IQueueClient CreateQueueClient(ServiceBusEntityConnection entityConnection);
+        IQueueClient CreateQueueClient(
+            ServiceBusEntityConnection entityConnection);
 
-        IQueueClient CreateQueueClient(ServiceBusEntityConnection entityConnection, ReceiveMode mode);
-
-        ITopicClient CreateTopicClientFromConnectionString(string entityConnectionString);
-
-        ITopicClient CreateTopicClient(ServiceBusNamespaceConnection namespaceConnection, string entityPath);
-
-        ITopicClient CreateTopicClient(ServiceBusEntityConnection entityConnection);
-
-        ITopicClient CreateTopicClient(ServiceBusEntityConnection entityConnection, ReceiveMode mode);
-
-        ISubscriptionClient CreateSubscriptionClientFromConnectionString(
-            string topicEntityConnectionString,
-            string subscriptionName);
-
-        ISubscriptionClient CreateSubscriptionClientFromConnectionString(
-            string topicEntityConnectionString,
-            string subscriptionName,
+        IQueueClient CreateQueueClient(
+            ServiceBusEntityConnection entityConnection,
             ReceiveMode mode);
+
+        ITopicClient CreateTopicClient(
+            ServiceBusNamespaceConnection namespaceConnection,
+            string entityPath);
+
+        ITopicClient CreateTopicClient(
+            ServiceBusEntityConnection entityConnection);
 
         ISubscriptionClient CreateSubscriptionClient(
             ServiceBusNamespaceConnection namespaceConnection,
@@ -50,32 +70,36 @@ namespace Microsoft.Azure.ServiceBus
             string subscriptionName,
             ReceiveMode mode);
 
-        ISubscriptionClient CreateSubscriptionClient(ServiceBusEntityConnection topicConnection, string subscriptionName);
+        ISubscriptionClient CreateSubscriptionClient(
+            ServiceBusEntityConnection topicConnection,
+            string subscriptionName);
 
         ISubscriptionClient CreateSubscriptionClient(
             ServiceBusEntityConnection topicConnection,
             string subscriptionName,
             ReceiveMode mode);
 
-        IMessageReceiver CreateMessageReceiverFromConnectionString(string entityConnectionString);
-
-        IMessageReceiver CreateMessageReceiverFromConnectionString(string entityConnectionString, ReceiveMode mode);
-
-        IMessageReceiver CreateMessageReceiver(ServiceBusNamespaceConnection namespaceConnection, string entityPath);
+        IMessageReceiver CreateMessageReceiver(
+            ServiceBusNamespaceConnection namespaceConnection,
+            string entityPath);
 
         IMessageReceiver CreateMessageReceiver(
             ServiceBusNamespaceConnection namespaceConnection,
             string entityPath,
             ReceiveMode mode);
 
-        IMessageReceiver CreateMessageReceiver(ServiceBusEntityConnection entityConnection);
+        IMessageReceiver CreateMessageReceiver(
+            ServiceBusEntityConnection entityConnection);
 
-        IMessageReceiver CreateMessageReceiver(ServiceBusEntityConnection entityConnection, ReceiveMode mode);
+        IMessageReceiver CreateMessageReceiver(
+            ServiceBusEntityConnection entityConnection,
+            ReceiveMode mode);
 
-        IMessageSender CreateMessageSenderFromConnectionString(string entityConnectionString);
+        IMessageSender CreateMessageSender(
+            ServiceBusNamespaceConnection namespaceConnection,
+            string entityPath);
 
-        IMessageSender CreateMessageSender(ServiceBusNamespaceConnection namespaceConnection, string entityPath);
-
-        IMessageSender CreateMessageSender(ServiceBusEntityConnection entityConnection);
+        IMessageSender CreateMessageSender(
+            ServiceBusEntityConnection entityConnection);
     }
 }
