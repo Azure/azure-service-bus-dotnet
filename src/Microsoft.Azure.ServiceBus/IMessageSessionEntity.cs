@@ -3,12 +3,17 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
     using System.Threading.Tasks;
 
     public interface IMessageSessionEntity
     {
         Task<MessageSession> AcceptMessageSessionAsync();
 
+        Task<MessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime);
+
         Task<MessageSession> AcceptMessageSessionAsync(string sessionId);
+
+        Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime);
     }
 }
