@@ -170,7 +170,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTest(string queueName, int messageCount = 1)
         {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
+            var messagingFactory = new MessagingFactory();
+            var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
                 await this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);

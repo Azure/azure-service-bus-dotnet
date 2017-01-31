@@ -280,7 +280,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         protected override async Task OnCompleteAsync(IEnumerable<Guid> lockTokens)
         {
-                if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
+            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
             {
                 await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Completed).ConfigureAwait(false);
             }
@@ -293,6 +293,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         protected override async Task OnAbandonAsync(Guid lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { lockToken };
+            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
             {
                 await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Abandoned).ConfigureAwait(false);
             }
@@ -305,6 +306,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         protected override async Task OnDeferAsync(Guid lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { lockToken };
+            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
             {
                 await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Defered).ConfigureAwait(false);
             }
@@ -317,6 +319,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         protected override async Task OnDeadLetterAsync(Guid lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { lockToken };
+            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
             {
                 await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended).ConfigureAwait(false);
             }
