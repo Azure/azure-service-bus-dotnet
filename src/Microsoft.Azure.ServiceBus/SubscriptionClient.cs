@@ -18,16 +18,16 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ServiceBusConnection = serviceBusConnection;
             this.TopicPath = topicPath;
-            this.Name = name;
-            this.SubscriptionPath = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.Name);
+            this.SubscriptionName = name;
+            this.SubscriptionPath = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
             this.ReceiveMode = receiveMode;
         }
 
         public string TopicPath { get; private set; }
 
-        public string Path => EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.Name);
+        public string Path => EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
 
-        public string Name { get; }
+        public string SubscriptionName { get; }
 
         public ReceiveMode ReceiveMode { get; private set; }
 
