@@ -29,8 +29,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
             var messagingFactory = new ServiceBusFactory();
             var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
+            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
                     entityConnectionString,
                     this.SubscriptionName);
             try
@@ -189,8 +188,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
             var messagingFactory = new ServiceBusFactory();
             var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
+            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
                     entityConnectionString,
                     this.SubscriptionName,
                     ReceiveMode.ReceiveAndDelete);
@@ -226,8 +224,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
             var messagingFactory = new ServiceBusFactory();
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
+            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
                     entityConnectionString,
                     this.SubscriptionName,
                     ReceiveMode.ReceiveAndDelete);
@@ -259,7 +256,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        async Task AcceptAndCompleteSessionsAsync(SubscriptionClient subscriptionClient, string sessionId, string messageId)
+        async Task AcceptAndCompleteSessionsAsync(ISubscriptionClient subscriptionClient, string sessionId, string messageId)
         {
             var sessionReceiver = await subscriptionClient.AcceptMessageSessionAsync(sessionId);
             if (sessionId != null)
@@ -273,7 +270,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             TestUtility.Log($"Completed Message: {message.MessageId} for Session: {sessionReceiver.SessionId}");
         }
 
-        async Task PeekAndDeleteMessageAsync(SubscriptionClient queueClient, string sessionId, string messageId)
+        async Task PeekAndDeleteMessageAsync(ISubscriptionClient queueClient, string sessionId, string messageId)
         {
             var sessionReceiver = await queueClient.AcceptMessageSessionAsync(sessionId);
             if (sessionId != null)

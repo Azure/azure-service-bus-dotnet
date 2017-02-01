@@ -214,7 +214,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
+                await this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(subscriptionClient.InnerReceiver);
             }
             finally
             {
@@ -241,8 +241,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await
                     this.ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(
                         topicClient.InnerSender,
-                        subscriptionClient.InnerReceiver,
-                        messageCount);
+                        subscriptionClient.InnerReceiver);
             }
             finally
             {
@@ -269,8 +268,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await
                     this.CancelScheduledMessagesAsyncTestCase(
                         topicClient.InnerSender,
-                        subscriptionClient.InnerReceiver,
-                        messageCount);
+                        subscriptionClient.InnerReceiver);
             }
             finally
             {

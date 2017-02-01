@@ -12,27 +12,27 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     public abstract class SenderReceiverClientTestBase
     {
-        protected async Task PeekLockTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        protected async Task PeekLockTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
             IEnumerable<BrokeredMessage> receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
             await TestUtility.CompleteMessagesAsync(messageReceiver, receivedMessages);
         }
 
-        protected async Task ReceiveDeleteTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        protected async Task ReceiveDeleteTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
             IEnumerable<BrokeredMessage> receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
             Assert.True(messageCount == receivedMessages.Count());
         }
 
-        protected async Task PeekLockWithAbandonTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        protected async Task PeekLockWithAbandonTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             // Send messages
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
 
             // Receive 5 messages and Abandon them
-            int abandonMessagesCount = 5;
+            var abandonMessagesCount = 5;
             var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, abandonMessagesCount);
             Assert.True(receivedMessages.Count() == abandonMessagesCount);
 
@@ -52,13 +52,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await TestUtility.CompleteMessagesAsync(messageReceiver, receivedMessages);
         }
 
-        protected async Task PeekLockWithDeadLetterTestCase(MessageSender messageSender, MessageReceiver messageReceiver, MessageReceiver deadLetterReceiver, int messageCount)
+        protected async Task PeekLockWithDeadLetterTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, IMessageReceiver deadLetterReceiver, int messageCount)
         {
             // Send messages
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
 
             // Receive 5 messages and Deadletter them
-            int deadLetterMessageCount = 5;
+            var deadLetterMessageCount = 5;
             var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, deadLetterMessageCount);
             Assert.True(receivedMessages.Count() == deadLetterMessageCount);
 
@@ -78,13 +78,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await TestUtility.CompleteMessagesAsync(deadLetterReceiver, receivedMessages);
         }
 
-        protected async Task PeekLockDeferTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        protected async Task PeekLockDeferTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             // Send messages
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
 
             // Receive 5 messages And Defer them
-            int deferMessagesCount = 5;
+            var deferMessagesCount = 5;
             var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, deferMessagesCount);
             Assert.True(receivedMessages.Count() == deferMessagesCount);
             var sequenceNumbers = receivedMessages.Select(receivedMessage => receivedMessage.SequenceNumber);
@@ -109,7 +109,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await TestUtility.CompleteMessagesAsync(messageReceiver, receivedMessages);
         }
 
-        protected async Task RenewLockTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        protected async Task RenewLockTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             // Send messages
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
@@ -124,7 +124,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             TestUtility.Log("Sleeping 10 seconds...");
             await Task.Delay(TimeSpan.FromSeconds(10));
 
-            DateTime lockedUntilUtcTime = await messageReceiver.RenewLockAsync(receivedMessages.First().LockToken);
+            var lockedUntilUtcTime = await messageReceiver.RenewLockAsync(receivedMessages.First().LockToken);
             TestUtility.Log($"After First Renewal: {lockedUntilUtcTime}");
             Assert.True(lockedUntilUtcTime >= firstLockedUntilUtcTime + TimeSpan.FromSeconds(10));
 
@@ -141,10 +141,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.True(receivedMessages.Count() == messageCount);
         }
 
-        protected async Task PeekAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        protected async Task PeekAsyncTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
-            List<BrokeredMessage> peekedMessages = new List<BrokeredMessage>();
+            var peekedMessages = new List<BrokeredMessage>();
             peekedMessages.Add(await TestUtility.PeekMessageAsync(messageReceiver));
             peekedMessages.AddRange(await TestUtility.PeekMessagesAsync(messageReceiver, messageCount - 1));
 
@@ -156,25 +156,26 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 lastSequenceNumber = message.SequenceNumber;
             }
 
-            await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
+            // TODO: unsused variable
+            var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
         }
 
-        protected async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        protected async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(IMessageReceiver messageReceiver)
         {
-            Stopwatch timer = Stopwatch.StartNew();
+            var stopwatch = Stopwatch.StartNew();
             var message = await messageReceiver.ReceiveAsync(TimeSpan.FromSeconds(2));
-            timer.Stop();
+            stopwatch.Stop();
 
             // If message is not null, then the queue needs to be cleaned up before running the timeout test.
             Assert.Null(message);
 
             // Ensuring total time taken is less than 60 seconds, which is the default timeout for receive.
             // Keeping the value of 40 to avoid flakiness in test infrastructure which may lead to extended time taken.
-            // Todo: Change this value to a lower number once test infra is performant.
-            Assert.True(timer.Elapsed.TotalSeconds < 40);
+            // TODO: Change this value to a lower number once test infra is performant.
+            Assert.True(stopwatch.Elapsed.TotalSeconds < 40);
         }
 
-        protected async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        protected async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver)
         {
             var startTime = DateTime.UtcNow;
             var scheduleTime = new DateTimeOffset(DateTime.UtcNow).AddSeconds(5);
@@ -197,7 +198,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.True(Math.Ceiling(message.ScheduledEnqueueTimeUtc.Subtract(startTime).TotalSeconds) >= 5);
         }
 
-        protected async Task CancelScheduledMessagesAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
+        protected async Task CancelScheduledMessagesAsyncTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver)
         {
             var scheduleTime = new DateTimeOffset(DateTime.UtcNow).AddSeconds(30);
             var brokeredMessage = new BrokeredMessage("Test1") { MessageId = Guid.NewGuid().ToString() };
@@ -218,7 +219,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             // instead of waiting for connection timeout on a single message.
             await messageSender.SendAsync(new BrokeredMessage("Dummy") { MessageId = "Dummy" });
             IList<BrokeredMessage> messages = null;
-            int retryCount = 5;
+            var retryCount = 5;
             while (messages == null && --retryCount > 0)
             {
                 messages = await messageReceiver.ReceiveAsync(2);

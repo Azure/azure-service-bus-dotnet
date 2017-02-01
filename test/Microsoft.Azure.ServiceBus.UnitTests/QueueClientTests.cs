@@ -24,7 +24,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
             try
             {
-                await this.PeekLockTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await this.PeekLockTestCase(queueClient, queueClient, messageCount);
             }
             finally
             {
@@ -174,7 +174,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(queueClient.InnerReceiver);
             }
             finally
             {
@@ -191,7 +191,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await this.ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(queueClient.InnerSender, queueClient.InnerReceiver);
             }
             finally
             {
@@ -208,7 +208,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.CancelScheduledMessagesAsyncTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await this.CancelScheduledMessagesAsyncTestCase(queueClient.InnerSender, queueClient.InnerReceiver);
             }
             finally
             {
