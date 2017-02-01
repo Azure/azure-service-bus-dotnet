@@ -22,7 +22,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
             var message = await queueClient.ReceiveAsync();
-            Assert.NotNull((object)message);
+            Assert.NotNull(message);
 
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.CompleteAsync());
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.AbandonAsync());
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
             message = await queueClient.ReceiveAsync();
-            Assert.NotNull((object)message);
+            Assert.NotNull(message);
             await message.AbandonAsync();
             await Task.Delay(TimeSpan.FromMilliseconds(100));
             message = await queueClient.ReceiveAsync();

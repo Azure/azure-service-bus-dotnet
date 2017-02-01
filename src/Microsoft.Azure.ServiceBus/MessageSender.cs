@@ -26,7 +26,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task SendAsync(BrokeredMessage brokeredMessage)
         {
-            return this.SendAsync(new BrokeredMessage[] { brokeredMessage });
+            return this.SendAsync(new[] { brokeredMessage });
         }
 
         public async Task SendAsync(IEnumerable<BrokeredMessage> brokeredMessages)

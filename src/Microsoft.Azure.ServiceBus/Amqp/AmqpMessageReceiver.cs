@@ -103,7 +103,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);
             ReceivingAmqpLink receivingAmqpLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
             Source source = (Source)receivingAmqpLink.Settings.Source;
-            if (!source.FilterSet.TryGetValue<string>(AmqpClientConstants.SessionFilterName, out this.sessionId))
+            if (!source.FilterSet.TryGetValue(AmqpClientConstants.SessionFilterName, out this.sessionId))
             {
                 receivingAmqpLink.Session.SafeClose();
                 throw new ServiceBusException(false, Resources.AmqpFieldSessionId);
@@ -280,7 +280,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         protected override async Task OnCompleteAsync(IEnumerable<Guid> lockTokens)
         {
-            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
+                if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
                 await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Completed).ConfigureAwait(false);
             }
@@ -336,7 +336,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 // Create an AmqpRequest Message to renew  lock
                 AmqpRequestMessage requestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewLockOperation, this.OperationTimeout, null);
-                requestMessage.Map[ManagementConstants.Properties.LockTokens] = new Guid[] { lockToken };
+                requestMessage.Map[ManagementConstants.Properties.LockTokens] = new[] { lockToken };
 
                 AmqpResponseMessage response = await this.ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
 

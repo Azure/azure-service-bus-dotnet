@@ -72,7 +72,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log($"Sent Message: {messageId} to Session: {sessionId}");
 
                 var sessionReceiver = await queueClient.AcceptMessageSessionAsync(sessionId);
-                Assert.NotNull((object)sessionReceiver);
+                Assert.NotNull(sessionReceiver);
                 var message = await sessionReceiver.ReceiveAsync();
                 TestUtility.Log($"Received Message: {message.MessageId} from Session: {sessionReceiver.SessionId}");
                 Assert.True(message.MessageId == messageId);
@@ -91,7 +91,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 }
 
                 // Complete message using Session Receiver
-                await sessionReceiver.CompleteAsync(new Guid[] { message.LockToken });
+                await sessionReceiver.CompleteAsync(new[] { message.LockToken });
                 TestUtility.Log($"Completed Message: {message.MessageId} for Session: {sessionReceiver.SessionId}");
 
                 sessionStateString = "Completed Message On Session!";
@@ -130,7 +130,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log($"Sent Message: {messageId} to Session: {sessionId}");
 
                 var sessionReceiver = await queueClient.AcceptMessageSessionAsync(sessionId);
-                Assert.NotNull((object)sessionReceiver);
+                Assert.NotNull(sessionReceiver);
                 DateTime initialSessionLockedUntilTime = sessionReceiver.LockedUntilUtc;
                 TestUtility.Log($"Session LockedUntilUTC: {initialSessionLockedUntilTime} for Session: {sessionReceiver.SessionId}");
                 BrokeredMessage message = await sessionReceiver.ReceiveAsync();

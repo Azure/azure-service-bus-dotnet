@@ -8,7 +8,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Diagnostics;
     using System.IO;
     using System.Text;
-    using System.Threading;
     using System.Threading.Tasks;
     using Xunit;
 
@@ -61,8 +60,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                subscriptionClient.Close();
-                topicClient.Close();
+                await subscriptionClient.CloseAsync();
+                await topicClient.CloseAsync();
             }
         }
 
@@ -86,7 +85,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log($"Sent Message: {messageId} to Session: {sessionId}");
 
                 var sessionReceiver = await subscriptionClient.AcceptMessageSessionAsync(sessionId);
-                Assert.NotNull((object)sessionReceiver);
+                Assert.NotNull(sessionReceiver);
                 var message = await sessionReceiver.ReceiveAsync();
                 TestUtility.Log($"Received Message: {message.MessageId} from Session: {sessionReceiver.SessionId}");
                 Assert.True(message.MessageId == messageId);
@@ -125,8 +124,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                subscriptionClient.Close();
-                topicClient.Close();
+                await subscriptionClient.CloseAsync();
+                await topicClient.CloseAsync();
             }
         }
 
@@ -150,7 +149,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log($"Sent Message: {messageId} to Session: {sessionId}");
 
                 var sessionReceiver = await subscriptionClient.AcceptMessageSessionAsync(sessionId);
-                Assert.NotNull((object)sessionReceiver);
+                Assert.NotNull(sessionReceiver);
                 var initialSessionLockedUntilTime = sessionReceiver.LockedUntilUtc;
                 TestUtility.Log($"Session LockedUntilUTC: {initialSessionLockedUntilTime} for Session: {sessionReceiver.SessionId}");
                 var message = await sessionReceiver.ReceiveAsync();
@@ -177,8 +176,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                subscriptionClient.Close();
-                topicClient.Close();
+                await subscriptionClient.CloseAsync();
+                await topicClient.CloseAsync();
             }
         }
 
