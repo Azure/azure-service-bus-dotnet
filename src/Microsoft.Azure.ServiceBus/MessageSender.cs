@@ -70,7 +70,7 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
-                result = await this.OnScheduleMessageAsync(message);
+                result = await this.OnScheduleMessageAsync(message).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -88,7 +88,7 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
-                await this.OnCancelScheduledMessageAsync(sequenceNumber);
+                await this.OnCancelScheduledMessageAsync(sequenceNumber).ConfigureAwait(false);
             }
             catch (Exception exception)
             {

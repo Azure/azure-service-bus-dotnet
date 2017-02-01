@@ -311,7 +311,7 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
-                await this.OnAddRuleAsync(description);
+                await this.OnAddRuleAsync(description).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -338,7 +338,7 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
-                await this.OnRemoveRuleAsync(ruleName);
+                await this.OnRemoveRuleAsync(ruleName).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
