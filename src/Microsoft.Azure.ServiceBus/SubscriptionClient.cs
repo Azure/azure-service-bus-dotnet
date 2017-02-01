@@ -185,22 +185,22 @@ namespace Microsoft.Azure.ServiceBus
             return this.InnerReceiver.AbandonAsync(lockToken);
         }
 
-        public Task<MessageSession> AcceptMessageSessionAsync()
+        public Task<IMessageSession> AcceptMessageSessionAsync()
         {
             return this.AcceptMessageSessionAsync(null);
         }
 
-        public Task<MessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime)
+        public Task<IMessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime)
         {
             return this.AcceptMessageSessionAsync(null, serverWaitTime);
         }
 
-        public Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
+        public Task<IMessageSession> AcceptMessageSessionAsync(string sessionId)
         {
             return this.AcceptMessageSessionAsync(sessionId, this.InnerReceiver.OperationTimeout);
         }
 
-        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
+        public async Task<IMessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
             MessageSession session;
 

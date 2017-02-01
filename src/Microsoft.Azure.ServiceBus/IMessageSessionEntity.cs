@@ -8,12 +8,12 @@ namespace Microsoft.Azure.ServiceBus
 
     public interface IMessageSessionEntity
     {
-        Task<MessageSession> AcceptMessageSessionAsync();
+        Task<IMessageSession> AcceptMessageSessionAsync();
 
-        Task<MessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime);
+        Task<IMessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime);
 
-        Task<MessageSession> AcceptMessageSessionAsync(string sessionId);
+        Task<IMessageSession> AcceptMessageSessionAsync(string sessionId);
 
-        Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime);
+        Task<IMessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime);
     }
 }
