@@ -20,13 +20,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         const string ScheduledEnqueueTimeUtcName = "x-opt-scheduled-enqueue-time";
         const string SequenceNumberName = "x-opt-sequence-number";
         const string OffsetName = "x-opt-offset";
-        const string LockTokenName = "x-opt-lock-token";
         const string LockedUntilName = "x-opt-locked-until";
         const string PublisherName = "x-opt-publisher";
         const string PartitionKeyName = "x-opt-partition-key";
         const string PartitionIdName = "x-opt-partition-id";
-        const string PrefilteredMessageHeadersName = "x-opt-prefiltered-headers";
-        const string PrefilteredMessagePropertiesName = "x-opt-prefiltered-properties";
         const string DeadLetterSourceName = "x-opt-deadletter-source";
         const string TimeSpanName = AmqpConstants.Vendor + ":timespan";
         const string UriName = AmqpConstants.Vendor + ":uri";
