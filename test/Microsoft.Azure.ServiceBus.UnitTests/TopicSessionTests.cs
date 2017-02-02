@@ -232,7 +232,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 Stopwatch timer = Stopwatch.StartNew();
 
-                MessageSession sessionReceiver = null;
+                IMessageSession sessionReceiver = null;
                 try
                 {
                     sessionReceiver = await subscriptionClient.AcceptMessageSessionAsync(TimeSpan.FromSeconds(2));

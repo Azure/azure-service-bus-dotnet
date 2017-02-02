@@ -203,7 +203,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 Stopwatch timer = Stopwatch.StartNew();
 
-                MessageSession sessionReceiver = null;
+                IMessageSession sessionReceiver = null;
                 try
                 {
                     sessionReceiver = await queueClient.AcceptMessageSessionAsync(TimeSpan.FromSeconds(2));

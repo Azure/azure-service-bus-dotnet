@@ -33,7 +33,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return new AmqpMessageReceiver(
                 this.SubscriptionPath,
                 MessagingEntityType.Subscriber,
-                this.Mode,
+                this.ReceiveMode,
                 this.ServiceBusConnection.PrefetchCount,
                 this.ServiceBusConnection,
                 this.CbsTokenProvider);
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             AmqpMessageReceiver receiver = new AmqpMessageReceiver(
                 this.SubscriptionPath,
                 MessagingEntityType.Subscriber,
-                this.Mode,
+                this.ReceiveMode,
                 this.ServiceBusConnection.PrefetchCount,
                 this.ServiceBusConnection,
                 this.CbsTokenProvider,

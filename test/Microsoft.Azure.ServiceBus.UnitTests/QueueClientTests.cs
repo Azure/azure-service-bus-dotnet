@@ -205,10 +205,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task CancelScheduledMessagesAsyncTest(string queueName, int messageCount = 1)
         {
             var messagingFactory = new ServiceBusFactory();
-            var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
+            var queueClient = messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.CancelScheduledMessagesAsyncTestCase(queueClient.InnerSender, queueClient.InnerReceiver);
+                await this.CancelScheduledMessagesAsyncTestCase(queueClient, queueClient);
             }
             finally
             {
