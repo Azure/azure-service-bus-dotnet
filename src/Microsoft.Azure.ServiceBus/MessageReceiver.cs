@@ -6,6 +6,7 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public abstract class MessageReceiver : ClientEntity
@@ -13,6 +14,9 @@ namespace Microsoft.Azure.ServiceBus
         readonly TimeSpan operationTimeout;
         int prefetchCount;
         long lastPeekedSequenceNumber;
+        readonly Object messageReceivePumpSyncLock;
+        MessageReceivePump receivePump;
+        CancellationTokenSource receivePumpCancellationTokenSource;
 
         protected MessageReceiver(ReceiveMode receiveMode, TimeSpan operationTimeout)
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString())
@@ -20,6 +24,7 @@ namespace Microsoft.Azure.ServiceBus
             this.ReceiveMode = receiveMode;
             this.operationTimeout = operationTimeout;
             this.lastPeekedSequenceNumber = Constants.DefaultLastPeekedSequenceNumber;
+            this.messageReceivePumpSyncLock = new object();
         }
 
         public abstract string Path { get; }
@@ -302,8 +307,17 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             MessagingEventSource.Log.MessagePeekStop(this.ClientId, messages?.Count ?? 0);
-
             return messages;
+        }
+
+        public void OnMessageAsync(Func<BrokeredMessage, CancellationToken, Task> callback)
+        {
+            this.OnMessageAsync(callback, new OnMessageOptions() { ReceiveTimeOut = this.OperationTimeout } );
+        }
+
+        public void OnMessageAsync(Func<BrokeredMessage, CancellationToken, Task> callback, OnMessageOptions onMessageOptions)
+        {
+            this.OnMessageHandlerAsync(onMessageOptions, callback);  
         }
 
         protected abstract Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime);
@@ -321,6 +335,31 @@ namespace Microsoft.Azure.ServiceBus
         protected abstract Task<DateTime> OnRenewLockAsync(Guid lockToken);
 
         protected abstract Task<IList<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1);
+
+        void OnMessageHandlerAsync(OnMessageOptions onMessageOptions, 
+            Func<BrokeredMessage, CancellationToken, Task> callback)
+        {
+            lock (this.messageReceivePumpSyncLock)
+            {
+                if (this.receivePump != null)
+                {
+                    throw new InvalidOperationException(Resources.OnMessageAlreadyCalled);
+                }
+
+                try
+                {
+                    this.receivePumpCancellationTokenSource = new CancellationTokenSource();
+                    this.receivePump = new MessageReceivePump(this, onMessageOptions, callback, this.receivePumpCancellationTokenSource.Token);
+                    this.receivePump.Start();
+                }
+                catch (Exception)
+                {
+                    // TODO: Null the cancellationToken as well.
+                    this.receivePump = null;
+                    throw;
+                }
+            }
+        }
 
         static int ValidateLockTokens(IEnumerable<Guid> lockTokens)
         {
