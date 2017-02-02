@@ -162,26 +162,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     await queueClient.CloseAsync();
                 }
             }
-
-            [Fact]
-            [DisplayTestMethodName]
-            async Task Should_return_true_for_completed_message()
-            {
-                var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName), ReceiveMode.PeekLock);
-                try
-                {
-                    await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
-                    var peekedMessage = await TestUtility.PeekMessageAsync(queueClient.InnerReceiver);
-                    var messages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerReceiver, 1);
-                    await TestUtility.CompleteMessagesAsync(queueClient.InnerReceiver, messages);
-                    var result = peekedMessage.IsReceived;
-                    Assert.True(result);
-                }
-                finally
-                {
-                    await queueClient.CloseAsync();
-                }
-            }
         }
     }
 }
