@@ -130,6 +130,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
                     var receivedMessages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerReceiver, 1);
                     Assert.True(receivedMessages.First().IsReceived);
+
+                    // TODO: remove when per test cleanup is possible
+                    if (receiveMode == ReceiveMode.PeekLock)
+                    {
+                        await receivedMessages.First().CompleteAsync();
+                    }
                 }
                 finally
                 {
