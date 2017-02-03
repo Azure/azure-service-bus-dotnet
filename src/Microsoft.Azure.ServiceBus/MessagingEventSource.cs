@@ -556,6 +556,24 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
+        [NonEvent]
+        public void ScheduleMessageStart(string clientId, DateTimeOffset scheduleEnqueueTimeUtc)
+        {
+            if (this.IsEnabled())
+            {
+                this.ScheduleMessageException(clientId, scheduleEnqueueTimeUtc.ToString());
+            }
+        }
+
+        [Event(49, Level = EventLevel.Informational, Message = "{0}: ScheduleMessageAsync start. ScheduleTimeUtc = {1}")]
+        public void ScheduleMessageStart(string clientId, string scheduleEnqueueTimeUtc)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(49, clientId, scheduleEnqueueTimeUtc);
+            }
+        }
+
         [Event(48, Level = EventLevel.Informational, Message = "MessageReceiver (Namespace '{0}'; Entity '{1}' created).")]
         public void MessageReceiverCreateStop(string namespaceName, string entityName)
         {
