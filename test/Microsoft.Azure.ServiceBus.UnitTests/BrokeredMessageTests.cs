@@ -13,7 +13,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task BrokeredMessageOperationsTest()
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
 
             // Create QueueClient with ReceiveDelete,
             // Send and Receive a message, Try to Complete/Abandon/Defer/DeadLetter should throw InvalidOperationException()
@@ -126,7 +126,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             [InlineData(ReceiveMode.PeekLock)]
             async Task Should_return_true_for_message_that_was_sent_and_received(ReceiveMode receiveMode)
             {
-                var messagingFactory = new ServiceBusFactory();
+                var messagingFactory = new ServiceBusClientFactory();
                 var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
                     TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName),
                     receiveMode);
@@ -153,7 +153,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             [DisplayTestMethodName]
             async Task Should_return_true_for_peeked_message()
             {
-                var messagingFactory = new ServiceBusFactory();
+                var messagingFactory = new ServiceBusClientFactory();
                 var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
                     TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName),
                     ReceiveMode.PeekLock);

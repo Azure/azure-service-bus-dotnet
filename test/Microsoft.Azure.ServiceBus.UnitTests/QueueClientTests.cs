@@ -20,7 +20,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekLockTest(string queueName, int messageCount = 10)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
             try
             {
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task MessageReceiverAndMessageSenderCreationWorksAsExpected(string queueName, int messageCount = 10)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var messageReceiver =
                 (MessageReceiver)messagingFactory.CreateMessageReceiverFromConnectionString(
                     TestUtility.GetEntityConnectionString(queueName));
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task ReceiveDeleteTest(string queueName, int messageCount = 10)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
@@ -78,7 +78,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekLockWithAbandonTest(string queueName, int messageCount = 10)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
             try
             {
@@ -95,7 +95,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekLockWithDeadLetterTest(string queueName, int messageCount = 10)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
 
             // Create DLQ Client To Receive DeadLetteredMessages
@@ -119,7 +119,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekLockDeferTest(string queueName, int messageCount = 10)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
             try
             {
@@ -136,7 +136,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task BasicRenewLockTest(string queueName, int messageCount = 10)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
             try
             {
@@ -153,7 +153,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekAsyncTest(string queueName, int messageCount = 10)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
@@ -170,7 +170,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTest(string queueName, int messageCount = 1)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
@@ -187,7 +187,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTest(string queueName, int messageCount = 1)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
@@ -204,7 +204,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task CancelScheduledMessagesAsyncTest(string queueName, int messageCount = 1)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {

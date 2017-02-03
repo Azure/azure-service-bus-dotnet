@@ -27,7 +27,7 @@ namespace ReceiveSample
             };
 
             // Initializes the static QueueClient variable that will be used in the ReceiveMessages method.
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             queueClient = messagingFactory.CreateQueueClientFromConnectionString(connectionStringBuilder.ToString());
 
             await ReceiveMessages();

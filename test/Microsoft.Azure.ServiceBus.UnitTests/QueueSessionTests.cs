@@ -24,7 +24,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task SessionTest(string queueName)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
             try
             {
@@ -62,7 +62,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task GetAndSetSessionStateTest(string queueName)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
             try
             {
@@ -120,7 +120,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task SessionRenewLockTest(string queueName)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
             try
             {
@@ -166,7 +166,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekSessionAsyncTest(string queueName, int messageCount = 10)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
@@ -197,7 +197,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task AcceptSessionShouldReturnNoLaterThanServerWaitTimeTestCase(string queueName, int messageCount = 1)
         {
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {

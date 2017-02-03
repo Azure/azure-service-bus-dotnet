@@ -26,7 +26,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task CorrelationFilterTestCase(string topicName, int messageCount = 10)
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
             var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
                 entityConnectionString,
@@ -78,7 +78,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task SqlFilterTestCase(string topicName, int messageCount = 10)
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
             var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
                 entityConnectionString,
@@ -140,7 +140,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task SqlActionTestCase(string topicName, int messageCount = 10)
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusFactory();
+            var messagingFactory = new ServiceBusClientFactory();
             var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
             var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
                 entityConnectionString,
