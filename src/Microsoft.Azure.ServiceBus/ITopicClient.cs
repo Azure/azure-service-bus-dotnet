@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus
     ///     {
     ///          EntityPath = TopicName
     ///     };
-    /// ServiceBusFactory factory = new ServiceBusFactory();
+    /// ServiceBusClientFactory factory = new ServiceBusClientFactory();
     /// ITopicClient myTopicClient = factory.CreateTopicClientFromConnectionString(connectionStringBuilder.ToString());
     ///
     /// //********************************************************************************
@@ -29,7 +29,7 @@ namespace Microsoft.Azure.ServiceBus
     /// }
     /// </code>
     /// </example>
-    /// <seealso cref="ServiceBusFactory"/>
+    /// <seealso cref="ServiceBusClientFactory"/>
     public interface ITopicClient : IMessageSender
     {
         string TopicName { get; }
