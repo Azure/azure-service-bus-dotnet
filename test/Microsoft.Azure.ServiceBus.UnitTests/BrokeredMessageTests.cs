@@ -126,7 +126,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             [InlineData(ReceiveMode.PeekLock)]
             async Task Should_return_true_for_message_that_was_sent_and_received(ReceiveMode receiveMode)
             {
-                var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName), receiveMode);
+                var messagingFactory = new ServiceBusFactory();
+                var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
+                    TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName),
+                    receiveMode);
+
                 try
                 {
                     await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
@@ -149,7 +153,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             [DisplayTestMethodName]
             async Task Should_return_true_for_peeked_message()
             {
-                var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName), ReceiveMode.PeekLock);
+                var messagingFactory = new ServiceBusFactory();
+                var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
+                    TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName),
+                    ReceiveMode.PeekLock);
                 try
                 {
                     await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
