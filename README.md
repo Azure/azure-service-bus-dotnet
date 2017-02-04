@@ -92,7 +92,7 @@ The standard way to manage Azure resources is by using [Azure Resource Manager](
   * Browse messages and sessions
   * Scheduled messages specific API (Scheduling of messages can be done today through the queue/topic client, but this item is to add specific API's for scheduled messages)
   * EventSource logging
-  * Overload to Receive/AcceptMessageSession APIs that accept ServerWaitTimeout
+  * Overload to Receive/AcceptMessageSession APIs that accepts ServerWaitTimeout
 
 - [ ] Sprint 6: February 2017
   * Interfaces for easier testing
