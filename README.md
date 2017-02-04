@@ -92,7 +92,9 @@ The standard way to manage Azure resources is by using [Azure Resource Manager](
       * Add/Remove Rule
       * Browse messages and sessions
   * Scheduled messages specific API (Scheduling of messages can be done today through the queue/topic client, but this item is to add specific API's for scheduled messages)
+  * Added EventSource logging
 - [ ] Sprint 6: February 2017
+  * Interfaces for easier testing
   * "EntityFactory"
   * OnMessage/OnSession handlers
   * PartitionedEntity API - Batch receive to/complete from a specific partition
