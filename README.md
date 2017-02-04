@@ -86,18 +86,17 @@ The standard way to manage Azure resources is by using [Azure Resource Manager](
   * Retry policy
   * Receive by sequence number
 
-- [x] Sprint 5: January 2017 **Complete**
-  * Add major error conditions (ex. preventing all operations that are not supported, for Ex Transaction scenarios, etc)~~
-  * Request/Response features:~~
-      * Add/Remove Rule
-      * Browse messages and sessions
+- [x] Sprint 5: **Complete**
+  * Exception handling and some missing error scenarios
+  * Add/Remove Rule
+  * Browse messages and sessions
   * Scheduled messages specific API (Scheduling of messages can be done today through the queue/topic client, but this item is to add specific API's for scheduled messages)
   * EventSource logging
-  * Overload to Receive/ReceiveSessions for timeout
+  * Overload to Receive/AcceptMessageSession APIs that accept ServerWaitTimeout
 
 - [ ] Sprint 6: February 2017
   * Interfaces for easier testing
-  * "EntityFactory"
+  * "EntityFactory" (name to be determined) - Object used to create Queue/Topic/Subscption clients
   * OnMessage/OnSession handlers
   * PartitionedEntity API - Batch receive to/complete from a specific partition
   * NuGet package
