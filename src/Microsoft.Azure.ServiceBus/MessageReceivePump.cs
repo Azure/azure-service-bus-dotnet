@@ -10,15 +10,20 @@ namespace Microsoft.Azure.ServiceBus
 
     public sealed class MessageReceivePump
     {
-        static TimeSpan RenewLockThresholdTime = TimeSpan.FromSeconds(30);
+        const int MaxInitialReceiveRetryCount = 3;
+        static readonly TimeSpan ServerBusyExceptionBackoffAmount = TimeSpan.FromSeconds(10);
+        static readonly TimeSpan OtherExceptionBackoffAmount = TimeSpan.FromSeconds(1);
         readonly Func<BrokeredMessage, CancellationToken, Task> onMessageCallback;
         readonly OnMessageOptions onMessageOptions;
         readonly MessageReceiver messageReceiver;
         readonly CancellationToken pumpCancellationToken;
         readonly SemaphoreSlim maxConcurrentCallsSemaphoreSlim;
 
-        public MessageReceivePump(MessageReceiver messageReceiver, OnMessageOptions onMessageOptions,
-            Func<BrokeredMessage, CancellationToken, Task> callback, CancellationToken pumpCancellationToken)
+        public MessageReceivePump(
+            MessageReceiver messageReceiver,
+            OnMessageOptions onMessageOptions,
+            Func<BrokeredMessage, CancellationToken, Task> callback,
+            CancellationToken pumpCancellationToken)
         {
             if (messageReceiver == null)
             {
@@ -32,90 +37,208 @@ namespace Microsoft.Azure.ServiceBus
             this.maxConcurrentCallsSemaphoreSlim = new SemaphoreSlim(1, this.onMessageOptions.MaxConcurrentCalls);
         }
 
-        // Start Pump method
-        // Pump will start of a ReceiveTask which will:
-        //  1. Start of a loop for Receives.
-        //  2. Before starting the loop for receives it checks for cancellation token to stop
-        //  3. Call Receive. 
-        //  4. If message Received.
-        //      a. Start a Dispatch task for the receivedMessage which again takes in a CancellationToken
-        //      b. If MaxConcurrent calls > 1, call DispatchTask for that message and continue receiving on this thread.
-        //      c. Have a semaphore to control the number of tasks to limit the maxConcurrent receives.
-        //      b. If semaphore is not available, then wait, else go back to receive and dispatch
-        //      e. In the dispatch task call callback and also start a RenewLockTask with the same cancellationToken.
-        //      f. After callback is executed, If AutoComplete is set to true, call complete on the message.
-        //      g. After the callback is executed, the Dispatch task will call cancel on the RenewLock task to stop the renewal.
-        //  
-        //  When Receiver Close is called, it will call the Cancel on the cancellationToken
-        //  Then the Close on the MessageReceivePump is called.
-        public void Start()
+        public async Task StartPumpAsync()
         {
-            Task.Factory.StartNew(async () => await this.MessageReceiveTask().ConfigureAwait(false));
-        }
-
-        async Task MessageReceiveTask()
-        {
-            while (!this.pumpCancellationToken.IsCancellationRequested)
+            int retryCount = 0;
+            BrokeredMessage initialMessage = null;
+            while (true)
             {
                 try
                 {
-                    BrokeredMessage message = await this.messageReceiver.ReceiveAsync();
-                    await this.MessageDispatchTask(message).ConfigureAwait(false);
+                    initialMessage = await this.messageReceiver.ReceiveAsync(TimeSpan.Zero).ConfigureAwait(false);
+                    break;
                 }
-                catch (Exception e)
+                catch (Exception exception)
                 {
-                    //TODO: Handle specific exceptions  like ServerBust, Timeout, etc better for retry
-                    this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(e, "Receive"));
-                    throw;
+                    retryCount++;
+                    if (retryCount == MaxInitialReceiveRetryCount ||
+                        !this.ShouldRetry(exception))
+                    {
+                        throw;
+                    }
+
+                    TimeSpan backOffTime = this.GetBackOffTime(exception);
+                    await Task.Delay(backOffTime, this.pumpCancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            TaskExtensionHelper.Schedule(() => this.MessagePumpTask(initialMessage));
+        }
+
+        TimeSpan GetBackOffTime(Exception exception)
+        {
+            return exception is ServerBusyException ? ServerBusyExceptionBackoffAmount : OtherExceptionBackoffAmount;
+        }
+
+        bool ShouldRetry(Exception exception)
+        {
+            ServiceBusException serviceBusException = exception as ServiceBusException;
+            return serviceBusException != null && serviceBusException.IsTransient;
+        }
+
+        bool ShouldRenewLock()
+        {
+            return
+                this.messageReceiver.ReceiveMode == ReceiveMode.PeekLock &&
+                this.onMessageOptions.AutoRenewLock;
+        }
+
+        async Task MessagePumpTask(BrokeredMessage initialMessage)
+        {
+            while (!this.pumpCancellationToken.IsCancellationRequested)
+            {
+                BrokeredMessage message = null;
+                try
+                {
+                    await this.maxConcurrentCallsSemaphoreSlim.WaitAsync(this.pumpCancellationToken).ConfigureAwait(false);
+                    if (initialMessage == null)
+                    {
+                        message = await this.messageReceiver.ReceiveAsync();
+                    }
+                    else
+                    {
+                        message = initialMessage;
+                    }
+
+                    if (message != null)
+                    {
+                        TaskExtensionHelper.Schedule(() => this.MessageDispatchTask(message));
+                    }
+                }
+                catch (Exception exception)
+                {
+                    // TODO: Trace the exception
+                    this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "Receive"));
+                    TimeSpan backOffTimeSpan = this.GetBackOffTime(exception);
+                    await Task.Delay(backOffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    // Either an exception or for some reason message was null, release semaphore and retry.
+                    if (message == null)
+                    {
+                        this.maxConcurrentCallsSemaphoreSlim.Release();
+                    }
                 }
             }
         }
 
         async Task MessageDispatchTask(BrokeredMessage message)
         {
+            CancellationTokenSource renewLockCancellationTokenSource = null;
+            Timer autoRenewLockCancellationTimer = null;
+            if (this.ShouldRenewLock())
+            {
+                renewLockCancellationTokenSource = new CancellationTokenSource();
+                TaskExtensionHelper.Schedule(() => this.RenewMessageLockTask(message, renewLockCancellationTokenSource.Token));
+
+                // After a threshold time of renewal('AutoRenewTimeout'), create timer to cancel anymore renewals.
+                autoRenewLockCancellationTimer = new Timer(this.CancelAutoRenewlock, renewLockCancellationTokenSource, this.onMessageOptions.AutoRenewTimeout, TimeSpan.FromMilliseconds(-1));
+            }
+
             try
             {
-                CancellationTokenSource renewLockCancellationTokenSource = new CancellationTokenSource();
-                TaskExtensionHelper.FireAndForget(() => this.RenewMessageLockTask(message, renewLockCancellationTokenSource.Token));
+                await this.onMessageCallback(message, this.pumpCancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "UserCallback"));
 
-                await this.onMessageCallback(message, this.pumpCancellationToken);
+                // Nothing much to do if UserCallback throws, Abandon message and Release semaphore.
+                await this.AbandonMessageIfNeededAsync(message).ConfigureAwait(false);
+                this.maxConcurrentCallsSemaphoreSlim.Release();
+                return;
+            }
+            finally
+            {
+                renewLockCancellationTokenSource?.Cancel();
+                renewLockCancellationTokenSource?.Dispose();
+                autoRenewLockCancellationTimer?.Dispose();
+            }
+
+            // If we've made it this far, user callback completed fine. Complete message and Release semaphore.
+            await this.CompleteMessageIfNeededAsync(message).ConfigureAwait(false);
+            this.maxConcurrentCallsSemaphoreSlim.Release();
+        }
+
+        void CancelAutoRenewlock(object state)
+        {
+            CancellationTokenSource renewLockCancellationTokenSource = (CancellationTokenSource)state;
+            try
+            {
+                // TODO: Trace the fact that a Cancel was called on AutoRenew with the message ID
                 renewLockCancellationTokenSource.Cancel();
-                renewLockCancellationTokenSource.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Ignore this race.
+            }
+        }
 
-                if (this.onMessageOptions.AutoComplete && !this.pumpCancellationToken.IsCancellationRequested)
+        async Task AbandonMessageIfNeededAsync(BrokeredMessage message)
+        {
+            try
+            {
+                if (this.messageReceiver.ReceiveMode == ReceiveMode.PeekLock)
                 {
-                    await message.CompleteAsync().ConfigureAwait(false);
+                    await this.messageReceiver.AbandonAsync(new[] { message.LockToken }).ConfigureAwait(false);
                 }
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                //TODO: Handle specific exceptions  like ServerBust, Timeout, etc better for retry
-                this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(e, "Dispatch"));
-                throw;
+                // TODO: Log Abandon exception.
+                this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "Abandon"));
+            }
+        }
+
+        async Task CompleteMessageIfNeededAsync(BrokeredMessage message)
+        {
+            try
+            {
+                if (this.messageReceiver.ReceiveMode == ReceiveMode.PeekLock &&
+                    this.onMessageOptions.AutoComplete)
+                {
+                    await this.messageReceiver.CompleteAsync(new[] { message.LockToken }).ConfigureAwait(false);
+                }
+            }
+            catch (Exception exception)
+            {
+                // Log Complete exception.
+                this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "Complete"));
             }
         }
 
         async Task RenewMessageLockTask(BrokeredMessage message, CancellationToken renewLockCancellationToken)
         {
-            while (!this.pumpCancellationToken.IsCancellationRequested && 
+            while (!this.pumpCancellationToken.IsCancellationRequested &&
                    !renewLockCancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    if (message.LockedUntilUtc - DateTime.UtcNow < MessageReceivePump.RenewLockThresholdTime)
+                    TimeSpan amount = MessagingUtilities.CalculateRenewAfterDuration(message.LockedUntilUtc);
+                    await Task.Delay(amount, renewLockCancellationToken).ConfigureAwait(false);
+
+                    if (!this.pumpCancellationToken.IsCancellationRequested &&
+                        !renewLockCancellationToken.IsCancellationRequested)
                     {
                         await message.RenewLockAsync().ConfigureAwait(false);
                     }
                     else
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(10), renewLockCancellationToken).ConfigureAwait(false);
+                        break;
                     }
                 }
-                catch (Exception e)
+                catch (Exception exception)
                 {
-                    //TODO: Handle specific exceptions  like ServerBust, Timeout, etc better for retry
-                    this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(e, "RenewLock"));
-                    throw;
+                    // TODO: Log Renewlock exception.
+                    this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "RenewLock"));
+                    if (!this.ShouldRetry(exception))
+                    {
+                        break;
+                    }
+
+                    TimeSpan backoffTimeSpan = this.GetBackOffTime(exception);
+                    await Task.Delay(backoffTimeSpan).ConfigureAwait(false);
                 }
             }
         }

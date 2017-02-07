@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
     public class TaskExtensionHelper
     {
-        public static void FireAndForget(Func<Task> func)
+        public static void Schedule(Func<Task> func)
         {
             Task.Run(async () =>
             {

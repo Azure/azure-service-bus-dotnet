@@ -30,5 +30,9 @@ namespace Microsoft.Azure.ServiceBus
         public static readonly TimeSpan DefaultOperationTimeout = TimeSpan.FromMinutes(1);
 
         public static readonly TimeSpan ClientPumpRenewLockTimeout = TimeSpan.FromMinutes(5);
+
+        public static readonly TimeSpan MinimumLockDuration = TimeSpan.FromSeconds(5);
+
+        public static readonly TimeSpan MaximumRenewBufferDuration = TimeSpan.FromSeconds(10);
     }
 }

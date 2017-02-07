@@ -12,9 +12,9 @@ namespace Microsoft.Azure.ServiceBus
     public abstract class MessageReceiver : ClientEntity
     {
         readonly TimeSpan operationTimeout;
+        readonly object messageReceivePumpSyncLock;
         int prefetchCount;
         long lastPeekedSequenceNumber;
-        readonly Object messageReceivePumpSyncLock;
         MessageReceivePump receivePump;
         CancellationTokenSource receivePumpCancellationTokenSource;
 
@@ -122,7 +122,7 @@ namespace Microsoft.Azure.ServiceBus
             IList<BrokeredMessage> messages;
             try
             {
-                messages = await this.OnReceiveAsync(maxMessageCount, serverWaitTime);
+                messages = await this.OnReceiveAsync(maxMessageCount, serverWaitTime).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -312,12 +312,12 @@ namespace Microsoft.Azure.ServiceBus
 
         public void OnMessageAsync(Func<BrokeredMessage, CancellationToken, Task> callback)
         {
-            this.OnMessageAsync(callback, new OnMessageOptions() { ReceiveTimeOut = this.OperationTimeout } );
+            this.OnMessageAsync(callback, new OnMessageOptions() { ReceiveTimeOut = this.OperationTimeout });
         }
 
         public void OnMessageAsync(Func<BrokeredMessage, CancellationToken, Task> callback, OnMessageOptions onMessageOptions)
         {
-            this.OnMessageHandlerAsync(onMessageOptions, callback);  
+            this.OnMessageHandlerAsync(onMessageOptions, callback).GetAwaiter().GetResult();
         }
 
         protected abstract Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime);
@@ -335,31 +335,6 @@ namespace Microsoft.Azure.ServiceBus
         protected abstract Task<DateTime> OnRenewLockAsync(Guid lockToken);
 
         protected abstract Task<IList<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1);
-
-        void OnMessageHandlerAsync(OnMessageOptions onMessageOptions, 
-            Func<BrokeredMessage, CancellationToken, Task> callback)
-        {
-            lock (this.messageReceivePumpSyncLock)
-            {
-                if (this.receivePump != null)
-                {
-                    throw new InvalidOperationException(Resources.OnMessageAlreadyCalled);
-                }
-
-                try
-                {
-                    this.receivePumpCancellationTokenSource = new CancellationTokenSource();
-                    this.receivePump = new MessageReceivePump(this, onMessageOptions, callback, this.receivePumpCancellationTokenSource.Token);
-                    this.receivePump.Start();
-                }
-                catch (Exception)
-                {
-                    // TODO: Null the cancellationToken as well.
-                    this.receivePump = null;
-                    throw;
-                }
-            }
-        }
 
         static int ValidateLockTokens(IEnumerable<Guid> lockTokens)
         {
@@ -388,6 +363,35 @@ namespace Microsoft.Azure.ServiceBus
             if (this.ReceiveMode != ReceiveMode.PeekLock)
             {
                 throw Fx.Exception.AsError(new InvalidOperationException("The operation is only supported in 'PeekLock' receive mode."));
+            }
+        }
+
+        async Task OnMessageHandlerAsync(
+            OnMessageOptions onMessageOptions,
+            Func<BrokeredMessage, CancellationToken, Task> callback)
+        {
+            lock (this.messageReceivePumpSyncLock)
+            {
+                if (this.receivePump != null)
+                {
+                    throw new InvalidOperationException(Resources.OnMessageAlreadyCalled);
+                }
+
+                this.receivePumpCancellationTokenSource = new CancellationTokenSource();
+                this.receivePump = new MessageReceivePump(this, onMessageOptions, callback, this.receivePumpCancellationTokenSource.Token);
+            }
+
+            try
+            {
+                await this.receivePump.StartPumpAsync().ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // TODO: Log the Start Pump exception.
+                this.receivePumpCancellationTokenSource.Cancel();
+                this.receivePumpCancellationTokenSource.Dispose();
+                this.receivePump = null;
+                throw;
             }
         }
     }
