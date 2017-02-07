@@ -370,6 +370,8 @@ namespace Microsoft.Azure.ServiceBus
             OnMessageOptions onMessageOptions,
             Func<BrokeredMessage, CancellationToken, Task> callback)
         {
+            MessagingEventSource.Log.RegisterOnMessageHandlerStart(this.ClientId, onMessageOptions);
+
             lock (this.messageReceivePumpSyncLock)
             {
                 if (this.receivePump != null)
@@ -385,14 +387,17 @@ namespace Microsoft.Azure.ServiceBus
             {
                 await this.receivePump.StartPumpAsync().ConfigureAwait(false);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                // TODO: Log the Start Pump exception.
+                MessagingEventSource.Log.RegisterOnMessageHandlerException(this.ClientId, exception);
+
                 this.receivePumpCancellationTokenSource.Cancel();
                 this.receivePumpCancellationTokenSource.Dispose();
                 this.receivePump = null;
                 throw;
             }
+
+            MessagingEventSource.Log.RegisterOnMessageHandlerStop(this.ClientId);
         }
     }
 }

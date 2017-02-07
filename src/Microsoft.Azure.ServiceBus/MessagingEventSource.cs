@@ -532,5 +532,272 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.WriteEvent(44, clientId, exception);
         }
+
+        [NonEvent]
+        public void RegisterOnMessageHandlerStart(string clientId, OnMessageOptions onMessageOptions)
+        {
+            if (this.IsEnabled())
+            {
+                this.RegisterOnMessageHandlerStart(clientId, onMessageOptions.AutoComplete, onMessageOptions.AutoRenewLock, onMessageOptions.MaxConcurrentCalls, (long)onMessageOptions.AutoRenewTimeout.TotalSeconds);
+            }
+        }
+
+        [Event(61, Level = EventLevel.Informational, Message = "{0}: Register OnMessageHandler start: OnMessage Options: AutoComplete: {1}, AutoRenewLock: {2}, MaxConcurrentCalls: {3}, AutoRenewTimeout: {4}")]
+        void RegisterOnMessageHandlerStart(string clientId, bool autoComplete, bool autorenewLock, int maxConcurrentCalls, long autorenewTimeoutInSeconds)
+        {
+            this.WriteEvent(61, clientId, autoComplete, autorenewLock, maxConcurrentCalls, autorenewTimeoutInSeconds);
+        }
+
+        [Event(62, Level = EventLevel.Informational, Message = "{0}: Register OnMessageHandler done.")]
+        public void RegisterOnMessageHandlerStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(62, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void RegisterOnMessageHandlerException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.RegisterOnMessageHandlerException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(63, Level = EventLevel.Error, Message = "{0}: Register OnMessageHandler Exception: {1}")]
+        void RegisterOnMessageHandlerException(string clientId, string exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(63, clientId, exception);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpInitialMessageReceived(string clientId, BrokeredMessage message)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpInitialMessageReceived(clientId, message.SequenceNumber, message.LockToken.ToString());
+            }
+        }
+
+        [Event(64, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump Received Initial Message: SequenceNumber: {1}, LockToken: {2}")]
+        void MessageReceiverPumpInitialMessageReceived(string clientId, long sequenceNumber, string lockToken)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(64, clientId, sequenceNumber, lockToken);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpInitialMessageReceiveException(string clientId, int retryCount, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpInitialMessageReceiveException(clientId, retryCount, exception.ToString());
+            }
+        }
+
+        [Event(65, Level = EventLevel.Error, Message = "{0}: Register OnMessageHandler Exception: RetryCount: {1}, Exception: {2}")]
+        void MessageReceiverPumpInitialMessageReceiveException(string clientId, int retryCount, string exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(65, clientId, retryCount, exception);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpTaskStart(string clientId, BrokeredMessage message, int currentSemaphoreCount)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpTaskStart(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString(), currentSemaphoreCount);
+            }
+        }
+
+        [Event(66, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump PumpTask Started: Message: SequenceNumber: {1}, LockToken: {2}, Available Semaphore Count: {3}")]
+        void MessageReceiverPumpTaskStart(string clientId, long sequenceNumber, string lockToken, int currentSemaphoreCount)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(66, clientId, sequenceNumber, lockToken, currentSemaphoreCount);
+            }
+        }
+
+        [Event(67, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump PumpTask done: Available Semaphore Count: {1}")]
+        public void MessageReceiverPumpTaskStop(string clientId, int currentSemaphoreCount)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(67, clientId, currentSemaphoreCount);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceivePumpTaskException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceivePumpTaskException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(68, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump PumpTask Exception: Exception: {1}")]
+        void MessageReceivePumpTaskException(string clientId, string exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(68, clientId, exception);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpDispatchTaskStart(string clientId, BrokeredMessage message)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpDispatchTaskStart(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString());
+            }
+        }
+
+        [Event(69, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump DispatchTask start: Message: SequenceNumber: {1}, LockToken: {2}")]
+        void MessageReceiverPumpDispatchTaskStart(string clientId, long sequenceNumber, string lockToken)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(69, clientId, sequenceNumber, lockToken);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpDispatchTaskStop(string clientId, BrokeredMessage message, int currentSemaphoreCount)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpDispatchTaskStop(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString(), currentSemaphoreCount);
+            }
+        }
+
+        [Event(70, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump DispatchTask done: Message: SequenceNumber: {1}, LockToken: {2}, Current Semaphore Count: {3}")]
+        void MessageReceiverPumpDispatchTaskStop(string clientId, long sequenceNumber, string lockToken, int currentSemaphoreCount)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(70, clientId, sequenceNumber, lockToken, currentSemaphoreCount);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpUserCallbackStart(string clientId, BrokeredMessage message)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpUserCallbackStart(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString());
+            }
+        }
+
+        [Event(71, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback start: Message: SequenceNumber: {1}, LockToken: {2}")]
+        void MessageReceiverPumpUserCallbackStart(string clientId, long sequenceNumber, string lockToken)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(71, clientId, sequenceNumber, lockToken);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpUserCallbackStop(string clientId, BrokeredMessage message)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpUserCallbackStop(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString());
+            }
+        }
+
+        [Event(72, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback done: Message: SequenceNumber: {1}, LockToken: {2}")]
+        void MessageReceiverPumpUserCallbackStop(string clientId, long sequenceNumber, string lockToken)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(72, clientId, sequenceNumber, lockToken);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpUserCallbackException(string clientId, BrokeredMessage message, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpUserCallbackException(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString(), exception.ToString());
+            }
+        }
+
+        [Event(73, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump UserCallback Exception: Message: SequenceNumber: {1}, LockToken: {2}, Exception: {3}")]
+        void MessageReceiverPumpUserCallbackException(string clientId, long sequenceNumber, string lockToken, string exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(73, clientId, sequenceNumber, lockToken, exception);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpRenewMessageStart(string clientId, BrokeredMessage message, TimeSpan renewAfterTimeSpan)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpRenewMessageStart(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString(), (long)renewAfterTimeSpan.TotalSeconds);
+            }
+        }
+
+        [Event(74, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback start: Message: SequenceNumber: {1}, LockToken: {2}, RenewAfterTimeInSeconds: {3}")]
+        void MessageReceiverPumpRenewMessageStart(string clientId, long sequenceNumber, string lockToken, long renewAfterTimeSpanInSeconds)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(74, clientId, sequenceNumber, lockToken, renewAfterTimeSpanInSeconds);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpRenewMessageStop(string clientId, BrokeredMessage message)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpRenewMessageStop(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString());
+            }
+        }
+
+        [Event(75, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback done: Message: SequenceNumber: {1}, LockToken: {2}")]
+        void MessageReceiverPumpRenewMessageStop(string clientId, long sequenceNumber, string lockToken)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(75, clientId, sequenceNumber, lockToken);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpRenewMessageException(string clientId, BrokeredMessage message, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpRenewMessageException(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString(), exception.ToString());
+            }
+        }
+
+        [Event(76, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump UserCallback Exception: Message: SequenceNumber: {1}, LockToken: {2}, Exception: {3}")]
+        void MessageReceiverPumpRenewMessageException(string clientId, long sequenceNumber, string lockToken, string exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(76, clientId, sequenceNumber, lockToken, exception);
+            }
+        }
     }
 }

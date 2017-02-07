@@ -45,12 +45,15 @@ namespace Microsoft.Azure.ServiceBus
             {
                 try
                 {
-                    initialMessage = await this.messageReceiver.ReceiveAsync(TimeSpan.Zero).ConfigureAwait(false);
+                    initialMessage = await this.messageReceiver.ReceiveAsync().ConfigureAwait(false);
+                    MessagingEventSource.Log.MessageReceiverPumpInitialMessageReceived(this.messageReceiver.ClientId, initialMessage);
                     break;
                 }
                 catch (Exception exception)
                 {
                     retryCount++;
+                    MessagingEventSource.Log.MessageReceiverPumpInitialMessageReceiveException(this.messageReceiver.ClientId, retryCount, exception);
+
                     if (retryCount == MaxInitialReceiveRetryCount ||
                         !this.ShouldRetry(exception))
                     {
@@ -90,7 +93,9 @@ namespace Microsoft.Azure.ServiceBus
                 BrokeredMessage message = null;
                 try
                 {
+                    MessagingEventSource.Log.MessageReceiverPumpTaskStart(this.messageReceiver.ClientId, initialMessage, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
                     await this.maxConcurrentCallsSemaphoreSlim.WaitAsync(this.pumpCancellationToken).ConfigureAwait(false);
+
                     if (initialMessage == null)
                     {
                         message = await this.messageReceiver.ReceiveAsync();
@@ -107,7 +112,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
                 catch (Exception exception)
                 {
-                    // TODO: Trace the exception
+                    MessagingEventSource.Log.MessageReceivePumpTaskException(this.messageReceiver.ClientId, exception);
                     this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "Receive"));
                     TimeSpan backOffTimeSpan = this.GetBackOffTime(exception);
                     await Task.Delay(backOffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
@@ -118,6 +123,7 @@ namespace Microsoft.Azure.ServiceBus
                     if (message == null)
                     {
                         this.maxConcurrentCallsSemaphoreSlim.Release();
+                        MessagingEventSource.Log.MessageReceiverPumpTaskStop(this.messageReceiver.ClientId, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
                     }
                 }
             }
@@ -127,6 +133,9 @@ namespace Microsoft.Azure.ServiceBus
         {
             CancellationTokenSource renewLockCancellationTokenSource = null;
             Timer autoRenewLockCancellationTimer = null;
+
+            MessagingEventSource.Log.MessageReceiverPumpDispatchTaskStart(this.messageReceiver.ClientId, message);
+
             if (this.ShouldRenewLock())
             {
                 renewLockCancellationTokenSource = new CancellationTokenSource();
@@ -138,10 +147,13 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
+                MessagingEventSource.Log.MessageReceiverPumpUserCallbackStart(this.messageReceiver.ClientId, message);
                 await this.onMessageCallback(message, this.pumpCancellationToken).ConfigureAwait(false);
+                MessagingEventSource.Log.MessageReceiverPumpUserCallbackStop(this.messageReceiver.ClientId, message);
             }
             catch (Exception exception)
             {
+                MessagingEventSource.Log.MessageReceiverPumpUserCallbackException(this.messageReceiver.ClientId, message, exception);
                 this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "UserCallback"));
 
                 // Nothing much to do if UserCallback throws, Abandon message and Release semaphore.
@@ -159,6 +171,8 @@ namespace Microsoft.Azure.ServiceBus
             // If we've made it this far, user callback completed fine. Complete message and Release semaphore.
             await this.CompleteMessageIfNeededAsync(message).ConfigureAwait(false);
             this.maxConcurrentCallsSemaphoreSlim.Release();
+
+            MessagingEventSource.Log.MessageReceiverPumpDispatchTaskStop(this.messageReceiver.ClientId, message, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
         }
 
         void CancelAutoRenewlock(object state)
@@ -166,7 +180,6 @@ namespace Microsoft.Azure.ServiceBus
             CancellationTokenSource renewLockCancellationTokenSource = (CancellationTokenSource)state;
             try
             {
-                // TODO: Trace the fact that a Cancel was called on AutoRenew with the message ID
                 renewLockCancellationTokenSource.Cancel();
             }
             catch (ObjectDisposedException)
@@ -186,7 +199,6 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                // TODO: Log Abandon exception.
                 this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "Abandon"));
             }
         }
@@ -203,7 +215,6 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                // Log Complete exception.
                 this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "Complete"));
             }
         }
@@ -216,12 +227,14 @@ namespace Microsoft.Azure.ServiceBus
                 try
                 {
                     TimeSpan amount = MessagingUtilities.CalculateRenewAfterDuration(message.LockedUntilUtc);
+                    MessagingEventSource.Log.MessageReceiverPumpRenewMessageStart(this.messageReceiver.ClientId, message, amount);
                     await Task.Delay(amount, renewLockCancellationToken).ConfigureAwait(false);
 
                     if (!this.pumpCancellationToken.IsCancellationRequested &&
                         !renewLockCancellationToken.IsCancellationRequested)
                     {
                         await message.RenewLockAsync().ConfigureAwait(false);
+                        MessagingEventSource.Log.MessageReceiverPumpRenewMessageStop(this.messageReceiver.ClientId, message);
                     }
                     else
                     {
@@ -230,7 +243,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
                 catch (Exception exception)
                 {
-                    // TODO: Log Renewlock exception.
+                    MessagingEventSource.Log.MessageReceiverPumpRenewMessageException(this.messageReceiver.ClientId, message, exception);
                     this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "RenewLock"));
                     if (!this.ShouldRetry(exception))
                     {
