@@ -74,6 +74,19 @@ namespace Microsoft.Azure.ServiceBus
 
         protected MessagingEntityType EntityType { get; set; }
 
+        public override Task CloseAsync()
+        {
+            lock (this.messageReceivePumpSyncLock)
+            {
+                if (this.receivePump != null)
+                {
+                    this.receivePumpCancellationTokenSource.Cancel();
+                    this.receivePump = null;
+                }
+            }
+            return Task.FromResult(0);
+        }
+
         /// <summary>
         /// Asynchronously receives a message using the <see cref="MessageReceiver" />.
         /// </summary>

@@ -34,7 +34,7 @@ namespace Microsoft.Azure.ServiceBus
             this.onMessageOptions = onMessageOptions;
             this.onMessageCallback = callback;
             this.pumpCancellationToken = pumpCancellationToken;
-            this.maxConcurrentCallsSemaphoreSlim = new SemaphoreSlim(1, this.onMessageOptions.MaxConcurrentCalls);
+            this.maxConcurrentCallsSemaphoreSlim = new SemaphoreSlim(this.onMessageOptions.MaxConcurrentCalls);
         }
 
         public async Task StartPumpAsync()
@@ -93,7 +93,6 @@ namespace Microsoft.Azure.ServiceBus
                 BrokeredMessage message = null;
                 try
                 {
-                    MessagingEventSource.Log.MessageReceiverPumpTaskStart(this.messageReceiver.ClientId, initialMessage, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
                     await this.maxConcurrentCallsSemaphoreSlim.WaitAsync(this.pumpCancellationToken).ConfigureAwait(false);
 
                     if (initialMessage == null)
@@ -103,10 +102,12 @@ namespace Microsoft.Azure.ServiceBus
                     else
                     {
                         message = initialMessage;
+                        initialMessage = null;
                     }
 
                     if (message != null)
                     {
+                        MessagingEventSource.Log.MessageReceiverPumpTaskStart(this.messageReceiver.ClientId, message, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
                         TaskExtensionHelper.Schedule(() => this.MessageDispatchTask(message));
                     }
                 }
@@ -244,7 +245,13 @@ namespace Microsoft.Azure.ServiceBus
                 catch (Exception exception)
                 {
                     MessagingEventSource.Log.MessageReceiverPumpRenewMessageException(this.messageReceiver.ClientId, message, exception);
-                    this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "RenewLock"));
+
+                    // TaskCancelled is expected here as renewTasks will be cancelled after the Complete call is made.
+                    // Lets not bother user with this exception.
+                    if (exception is TaskCanceledException)
+                    {
+                        this.onMessageOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "RenewLock"));
+                    }
                     if (!this.ShouldRetry(exception))
                     {
                         break;

@@ -580,16 +580,16 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.MessageReceiverPumpInitialMessageReceived(clientId, message.SequenceNumber, message.LockToken.ToString());
+                this.MessageReceiverPumpInitialMessageReceived(clientId, message.SequenceNumber);
             }
         }
 
-        [Event(64, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump Received Initial Message: SequenceNumber: {1}, LockToken: {2}")]
-        void MessageReceiverPumpInitialMessageReceived(string clientId, long sequenceNumber, string lockToken)
+        [Event(64, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump Received Initial Message: SequenceNumber: {1}")]
+        void MessageReceiverPumpInitialMessageReceived(string clientId, long sequenceNumber)
         {
             if (this.IsEnabled())
             {
-                this.WriteEvent(64, clientId, sequenceNumber, lockToken);
+                this.WriteEvent(64, clientId, sequenceNumber);
             }
         }
 
@@ -602,7 +602,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(65, Level = EventLevel.Error, Message = "{0}: Register OnMessageHandler Exception: RetryCount: {1}, Exception: {2}")]
+        [Event(65, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump Receive Initial Message Exception: RetryCount: {1}, Exception: {2}")]
         void MessageReceiverPumpInitialMessageReceiveException(string clientId, int retryCount, string exception)
         {
             if (this.IsEnabled())
@@ -616,26 +616,20 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.MessageReceiverPumpTaskStart(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString(), currentSemaphoreCount);
+                this.MessageReceiverPumpTaskStart(clientId, message?.SequenceNumber ?? -1, currentSemaphoreCount);
             }
         }
 
-        [Event(66, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump PumpTask Started: Message: SequenceNumber: {1}, LockToken: {2}, Available Semaphore Count: {3}")]
-        void MessageReceiverPumpTaskStart(string clientId, long sequenceNumber, string lockToken, int currentSemaphoreCount)
+        [Event(66, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump PumpTask Started: Message: SequenceNumber: {1}, Available Semaphore Count: {2}")]
+        void MessageReceiverPumpTaskStart(string clientId, long sequenceNumber, int currentSemaphoreCount)
         {
-            if (this.IsEnabled())
-            {
-                this.WriteEvent(66, clientId, sequenceNumber, lockToken, currentSemaphoreCount);
-            }
+            this.WriteEvent(66, clientId, sequenceNumber, currentSemaphoreCount);
         }
 
         [Event(67, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump PumpTask done: Available Semaphore Count: {1}")]
         public void MessageReceiverPumpTaskStop(string clientId, int currentSemaphoreCount)
         {
-            if (this.IsEnabled())
-            {
-                this.WriteEvent(67, clientId, currentSemaphoreCount);
-            }
+            this.WriteEvent(67, clientId, currentSemaphoreCount);
         }
 
         [NonEvent]
@@ -650,10 +644,7 @@ namespace Microsoft.Azure.ServiceBus
         [Event(68, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump PumpTask Exception: Exception: {1}")]
         void MessageReceivePumpTaskException(string clientId, string exception)
         {
-            if (this.IsEnabled())
-            {
-                this.WriteEvent(68, clientId, exception);
-            }
+            this.WriteEvent(68, clientId, exception);
         }
 
         [NonEvent]
@@ -661,17 +652,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.MessageReceiverPumpDispatchTaskStart(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString());
+                this.MessageReceiverPumpDispatchTaskStart(clientId, message?.SequenceNumber ?? -1);
             }
         }
 
-        [Event(69, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump DispatchTask start: Message: SequenceNumber: {1}, LockToken: {2}")]
-        void MessageReceiverPumpDispatchTaskStart(string clientId, long sequenceNumber, string lockToken)
+        [Event(69, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump DispatchTask start: Message: SequenceNumber: {1}")]
+        void MessageReceiverPumpDispatchTaskStart(string clientId, long sequenceNumber)
         {
-            if (this.IsEnabled())
-            {
-                this.WriteEvent(69, clientId, sequenceNumber, lockToken);
-            }
+            this.WriteEvent(69, clientId, sequenceNumber);
         }
 
         [NonEvent]
@@ -679,17 +667,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.MessageReceiverPumpDispatchTaskStop(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString(), currentSemaphoreCount);
+                this.MessageReceiverPumpDispatchTaskStop(clientId, message?.SequenceNumber ?? -1, currentSemaphoreCount);
             }
         }
 
-        [Event(70, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump DispatchTask done: Message: SequenceNumber: {1}, LockToken: {2}, Current Semaphore Count: {3}")]
-        void MessageReceiverPumpDispatchTaskStop(string clientId, long sequenceNumber, string lockToken, int currentSemaphoreCount)
+        [Event(70, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump DispatchTask done: Message: SequenceNumber: {1}, Current Semaphore Count: {2}")]
+        void MessageReceiverPumpDispatchTaskStop(string clientId, long sequenceNumber, int currentSemaphoreCount)
         {
-            if (this.IsEnabled())
-            {
-                this.WriteEvent(70, clientId, sequenceNumber, lockToken, currentSemaphoreCount);
-            }
+            this.WriteEvent(70, clientId, sequenceNumber, currentSemaphoreCount);
         }
 
         [NonEvent]
@@ -697,17 +682,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.MessageReceiverPumpUserCallbackStart(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString());
+                this.MessageReceiverPumpUserCallbackStart(clientId, message?.SequenceNumber ?? -1);
             }
         }
 
-        [Event(71, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback start: Message: SequenceNumber: {1}, LockToken: {2}")]
-        void MessageReceiverPumpUserCallbackStart(string clientId, long sequenceNumber, string lockToken)
+        [Event(71, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback start: Message: SequenceNumber: {1}")]
+        void MessageReceiverPumpUserCallbackStart(string clientId, long sequenceNumber)
         {
-            if (this.IsEnabled())
-            {
-                this.WriteEvent(71, clientId, sequenceNumber, lockToken);
-            }
+            this.WriteEvent(71, clientId, sequenceNumber);
         }
 
         [NonEvent]
@@ -715,17 +697,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.MessageReceiverPumpUserCallbackStop(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString());
+                this.MessageReceiverPumpUserCallbackStop(clientId, message?.SequenceNumber ?? -1);
             }
         }
 
-        [Event(72, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback done: Message: SequenceNumber: {1}, LockToken: {2}")]
-        void MessageReceiverPumpUserCallbackStop(string clientId, long sequenceNumber, string lockToken)
+        [Event(72, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback done: Message: SequenceNumber: {1}")]
+        void MessageReceiverPumpUserCallbackStop(string clientId, long sequenceNumber)
         {
-            if (this.IsEnabled())
-            {
-                this.WriteEvent(72, clientId, sequenceNumber, lockToken);
-            }
+            this.WriteEvent(72, clientId, sequenceNumber);
         }
 
         [NonEvent]
@@ -733,17 +712,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.MessageReceiverPumpUserCallbackException(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString(), exception.ToString());
+                this.MessageReceiverPumpUserCallbackException(clientId, message?.SequenceNumber ?? -1, exception.ToString());
             }
         }
 
-        [Event(73, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump UserCallback Exception: Message: SequenceNumber: {1}, LockToken: {2}, Exception: {3}")]
-        void MessageReceiverPumpUserCallbackException(string clientId, long sequenceNumber, string lockToken, string exception)
+        [Event(73, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump UserCallback Exception: Message: SequenceNumber: {1}, Exception: {2}")]
+        void MessageReceiverPumpUserCallbackException(string clientId, long sequenceNumber, string exception)
         {
-            if (this.IsEnabled())
-            {
-                this.WriteEvent(73, clientId, sequenceNumber, lockToken, exception);
-            }
+            this.WriteEvent(73, clientId, sequenceNumber, exception);
         }
 
         [NonEvent]
@@ -751,17 +727,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.MessageReceiverPumpRenewMessageStart(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString(), (long)renewAfterTimeSpan.TotalSeconds);
+                this.MessageReceiverPumpRenewMessageStart(clientId, message?.SequenceNumber ?? -1, (long)renewAfterTimeSpan.TotalSeconds);
             }
         }
 
-        [Event(74, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback start: Message: SequenceNumber: {1}, LockToken: {2}, RenewAfterTimeInSeconds: {3}")]
-        void MessageReceiverPumpRenewMessageStart(string clientId, long sequenceNumber, string lockToken, long renewAfterTimeSpanInSeconds)
+        [Event(74, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump RenewMessage start: Message: SequenceNumber: {1}, RenewAfterTimeInSeconds: {2}")]
+        void MessageReceiverPumpRenewMessageStart(string clientId, long sequenceNumber, long renewAfterTimeSpanInSeconds)
         {
-            if (this.IsEnabled())
-            {
-                this.WriteEvent(74, clientId, sequenceNumber, lockToken, renewAfterTimeSpanInSeconds);
-            }
+            this.WriteEvent(74, clientId, sequenceNumber, renewAfterTimeSpanInSeconds);
         }
 
         [NonEvent]
@@ -769,17 +742,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.MessageReceiverPumpRenewMessageStop(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString());
+                this.MessageReceiverPumpRenewMessageStop(clientId, message?.SequenceNumber ?? -1);
             }
         }
 
-        [Event(75, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback done: Message: SequenceNumber: {1}, LockToken: {2}")]
-        void MessageReceiverPumpRenewMessageStop(string clientId, long sequenceNumber, string lockToken)
+        [Event(75, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump RenewMessage done: Message: SequenceNumber: {1}")]
+        void MessageReceiverPumpRenewMessageStop(string clientId, long sequenceNumber)
         {
-            if (this.IsEnabled())
-            {
-                this.WriteEvent(75, clientId, sequenceNumber, lockToken);
-            }
+            this.WriteEvent(75, clientId, sequenceNumber);
         }
 
         [NonEvent]
@@ -787,17 +757,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.MessageReceiverPumpRenewMessageException(clientId, message?.SequenceNumber ?? -1, message?.LockToken.ToString() ?? Guid.Empty.ToString(), exception.ToString());
+                this.MessageReceiverPumpRenewMessageException(clientId, message?.SequenceNumber ?? -1, exception.ToString());
             }
         }
 
-        [Event(76, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump UserCallback Exception: Message: SequenceNumber: {1}, LockToken: {2}, Exception: {3}")]
-        void MessageReceiverPumpRenewMessageException(string clientId, long sequenceNumber, string lockToken, string exception)
+        [Event(76, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump RenewMessage Exception: Message: SequenceNumber: {1}, Exception: {2}")]
+        void MessageReceiverPumpRenewMessageException(string clientId, long sequenceNumber, string exception)
         {
-            if (this.IsEnabled())
-            {
-                this.WriteEvent(76, clientId, sequenceNumber, lockToken, exception);
-            }
+            this.WriteEvent(76, clientId, sequenceNumber, exception);
         }
     }
 }
