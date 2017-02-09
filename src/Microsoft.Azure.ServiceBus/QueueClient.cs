@@ -327,7 +327,6 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="onMessageOptions">Calls a message option.</param>
         public void OnMessageAsync(Func<BrokeredMessage, CancellationToken, Task> callback, OnMessageOptions onMessageOptions)
         {
-            onMessageOptions.ReceiveTimeOut = this.InnerReceiver.OperationTimeout;
             this.InnerReceiver.OnMessageAsync(callback, onMessageOptions);
         }
 

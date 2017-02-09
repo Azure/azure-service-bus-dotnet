@@ -265,6 +265,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     await Task.Delay(TimeSpan.FromSeconds(5));
                 }
             }
+
+            Assert.True(count == messageCount);
         }
     }
 }

@@ -330,6 +330,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public void OnMessageAsync(Func<BrokeredMessage, CancellationToken, Task> callback, OnMessageOptions onMessageOptions)
         {
+            onMessageOptions.ReceiveTimeOut = this.OperationTimeout;
             this.OnMessageHandlerAsync(onMessageOptions, callback).GetAwaiter().GetResult();
         }
 

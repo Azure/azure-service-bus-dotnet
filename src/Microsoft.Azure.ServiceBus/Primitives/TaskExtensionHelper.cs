@@ -18,7 +18,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 }
                 catch (Exception)
                 {
-                    // TODO: Log Exception
                 }
             });
         }
