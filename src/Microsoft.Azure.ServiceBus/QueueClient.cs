@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.ServiceBus.Core;
+
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
@@ -28,21 +30,6 @@ namespace Microsoft.Azure.ServiceBus
         public ReceiveMode ReceiveMode { get; private set; }
 
         public string Path => this.QueueName;
-
-        public int PrefetchCount
-        {
-            get
-            {
-                return this.InnerReceiver.PrefetchCount;
-            }
-
-            set
-            {
-                this.InnerReceiver.PrefetchCount = value;
-            }
-        }
-
-        public long LastPeekedSequenceNumber => this.InnerReceiver.LastPeekedSequenceNumber;
 
         internal MessageSender InnerSender
         {
@@ -103,153 +90,19 @@ namespace Microsoft.Azure.ServiceBus
             return this.SendAsync(new[] { brokeredMessage });
         }
 
-        public Task SendAsync(IEnumerable<BrokeredMessage> brokeredMessages)
+        public Task SendAsync(IList<BrokeredMessage> brokeredMessages)
         {
             return this.InnerSender.SendAsync(brokeredMessages);
         }
 
-        /// <summary>
-        /// Receives a message using the <see cref="MessageReceiver" />.
-        /// </summary>
-        /// <returns>The asynchronous operation.</returns>
-        public Task<BrokeredMessage> ReceiveAsync()
-        {
-            return this.InnerReceiver.ReceiveAsync();
-        }
-
-        /// <summary>
-        /// Receives a message using the <see cref="MessageReceiver" />.
-        /// </summary>
-        /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
-        /// <returns>The asynchronous operation.</returns>
-        public Task<BrokeredMessage> ReceiveAsync(TimeSpan serverWaitTime)
-        {
-            return this.InnerReceiver.ReceiveAsync(serverWaitTime);
-        }
-
-        /// <summary>
-        /// Receives a message using the <see cref="MessageReceiver" />.
-        /// </summary>
-        /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
-        /// <returns>The asynchronous operation.</returns>
-        public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
-        {
-            return this.InnerReceiver.ReceiveAsync(maxMessageCount, this.InnerReceiver.OperationTimeout);
-        }
-
-        /// <summary>
-        /// Receives a message using the <see cref="MessageReceiver" />.
-        /// </summary>
-        /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
-        /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
-        /// <returns>The asynchronous operation.</returns>
-        public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
-        {
-            return this.InnerReceiver.ReceiveAsync(maxMessageCount, serverWaitTime);
-        }
-
-        public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
-        {
-            IList<BrokeredMessage> messages = await this.ReceiveBySequenceNumberAsync(new[] { sequenceNumber });
-            if (messages != null && messages.Count > 0)
-            {
-                return messages[0];
-            }
-
-            return null;
-        }
-
-        public Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
-        {
-            return this.InnerReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers);
-        }
-
-        /// <summary>
-        /// Asynchronously reads the next message without changing the state of the receiver or the message source.
-        /// </summary>
-        /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
-        public Task<BrokeredMessage> PeekAsync()
-        {
-            return this.InnerReceiver.PeekAsync();
-        }
-
-        /// <summary>
-        /// Asynchronously reads the next batch of message without changing the state of the receiver or the message source.
-        /// </summary>
-        /// <param name="maxMessageCount">The number of messages.</param>
-        /// <returns>The asynchronous operation that returns a list of <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> to be read.</returns>
-        public Task<IList<BrokeredMessage>> PeekAsync(int maxMessageCount)
-        {
-            return this.InnerReceiver.PeekAsync(maxMessageCount);
-        }
-
-        /// <summary>
-        /// Asynchronously reads the next message without changing the state of the receiver or the message source.
-        /// </summary>
-        /// <param name="fromSequenceNumber">The sequence number from where to read the message.</param>
-        /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
-        public Task<BrokeredMessage> PeekBySequenceNumberAsync(long fromSequenceNumber)
-        {
-            return this.InnerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber);
-        }
-
-        /// <summary>Peeks a batch of messages.</summary>
-        /// <param name="fromSequenceNumber">The starting point from which to browse a batch of messages.</param>
-        /// <param name="messageCount">The number of messages.</param>
-        /// <returns>A batch of messages peeked.</returns>
-        public Task<IList<BrokeredMessage>> PeekBySequenceNumberAsync(long fromSequenceNumber, int messageCount)
-        {
-            return this.InnerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber, messageCount);
-        }
-
         public Task CompleteAsync(Guid lockToken)
         {
-            return this.CompleteAsync(new[] { lockToken });
-        }
-
-        public Task CompleteAsync(IEnumerable<Guid> lockTokens)
-        {
-            return this.InnerReceiver.CompleteAsync(lockTokens);
+            return this.InnerReceiver.CompleteAsync(lockToken);
         }
 
         public Task AbandonAsync(Guid lockToken)
         {
             return this.InnerReceiver.AbandonAsync(lockToken);
-        }
-
-        public Task<MessageSession> AcceptMessageSessionAsync()
-        {
-            return this.AcceptMessageSessionAsync(null);
-        }
-
-        public Task<MessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime)
-        {
-            return this.AcceptMessageSessionAsync(null, serverWaitTime);
-        }
-
-        public Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
-        {
-            return this.AcceptMessageSessionAsync(sessionId, this.InnerReceiver.OperationTimeout);
-        }
-
-        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
-        {
-            MessageSession session;
-
-            MessagingEventSource.Log.AcceptMessageSessionStart(this.ClientId, sessionId);
-
-            try
-            {
-                session = await this.OnAcceptMessageSessionAsync(sessionId, serverWaitTime).ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                MessagingEventSource.Log.AcceptMessageSessionException(this.ClientId, exception);
-                throw;
-            }
-
-            MessagingEventSource.Log.AcceptMessageSessionStop(this.ClientId);
-            return session;
         }
 
         public Task DeferAsync(Guid lockToken)
@@ -261,12 +114,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             return this.InnerReceiver.DeadLetterAsync(lockToken);
         }
-
-        public Task<DateTime> RenewLockAsync(Guid lockToken)
-        {
-            return this.InnerReceiver.RenewLockAsync(lockToken);
-        }
-
+        
         /// <summary>
         /// Sends a scheduled message
         /// </summary>

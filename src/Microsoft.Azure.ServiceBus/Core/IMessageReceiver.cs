@@ -1,18 +1,14 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus
+namespace Microsoft.Azure.ServiceBus.Core
 {
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public interface IMessageReceiver : IClientEntity
+    public interface IMessageReceiver : IReceiverClient
     {
-        string Path { get; }
-
-        ReceiveMode ReceiveMode { get; }
-
         int PrefetchCount { get; set; }
 
         long LastPeekedSequenceNumber { get; }
@@ -40,15 +36,7 @@ namespace Microsoft.Azure.ServiceBus
 
         Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers);
 
-        Task CompleteAsync(Guid lockToken);
-
         Task CompleteAsync(IEnumerable<Guid> lockTokens);
-
-        Task AbandonAsync(Guid lockToken);
-
-        Task DeferAsync(Guid lockToken);
-
-        Task DeadLetterAsync(Guid lockToken);
 
         Task<DateTime> RenewLockAsync(Guid lockToken);
 

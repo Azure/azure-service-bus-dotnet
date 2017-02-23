@@ -1,13 +1,12 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using Primitives;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
+namespace Microsoft.Azure.ServiceBus.Core
+{
     public abstract class MessageSender : ClientEntity, IMessageSender
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -29,7 +28,7 @@ namespace Microsoft.Azure.ServiceBus
             return this.SendAsync(new[] { brokeredMessage });
         }
 
-        public async Task SendAsync(IEnumerable<BrokeredMessage> brokeredMessages)
+        public async Task SendAsync(IList<BrokeredMessage> brokeredMessages)
         {
             int count = MessageSender.ValidateMessages(brokeredMessages);
             MessagingEventSource.Log.MessageSendStart(this.ClientId, count);
