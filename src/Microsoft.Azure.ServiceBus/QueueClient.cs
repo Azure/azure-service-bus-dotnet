@@ -1,28 +1,32 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Core;
-
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Amqp;
+    using Core;
+    using Primitives;
 
     /// <summary>
     /// Anchor class - all Queue client operations start here.
     /// </summary>
-    public abstract class QueueClient : ClientEntity, IQueueClient
+    public class QueueClient : ClientEntity, IQueueClient
     {
-        MessageSender innerSender;
-        MessageReceiver innerReceiver;
+        public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode)
+            : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode)
+        {
+        }
 
-        protected QueueClient(ServiceBusConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode)
+        protected QueueClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode)
             : base($"{nameof(QueueClient)}{ClientEntity.GetNextId()}({entityPath})")
         {
             this.ServiceBusConnection = serviceBusConnection;
             this.QueueName = entityPath;
             this.ReceiveMode = receiveMode;
+            this.InnerClient = new AmqpClient(serviceBusConnection, entityPath, MessagingEntityType.Queue, receiveMode);
         }
 
         public string QueueName { get; }
@@ -31,52 +35,14 @@ namespace Microsoft.Azure.ServiceBus
 
         public string Path => this.QueueName;
 
-        internal MessageSender InnerSender
-        {
-            get
-            {
-                if (this.innerSender == null)
-                {
-                    lock (this.ThisLock)
-                    {
-                        if (this.innerSender == null)
-                        {
-                            this.innerSender = this.CreateMessageSender();
-                        }
-                    }
-                }
-
-                return this.innerSender;
-            }
-        }
-
-        internal MessageReceiver InnerReceiver
-        {
-            get
-            {
-                if (this.innerReceiver == null)
-                {
-                    lock (this.ThisLock)
-                    {
-                        if (this.innerReceiver == null)
-                        {
-                            this.innerReceiver = this.CreateMessageReceiver();
-                        }
-                    }
-                }
-
-                return this.innerReceiver;
-            }
-        }
-
-        protected object ThisLock { get; } = new object();
-
+        // TODO nemakam: Remove this, and ensure someone is accountable for its closure. --> Across all clients
         protected ServiceBusConnection ServiceBusConnection { get; }
+
+        IInnerClient InnerClient { get; }
 
         public sealed override async Task CloseAsync()
         {
-            await this.InnerReceiver.CloseAsync().ConfigureAwait(false);
-            await this.OnCloseAsync().ConfigureAwait(false);
+            await this.InnerClient.CloseAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -92,29 +58,24 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task SendAsync(IList<BrokeredMessage> brokeredMessages)
         {
-            return this.InnerSender.SendAsync(brokeredMessages);
+            return this.InnerClient.InnerSender.SendAsync(brokeredMessages);
         }
 
         public Task CompleteAsync(Guid lockToken)
         {
-            return this.InnerReceiver.CompleteAsync(lockToken);
+            return this.InnerClient.InnerReceiver.CompleteAsync(lockToken);
         }
 
         public Task AbandonAsync(Guid lockToken)
         {
-            return this.InnerReceiver.AbandonAsync(lockToken);
-        }
-
-        public Task DeferAsync(Guid lockToken)
-        {
-            return this.InnerReceiver.DeferAsync(lockToken);
+            return this.InnerClient.InnerReceiver.AbandonAsync(lockToken);
         }
 
         public Task DeadLetterAsync(Guid lockToken)
         {
-            return this.InnerReceiver.DeadLetterAsync(lockToken);
+            return this.InnerClient.InnerReceiver.DeadLetterAsync(lockToken);
         }
-        
+
         /// <summary>
         /// Sends a scheduled message
         /// </summary>
@@ -123,15 +84,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>Sequence number that is needed for cancelling.</returns>
         public Task<long> ScheduleMessageAsync(BrokeredMessage message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
-            try
-            {
-                return this.innerSender.ScheduleMessageAsync(message, scheduleEnqueueTimeUtc);
-            }
-            catch (Exception)
-            {
-                // TODO: Log Complete Exception
-                throw;
-            }
+            return this.InnerClient.InnerSender.ScheduleMessageAsync(message, scheduleEnqueueTimeUtc);
         }
 
         /// <summary>
@@ -141,33 +94,17 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns></returns>
         public Task CancelScheduledMessageAsync(long sequenceNumber)
         {
-            try
-            {
-                return this.innerSender.CancelScheduledMessageAsync(sequenceNumber);
-            }
-            catch (Exception)
-            {
-                // TODO: Log Complete Exception
-                throw;
-            }
+            return this.InnerClient.InnerSender.CancelScheduledMessageAsync(sequenceNumber);
         }
 
         protected MessageSender CreateMessageSender()
         {
-            return this.OnCreateMessageSender();
+            return this.InnerClient.CreateMessageSender();
         }
 
         protected MessageReceiver CreateMessageReceiver()
         {
-            return this.OnCreateMessageReceiver();
+            return this.InnerClient.CreateMessageReceiver();
         }
-
-        protected abstract MessageSender OnCreateMessageSender();
-
-        protected abstract MessageReceiver OnCreateMessageReceiver();
-
-        protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime);
-
-        protected abstract Task OnCloseAsync();
     }
 }

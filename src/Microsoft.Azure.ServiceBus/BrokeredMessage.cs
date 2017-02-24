@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Core;
-
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
@@ -12,7 +10,8 @@ namespace Microsoft.Azure.ServiceBus
     using System.Runtime.Serialization;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Core;
+    using Primitives;
 
     /// <summary>Represents the unit of communication between ServiceBus client and Service.</summary>
     public sealed class BrokeredMessage : IDisposable
@@ -146,11 +145,11 @@ namespace Microsoft.Azure.ServiceBus
             Stream originalStream = originalMessage.BodyStream;
             if (originalStream != null)
             {
-                this.BodyStream = BrokeredMessage.CloneStream(originalMessage.BodyStream, clientSideCloning);
+                this.BodyStream = CloneStream(originalMessage.BodyStream, clientSideCloning);
                 this.ownsBodyStream = true;
             }
 
-            this.AttachDisposables(BrokeredMessage.CloneDisposables(originalMessage.attachedDisposables));
+            this.AttachDisposables(CloneDisposables(originalMessage.attachedDisposables));
         }
 
         [Flags]
@@ -244,7 +243,7 @@ namespace Microsoft.Azure.ServiceBus
             set
             {
                 this.ThrowIfDisposed();
-                BrokeredMessage.ValidateSessionId(value);
+                ValidateSessionId(value);
                 this.replyToSessionId = value;
                 if (value == null)
                 {
@@ -392,7 +391,7 @@ namespace Microsoft.Azure.ServiceBus
             set
             {
                 this.ThrowIfDisposed();
-                BrokeredMessage.ValidateMessageId(value);
+                ValidateMessageId(value);
                 this.initializedMembers |= MessageMembers.MessageId;
                 this.messageId = value;
             }
@@ -456,7 +455,7 @@ namespace Microsoft.Azure.ServiceBus
             set
             {
                 this.ThrowIfDisposed();
-                BrokeredMessage.ValidatePartitionKey("ViaPartitionKey", value);
+                ValidatePartitionKey("ViaPartitionKey", value);
                 this.viaPartitionKey = value;
                 if (value == null)
                 {
@@ -747,7 +746,7 @@ namespace Microsoft.Azure.ServiceBus
             set
             {
                 this.ThrowIfDisposed();
-                BrokeredMessage.ValidatePartitionKey(nameof(this.Publisher), value);
+                ValidatePartitionKey(nameof(this.Publisher), value);
                 if (value != null)
                 {
                     this.ThrowIfDominatingPropertyIsNotEqualToNonNullDormantProperty(MessageMembers.Publisher, MessageMembers.PartitionKey, value, this.partitionKey);
@@ -1120,7 +1119,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal void CopySessionId(string sessionId)
         {
-            BrokeredMessage.ValidateSessionId(sessionId);
+            ValidateSessionId(sessionId);
             this.sessionId = sessionId;
             if (sessionId == null)
             {
@@ -1134,7 +1133,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal void CopyPartitionKey(string partitionKey)
         {
-            BrokeredMessage.ValidatePartitionKey("PartitionKey", partitionKey);
+            ValidatePartitionKey("PartitionKey", partitionKey);
             this.partitionKey = partitionKey;
             if (partitionKey == null)
             {

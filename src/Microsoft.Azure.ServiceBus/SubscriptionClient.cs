@@ -1,28 +1,33 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Core;
-
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
-    using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Filters;
+    using Amqp;
+    using Core;
+    using Filters;
+    using Primitives;
 
-    public abstract class SubscriptionClient : ClientEntity, ISubscriptionClient
+    public class SubscriptionClient : ClientEntity, ISubscriptionClient
     {
         public const string DefaultRule = "$Default";
-        MessageReceiver innerReceiver;
 
-        protected SubscriptionClient(ServiceBusConnection serviceBusConnection, string topicPath, string name, ReceiveMode receiveMode)
-            : base($"{nameof(SubscriptionClient)}{ClientEntity.GetNextId()}({name})")
+        public SubscriptionClient(string connectionString, string topicPath, string subscriptionName, ReceiveMode receiveMode)
+            : this(new ServiceBusNamespaceConnection(connectionString), topicPath, subscriptionName, receiveMode)
+        {
+        }
+
+        protected SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode)
+            : base($"{nameof(QueueClient)}{ClientEntity.GetNextId()}({subscriptionName})")
         {
             this.ServiceBusConnection = serviceBusConnection;
             this.TopicPath = topicPath;
-            this.SubscriptionName = name;
+            this.SubscriptionName = subscriptionName;
             this.SubscriptionPath = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
             this.ReceiveMode = receiveMode;
+            this.InnerSubscriptionClient = new AmqpSubscriptionClient(serviceBusConnection, this.SubscriptionPath, MessagingEntityType.Subscriber, receiveMode);
         }
 
         public string TopicPath { get; private set; }
@@ -33,208 +38,35 @@ namespace Microsoft.Azure.ServiceBus
 
         public ReceiveMode ReceiveMode { get; private set; }
 
-        public long LastPeekedSequenceNumber => this.InnerReceiver.LastPeekedSequenceNumber;
-
-        public int PrefetchCount
-        {
-            get
-            {
-                return this.InnerReceiver.PrefetchCount;
-            }
-
-            set
-            {
-                this.InnerReceiver.PrefetchCount = value;
-            }
-        }
-
         internal string SubscriptionPath { get; private set; }
 
-        internal MessageReceiver InnerReceiver
-        {
-            get
-            {
-                if (this.innerReceiver == null)
-                {
-                    lock (this.ThisLock)
-                    {
-                        if (this.innerReceiver == null)
-                        {
-                            this.innerReceiver = this.CreateMessageReceiver();
-                        }
-                    }
-                }
-
-                return this.innerReceiver;
-            }
-        }
-
-        protected object ThisLock { get; } = new object();
+        internal IInnerSubscriptionClient InnerSubscriptionClient { get; }
 
         protected ServiceBusConnection ServiceBusConnection { get; }
 
         public sealed override async Task CloseAsync()
         {
-            await this.OnCloseAsync().ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Receives a message using the <see cref="MessageReceiver" />.
-        /// </summary>
-        /// <returns>The asynchronous operation.</returns>
-        public Task<BrokeredMessage> ReceiveAsync()
-        {
-            return this.InnerReceiver.ReceiveAsync();
-        }
-
-        /// <summary>
-        /// Receives a message using the <see cref="MessageReceiver" />.
-        /// </summary>
-        /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
-        /// <returns>The asynchronous operation.</returns>
-        public Task<BrokeredMessage> ReceiveAsync(TimeSpan serverWaitTime)
-        {
-            return this.InnerReceiver.ReceiveAsync(serverWaitTime);
-        }
-
-        /// <summary>
-        /// Receives a message using the <see cref="MessageReceiver" />.
-        /// </summary>
-        /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
-        /// <returns>The asynchronous operation.</returns>
-        public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
-        {
-            return this.InnerReceiver.ReceiveAsync(maxMessageCount);
-        }
-
-        /// <summary>
-        /// Receives a message using the <see cref="MessageReceiver" />.
-        /// </summary>
-        /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
-        /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
-        /// <returns>The asynchronous operation.</returns>
-        public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
-        {
-            return this.InnerReceiver.ReceiveAsync(maxMessageCount, serverWaitTime);
-        }
-
-        public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
-        {
-            IList<BrokeredMessage> messages = await this.ReceiveBySequenceNumberAsync(new[] { sequenceNumber });
-            if (messages != null && messages.Count > 0)
-            {
-                return messages[0];
-            }
-
-            return null;
-        }
-
-        public Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
-        {
-            return this.InnerReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers);
-        }
-
-        /// <summary>
-        /// Asynchronously reads the next message without changing the state of the receiver or the message source.
-        /// </summary>
-        /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
-        public Task<BrokeredMessage> PeekAsync()
-        {
-            return this.InnerReceiver.PeekAsync();
-        }
-
-        /// <summary>
-        /// Asynchronously reads the next batch of message without changing the state of the receiver or the message source.
-        /// </summary>
-        /// <param name="maxMessageCount">The number of messages.</param>
-        /// <returns>The asynchronous operation that returns a list of <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> to be read.</returns>
-        public Task<IList<BrokeredMessage>> PeekAsync(int maxMessageCount)
-        {
-            return this.InnerReceiver.PeekAsync(maxMessageCount);
-        }
-
-        /// <summary>
-        /// Asynchronously reads the next message without changing the state of the receiver or the message source.
-        /// </summary>
-        /// <param name="fromSequenceNumber">The sequence number from where to read the message.</param>
-        /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
-        public Task<BrokeredMessage> PeekBySequenceNumberAsync(long fromSequenceNumber)
-        {
-            return this.InnerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber);
-        }
-
-        /// <summary>Peeks a batch of messages.</summary>
-        /// <param name="fromSequenceNumber">The starting point from which to browse a batch of messages.</param>
-        /// <param name="messageCount">The number of messages.</param>
-        /// <returns>A batch of messages peeked.</returns>
-        public Task<IList<BrokeredMessage>> PeekBySequenceNumberAsync(long fromSequenceNumber, int messageCount)
-        {
-            return this.InnerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber, messageCount);
+            await this.InnerSubscriptionClient.CloseAsync().ConfigureAwait(false);
         }
 
         public Task CompleteAsync(Guid lockToken)
         {
-            return this.CompleteAsync(new[] { lockToken });
-        }
-
-        public Task CompleteAsync(IEnumerable<Guid> lockTokens)
-        {
-            return this.InnerReceiver.CompleteAsync(lockTokens);
+            return this.InnerSubscriptionClient.InnerReceiver.CompleteAsync(lockToken);
         }
 
         public Task AbandonAsync(Guid lockToken)
         {
-            return this.InnerReceiver.AbandonAsync(lockToken);
-        }
-
-        public Task<MessageSession> AcceptMessageSessionAsync()
-        {
-            return this.AcceptMessageSessionAsync(null);
-        }
-
-        public Task<MessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime)
-        {
-            return this.AcceptMessageSessionAsync(null, serverWaitTime);
-        }
-
-        public Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
-        {
-            return this.AcceptMessageSessionAsync(sessionId, this.InnerReceiver.OperationTimeout);
-        }
-
-        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
-        {
-            MessageSession session;
-
-            MessagingEventSource.Log.AcceptMessageSessionStart(this.ClientId, sessionId);
-
-            try
-            {
-                session = await this.OnAcceptMessageSessionAsync(sessionId, serverWaitTime).ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                MessagingEventSource.Log.AcceptMessageSessionException(this.ClientId, exception);
-                throw;
-            }
-
-            MessagingEventSource.Log.AcceptMessageSessionStop(this.ClientId);
-            return session;
-        }
-
-        public Task DeferAsync(Guid lockToken)
-        {
-            return this.InnerReceiver.DeferAsync(lockToken);
+            return this.InnerSubscriptionClient.InnerReceiver.AbandonAsync(lockToken);
         }
 
         public Task DeadLetterAsync(Guid lockToken)
         {
-            return this.InnerReceiver.DeadLetterAsync(lockToken);
+            return this.InnerSubscriptionClient.InnerReceiver.DeadLetterAsync(lockToken);
         }
 
         public Task<DateTime> RenewLockAsync(Guid lockToken)
         {
-            return this.InnerReceiver.RenewLockAsync(lockToken);
+            return this.InnerSubscriptionClient.InnerReceiver.RenewLockAsync(lockToken);
         }
 
         /// <summary>
@@ -265,7 +97,7 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
-                await this.OnAddRuleAsync(description).ConfigureAwait(false);
+                await this.InnerSubscriptionClient.OnAddRuleAsync(description).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -292,7 +124,7 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
-                await this.OnRemoveRuleAsync(ruleName).ConfigureAwait(false);
+                await this.InnerSubscriptionClient.OnRemoveRuleAsync(ruleName).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -302,20 +134,5 @@ namespace Microsoft.Azure.ServiceBus
 
             MessagingEventSource.Log.RemoveRuleStop(this.ClientId);
         }
-
-        protected MessageReceiver CreateMessageReceiver()
-        {
-            return this.OnCreateMessageReceiver();
-        }
-
-        protected abstract MessageReceiver OnCreateMessageReceiver();
-
-        protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime);
-
-        protected abstract Task OnCloseAsync();
-
-        protected abstract Task OnAddRuleAsync(RuleDescription description);
-
-        protected abstract Task OnRemoveRuleAsync(string ruleName);
     }
 }

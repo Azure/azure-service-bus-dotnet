@@ -1,33 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Core;
-
 namespace Microsoft.Azure.ServiceBus
 {
+    using Core;
     using Primitives;
 
     public interface IServiceBusClientFactory
     {
-        IQueueClient CreateQueueClientFromConnectionString(
-            string entityConnectionString);
-
-        IQueueClient CreateQueueClientFromConnectionString(
-            string entityConnectionString,
-            ReceiveMode mode);
-
-        ITopicClient CreateTopicClientFromConnectionString(
-            string entityConnectionString);
-
-        ISubscriptionClient CreateSubscriptionClientFromConnectionString(
-            string topicEntityConnectionString,
-            string subscriptionName);
-
-        ISubscriptionClient CreateSubscriptionClientFromConnectionString(
-            string topicEntityConnectionString,
-            string subscriptionName,
-            ReceiveMode mode);
-
         IMessageReceiver CreateMessageReceiverFromConnectionString(
             string entityConnectionString);
 
@@ -37,49 +17,6 @@ namespace Microsoft.Azure.ServiceBus
 
         IMessageSender CreateMessageSenderFromConnectionString(
             string entityConnectionString);
-
-        IQueueClient CreateQueueClient(
-            ServiceBusNamespaceConnection namespaceConnection,
-            string entityPath);
-
-        IQueueClient CreateQueueClient(
-            ServiceBusNamespaceConnection namespaceConnection,
-            string entityPath,
-            ReceiveMode mode);
-
-        IQueueClient CreateQueueClient(
-            ServiceBusEntityConnection entityConnection);
-
-        IQueueClient CreateQueueClient(
-            ServiceBusEntityConnection entityConnection,
-            ReceiveMode mode);
-
-        ITopicClient CreateTopicClient(
-            ServiceBusNamespaceConnection namespaceConnection,
-            string entityPath);
-
-        ITopicClient CreateTopicClient(
-            ServiceBusEntityConnection entityConnection);
-
-        ISubscriptionClient CreateSubscriptionClient(
-            ServiceBusNamespaceConnection namespaceConnection,
-            string topicPath,
-            string subscriptionName);
-
-        ISubscriptionClient CreateSubscriptionClient(
-            ServiceBusNamespaceConnection namespaceConnection,
-            string topicPath,
-            string subscriptionName,
-            ReceiveMode mode);
-
-        ISubscriptionClient CreateSubscriptionClient(
-            ServiceBusEntityConnection topicConnection,
-            string subscriptionName);
-
-        ISubscriptionClient CreateSubscriptionClient(
-            ServiceBusEntityConnection topicConnection,
-            string subscriptionName,
-            ReceiveMode mode);
 
         IMessageReceiver CreateMessageReceiver(
             ServiceBusNamespaceConnection namespaceConnection,

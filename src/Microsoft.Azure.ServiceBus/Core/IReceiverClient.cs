@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Threading.Tasks;
-
 namespace Microsoft.Azure.ServiceBus.Core
 {
+    using System;
+    using System.Threading.Tasks;
+
     public interface IReceiverClient : IClientEntity
     {
         string Path { get; }
@@ -16,9 +16,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         Task AbandonAsync(Guid lockToken);
 
-        Task DeferAsync(Guid lockToken);
-
         Task DeadLetterAsync(Guid lockToken);
-
     }
 }

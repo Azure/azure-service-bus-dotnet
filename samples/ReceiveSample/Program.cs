@@ -20,15 +20,7 @@ namespace ReceiveSample
 
         private static async Task MainAsync(string[] args)
         {
-            // Creates a ServiceBusConnectionStringBuilder object from the connection string, and sets the EntityPath.
-            var connectionStringBuilder = new ServiceBusConnectionStringBuilder(ServiceBusConnectionString)
-            {
-                EntityPath = QueueName
-            };
-
-            // Initializes the static QueueClient variable that will be used in the ReceiveMessages method.
-            var messagingFactory = new ServiceBusClientFactory();
-            queueClient = messagingFactory.CreateQueueClientFromConnectionString(connectionStringBuilder.ToString());
+            queueClient = new QueueClient(ServiceBusConnectionString, QueueName, ReceiveMode.PeekLock);
 
             await ReceiveMessages();
 

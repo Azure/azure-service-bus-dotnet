@@ -1,15 +1,14 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Core;
-
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
     using System.IO;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Messaging.Amqp;
+    using Azure.Amqp;
+    using Core;
+    using Messaging.Amqp;
 
     public class AmqpMessageSession : MessageSession
     {

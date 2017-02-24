@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Core;
-
 namespace Microsoft.Azure.ServiceBus
 {
     using System.Threading.Tasks;
+    using Core;
     using Filters;
 
-    public interface ISubscriptionClient : IMessageReceiver, IMessageSessionEntity
+    public interface ISubscriptionClient : IReceiverClient
     {
         string TopicPath { get; }
 

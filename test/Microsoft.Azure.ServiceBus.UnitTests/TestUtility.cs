@@ -8,6 +8,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
+    using Core;
 
     static class TestUtility
     {

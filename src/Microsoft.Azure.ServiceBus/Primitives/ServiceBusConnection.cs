@@ -1,16 +1,15 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Core;
-
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Transport;
-    using Microsoft.Azure.ServiceBus.Amqp;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Amqp;
+    using Azure.Amqp;
+    using Azure.Amqp.Transport;
+    using Core;
+    using Primitives;
 
     public abstract class ServiceBusConnection
     {
@@ -74,6 +73,7 @@ namespace Microsoft.Azure.ServiceBus
             return this.ConnectionManager.CloseAsync();
         }
 
+        /*
         internal QueueClient CreateQueueClient(string entityPath, ReceiveMode mode)
         {
             MessagingEventSource.Log.QueueClientCreateStart(this.Endpoint.Host, entityPath, mode.ToString());
@@ -97,6 +97,7 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.SubscriptionClientCreateStop(this.Endpoint.Host, topicPath, subscriptionName, subscriptionClient.ClientId);
             return subscriptionClient;
         }
+        */
 
         internal MessageSender CreateMessageSender(string entityPath)
         {
@@ -123,7 +124,7 @@ namespace Microsoft.Azure.ServiceBus
             this.Endpoint = builder.Endpoint;
             this.SasKeyName = builder.SasKeyName;
             this.SasKey = builder.SasKey;
-            this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, ServiceBusConnection.CloseConnection);
+            this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, CloseConnection);
         }
 
         static void CloseConnection(AmqpConnection connection)
@@ -139,7 +140,7 @@ namespace Microsoft.Azure.ServiceBus
 
             TimeoutHelper timeoutHelper = new TimeoutHelper(timeout);
             AmqpSettings amqpSettings = AmqpConnectionHelper.CreateAmqpSettings(
-                amqpVersion: ServiceBusConnection.AmqpVersion,
+                amqpVersion: AmqpVersion,
                 useSslStreamSecurity: true,
                 hasTokenProvider: true);
 

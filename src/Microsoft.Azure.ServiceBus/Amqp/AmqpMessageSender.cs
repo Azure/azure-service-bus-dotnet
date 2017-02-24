@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Core;
-
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
@@ -10,10 +8,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Encoding;
-    using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.Azure.Messaging.Amqp;
+    using Azure.Amqp;
+    using Azure.Amqp.Encoding;
+    using Azure.Amqp.Framing;
+    using Core;
+    using Messaging.Amqp;
 
     sealed class AmqpMessageSender : MessageSender
     {

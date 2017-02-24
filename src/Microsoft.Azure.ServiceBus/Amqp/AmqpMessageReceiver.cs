@@ -1,20 +1,18 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Core;
-
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Encoding;
-    using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.Azure.Messaging.Amqp;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Azure.Amqp;
+    using Azure.Amqp.Encoding;
+    using Azure.Amqp.Framing;
+    using Core;
+    using Messaging.Amqp;
+    using Primitives;
 
     sealed class AmqpMessageReceiver : MessageReceiver
     {
@@ -140,7 +138,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                 IEnumerable<AmqpMessage> amqpMessages = null;
                 bool hasMessages = await Task.Factory.FromAsync(
-                    (c, s) => receiveLink.BeginReceiveRemoteMessages(maxMessageCount, AmqpMessageReceiver.DefaultBatchFlushInterval, timeoutHelper.RemainingTime(), c, s),
+                    (c, s) => receiveLink.BeginReceiveRemoteMessages(maxMessageCount, DefaultBatchFlushInterval, timeoutHelper.RemainingTime(), c, s),
                     a => receiveLink.EndReceiveMessages(a, out amqpMessages),
                     this).ConfigureAwait(false);
 
@@ -222,7 +220,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     return messages;
                 }
                 else if (response.StatusCode == AmqpResponseStatusCode.NoContent ||
-                        (response.StatusCode == AmqpResponseStatusCode.NotFound && AmqpSymbol.Equals(AmqpClientConstants.MessageNotFoundError, response.GetResponseErrorCondition())))
+                        (response.StatusCode == AmqpResponseStatusCode.NotFound && Equals(AmqpClientConstants.MessageNotFoundError, response.GetResponseErrorCondition())))
                 {
                     return messages;
                 }
