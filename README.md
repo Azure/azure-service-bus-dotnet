@@ -6,7 +6,10 @@
 
 **Please be aware that this library is currently in active development, and is not intended for production**
 
-[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/master)
+|Build/Package|Status|
+|------|-------------|
+|master|[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/master)|
+|dev|[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/dev)|
 
 This is the next generation Service Bus .NET client library that focuses on queues & topics. If you are looking for Event Hubs and Relay clients, follow the below links:
 * [Event Hubs](https://github.com/azure/azure-event-hubs-dotnet)
@@ -83,10 +86,22 @@ The standard way to manage Azure resources is by using [Azure Resource Manager](
   * Retry policy
   * Receive by sequence number
 
-- [ ] Sprint 5: Early 2017
-  * Add major error conditions (ex. preventing all operations that are not supported, for Ex Transaction scenarios, etc)
-  * Request/Response features:
-      * Add/Remove Rule
-      * Browse messages and sessions
+- [x] Sprint 5: **Complete**
+  * Exception handling and some missing error scenarios
+  * Add/Remove Rule
+  * Browse messages and sessions
   * Scheduled messages specific API (Scheduling of messages can be done today through the queue/topic client, but this item is to add specific API's for scheduled messages)
+  * EventSource logging
+  * Overload to Receive/AcceptMessageSession APIs that accepts ServerWaitTimeout
+
+- [ ] Sprint 6: February 2017
+  * Interfaces for easier testing
+  * "EntityFactory" (name to be determined) - Object used to create Queue/Topic/Subscption clients
   * OnMessage/OnSession handlers
+  * PartitionedEntity API - Batch receive to/complete from a specific partition
+  * NuGet package
+  * Dedicated AppVeyor account
+  * API documentation
+  * General clean up (i.e. moving strings to resources file)
+  * Additional unit/stress tests
+    * Prefetch
