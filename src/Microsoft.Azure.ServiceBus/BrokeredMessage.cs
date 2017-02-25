@@ -974,57 +974,6 @@ namespace Microsoft.Azure.ServiceBus
             return (T)serializer.ReadObject(this.BodyStream);
         }
 
-        // Summary:
-        //    Asynchronously Abandons the lock on a peek-locked message.
-        public Task AbandonAsync()
-        {
-            this.ThrowIfDisposed();
-            this.ThrowIfNotLocked();
-
-            return this.Receiver.AbandonAsync(this.LockToken);
-        }
-
-        /// <summary>Asynchronously completes the receive operation of a message and
-        /// indicates that the message should be marked as processed and deleted.</summary>
-        /// <returns>The asynchronous result of the operation.</returns>
-        public Task CompleteAsync()
-        {
-            this.ThrowIfDisposed();
-            this.ThrowIfNotLocked();
-
-            return this.Receiver.CompleteAsync(new[] { this.LockToken });
-        }
-
-        /// <summary>Asynchronously moves the message to the dead letter queue.</summary>
-        /// <returns>The asynchronous result of the operation.</returns>
-        public Task DeadLetterAsync()
-        {
-            this.ThrowIfDisposed();
-            this.ThrowIfNotLocked();
-
-            return this.Receiver.DeadLetterAsync(this.LockToken);
-        }
-
-        /// <summary>Asynchronously indicates that the receiver wants to defer the processing for this message.</summary>
-        /// <returns>The asynchronous result of the operation.</returns>
-        public Task DeferAsync()
-        {
-            this.ThrowIfDisposed();
-            this.ThrowIfNotLocked();
-
-            return this.Receiver.DeferAsync(this.LockToken);
-        }
-
-        /// <summary>Specifies the time period within which the host renews its lock on a message.</summary>
-        /// <returns>The host that is being locked.</returns>
-        public Task RenewLockAsync()
-        {
-            this.ThrowIfDisposed();
-            this.ThrowIfNotLocked();
-
-            return this.InternalRenewLockAsync(this.LockToken);
-        }
-
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         public void Dispose()
         {

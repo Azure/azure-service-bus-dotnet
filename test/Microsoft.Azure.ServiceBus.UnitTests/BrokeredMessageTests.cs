@@ -11,63 +11,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     public class BrokeredMessageTests
     {
         [Fact]
-        async Task BrokeredMessageOperationsTest()
-        {
-            var messagingFactory = new ServiceBusClientFactory();
-
-            // Create QueueClient with ReceiveDelete,
-            // Send and Receive a message, Try to Complete/Abandon/Defer/DeadLetter should throw InvalidOperationException()
-            var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
-                TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName),
-                ReceiveMode.ReceiveAndDelete);
-
-            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
-            var message = await queueClient.ReceiveAsync();
-            Assert.NotNull(message);
-
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.CompleteAsync());
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.AbandonAsync());
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.DeferAsync());
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await message.DeadLetterAsync());
-
-            // Create a PeekLock queueClient and do rest of the operations
-            // Send a Message, Receive/ Abandon and Complete it using BrokeredMessage methods
-            queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
-                TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName),
-                ReceiveMode.PeekLock);
-
-            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
-            message = await queueClient.ReceiveAsync();
-            Assert.NotNull(message);
-            await message.AbandonAsync();
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
-            message = await queueClient.ReceiveAsync();
-            await message.CompleteAsync();
-
-            // Send a Message, Receive / DeadLetter using BrokeredMessage methods
-            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
-            message = await queueClient.ReceiveAsync();
-            await message.DeadLetterAsync();
-
-            var builder = new ServiceBusConnectionStringBuilder(TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName));
-            builder.EntityPath = EntityNameHelper.FormatDeadLetterPath(queueClient.QueueName);
-            var deadLetterQueueClient = messagingFactory.CreateQueueClientFromConnectionString(builder.ToString());
-            message = await deadLetterQueueClient.ReceiveAsync();
-            await message.CompleteAsync();
-
-            // Send a Message, Receive/Defer using BrokeredMessage methods
-            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
-            message = await queueClient.ReceiveAsync();
-            var deferredSequenceNumber = message.SequenceNumber;
-            await message.DeferAsync();
-
-            var deferredMessage = await queueClient.ReceiveBySequenceNumberAsync(deferredSequenceNumber);
-            await deferredMessage.CompleteAsync();
-
-            await queueClient.CloseAsync();
-        }
-
-        [Fact]
         [DisplayTestMethodName]
         void DefaultMessageIdGenerator()
         {
@@ -109,7 +52,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             BrokeredMessage.SetMessageIdGenerator(null);
         }
 
-        public class When_querying_IsReceived_property
+        public class WhenQueryingIsReceivedProperty
         {
             [Fact]
             [DisplayTestMethodName]
@@ -126,21 +69,18 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             [InlineData(ReceiveMode.PeekLock)]
             async Task Should_return_true_for_message_that_was_sent_and_received(ReceiveMode receiveMode)
             {
-                var messagingFactory = new ServiceBusClientFactory();
-                var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
-                    TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName),
-                    receiveMode);
+                var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, Constants.NonPartitionedQueueName, receiveMode);
 
                 try
                 {
-                    await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
-                    var receivedMessages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerReceiver, 1);
+                    await TestUtility.SendMessagesAsync(queueClient.InnerClient.InnerSender, 1);
+                    var receivedMessages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerClient.InnerReceiver, 1);
                     Assert.True(receivedMessages.First().IsReceived);
 
                     // TODO: remove when per test cleanup is possible
                     if (receiveMode == ReceiveMode.PeekLock)
                     {
-                        await receivedMessages.First().CompleteAsync();
+                        await queueClient.CompleteAsync(receivedMessages.First().LockToken);
                     }
                 }
                 finally
@@ -153,21 +93,19 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             [DisplayTestMethodName]
             async Task Should_return_true_for_peeked_message()
             {
-                var messagingFactory = new ServiceBusClientFactory();
-                var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
-                    TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName),
-                    ReceiveMode.PeekLock);
+                var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, Constants.NonPartitionedQueueName, ReceiveMode.PeekLock);
+
                 try
                 {
-                    await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
-                    var peekedMessage = await TestUtility.PeekMessageAsync(queueClient.InnerReceiver);
+                    await TestUtility.SendMessagesAsync(queueClient.InnerClient.InnerSender, 1);
+                    var peekedMessage = await TestUtility.PeekMessageAsync(queueClient.InnerClient.InnerReceiver);
                     var result = peekedMessage.IsReceived;
                     Assert.True(result);
                 }
                 finally
                 {
-                    var messages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerReceiver, 1);
-                    await TestUtility.CompleteMessagesAsync(queueClient.InnerReceiver, messages);
+                    var messages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerClient.InnerReceiver, 1);
+                    await TestUtility.CompleteMessagesAsync(queueClient.InnerClient.InnerReceiver, messages);
                     await queueClient.CloseAsync();
                 }
             }
