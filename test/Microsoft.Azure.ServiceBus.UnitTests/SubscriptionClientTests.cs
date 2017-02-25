@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Filters;
     using Xunit;
@@ -24,11 +25,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task CorrelationFilterTestCase(string topicName, int messageCount = 10)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
-                entityConnectionString,
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
 
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await topicClient.SendAsync(new BrokeredMessage { MessageId = messageId2, Label = "Red" });
                 TestUtility.Log($"Sent Message: {messageId2}");
 
-                var messages = await subscriptionClient.ReceiveAsync(maxMessageCount: 2);
+                var messages = await subscriptionClient.InnerSubscriptionClient.InnerReceiver.ReceiveAsync(maxMessageCount: 2);
                 Assert.NotNull(messages);
                 Assert.True(messages.Count == 1);
                 Assert.True(messageId2.Equals(messages.First().MessageId));
@@ -76,11 +76,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task SqlFilterTestCase(string topicName, int messageCount = 10)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
-                entityConnectionString,
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
 
@@ -119,7 +118,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 });
                 TestUtility.Log($"Sent Message: {messageId2}");
 
-                var messages = await subscriptionClient.ReceiveAsync(maxMessageCount: 2);
+                var messages = await subscriptionClient.InnerSubscriptionClient.InnerReceiver.ReceiveAsync(maxMessageCount: 2);
                 Assert.NotNull(messages);
                 Assert.True(messages.Count == 1);
                 Assert.True(messageId2.Equals(messages.First().MessageId));
@@ -138,11 +137,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task SqlActionTestCase(string topicName, int messageCount = 10)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
-                entityConnectionString,
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
 
@@ -182,7 +180,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 });
                 TestUtility.Log($"Sent Message: {messageId2}");
 
-                var messages = await subscriptionClient.ReceiveAsync(maxMessageCount: 2);
+                var messages = await subscriptionClient.InnerSubscriptionClient.InnerReceiver.ReceiveAsync(maxMessageCount: 2);
                 Assert.NotNull(messages);
                 Assert.True(messages.Count == 1);
                 Assert.True(messageId2.Equals(messages.First().MessageId));

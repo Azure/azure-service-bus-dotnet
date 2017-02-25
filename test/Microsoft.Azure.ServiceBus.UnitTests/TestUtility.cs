@@ -12,8 +12,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     static class TestUtility
     {
-        static readonly string ConnectionString;
-
         static TestUtility()
         {
             var envConnectionString = Environment.GetEnvironmentVariable(Constants.ConnectionStringEnvironmentVariable);
@@ -23,13 +21,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
 
             // Validate the connection string
-            ConnectionString = new ServiceBusConnectionStringBuilder(envConnectionString).ToString();
+            NamespaceConnectionString = new ServiceBusConnectionStringBuilder(envConnectionString).ToString();
         }
+
+        internal static string NamespaceConnectionString { get; }
 
         internal static string GetEntityConnectionString(string entityName)
         {
             // If the entity name is populated in the connection string, it will be overridden.
-            var connectionStringBuilder = new ServiceBusConnectionStringBuilder(ConnectionString)
+            var connectionStringBuilder = new ServiceBusConnectionStringBuilder(NamespaceConnectionString)
             {
                 EntityPath = entityName
             };

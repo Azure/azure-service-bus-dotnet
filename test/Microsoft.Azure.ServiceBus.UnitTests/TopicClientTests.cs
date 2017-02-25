@@ -22,16 +22,18 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekLockTest(string topicName, int messageCount = 10)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = (TopicClient)messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
-                    entityConnectionString,
-                    this.SubscriptionName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                this.SubscriptionName);
+
             try
             {
-                await this.PeekLockTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
+                await this.PeekLockTestCase(
+                    topicClient.InnerClient.InnerSender,
+                    subscriptionClient.InnerSubscriptionClient.InnerReceiver,
+                    messageCount);
             }
             finally
             {
@@ -45,18 +47,19 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task TopicClientReceiveDeleteTestCase(string topicName, int messageCount = 10)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = (TopicClient)messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
-                    entityConnectionString,
-                    this.SubscriptionName,
-                    ReceiveMode.ReceiveAndDelete);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                this.SubscriptionName,
+                ReceiveMode.ReceiveAndDelete);
             try
             {
                 await
-                    this.ReceiveDeleteTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
+                    this.ReceiveDeleteTestCase(
+                        topicClient.InnerClient.InnerSender,
+                        subscriptionClient.InnerSubscriptionClient.InnerReceiver,
+                        messageCount);
             }
             finally
             {
@@ -70,19 +73,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task TopicClientPeekLockWithAbandonTestCase(string topicName, int messageCount = 10)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = (TopicClient)messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
-                    entityConnectionString,
-                    this.SubscriptionName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                this.SubscriptionName);
             try
             {
                 await
                     this.PeekLockWithAbandonTestCase(
-                        topicClient.InnerSender,
-                        subscriptionClient.InnerReceiver,
+                        topicClient.InnerClient.InnerSender,
+                        subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                         messageCount);
             }
             finally
@@ -97,27 +98,26 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task TopicClientPeekLockWithDeadLetterTestCase(string topicName, int messageCount = 10)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = (TopicClient)messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
-                    entityConnectionString,
-                    this.SubscriptionName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                this.SubscriptionName);
 
             // Create DLQ Client To Receive DeadLetteredMessages
             var subscriptionDeadletterPath = EntityNameHelper.FormatDeadLetterPath(this.SubscriptionName);
-            var deadLetterSubscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
-                    TestUtility.GetEntityConnectionString(topicName), subscriptionDeadletterPath);
+            var deadLetterSubscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                subscriptionDeadletterPath);
 
             try
             {
                 await
                     this.PeekLockWithDeadLetterTestCase(
-                        topicClient.InnerSender,
-                        subscriptionClient.InnerReceiver,
-                        deadLetterSubscriptionClient.InnerReceiver,
+                        topicClient.InnerClient.InnerSender,
+                        subscriptionClient.InnerSubscriptionClient.InnerReceiver,
+                        deadLetterSubscriptionClient.InnerSubscriptionClient.InnerReceiver,
                         messageCount);
             }
             finally
@@ -133,17 +133,18 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task TopicClientPeekLockDeferTestCase(string topicName, int messageCount = 10)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = (TopicClient)messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
-                    entityConnectionString,
-                    this.SubscriptionName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                this.SubscriptionName);
             try
             {
                 await
-                    this.PeekLockDeferTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
+                    this.PeekLockDeferTestCase(
+                        topicClient.InnerClient.InnerSender,
+                        subscriptionClient.InnerSubscriptionClient.InnerReceiver,
+                        messageCount);
             }
             finally
             {
@@ -157,16 +158,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task TopicClientRenewLockTestCase(string topicName, int messageCount = 10)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = (TopicClient)messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
-                    entityConnectionString,
-                    this.SubscriptionName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                this.SubscriptionName);
             try
             {
-                await this.RenewLockTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
+                await this.RenewLockTestCase(
+                    topicClient.InnerClient.InnerSender,
+                    subscriptionClient.InnerSubscriptionClient.InnerReceiver,
+                    messageCount);
             }
             finally
             {
@@ -180,17 +182,18 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekAsyncTest(string topicName, int messageCount = 10)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = (TopicClient)messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
-                    entityConnectionString,
-                    this.SubscriptionName,
-                    ReceiveMode.ReceiveAndDelete);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                this.SubscriptionName,
+                ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.PeekAsyncTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
+                await this.PeekAsyncTestCase(
+                    topicClient.InnerClient.InnerSender,
+                    subscriptionClient.InnerSubscriptionClient.InnerReceiver,
+                    messageCount);
             }
             finally
             {
@@ -204,17 +207,19 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTest(string topicName, int messageCount = 1)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = (TopicClient)messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
-                    entityConnectionString,
-                    this.SubscriptionName,
-                    ReceiveMode.ReceiveAndDelete);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                this.SubscriptionName,
+                ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(topicClient.InnerSender, subscriptionClient.InnerReceiver, messageCount);
+                await
+                    this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(
+                        topicClient.InnerClient.InnerSender,
+                        subscriptionClient.InnerSubscriptionClient.InnerReceiver,
+                        messageCount);
             }
             finally
             {
@@ -228,20 +233,18 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTest(string topicName, int messageCount = 1)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = (TopicClient)messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
-                    entityConnectionString,
-                    this.SubscriptionName,
-                    ReceiveMode.ReceiveAndDelete);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                this.SubscriptionName,
+                ReceiveMode.ReceiveAndDelete);
             try
             {
                 await
                     this.ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(
-                        topicClient.InnerSender,
-                        subscriptionClient.InnerReceiver,
+                        topicClient.InnerClient.InnerSender,
+                        subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                         messageCount);
             }
             finally
@@ -256,20 +259,18 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task CancelScheduledMessagesAsyncTest(string topicName, int messageCount = 1)
         {
-            var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var messagingFactory = new ServiceBusClientFactory();
-            var topicClient = (TopicClient)messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
-            var subscriptionClient =
-                (SubscriptionClient)messagingFactory.CreateSubscriptionClientFromConnectionString(
-                    entityConnectionString,
-                    this.SubscriptionName,
-                    ReceiveMode.ReceiveAndDelete);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                this.SubscriptionName,
+                ReceiveMode.ReceiveAndDelete);
             try
             {
                 await
                     this.CancelScheduledMessagesAsyncTestCase(
-                        topicClient.InnerSender,
-                        subscriptionClient.InnerReceiver,
+                        topicClient.InnerClient.InnerSender,
+                        subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                         messageCount);
             }
             finally

@@ -27,9 +27,9 @@ namespace Microsoft.Azure.ServiceBus
 
         public string TopicName { get; }
 
-        protected ServiceBusConnection ServiceBusConnection { get; }
+        internal IInnerClient InnerClient { get; }
 
-        IInnerClient InnerClient { get; }
+        protected ServiceBusConnection ServiceBusConnection { get; }
 
         public sealed override async Task CloseAsync()
         {

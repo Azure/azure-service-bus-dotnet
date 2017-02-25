@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         public const string DefaultRule = "$Default";
 
-        public SubscriptionClient(string connectionString, string topicPath, string subscriptionName, ReceiveMode receiveMode)
+        public SubscriptionClient(string connectionString, string topicPath, string subscriptionName, ReceiveMode receiveMode = ReceiveMode.PeekLock)
             : this(new ServiceBusNamespaceConnection(connectionString), topicPath, subscriptionName, receiveMode)
         {
         }

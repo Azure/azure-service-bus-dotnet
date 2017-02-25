@@ -15,7 +15,7 @@ namespace Microsoft.Azure.ServiceBus
     /// </summary>
     public class QueueClient : ClientEntity, IQueueClient
     {
-        public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode)
+        public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode)
         {
         }
@@ -35,10 +35,10 @@ namespace Microsoft.Azure.ServiceBus
 
         public string Path => this.QueueName;
 
+        internal IInnerClient InnerClient { get; }
+
         // TODO nemakam: Remove this, and ensure someone is accountable for its closure. --> Across all clients
         protected ServiceBusConnection ServiceBusConnection { get; }
-
-        IInnerClient InnerClient { get; }
 
         public sealed override async Task CloseAsync()
         {
