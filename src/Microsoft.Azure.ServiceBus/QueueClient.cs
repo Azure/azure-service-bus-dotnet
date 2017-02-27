@@ -317,6 +317,8 @@ namespace Microsoft.Azure.ServiceBus
             return this.InnerReceiver.RenewLockAsync(lockToken);
         }
 
+        /// <summary>Asynchronously processes a message.</summary>
+        /// <param name="callback">The method to invoke when the operation is complete.</param>
         public void OnMessageAsync(Func<BrokeredMessage, CancellationToken, Task> callback)
         {
             this.InnerReceiver.OnMessageAsync(callback);

@@ -4,8 +4,12 @@
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
+    using System.Threading;
     using Primitives;
 
+    /// <summary>Provides options associated with message pump processing using
+    /// <see cref="QueueClient.OnMessageAsync(System.Action{BrokeredMessage, CancellationToken})" /> and
+    /// <see cref="SubscriptionClient.OnMessageAsync(System.Action{BrokeredMessage, CancellationToken})" />.</summary>
     public sealed class OnMessageOptions
     {
         int maxConcurrentCalls;

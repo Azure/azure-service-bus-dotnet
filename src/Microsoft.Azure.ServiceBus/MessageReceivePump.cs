@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus.Primitives;
 
-    public sealed class MessageReceivePump
+    sealed class MessageReceivePump
     {
         const int MaxInitialReceiveRetryCount = 3;
         static readonly TimeSpan ServerBusyExceptionBackoffAmount = TimeSpan.FromSeconds(10);
@@ -258,7 +258,7 @@ namespace Microsoft.Azure.ServiceBus
                     }
 
                     TimeSpan backoffTimeSpan = this.GetBackOffTime(exception);
-                    await Task.Delay(backoffTimeSpan).ConfigureAwait(false);
+                    await Task.Delay(backoffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
                 }
             }
         }
