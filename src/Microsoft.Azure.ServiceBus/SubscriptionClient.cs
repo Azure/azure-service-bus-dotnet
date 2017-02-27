@@ -25,21 +25,19 @@ namespace Microsoft.Azure.ServiceBus
             this.ServiceBusConnection = serviceBusConnection;
             this.TopicPath = topicPath;
             this.SubscriptionName = subscriptionName;
-            this.SubscriptionPath = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
+            this.Path = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
             this.ReceiveMode = receiveMode;
-            this.InnerSubscriptionClient = new AmqpSubscriptionClient(serviceBusConnection, this.SubscriptionPath, MessagingEntityType.Subscriber, receiveMode);
+            this.InnerSubscriptionClient = new AmqpSubscriptionClient(serviceBusConnection, this.Path, MessagingEntityType.Subscriber, receiveMode);
         }
 
-        public string TopicPath { get; private set; }
+        public string TopicPath { get; }
 
-        public string Path => EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
+        public string Path { get; }
 
         public string SubscriptionName { get; }
 
-        public ReceiveMode ReceiveMode { get; private set; }
-
-        internal string SubscriptionPath { get; private set; }
-
+        public ReceiveMode ReceiveMode { get; }
+        
         internal IInnerSubscriptionClient InnerSubscriptionClient { get; }
 
         protected ServiceBusConnection ServiceBusConnection { get; }
