@@ -9,11 +9,11 @@ namespace Microsoft.Azure.ServiceBus.Core
 
     public interface IMessageSender : IClientEntity
     {
-        Task SendAsync(BrokeredMessage brokeredMessage);
+        Task SendAsync(Message message);
 
-        Task SendAsync(IList<BrokeredMessage> brokeredMessages);
+        Task SendAsync(IList<Message> messageList);
 
-        Task<long> ScheduleMessageAsync(BrokeredMessage message, DateTimeOffset scheduleEnqueueTimeUtc);
+        Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc);
 
         Task CancelScheduledMessageAsync(long sequenceNumber);
     }

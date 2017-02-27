@@ -50,11 +50,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 });
 
                 var messageId1 = Guid.NewGuid().ToString();
-                await topicClient.SendAsync(new BrokeredMessage { MessageId = messageId1, Label = "Blue" });
+                await topicClient.SendAsync(new Message { MessageId = messageId1, Label = "Blue" });
                 TestUtility.Log($"Sent Message: {messageId1}");
 
                 var messageId2 = Guid.NewGuid().ToString();
-                await topicClient.SendAsync(new BrokeredMessage { MessageId = messageId2, Label = "Red" });
+                await topicClient.SendAsync(new Message { MessageId = messageId2, Label = "Red" });
                 TestUtility.Log($"Sent Message: {messageId2}");
 
                 var messages = await subscriptionClient.InnerSubscriptionClient.InnerReceiver.ReceiveAsync(maxMessageCount: 2);
@@ -101,7 +101,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 });
 
                 var messageId1 = Guid.NewGuid().ToString();
-                await topicClient.SendAsync(new BrokeredMessage
+                await topicClient.SendAsync(new Message
                 {
                     MessageId = messageId1,
                     Label = "BlueSql",
@@ -110,7 +110,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log($"Sent Message: {messageId1}");
 
                 var messageId2 = Guid.NewGuid().ToString();
-                await topicClient.SendAsync(new BrokeredMessage
+                await topicClient.SendAsync(new Message
                 {
                     MessageId = messageId2,
                     Label = "RedSql",
@@ -163,7 +163,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 });
 
                 var messageId1 = Guid.NewGuid().ToString();
-                await topicClient.SendAsync(new BrokeredMessage
+                await topicClient.SendAsync(new Message
                 {
                     MessageId = messageId1,
                     Label = "BlueSqlAction",
@@ -172,7 +172,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log($"Sent Message: {messageId1}");
 
                 var messageId2 = Guid.NewGuid().ToString();
-                await topicClient.SendAsync(new BrokeredMessage
+                await topicClient.SendAsync(new Message
                 {
                     MessageId = messageId2,
                     Label = "RedSqlAction",

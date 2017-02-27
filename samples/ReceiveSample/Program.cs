@@ -36,6 +36,7 @@ namespace ReceiveSample
             {
                 try
                 {
+                    /*
                     // Receive the next message from the queue
                     var message = await queueClient.ReceiveAsync();
                     
@@ -44,6 +45,7 @@ namespace ReceiveSample
 
                     // Complete the message so that it is not received again
                     await message.CompleteAsync();
+                    */
                 }
                 catch (Exception exception)
                 {

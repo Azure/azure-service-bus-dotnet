@@ -57,7 +57,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 var messageId = "test-message1";
                 var sessionId = Guid.NewGuid().ToString();
-            await queueClient.SendAsync(new BrokeredMessage
+            await queueClient.SendAsync(new Message
                 { MessageId = messageId, SessionId = sessionId });
                 TestUtility.Log($"Sent Message: {messageId} to Session: {sessionId}");
 

@@ -23,19 +23,19 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         protected MessagingEntityType? EntityType { get; set; }
 
-        public Task SendAsync(BrokeredMessage brokeredMessage)
+        public Task SendAsync(Message message)
         {
-            return this.SendAsync(new[] { brokeredMessage });
+            return this.SendAsync(new[] { message });
         }
 
-        public async Task SendAsync(IList<BrokeredMessage> brokeredMessages)
+        public async Task SendAsync(IList<Message> messageList)
         {
-            int count = MessageSender.ValidateMessages(brokeredMessages);
+            int count = MessageSender.ValidateMessages(messageList);
             MessagingEventSource.Log.MessageSendStart(this.ClientId, count);
 
             try
             {
-                await this.OnSendAsync(brokeredMessages).ConfigureAwait(false);
+                await this.OnSendAsync(messageList).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -46,7 +46,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessageSendStop(this.ClientId);
         }
 
-        public async Task<long> ScheduleMessageAsync(BrokeredMessage message, DateTimeOffset scheduleEnqueueTimeUtc)
+        public async Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
             if (message == null)
             {
@@ -97,21 +97,21 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.CancelScheduledMessageStop(this.ClientId);
         }
 
-        protected abstract Task OnSendAsync(IEnumerable<BrokeredMessage> brokeredMessages);
+        protected abstract Task OnSendAsync(IList<Message> messageList);
 
-        protected abstract Task<long> OnScheduleMessageAsync(BrokeredMessage brokeredMessage);
+        protected abstract Task<long> OnScheduleMessageAsync(Message message);
 
         protected abstract Task OnCancelScheduledMessageAsync(long sequenceNumber);
 
-        static int ValidateMessages(IEnumerable<BrokeredMessage> brokeredMessages)
+        static int ValidateMessages(IList<Message> messageList)
         {
             int count = 0;
-            if (brokeredMessages == null)
+            if (messageList == null)
             {
-                throw Fx.Exception.ArgumentNull(nameof(brokeredMessages));
+                throw Fx.Exception.ArgumentNull(nameof(messageList));
             }
 
-            foreach (var message in brokeredMessages)
+            foreach (var message in messageList)
             {
                 count++;
                 ValidateMessage(message);
@@ -120,11 +120,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             return count;
         }
 
-        static void ValidateMessage(BrokeredMessage brokeredMessage)
+        static void ValidateMessage(Message message)
         {
-            if (brokeredMessage.IsLockTokenSet)
+            if (message.IsLockTokenSet)
             {
-                throw Fx.Exception.Argument(nameof(brokeredMessage), "Cannot send a message that was already received.");
+                throw Fx.Exception.Argument(nameof(message), "Cannot send a message that was already received.");
             }
         }
     }

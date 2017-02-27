@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus
     using Primitives;
 
     /// <summary>Represents the unit of communication between ServiceBus client and Service.</summary>
-    public sealed class BrokeredMessage : IDisposable
+    public sealed class Message : IDisposable
     {
         static Func<string> messageIdGeneratorFunc = () => (string)null;
 
@@ -54,8 +54,8 @@ namespace Microsoft.Azure.ServiceBus
         // TODO: Check back to see if this can be safely removed
         volatile List<IDisposable> attachedDisposables;
 
-        /// <summary>Initializes a new instance of the <see cref="BrokeredMessage" /> class.</summary>
-        public BrokeredMessage()
+        /// <summary>Initializes a new instance of the <see cref="Message" /> class.</summary>
+        public Message()
         {
             try
             {
@@ -66,20 +66,20 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("BrokeredMessage ID generator function has failed.", ex);
+                throw new InvalidOperationException("Message ID generator function has failed.", ex);
             }
         }
 
         /// <summary>Initializes a new instance of the
-        /// <see cref="BrokeredMessage" /> class from a given object by using DataContractSerializer with a binary XmlDictionaryWriter.</summary>
+        /// <see cref="Message" /> class from a given object by using DataContractSerializer with a binary XmlDictionaryWriter.</summary>
         /// <param name="serializableObject">The serializable object.</param>
-        public BrokeredMessage(object serializableObject)
+        public Message(object serializableObject)
             : this(serializableObject, serializableObject == null ? null : new DataContractBinarySerializer(GetObjectType(serializableObject)))
         {
             this.bodyObject = serializableObject;
         }
 
-        /// <summary> Constructor that creates a BrokeredMessage from a given object using the provided XmlObjectSerializer </summary>
+        /// <summary> Constructor that creates a Message from a given object using the provided XmlObjectSerializer </summary>
         /// <remarks> You should be aware of the exceptions that their provided Serializer can throw and take appropriate
         /// actions. Please refer to <see href="http://msdn.microsoft.com/en-us/library/ms574055.aspx"/> for
         /// a possible list of exceptions and their cause. </remarks>
@@ -88,7 +88,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <exception cref="ArgumentNullException">Thrown when null serializer is passed to the method
         /// TODO:
         /// with a non-null serializableObject</exception>
-        public BrokeredMessage(object serializableObject, XmlObjectSerializer serializer)
+        public Message(object serializableObject, XmlObjectSerializer serializer)
             : this()
         {
             if (serializableObject != null)
@@ -108,26 +108,26 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        /// <summary>Initializes a new instance of the <see cref="BrokeredMessage" /> class.</summary>
+        /// <summary>Initializes a new instance of the <see cref="Message" /> class.</summary>
         /// <param name="messageBodyStream">The message body stream.</param>
-        public BrokeredMessage(Stream messageBodyStream)
+        public Message(Stream messageBodyStream)
             : this(messageBodyStream, false)
         {
         }
 
         /// <summary>Initializes a new instance of the
-        /// <see cref="BrokeredMessage" /> class using the supplied stream as its body.</summary>
+        /// <see cref="Message" /> class using the supplied stream as its body.</summary>
         /// <param name="messageBodyStream">The message body stream.</param>
         /// <param name="ownsStream">true to indicate that the stream will be closed when the message is
         /// closed; false to indicate that the stream will not be closed when the message is closed.</param>
-        public BrokeredMessage(Stream messageBodyStream, bool ownsStream)
+        public Message(Stream messageBodyStream, bool ownsStream)
             : this()
         {
             this.ownsBodyStream = ownsStream;
             this.BodyStream = messageBodyStream;
         }
 
-        internal BrokeredMessage(object bodyObject, Stream bodyStream)
+        internal Message(object bodyObject, Stream bodyStream)
             : this()
         {
             this.bodyObject = bodyObject;
@@ -136,7 +136,7 @@ namespace Microsoft.Azure.ServiceBus
             this.ownsBodyStream = true;
         }
 
-        BrokeredMessage(BrokeredMessage originalMessage, bool clientSideCloning)
+        Message(Message originalMessage, bool clientSideCloning)
         {
             this.CopyMessageHeaders(originalMessage, clientSideCloning);
 
@@ -637,7 +637,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>Gets or sets the message’s time to live value. This is the duration after which the message expires, starting from when the message is sent to the Service Bus. Messages older than their TimeToLive value will expire and no longer be retained in the message store. Subscribers will be unable to receive expired messages.TimeToLive is the maximum lifetime that a message can receive, but its value cannot exceed the entity specified the
-        /// <see cref="Microsoft.ServiceBus.Messaging.QueueDescription.DefaultMessageTimeToLive" /> value on the destination queue or subscription. If a lower TimeToLive value is specified, it will be applied to the individual message. However, a larger value specified on the message will be overridden by the entity’s DefaultMessageTimeToLive value.</summary>
+        /// DefaultMessageTimeToLive value on the destination queue or subscription. If a lower TimeToLive value is specified, it will be applied to the individual message. However, a larger value specified on the message will be overridden by the entity’s DefaultMessageTimeToLive value.</summary>
         /// <value>The message’s time to live value.</value>
         /// <exception cref="System.ObjectDisposedException">Thrown if the message is in disposed state.</exception>
         /// <exception cref="System.ArgumentOutOfRangeException">Thrown if the passed in value is less than or equal to TimeSpan.Zero.</exception>
@@ -890,7 +890,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal MessageReceiver Receiver { get; set; }
 
-        /// <summary>Specify generator to be used to generate BrokeredMessage.MessageId value.
+        /// <summary>Specify generator to be used to generate Message.MessageId value.
         /// <param name="messageIdGenerator">Message ID generator.</param>
         /// <remarks>Be default, no value is assigned.</remarks>
         /// </summary>
@@ -925,7 +925,7 @@ namespace Microsoft.Azure.ServiceBus
             return this.GetBody<T>(new DataContractBinarySerializer(typeof(T)));
         }
 
-        /// <summary>Deserializes the BrokeredMessage body into an object of the specified type using
+        /// <summary>Deserializes the Message body into an object of the specified type using
         /// DataContractSerializer with a Binary XmlObjectSerializer. </summary>
         /// <typeparam name="T"> Generic type parameter. </typeparam>
         /// <param name="serializer"> The serializer object. </param>
@@ -988,16 +988,16 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>Clones a message, so that it is possible to send a clone of a message as a new message.</summary>
-        /// <returns>The <see cref="BrokeredMessage" /> that contains the cloned message.</returns>
+        /// <returns>The <see cref="Message" /> that contains the cloned message.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
             "Microsoft.Usage",
             "CA2202:Do not dispose objects multiple times",
             Justification = "Safe here. Any future behavior change is easy to detect")]
-        public BrokeredMessage Clone()
+        public Message Clone()
         {
             this.ThrowIfDisposed();
 
-            return new BrokeredMessage(this, clientSideCloning: true);
+            return new Message(this, clientSideCloning: true);
         }
 
         internal static IEnumerable<IDisposable> CloneDisposables(IEnumerable<IDisposable> disposables)
@@ -1036,7 +1036,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Attached an IDisposable object to the BrokeredMessage which should be disposed when the message itself is disposed
+        /// Attached an IDisposable object to the Message which should be disposed when the message itself is disposed
         /// </summary>
         /// <param name="disposables"></param>
         internal void AttachDisposables(IEnumerable<IDisposable> disposables)
@@ -1172,11 +1172,6 @@ namespace Microsoft.Azure.ServiceBus
             return (value == null) ? typeof(object) : value.GetType();
         }
 
-        async Task InternalRenewLockAsync(Guid lockToken)
-        {
-            this.LockedUntilUtc = await this.Receiver.RenewLockAsync(this.LockToken).ConfigureAwait(false);
-        }
-
         /// <summary> Performs application-defined tasks associated with freeing, releasing, or resetting
         /// unmanaged resources. </summary>
         /// <param name="disposing"> true if resources should be disposed, false if not. </param>
@@ -1224,7 +1219,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary> Copies the message headers described by originalMessage. </summary>
         /// <param name="originalMessage"> Message describing the original. </param>
         /// <param name="clientSideCloning"> specific if it is a client side initialized code path.</param>
-        void CopyMessageHeaders(BrokeredMessage originalMessage, bool clientSideCloning = false)
+        void CopyMessageHeaders(Message originalMessage, bool clientSideCloning = false)
         {
             this.MessageId = originalMessage.MessageId;
             this.headerSize = originalMessage.HeaderSize;
@@ -1339,8 +1334,8 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.disposed)
             {
-                // TODO: throw Fx.Exception.ObjectDisposed("BrokeredMessage has been disposed.");
-                throw new ObjectDisposedException("BrokeredMessage has been disposed.");
+                // TODO: throw Fx.Exception.ObjectDisposed("Message has been disposed.");
+                throw new ObjectDisposedException("Message has been disposed.");
             }
         }
 

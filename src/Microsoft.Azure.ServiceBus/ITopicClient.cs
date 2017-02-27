@@ -27,7 +27,7 @@ namespace Microsoft.Azure.ServiceBus
     /// List &lt;object&gt; Issues = new List &lt;object&gt;();
     /// foreach (var issue in Issues)
     /// {
-    ///    myTopicClient.Send(new BrokeredMessage(issue));
+    ///    myTopicClient.Send(new Message(issue));
     /// }
     /// </code>
     /// </example>

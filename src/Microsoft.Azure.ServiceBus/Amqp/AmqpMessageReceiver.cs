@@ -128,7 +128,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return responseMessage;
         }
 
-        protected override async Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
+        protected override async Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
         {
             ReceivingAmqpLink receiveLink = null;
             try
@@ -149,12 +149,12 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                 if (hasMessages && amqpMessages != null)
                 {
-                    IList<BrokeredMessage> brokeredMessages = null;
+                    IList<Message> brokeredMessages = null;
                     foreach (var amqpMessage in amqpMessages)
                     {
                         if (brokeredMessages == null)
                         {
-                            brokeredMessages = new List<BrokeredMessage>();
+                            brokeredMessages = new List<Message>();
                         }
 
                         if (this.ReceiveMode == ReceiveMode.ReceiveAndDelete)
@@ -162,9 +162,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             receiveLink.DisposeDelivery(amqpMessage, true, AmqpConstants.AcceptedOutcome);
                         }
 
-                        BrokeredMessage brokeredMessage = AmqpMessageConverter.ClientGetMessage(amqpMessage);
-                        brokeredMessage.Receiver = this; // Associate the Message with this Receiver.
-                        brokeredMessages.Add(brokeredMessage);
+                        Message message = AmqpMessageConverter.ClientGetMessage(amqpMessage);
+                        message.Receiver = this; // Associate the Message with this Receiver.
+                        brokeredMessages.Add(message);
                     }
 
                     return brokeredMessages;
@@ -178,7 +178,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected override async Task<IList<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
+        protected override async Task<IList<Message>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
         {
             try
             {
@@ -196,25 +196,25 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     requestMessage.Map[ManagementConstants.Properties.SessionId] = this.sessionId;
                 }
 
-                List<BrokeredMessage> messages = new List<BrokeredMessage>();
+                List<Message> messages = new List<Message>();
 
                 AmqpResponseMessage response = await this.ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
                 if (response.StatusCode == AmqpResponseStatusCode.OK)
                 {
-                    BrokeredMessage brokeredMessage = null;
+                    Message message = null;
                     var messageList = response.GetListValue<AmqpMap>(ManagementConstants.Properties.Messages);
                     foreach (AmqpMap entry in messageList)
                     {
                         var payload = (ArraySegment<byte>)entry[ManagementConstants.Properties.Message];
                         AmqpMessage amqpMessage =
                             AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(new[] { payload }), true);
-                        brokeredMessage = AmqpMessageConverter.ClientGetMessage(amqpMessage);
-                        messages.Add(brokeredMessage);
+                        message = AmqpMessageConverter.ClientGetMessage(amqpMessage);
+                        messages.Add(message);
                     }
 
-                    if (brokeredMessage != null)
+                    if (message != null)
                     {
-                        this.LastPeekedSequenceNumber = brokeredMessage.SequenceNumber;
+                        this.LastPeekedSequenceNumber = message.SequenceNumber;
                     }
 
                     return messages;
@@ -235,9 +235,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected override async Task<IList<BrokeredMessage>> OnReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
+        protected override async Task<IList<Message>> OnReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
         {
-            List<BrokeredMessage> messages = new List<BrokeredMessage>();
+            List<Message> messages = new List<Message>();
             try
             {
                 AmqpRequestMessage requestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.ReceiveBySequenceNumberOperation, this.OperationTimeout, null);
@@ -253,16 +253,16 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     {
                         ArraySegment<byte> payload = (ArraySegment<byte>)entry[ManagementConstants.Properties.Message];
                         AmqpMessage amqpMessage = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(new[] { payload }), true);
-                        BrokeredMessage brokeredMessage = AmqpMessageConverter.ClientGetMessage(amqpMessage);
-                        brokeredMessage.Receiver = this; // Associate the Message with this Receiver.
+                        Message message = AmqpMessageConverter.ClientGetMessage(amqpMessage);
+                        message.Receiver = this; // Associate the Message with this Receiver.
                         Guid lockToken;
                         if (entry.TryGetValue(ManagementConstants.Properties.LockToken, out lockToken))
                         {
-                            brokeredMessage.LockToken = lockToken;
-                            this.requestResponseLockedMessages.AddOrUpdate(lockToken, brokeredMessage.LockedUntilUtc);
+                            message.LockToken = lockToken;
+                            this.requestResponseLockedMessages.AddOrUpdate(lockToken, message.LockedUntilUtc);
                         }
 
-                        messages.Add(brokeredMessage);
+                        messages.Add(message);
                     }
                 }
                 else

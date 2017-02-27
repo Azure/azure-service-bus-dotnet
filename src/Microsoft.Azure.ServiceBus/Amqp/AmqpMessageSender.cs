@@ -60,10 +60,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return responseMessage;
         }
 
-        protected override async Task OnSendAsync(IEnumerable<BrokeredMessage> brokeredMessages)
+        protected override async Task OnSendAsync(IList<Message> messageList)
         {
             TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-            using (AmqpMessage amqpMessage = AmqpMessageConverter.BrokeredMessagesToAmqpMessage(brokeredMessages, true))
+            using (AmqpMessage amqpMessage = AmqpMessageConverter.BrokeredMessagesToAmqpMessage(messageList, true))
             {
                 SendingAmqpLink amqpLink = null;
                 try
@@ -95,10 +95,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected override async Task<long> OnScheduleMessageAsync(BrokeredMessage brokeredMessage)
+        protected override async Task<long> OnScheduleMessageAsync(Message message)
         {
             // TODO: Ensure System.Transactions.Transaction.Current is null. Transactions are not supported by 1.0.0 version of dotnet core.
-            using (AmqpMessage amqpMessage = AmqpMessageConverter.ClientGetMessage(brokeredMessage))
+            using (AmqpMessage amqpMessage = AmqpMessageConverter.ClientGetMessage(message))
             {
                 var request = AmqpRequestMessage.CreateRequest(
                     ManagementConstants.Operations.ScheduleMessageOperation,
@@ -112,16 +112,16 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 var entry = new AmqpMap();
                 {
                     entry[ManagementConstants.Properties.Message] = value;
-                    entry[ManagementConstants.Properties.MessageId] = brokeredMessage.MessageId;
+                    entry[ManagementConstants.Properties.MessageId] = message.MessageId;
 
-                    if (!string.IsNullOrWhiteSpace(brokeredMessage.SessionId))
+                    if (!string.IsNullOrWhiteSpace(message.SessionId))
                     {
-                        entry[ManagementConstants.Properties.SessionId] = brokeredMessage.SessionId;
+                        entry[ManagementConstants.Properties.SessionId] = message.SessionId;
                     }
 
-                    if (!string.IsNullOrWhiteSpace(brokeredMessage.PartitionKey))
+                    if (!string.IsNullOrWhiteSpace(message.PartitionKey))
                     {
-                        entry[ManagementConstants.Properties.PartitionKey] = brokeredMessage.PartitionKey;
+                        entry[ManagementConstants.Properties.PartitionKey] = message.PartitionKey;
                     }
                 }
 

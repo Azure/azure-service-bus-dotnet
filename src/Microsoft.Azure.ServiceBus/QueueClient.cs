@@ -46,19 +46,19 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Send <see cref="BrokeredMessage"/> to Queue.
-        /// <see cref="SendAsync(BrokeredMessage)"/> sends the <see cref="BrokeredMessage"/> to a Service Gateway, which in-turn will forward the BrokeredMessage to the queue.
+        /// Send <see cref="Message"/> to Queue.
+        /// <see cref="SendAsync(Message)"/> sends the <see cref="Message"/> to a Service Gateway, which in-turn will forward the Message to the queue.
         /// </summary>
-        /// <param name="brokeredMessage">the <see cref="BrokeredMessage"/> to be sent.</param>
+        /// <param name="message">the <see cref="Message"/> to be sent.</param>
         /// <returns>A Task that completes when the send operations is done.</returns>
-        public Task SendAsync(BrokeredMessage brokeredMessage)
+        public Task SendAsync(Message message)
         {
-            return this.SendAsync(new[] { brokeredMessage });
+            return this.SendAsync(new[] { message });
         }
 
-        public Task SendAsync(IList<BrokeredMessage> brokeredMessages)
+        public Task SendAsync(IList<Message> messageList)
         {
-            return this.InnerClient.InnerSender.SendAsync(brokeredMessages);
+            return this.InnerClient.InnerSender.SendAsync(messageList);
         }
 
         public Task CompleteAsync(Guid lockToken)
@@ -82,7 +82,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="message">Message to be scheduled</param>
         /// <param name="scheduleEnqueueTimeUtc">Time of enqueue</param>
         /// <returns>Sequence number that is needed for cancelling.</returns>
-        public Task<long> ScheduleMessageAsync(BrokeredMessage message, DateTimeOffset scheduleEnqueueTimeUtc)
+        public Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
             return this.InnerClient.InnerSender.ScheduleMessageAsync(message, scheduleEnqueueTimeUtc);
         }

@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         void DefaultMessageIdGenerator()
         {
-            var message = new BrokeredMessage();
+            var message = new Message();
 
             Assert.Null(message.MessageId);
         }
@@ -28,12 +28,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 throw exceptionToThrow;
             };
-            BrokeredMessage.SetMessageIdGenerator(idGenerator);
+            Message.SetMessageIdGenerator(idGenerator);
 
-            var exception = Assert.Throws<InvalidOperationException>(() => new BrokeredMessage());
+            var exception = Assert.Throws<InvalidOperationException>(() => new Message());
             Assert.Equal(exceptionToThrow, exception.InnerException);
 
-            BrokeredMessage.SetMessageIdGenerator(null);
+            Message.SetMessageIdGenerator(null);
         }
 
         [Fact]
@@ -41,15 +41,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         void CustomMessageIdGenerator()
         {
             var seed = 1;
-            BrokeredMessage.SetMessageIdGenerator(() => $"id-{seed++}");
+            Message.SetMessageIdGenerator(() => $"id-{seed++}");
 
-            var message1 = new BrokeredMessage();
-            var message2 = new BrokeredMessage();
+            var message1 = new Message();
+            var message2 = new Message();
 
             Assert.Equal("id-1", message1.MessageId);
             Assert.Equal("id-2", message2.MessageId);
 
-            BrokeredMessage.SetMessageIdGenerator(null);
+            Message.SetMessageIdGenerator(null);
         }
 
         public class WhenQueryingIsReceivedProperty
@@ -58,7 +58,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             [DisplayTestMethodName]
             void Should_return_false_for_message_that_was_not_sent()
             {
-                var message = new BrokeredMessage();
+                var message = new Message();
                 message.Properties["dummy"] = "dummy";
                 Assert.False(message.IsReceived);
             }

@@ -73,7 +73,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Asynchronously receives a message using the <see cref="MessageReceiver" />.
         /// </summary>
         /// <returns>The asynchronous operation.</returns>
-        public Task<BrokeredMessage> ReceiveAsync()
+        public Task<Message> ReceiveAsync()
         {
             return this.ReceiveAsync(this.OperationTimeout);
         }
@@ -83,9 +83,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
         /// <returns>The asynchronous operation.</returns>
-        public async Task<BrokeredMessage> ReceiveAsync(TimeSpan serverWaitTime)
+        public async Task<Message> ReceiveAsync(TimeSpan serverWaitTime)
         {
-            IList<BrokeredMessage> messages = await this.ReceiveAsync(1, serverWaitTime).ConfigureAwait(false);
+            IList<Message> messages = await this.ReceiveAsync(1, serverWaitTime).ConfigureAwait(false);
             if (messages != null && messages.Count > 0)
             {
                 return messages[0];
@@ -99,7 +99,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
         /// <returns>The asynchronous operation.</returns>
-        public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
+        public Task<IList<Message>> ReceiveAsync(int maxMessageCount)
         {
             return this.ReceiveAsync(maxMessageCount, this.OperationTimeout);
         }
@@ -110,11 +110,11 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
         /// <param name="serverWaitTime">The time span the server waits for receiving a message before it times out.</param>
         /// <returns>The asynchronous operation.</returns>
-        public async Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
+        public async Task<IList<Message>> ReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
         {
             MessagingEventSource.Log.MessageReceiveStart(this.ClientId, maxMessageCount);
 
-            IList<BrokeredMessage> messages;
+            IList<Message> messages;
             try
             {
                 messages = await this.OnReceiveAsync(maxMessageCount, serverWaitTime);
@@ -129,9 +129,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             return messages;
         }
 
-        public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
+        public async Task<Message> ReceiveBySequenceNumberAsync(long sequenceNumber)
         {
-            IList<BrokeredMessage> messages = await this.ReceiveBySequenceNumberAsync(new long[] { sequenceNumber });
+            IList<Message> messages = await this.ReceiveBySequenceNumberAsync(new long[] { sequenceNumber });
             if (messages != null && messages.Count > 0)
             {
                 return messages[0];
@@ -140,14 +140,14 @@ namespace Microsoft.Azure.ServiceBus.Core
             return null;
         }
 
-        public async Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
+        public async Task<IList<Message>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
         {
             this.ThrowIfNotPeekLockMode();
             int count = MessageReceiver.ValidateSequenceNumbers(sequenceNumbers);
 
             MessagingEventSource.Log.MessageReceiveBySequenceNumberStart(this.ClientId, count, sequenceNumbers);
 
-            IList<BrokeredMessage> messages;
+            IList<Message> messages;
             try
             {
                 messages = await this.OnReceiveBySequenceNumberAsync(sequenceNumbers).ConfigureAwait(false);
@@ -268,8 +268,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         /// Asynchronously reads the next message without changing the state of the receiver or the message source.
         /// </summary>
-        /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
-        public Task<BrokeredMessage> PeekAsync()
+        /// <returns>The asynchronous operation that returns the <see cref="Message" /> that represents the next message to be read.</returns>
+        public Task<Message> PeekAsync()
         {
             return this.PeekBySequenceNumberAsync(this.lastPeekedSequenceNumber + 1);
         }
@@ -278,8 +278,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Asynchronously reads the next batch of message without changing the state of the receiver or the message source.
         /// </summary>
         /// <param name="maxMessageCount">The number of messages.</param>
-        /// <returns>The asynchronous operation that returns a list of <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> to be read.</returns>
-        public Task<IList<BrokeredMessage>> PeekAsync(int maxMessageCount)
+        /// <returns>The asynchronous operation that returns a list of <see cref="Message" /> to be read.</returns>
+        public Task<IList<Message>> PeekAsync(int maxMessageCount)
         {
             return this.PeekBySequenceNumberAsync(this.lastPeekedSequenceNumber + 1, maxMessageCount);
         }
@@ -288,8 +288,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Asynchronously reads the next message without changing the state of the receiver or the message source.
         /// </summary>
         /// <param name="fromSequenceNumber">The sequence number from where to read the message.</param>
-        /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
-        public async Task<BrokeredMessage> PeekBySequenceNumberAsync(long fromSequenceNumber)
+        /// <returns>The asynchronous operation that returns the <see cref="Message" /> that represents the next message to be read.</returns>
+        public async Task<Message> PeekBySequenceNumberAsync(long fromSequenceNumber)
         {
             var messages = await this.PeekBySequenceNumberAsync(fromSequenceNumber, 1).ConfigureAwait(false);
             return messages?.FirstOrDefault();
@@ -299,9 +299,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <param name="fromSequenceNumber">The starting point from which to browse a batch of messages.</param>
         /// <param name="messageCount">The number of messages.</param>
         /// <returns>A batch of messages peeked.</returns>
-        public async Task<IList<BrokeredMessage>> PeekBySequenceNumberAsync(long fromSequenceNumber, int messageCount)
+        public async Task<IList<Message>> PeekBySequenceNumberAsync(long fromSequenceNumber, int messageCount)
         {
-            IList<BrokeredMessage> messages;
+            IList<Message> messages;
 
             MessagingEventSource.Log.MessagePeekStart(this.ClientId, fromSequenceNumber, messageCount);
             try
@@ -319,9 +319,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             return messages;
         }
 
-        protected abstract Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime);
+        protected abstract Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime);
 
-        protected abstract Task<IList<BrokeredMessage>> OnReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers);
+        protected abstract Task<IList<Message>> OnReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers);
 
         protected abstract Task OnCompleteAsync(IEnumerable<Guid> lockTokens);
 
@@ -333,7 +333,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         protected abstract Task<DateTime> OnRenewLockAsync(Guid lockToken);
 
-        protected abstract Task<IList<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1);
+        protected abstract Task<IList<Message>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1);
 
         static int ValidateLockTokens(IEnumerable<Guid> lockTokens)
         {

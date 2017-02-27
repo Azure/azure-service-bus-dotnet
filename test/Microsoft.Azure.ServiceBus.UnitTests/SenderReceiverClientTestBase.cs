@@ -16,14 +16,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         protected async Task PeekLockTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
         {
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
-            IEnumerable<BrokeredMessage> receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
+            IEnumerable<Message> receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
             await TestUtility.CompleteMessagesAsync(messageReceiver, receivedMessages);
         }
 
         protected async Task ReceiveDeleteTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
         {
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
-            IEnumerable<BrokeredMessage> receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
+            IEnumerable<Message> receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
             Assert.True(messageCount == receivedMessages.Count());
         }
 
@@ -70,7 +70,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await TestUtility.CompleteMessagesAsync(messageReceiver, receivedMessages);
 
             // TODO: After implementing Receive(WithTimeSpan), Add Try another Receive, We should not get anything.
-            // IEnumerable<BrokeredMessage> dummyMessages = await this.ReceiveMessagesAsync(queueClient, 10);
+            // IEnumerable<Message> dummyMessages = await this.ReceiveMessagesAsync(queueClient, 10);
             // Assert.True(dummyMessages == null);
 
             // Receive 5 DLQ messages and Complete them
@@ -118,7 +118,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             // Receive messages
             var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
 
-            BrokeredMessage message = receivedMessages.First();
+            Message message = receivedMessages.First();
             DateTime firstLockedUntilUtcTime = message.LockedUntilUtc;
             TestUtility.Log($"MessageLockedUntil: {firstLockedUntilUtcTime}");
 
@@ -145,13 +145,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         protected async Task PeekAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
         {
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
-            List<BrokeredMessage> peekedMessages = new List<BrokeredMessage>();
+            List<Message> peekedMessages = new List<Message>();
             peekedMessages.Add(await TestUtility.PeekMessageAsync(messageReceiver));
             peekedMessages.AddRange(await TestUtility.PeekMessagesAsync(messageReceiver, messageCount - 1));
 
             Assert.True(messageCount == peekedMessages.Count());
             long lastSequenceNumber = -1;
-            foreach (BrokeredMessage message in peekedMessages)
+            foreach (Message message in peekedMessages)
             {
                 Assert.True(message.SequenceNumber != lastSequenceNumber);
                 lastSequenceNumber = message.SequenceNumber;
@@ -184,7 +184,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var sequenceNumber =
                 await
                     messageSender.ScheduleMessageAsync(
-                        new BrokeredMessage("Test") { MessageId = "randomId", Label = "randomLabel" }, scheduleTime);
+                        new Message("Test") { MessageId = "randomId", Label = "randomLabel" }, scheduleTime);
             TestUtility.Log($"Received sequence number: {sequenceNumber}");
             Assert.True(sequenceNumber > 0);
 
@@ -201,7 +201,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         protected async Task CancelScheduledMessagesAsyncTestCase(MessageSender messageSender, MessageReceiver messageReceiver, int messageCount)
         {
             var scheduleTime = new DateTimeOffset(DateTime.UtcNow).AddSeconds(30);
-            var brokeredMessage = new BrokeredMessage("Test1") { MessageId = Guid.NewGuid().ToString() };
+            var brokeredMessage = new Message("Test1") { MessageId = Guid.NewGuid().ToString() };
             TestUtility.Log(
                 $"Sending message with schedule time: {scheduleTime.UtcDateTime} and messageID {brokeredMessage.MessageId}");
 
@@ -217,8 +217,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             // Sending a dummy message so that ReceiveAsync(2) returns immediately after getting 1 message
             // instead of waiting for connection timeout on a single message.
-            await messageSender.SendAsync(new BrokeredMessage("Dummy") { MessageId = "Dummy" });
-            IList<BrokeredMessage> messages = null;
+            await messageSender.SendAsync(new Message("Dummy") { MessageId = "Dummy" });
+            IList<Message> messages = null;
             int retryCount = 5;
             while (messages == null && --retryCount > 0)
             {

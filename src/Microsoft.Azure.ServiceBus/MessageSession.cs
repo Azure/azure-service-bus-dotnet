@@ -65,12 +65,12 @@ namespace Microsoft.Azure.ServiceBus
 
         protected abstract Task OnRenewLockAsync();
 
-        protected override Task<IList<BrokeredMessage>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
+        protected override Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
         {
             return this.InnerMessageReceiver.ReceiveAsync(maxMessageCount, serverWaitTime);
         }
 
-        protected override Task<IList<BrokeredMessage>> OnReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
+        protected override Task<IList<Message>> OnReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
         {
             return this.InnerMessageReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers);
         }
@@ -100,7 +100,7 @@ namespace Microsoft.Azure.ServiceBus
             return this.InnerMessageReceiver.RenewLockAsync(lockToken);
         }
 
-        protected override Task<IList<BrokeredMessage>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
+        protected override Task<IList<Message>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
         {
             return this.InnerMessageReceiver.PeekAsync(messageCount);
         }
