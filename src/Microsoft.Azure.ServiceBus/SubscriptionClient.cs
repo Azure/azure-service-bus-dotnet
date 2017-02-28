@@ -37,7 +37,7 @@ namespace Microsoft.Azure.ServiceBus
         public string SubscriptionName { get; }
 
         public ReceiveMode ReceiveMode { get; }
-        
+
         internal IInnerSubscriptionClient InnerSubscriptionClient { get; }
 
         protected ServiceBusConnection ServiceBusConnection { get; }

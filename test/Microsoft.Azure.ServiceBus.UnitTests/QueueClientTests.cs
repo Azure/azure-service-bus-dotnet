@@ -35,30 +35,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task MessageReceiverAndMessageSenderCreationWorksAsExpected(string queueName, int messageCount = 10)
-        {
-            var messagingFactory = new ServiceBusClientFactory();
-            var messageReceiver =
-                (MessageReceiver)messagingFactory.CreateMessageReceiverFromConnectionString(
-                    TestUtility.GetEntityConnectionString(queueName));
-            var messageSender =
-                (MessageSender)messagingFactory.CreateMessageSenderFromConnectionString(
-                    TestUtility.GetEntityConnectionString(queueName));
-
-            try
-            {
-                await this.PeekLockTestCase(messageSender, messageReceiver, messageCount);
-            }
-            finally
-            {
-                await messageSender.CloseAsync();
-                await messageReceiver.CloseAsync();
-            }
-        }
-
-        [Theory]
-        [MemberData(nameof(TestPermutations))]
-        [DisplayTestMethodName]
         async Task ReceiveDeleteTest(string queueName, int messageCount = 10)
         {
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
@@ -117,60 +93,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task PeekLockDeferTest(string queueName, int messageCount = 10)
-        {
-            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName);
-            try
-            {
-                await this.PeekLockDeferTestCase(queueClient.InnerClient.InnerSender, queueClient.InnerClient.InnerReceiver, messageCount);
-            }
-            finally
-            {
-                await queueClient.CloseAsync();
-            }
-        }
-
-        [Theory]
-        [MemberData(nameof(TestPermutations))]
-        [DisplayTestMethodName]
         async Task BasicRenewLockTest(string queueName, int messageCount = 10)
         {
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName);
             try
             {
                 await this.RenewLockTestCase(queueClient.InnerClient.InnerSender, queueClient.InnerClient.InnerReceiver, messageCount);
-            }
-            finally
-            {
-                await queueClient.CloseAsync();
-            }
-        }
-
-        [Theory]
-        [MemberData(nameof(TestPermutations))]
-        [DisplayTestMethodName]
-        async Task PeekAsyncTest(string queueName, int messageCount = 10)
-        {
-            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
-            try
-            {
-                await this.PeekAsyncTestCase(queueClient.InnerClient.InnerSender, queueClient.InnerClient.InnerReceiver, messageCount);
-            }
-            finally
-            {
-                await queueClient.CloseAsync();
-            }
-        }
-
-        [Theory]
-        [MemberData(nameof(TestPermutations))]
-        [DisplayTestMethodName]
-        async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTest(string queueName, int messageCount = 1)
-        {
-            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
-            try
-            {
-                await this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(queueClient.InnerClient.InnerSender, queueClient.InnerClient.InnerReceiver, messageCount);
             }
             finally
             {

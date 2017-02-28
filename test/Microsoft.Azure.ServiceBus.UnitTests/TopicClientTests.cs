@@ -131,31 +131,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task TopicClientPeekLockDeferTestCase(string topicName, int messageCount = 10)
-        {
-            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
-            var subscriptionClient = new SubscriptionClient(
-                TestUtility.NamespaceConnectionString,
-                topicName,
-                this.SubscriptionName);
-            try
-            {
-                await
-                    this.PeekLockDeferTestCase(
-                        topicClient.InnerClient.InnerSender,
-                        subscriptionClient.InnerSubscriptionClient.InnerReceiver,
-                        messageCount);
-            }
-            finally
-            {
-                await subscriptionClient.CloseAsync();
-                await topicClient.CloseAsync();
-            }
-        }
-
-        [Theory]
-        [MemberData(nameof(TestPermutations))]
-        [DisplayTestMethodName]
         async Task TopicClientRenewLockTestCase(string topicName, int messageCount = 10)
         {
             var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
@@ -176,58 +151,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await topicClient.CloseAsync();
             }
         }
-
-        [Theory]
-        [MemberData(nameof(TestPermutations))]
-        [DisplayTestMethodName]
-        async Task PeekAsyncTest(string topicName, int messageCount = 10)
-        {
-            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
-            var subscriptionClient = new SubscriptionClient(
-                TestUtility.NamespaceConnectionString,
-                topicName,
-                this.SubscriptionName,
-                ReceiveMode.ReceiveAndDelete);
-            try
-            {
-                await this.PeekAsyncTestCase(
-                    topicClient.InnerClient.InnerSender,
-                    subscriptionClient.InnerSubscriptionClient.InnerReceiver,
-                    messageCount);
-            }
-            finally
-            {
-                await subscriptionClient.CloseAsync();
-                await topicClient.CloseAsync();
-            }
-        }
-
-        [Theory]
-        [MemberData(nameof(TestPermutations))]
-        [DisplayTestMethodName]
-        async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTest(string topicName, int messageCount = 1)
-        {
-            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
-            var subscriptionClient = new SubscriptionClient(
-                TestUtility.NamespaceConnectionString,
-                topicName,
-                this.SubscriptionName,
-                ReceiveMode.ReceiveAndDelete);
-            try
-            {
-                await
-                    this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(
-                        topicClient.InnerClient.InnerSender,
-                        subscriptionClient.InnerSubscriptionClient.InnerReceiver,
-                        messageCount);
-            }
-            finally
-            {
-                await subscriptionClient.CloseAsync();
-                await topicClient.CloseAsync();
-            }
-        }
-
+    
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]

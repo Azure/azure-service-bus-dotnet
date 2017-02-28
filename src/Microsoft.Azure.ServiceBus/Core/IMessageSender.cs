@@ -3,18 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus.Core
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-
-    public interface IMessageSender : IClientEntity
+    public interface IMessageSender : ISenderClient
     {
-        Task SendAsync(Message message);
-
-        Task SendAsync(IList<Message> messageList);
-
-        Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc);
-
-        Task CancelScheduledMessageAsync(long sequenceNumber);
     }
 }

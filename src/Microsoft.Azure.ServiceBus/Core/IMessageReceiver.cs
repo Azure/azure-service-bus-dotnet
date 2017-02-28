@@ -38,6 +38,8 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         Task CompleteAsync(IEnumerable<Guid> lockTokens);
 
+        Task DeferAsync(Guid lockToken);
+
         Task<DateTime> RenewLockAsync(Guid lockToken);
 
         /// <summary>
