@@ -151,7 +151,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await topicClient.CloseAsync();
             }
         }
-    
+
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
