@@ -15,7 +15,13 @@ namespace Microsoft.Azure.ServiceBus
         int maxConcurrentCalls;
         TimeSpan autoRenewTimeout;
 
-        /// <summary>Initializes a new instance of the <see cref="OnMessageOptions" /> class.</summary>
+        /// <summary>Initializes a new instance of the <see cref="OnMessageOptions" /> class.
+        /// Default Values:
+        ///     <see cref="MaxConcurrentCalls"/> = 1
+        ///     <see cref="AutoComplete"/> = true
+        ///     <see cref="ReceiveTimeOut"/> = 1 minute
+        ///     <see cref="AutoRenewTimeout"/> = 5 minutes
+        /// </summary>
         public OnMessageOptions()
         {
             this.MaxConcurrentCalls = 1;
