@@ -6,9 +6,8 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
 
-    public abstract class TopicClient : ClientEntity
+    public abstract class TopicClient : ClientEntity, ITopicClient
     {
         MessageSender innerSender;
 
@@ -43,47 +42,6 @@ namespace Microsoft.Azure.ServiceBus
         protected ServiceBusConnection ServiceBusConnection { get; }
 
         protected object ThisLock { get; } = new object();
-
-        public static TopicClient CreateFromConnectionString(string entityConnectionString)
-        {
-            if (string.IsNullOrWhiteSpace(entityConnectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(entityConnectionString));
-            }
-
-            ServiceBusEntityConnection entityConnection = new ServiceBusEntityConnection(entityConnectionString);
-            return entityConnection.CreateTopicClient(entityConnection.EntityPath);
-        }
-
-        public static TopicClient Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath)
-        {
-            if (namespaceConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Entity Path is null");
-            }
-
-            return namespaceConnection.CreateTopicClient(entityPath);
-        }
-
-        public static TopicClient Create(ServiceBusEntityConnection entityConnection)
-        {
-            return TopicClient.Create(entityConnection, ReceiveMode.PeekLock);
-        }
-
-        public static TopicClient Create(ServiceBusEntityConnection entityConnection, ReceiveMode mode)
-        {
-            if (entityConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(entityConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            return entityConnection.CreateTopicClient(entityConnection.EntityPath);
-        }
 
         public sealed override async Task CloseAsync()
         {

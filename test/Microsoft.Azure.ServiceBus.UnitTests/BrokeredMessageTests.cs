@@ -13,13 +13,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task BrokeredMessageOperationsTest()
         {
+            var messagingFactory = new ServiceBusFactory();
+
             // Create QueueClient with ReceiveDelete,
             // Send and Receive a message, Try to Complete/Abandon/Defer/DeadLetter should throw InvalidOperationException()
-            var queueClient = QueueClient.CreateFromConnectionString(
+            var queueClient = messagingFactory.CreateQueueClientFromConnectionString(
                 TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName),
                 ReceiveMode.ReceiveAndDelete);
 
-            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+            await TestUtility.SendMessagesAsync(queueClient, 1);
             var message = await queueClient.ReceiveAsync();
             Assert.NotNull(message);
 
@@ -30,11 +32,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             // Create a PeekLock queueClient and do rest of the operations
             // Send a Message, Receive/ Abandon and Complete it using BrokeredMessage methods
-            queueClient = QueueClient.CreateFromConnectionString(
+            queueClient = messagingFactory.CreateQueueClientFromConnectionString(
                 TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName),
                 ReceiveMode.PeekLock);
 
-            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+            await TestUtility.SendMessagesAsync(queueClient, 1);
             message = await queueClient.ReceiveAsync();
             Assert.NotNull(message);
             await message.AbandonAsync();
@@ -43,18 +45,18 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await message.CompleteAsync();
 
             // Send a Message, Receive / DeadLetter using BrokeredMessage methods
-            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+            await TestUtility.SendMessagesAsync(queueClient, 1);
             message = await queueClient.ReceiveAsync();
             await message.DeadLetterAsync();
 
             var builder = new ServiceBusConnectionStringBuilder(TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName));
             builder.EntityPath = EntityNameHelper.FormatDeadLetterPath(queueClient.QueueName);
-            var deadLetterQueueClient = QueueClient.CreateFromConnectionString(builder.ToString());
+            var deadLetterQueueClient = messagingFactory.CreateQueueClientFromConnectionString(builder.ToString());
             message = await deadLetterQueueClient.ReceiveAsync();
             await message.CompleteAsync();
 
             // Send a Message, Receive/Defer using BrokeredMessage methods
-            await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+            await TestUtility.SendMessagesAsync(queueClient, 1);
             message = await queueClient.ReceiveAsync();
             var deferredSequenceNumber = message.SequenceNumber;
             await message.DeferAsync();

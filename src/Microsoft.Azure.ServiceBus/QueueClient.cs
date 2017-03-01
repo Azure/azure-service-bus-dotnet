@@ -7,13 +7,11 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>
     /// Anchor class - all Queue client operations start here.
-    /// See <see cref="QueueClient.CreateFromConnectionString(string)"/>
     /// </summary>
-    public abstract class QueueClient : ClientEntity
+    public abstract class QueueClient : ClientEntity, IQueueClient
     {
         MessageSender innerSender;
         MessageReceiver innerReceiver;
@@ -23,12 +21,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ServiceBusConnection = serviceBusConnection;
             this.QueueName = entityPath;
-            this.Mode = receiveMode;
+            this.ReceiveMode = receiveMode;
         }
 
         public string QueueName { get; }
 
-        public ReceiveMode Mode { get; private set; }
+        public ReceiveMode ReceiveMode { get; private set; }
+
+        public string Path => this.QueueName;
 
         public int PrefetchCount
         {
@@ -42,6 +42,8 @@ namespace Microsoft.Azure.ServiceBus
                 this.InnerReceiver.PrefetchCount = value;
             }
         }
+
+        public long LastPeekedSequenceNumber => this.InnerReceiver.LastPeekedSequenceNumber;
 
         internal MessageSender InnerSender
         {
@@ -84,57 +86,6 @@ namespace Microsoft.Azure.ServiceBus
         protected object ThisLock { get; } = new object();
 
         protected ServiceBusConnection ServiceBusConnection { get; }
-
-        public static QueueClient CreateFromConnectionString(string entityConnectionString)
-        {
-            return CreateFromConnectionString(entityConnectionString, ReceiveMode.PeekLock);
-        }
-
-        public static QueueClient CreateFromConnectionString(string entityConnectionString, ReceiveMode mode)
-        {
-            if (string.IsNullOrWhiteSpace(entityConnectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(entityConnectionString));
-            }
-
-            ServiceBusEntityConnection entityConnection = new ServiceBusEntityConnection(entityConnectionString);
-            return entityConnection.CreateQueueClient(entityConnection.EntityPath, mode);
-        }
-
-        public static QueueClient Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath)
-        {
-            return QueueClient.Create(namespaceConnection, entityPath, ReceiveMode.PeekLock);
-        }
-
-        public static QueueClient Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath, ReceiveMode mode)
-        {
-            if (namespaceConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Entity Path is null");
-            }
-
-            return namespaceConnection.CreateQueueClient(entityPath, mode);
-        }
-
-        public static QueueClient Create(ServiceBusEntityConnection entityConnection)
-        {
-            return QueueClient.Create(entityConnection, ReceiveMode.PeekLock);
-        }
-
-        public static QueueClient Create(ServiceBusEntityConnection entityConnection, ReceiveMode mode)
-        {
-            if (entityConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(entityConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            return entityConnection.CreateQueueClient(entityConnection.EntityPath, mode);
-        }
 
         public sealed override async Task CloseAsync()
         {
@@ -264,25 +215,25 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task AbandonAsync(Guid lockToken)
         {
-            return this.InnerReceiver.AbandonAsync(new[] { lockToken });
+            return this.InnerReceiver.AbandonAsync(lockToken);
         }
 
-        public Task<MessageSession> AcceptMessageSessionAsync()
+        public Task<IMessageSession> AcceptMessageSessionAsync()
         {
             return this.AcceptMessageSessionAsync(null);
         }
 
-        public Task<MessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime)
+        public Task<IMessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime)
         {
             return this.AcceptMessageSessionAsync(null, serverWaitTime);
         }
 
-        public Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
+        public Task<IMessageSession> AcceptMessageSessionAsync(string sessionId)
         {
             return this.AcceptMessageSessionAsync(sessionId, this.InnerReceiver.OperationTimeout);
         }
 
-        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
+        public async Task<IMessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
             MessageSession session;
 
@@ -304,15 +255,15 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task DeferAsync(Guid lockToken)
         {
-            return this.InnerReceiver.DeferAsync(new[] { lockToken });
+            return this.InnerReceiver.DeferAsync(lockToken);
         }
 
         public Task DeadLetterAsync(Guid lockToken)
         {
-            return this.InnerReceiver.DeadLetterAsync(new[] { lockToken });
+            return this.InnerReceiver.DeadLetterAsync(lockToken);
         }
 
-        public Task<DateTime> RenewMessageLockAsync(Guid lockToken)
+        public Task<DateTime> RenewLockAsync(Guid lockToken)
         {
             return this.InnerReceiver.RenewLockAsync(lockToken);
         }

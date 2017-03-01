@@ -42,7 +42,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Console.WriteLine(formattedMessage);
         }
 
-        internal static async Task SendMessagesAsync(MessageSender messageSender, int messageCount)
+        internal static async Task SendMessagesAsync(IMessageSender messageSender, int messageCount)
         {
             if (messageCount == 0)
             {
@@ -50,7 +50,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
 
             var messagesToSend = new List<BrokeredMessage>();
-            for (int i = 0; i < messageCount; i++)
+            for (var i = 0; i < messageCount; i++)
             {
                 var message = new BrokeredMessage("test" + i);
                 message.Label = "test" + i;
@@ -61,9 +61,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Log($"Sent {messageCount} messages");
         }
 
-        internal static async Task<IEnumerable<BrokeredMessage>> ReceiveMessagesAsync(MessageReceiver messageReceiver, int messageCount)
+        internal static async Task<IEnumerable<BrokeredMessage>> ReceiveMessagesAsync(IMessageReceiver messageReceiver, int messageCount)
         {
-            int receiveAttempts = 0;
+            var receiveAttempts = 0;
             var messagesToReturn = new List<BrokeredMessage>();
 
             while (receiveAttempts++ < Constants.MaxAttemptsCount && messagesToReturn.Count < messageCount)
@@ -80,16 +80,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             return messagesToReturn;
         }
 
-        internal static async Task<BrokeredMessage> PeekMessageAsync(MessageReceiver messageReceiver)
+        internal static async Task<BrokeredMessage> PeekMessageAsync(IMessageReceiver messageReceiver)
         {
             var message = await messageReceiver.PeekAsync();
-            Log($"Peeked 1 message");
+            Log("Peeked 1 message");
             return message;
         }
 
-        internal static async Task<IEnumerable<BrokeredMessage>> PeekMessagesAsync(MessageReceiver messageReceiver, int messageCount)
+        internal static async Task<IEnumerable<BrokeredMessage>> PeekMessagesAsync(IMessageReceiver messageReceiver, int messageCount)
         {
-            int receiveAttempts = 0;
+            var receiveAttempts = 0;
             var peekedMessages = new List<BrokeredMessage>();
 
             while (receiveAttempts++ < Constants.MaxAttemptsCount && peekedMessages.Count < messageCount)
@@ -106,28 +106,43 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             return peekedMessages;
         }
 
-        internal static async Task CompleteMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
+        internal static async Task CompleteMessagesAsync(IMessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
             await messageReceiver.CompleteAsync(messages.Select(message => message.LockToken));
             Log($"Completed {messages.Count()} messages");
         }
 
-        internal static async Task AbandonMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
+        internal static async Task AbandonMessagesAsync(IMessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            await messageReceiver.AbandonAsync(messages.Select(message => message.LockToken));
-            Log($"Abandoned {messages.Count()} messages");
+            var count = 0;
+            foreach (var message in messages)
+            {
+                await messageReceiver.AbandonAsync(message.LockToken);
+                count++;
+            }
+            Log($"Abandoned {count} messages");
         }
 
-        internal static async Task DeadLetterMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
+        internal static async Task DeadLetterMessagesAsync(IMessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            await messageReceiver.DeadLetterAsync(messages.Select(message => message.LockToken));
-            Log($"Deadlettered {messages.Count()} messages");
+            var count = 0;
+            foreach (var message in messages)
+            {
+                await messageReceiver.DeadLetterAsync(message.LockToken);
+                count++;
+            }
+            Log($"Deadlettered {count} messages");
         }
 
-        internal static async Task DeferMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
+        internal static async Task DeferMessagesAsync(IMessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            await messageReceiver.DeferAsync(messages.Select(message => message.LockToken));
-            Log($"Deferred {messages.Count()} messages");
+            var count = 0;
+            foreach (var message in messages)
+            {
+                await messageReceiver.DeferAsync(message.LockToken);
+                count++;
+            }
+            Log($"Deferred {count} messages");
         }
 
         static void VerifyUniqueMessages(List<BrokeredMessage> messages)

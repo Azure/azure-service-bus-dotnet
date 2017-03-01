@@ -24,7 +24,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task SessionTest(string queueName)
         {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
+            var messagingFactory = new ServiceBusFactory();
+            var queueClient = messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
             try
             {
                 var messageId1 = "test-message1";
@@ -61,7 +62,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task GetAndSetSessionStateTest(string queueName)
         {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
+            var messagingFactory = new ServiceBusFactory();
+            var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
             try
             {
                 var messageId = "test-message1";
@@ -118,7 +120,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task SessionRenewLockTest(string queueName)
         {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
+            var messagingFactory = new ServiceBusFactory();
+            var queueClient = messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
             try
             {
                 var messageId = "test-message1";
@@ -163,7 +166,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekSessionAsyncTest(string queueName, int messageCount = 10)
         {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
+            var messagingFactory = new ServiceBusFactory();
+            var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
                 var messageId1 = "test-message1";
@@ -193,12 +197,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task AcceptSessionShouldReturnNoLaterThanServerWaitTimeTestCase(string queueName, int messageCount = 1)
         {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
+            var messagingFactory = new ServiceBusFactory();
+            var queueClient = messagingFactory.CreateQueueClientFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
             try
             {
                 Stopwatch timer = Stopwatch.StartNew();
 
-                MessageSession sessionReceiver = null;
+                IMessageSession sessionReceiver = null;
                 try
                 {
                     sessionReceiver = await queueClient.AcceptMessageSessionAsync(TimeSpan.FromSeconds(2));
@@ -223,7 +228,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        async Task AcceptAndCompleteSessionsAsync(QueueClient queueClient, string sessionId, string messageId)
+        async Task AcceptAndCompleteSessionsAsync(IQueueClient queueClient, string sessionId, string messageId)
         {
             var sessionReceiver = await queueClient.AcceptMessageSessionAsync(sessionId);
             if (sessionId != null)
@@ -241,7 +246,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await sessionReceiver.CloseAsync();
         }
 
-        async Task PeekAndDeleteMessageAsync(QueueClient queueClient, string sessionId, string messageId)
+        async Task PeekAndDeleteMessageAsync(IQueueClient queueClient, string sessionId, string messageId)
         {
             var sessionReceiver = await queueClient.AcceptMessageSessionAsync(sessionId);
             if (sessionId != null)

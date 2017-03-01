@@ -27,8 +27,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task SessionTest(string topicName)
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName);
+            var messagingFactory = new ServiceBusFactory();
+            var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
+            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
+                    entityConnectionString,
+                    this.SubscriptionName);
             try
             {
                 var messageId1 = "test-message1";
@@ -67,8 +70,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task GetAndSetSessionStateTest(string topicName)
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName);
+            var messagingFactory = new ServiceBusFactory();
+            var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
+            var subscriptionClient =
+                messagingFactory.CreateSubscriptionClientFromConnectionString(
+                    entityConnectionString,
+                    this.SubscriptionName);
             try
             {
                 var messageId = "test-message1";
@@ -127,8 +134,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task SessionRenewLockTestCase(string topicName)
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName);
+            var messagingFactory = new ServiceBusFactory();
+            var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
+            var subscriptionClient =
+                messagingFactory.CreateSubscriptionClientFromConnectionString(
+                    entityConnectionString,
+                    this.SubscriptionName);
             try
             {
                 var messageId = "test-message1";
@@ -175,8 +186,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task PeekSessionAsyncTest(string topicName, int messageCount = 10)
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName, ReceiveMode.ReceiveAndDelete);
+            var messagingFactory = new ServiceBusFactory();
+            var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
+            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
+                    entityConnectionString,
+                    this.SubscriptionName,
+                    ReceiveMode.ReceiveAndDelete);
             try
             {
                 var messageId1 = "test-message1";
@@ -208,12 +223,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task AcceptSessionShouldReturnNoLaterThanServerWaitTimeTestCase(string topicName, int messageCount = 1)
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(entityConnectionString, this.SubscriptionName, ReceiveMode.ReceiveAndDelete);
+            var messagingFactory = new ServiceBusFactory();
+            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
+                    entityConnectionString,
+                    this.SubscriptionName,
+                    ReceiveMode.ReceiveAndDelete);
             try
             {
                 Stopwatch timer = Stopwatch.StartNew();
 
-                MessageSession sessionReceiver = null;
+                IMessageSession sessionReceiver = null;
                 try
                 {
                     sessionReceiver = await subscriptionClient.AcceptMessageSessionAsync(TimeSpan.FromSeconds(2));
@@ -237,7 +256,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        async Task AcceptAndCompleteSessionsAsync(SubscriptionClient subscriptionClient, string sessionId, string messageId)
+        async Task AcceptAndCompleteSessionsAsync(ISubscriptionClient subscriptionClient, string sessionId, string messageId)
         {
             var sessionReceiver = await subscriptionClient.AcceptMessageSessionAsync(sessionId);
             if (sessionId != null)
@@ -251,7 +270,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             TestUtility.Log($"Completed Message: {message.MessageId} for Session: {sessionReceiver.SessionId}");
         }
 
-        async Task PeekAndDeleteMessageAsync(SubscriptionClient queueClient, string sessionId, string messageId)
+        async Task PeekAndDeleteMessageAsync(ISubscriptionClient queueClient, string sessionId, string messageId)
         {
             var sessionReceiver = await queueClient.AcceptMessageSessionAsync(sessionId);
             if (sessionId != null)

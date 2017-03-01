@@ -980,7 +980,7 @@ namespace Microsoft.Azure.ServiceBus
             this.ThrowIfDisposed();
             this.ThrowIfNotLocked();
 
-            return this.Receiver.AbandonAsync(new[] { this.LockToken });
+            return this.Receiver.AbandonAsync(this.LockToken);
         }
 
         /// <summary>Asynchronously completes the receive operation of a message and
@@ -1001,7 +1001,7 @@ namespace Microsoft.Azure.ServiceBus
             this.ThrowIfDisposed();
             this.ThrowIfNotLocked();
 
-            return this.Receiver.DeadLetterAsync(new[] { this.LockToken });
+            return this.Receiver.DeadLetterAsync(this.LockToken);
         }
 
         /// <summary>Asynchronously indicates that the receiver wants to defer the processing for this message.</summary>
@@ -1011,7 +1011,7 @@ namespace Microsoft.Azure.ServiceBus
             this.ThrowIfDisposed();
             this.ThrowIfNotLocked();
 
-            return this.Receiver.DeferAsync(new[] { this.LockToken });
+            return this.Receiver.DeferAsync(this.LockToken);
         }
 
         /// <summary>Specifies the time period within which the host renews its lock on a message.</summary>

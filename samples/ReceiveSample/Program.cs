@@ -9,7 +9,7 @@ namespace ReceiveSample
 
     public class Program
     {
-        private static QueueClient queueClient;
+        private static IQueueClient queueClient;
         private const string ServiceBusConnectionString = "{Service Bus connection string}";
         private const string QueueName = "{Queue path/name}";
 
@@ -27,7 +27,8 @@ namespace ReceiveSample
             };
 
             // Initializes the static QueueClient variable that will be used in the ReceiveMessages method.
-            queueClient = QueueClient.CreateFromConnectionString(connectionStringBuilder.ToString());
+            var messagingFactory = new ServiceBusFactory();
+            queueClient = messagingFactory.CreateQueueClientFromConnectionString(connectionStringBuilder.ToString());
 
             await ReceiveMessages();
 

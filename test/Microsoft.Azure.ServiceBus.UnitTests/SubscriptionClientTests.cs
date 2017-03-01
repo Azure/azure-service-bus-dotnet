@@ -26,8 +26,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task CorrelationFilterTestCase(string topicName, int messageCount = 10)
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(
+            var messagingFactory = new ServiceBusFactory();
+            var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
+            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
                 entityConnectionString,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
@@ -77,8 +78,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task SqlFilterTestCase(string topicName, int messageCount = 10)
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(
+            var messagingFactory = new ServiceBusFactory();
+            var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
+            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
                 entityConnectionString,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
@@ -138,8 +140,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task SqlActionTestCase(string topicName, int messageCount = 10)
         {
             var entityConnectionString = TestUtility.GetEntityConnectionString(topicName);
-            var topicClient = TopicClient.CreateFromConnectionString(entityConnectionString);
-            var subscriptionClient = SubscriptionClient.CreateFromConnectionString(
+            var messagingFactory = new ServiceBusFactory();
+            var topicClient = messagingFactory.CreateTopicClientFromConnectionString(entityConnectionString);
+            var subscriptionClient = messagingFactory.CreateSubscriptionClientFromConnectionString(
                 entityConnectionString,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);

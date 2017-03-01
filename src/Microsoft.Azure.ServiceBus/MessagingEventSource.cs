@@ -178,19 +178,18 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageAbandonStart(string clientId, int messageCount, IEnumerable<Guid> lockTokens)
+        public void MessageAbandonStart(string clientId, int messageCount, Guid lockToken)
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
-                this.MessageAbandonStart(clientId, messageCount, formattedLockTokens);
+                this.MessageAbandonStart(clientId, messageCount, lockToken.ToString());
             }
         }
 
-        [Event(16, Level = EventLevel.Informational, Message = "{0}: AbandonAsync start. MessageCount = {1}, LockTokens = {2}")]
-        void MessageAbandonStart(string clientId, int messageCount, string lockTokens)
+        [Event(16, Level = EventLevel.Informational, Message = "{0}: AbandonAsync start. MessageCount = {1}, LockToken = {2}")]
+        void MessageAbandonStart(string clientId, int messageCount, string lockToken)
         {
-            this.WriteEvent(16, clientId, messageCount, lockTokens);
+            this.WriteEvent(16, clientId, messageCount, lockToken);
         }
 
         [Event(17, Level = EventLevel.Informational, Message = "{0}: AbandonAsync done.")]
@@ -218,19 +217,18 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageDeferStart(string clientId, int messageCount, IEnumerable<Guid> lockTokens)
+        public void MessageDeferStart(string clientId, int messageCount, Guid lockToken)
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
-                this.MessageDeferStart(clientId, messageCount, formattedLockTokens);
+                this.MessageDeferStart(clientId, messageCount, lockToken.ToString());
             }
         }
 
-        [Event(19, Level = EventLevel.Informational, Message = "{0}: DeferAsync start. MessageCount = {1}, LockTokens = {2}")]
-        void MessageDeferStart(string clientId, int messageCount, string lockTokens)
+        [Event(19, Level = EventLevel.Informational, Message = "{0}: DeferAsync start. MessageCount = {1}, LockToken = {2}")]
+        void MessageDeferStart(string clientId, int messageCount, string lockToken)
         {
-            this.WriteEvent(19, clientId, messageCount, lockTokens);
+            this.WriteEvent(19, clientId, messageCount, lockToken);
         }
 
         [Event(20, Level = EventLevel.Informational, Message = "{0}: DeferAsync done.")]
@@ -258,19 +256,18 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageDeadLetterStart(string clientId, int messageCount, IEnumerable<Guid> lockTokens)
+        public void MessageDeadLetterStart(string clientId, int messageCount, Guid lockToken)
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
-                this.MessageDeadLetterStart(clientId, messageCount, formattedLockTokens);
+                this.MessageDeadLetterStart(clientId, messageCount, lockToken.ToString());
             }
         }
 
-        [Event(22, Level = EventLevel.Informational, Message = "{0}: DeadLetterAsync start. MessageCount = {1}, LockTokens = {2}")]
-        void MessageDeadLetterStart(string clientId, int messageCount, string lockTokens)
+        [Event(22, Level = EventLevel.Informational, Message = "{0}: DeadLetterAsync start. MessageCount = {1}, LockToken = {2}")]
+        void MessageDeadLetterStart(string clientId, int messageCount, string lockToken)
         {
-            this.WriteEvent(22, clientId, messageCount, lockTokens);
+            this.WriteEvent(22, clientId, messageCount, lockToken);
         }
 
         [Event(23, Level = EventLevel.Informational, Message = "{0}: DeadLetterAsync done.")]
@@ -298,19 +295,18 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageRenewLockStart(string clientId, int messageCount, IEnumerable<Guid> lockTokens)
+        public void MessageRenewLockStart(string clientId, int messageCount, Guid lockToken)
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
-                this.MessageRenewLockStart(clientId, messageCount, formattedLockTokens);
+                this.MessageRenewLockStart(clientId, messageCount, lockToken.ToString());
             }
         }
 
-        [Event(25, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync start. MessageCount = {1}, LockTokens = {2}")]
-        void MessageRenewLockStart(string clientId, int messageCount, string lockTokens)
+        [Event(25, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync start. MessageCount = {1}, LockToken = {2}")]
+        void MessageRenewLockStart(string clientId, int messageCount, string lockToken)
         {
-            this.WriteEvent(25, clientId, messageCount, lockTokens);
+            this.WriteEvent(25, clientId, messageCount, lockToken);
         }
 
         [Event(26, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync done.")]
@@ -411,11 +407,11 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void AmqpSendLinkCreateStart(string clientId, MessagingEntityType entityType, string entityPath)
+        public void AmqpSendLinkCreateStart(string clientId, MessagingEntityType? entityType, string entityPath)
         {
             if (this.IsEnabled())
             {
-                this.AmqpSendLinkCreateStart(clientId, entityType.ToString(), entityPath);
+                this.AmqpSendLinkCreateStart(clientId, entityType?.ToString() ?? string.Empty, entityPath);
             }
         }
 
@@ -435,11 +431,11 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void AmqpReceiveLinkCreateStart(string clientId, bool isRequestResponseLink, MessagingEntityType entityType, string entityPath)
+        public void AmqpReceiveLinkCreateStart(string clientId, bool isRequestResponseLink, MessagingEntityType? entityType, string entityPath)
         {
             if (this.IsEnabled())
             {
-                this.AmqpReceiveLinkCreateStart(clientId, isRequestResponseLink.ToString(), entityType.ToString(), entityPath);
+                this.AmqpReceiveLinkCreateStart(clientId, isRequestResponseLink.ToString(), entityType?.ToString() ?? string.Empty, entityPath);
             }
         }
 
@@ -533,6 +529,33 @@ namespace Microsoft.Azure.ServiceBus
             this.WriteEvent(44, clientId, exception);
         }
 
+        [Event(45, Level = EventLevel.Informational, Message = "Creating MessageSender (Namespace '{0}'; Entity '{1}').")]
+        public void MessageSenderCreateStart(string namespaceName, string entityName)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(45, namespaceName, entityName);
+            }
+        }
+
+        [Event(46, Level = EventLevel.Informational, Message = "MessageSender (Namespace '{0}'; Entity '{1}' created).")]
+        public void MessageSenderCreateStop(string namespaceName, string entityName)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(46, namespaceName, entityName);
+            }
+        }
+
+        [Event(47, Level = EventLevel.Informational, Message = "Creating MessageReceiver (Namespace '{0}'; Entity '{1}'; ReceiveMode '{2}').")]
+        public void MessageReceiverCreateStart(string namespaceName, string entityName, string receiveMode)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(47, namespaceName, entityName);
+            }
+        }
+
         [NonEvent]
         public void ScheduleMessageStart(string clientId, DateTimeOffset scheduleEnqueueTimeUtc)
         {
@@ -548,6 +571,15 @@ namespace Microsoft.Azure.ServiceBus
             if (this.IsEnabled())
             {
                 this.WriteEvent(49, clientId, scheduleEnqueueTimeUtc);
+            }
+        }
+
+        [Event(48, Level = EventLevel.Informational, Message = "MessageReceiver (Namespace '{0}'; Entity '{1}' created).")]
+        public void MessageReceiverCreateStop(string namespaceName, string entityName)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(48, namespaceName, entityName);
             }
         }
 
