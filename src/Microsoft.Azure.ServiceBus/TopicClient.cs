@@ -10,17 +10,16 @@ namespace Microsoft.Azure.ServiceBus
     using Core;
     using Primitives;
 
-    public class TopicClient : ClientEntity, ITopicClient
+    public sealed class TopicClient : ClientEntity, ITopicClient
     {
         public TopicClient(string connectionString, string entityPath)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath)
         {
         }
 
-        protected TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath)
+        private TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath)
             : base($"{nameof(QueueClient)}{GetNextId()}({entityPath})")
         {
-            this.ServiceBusConnection = serviceBusConnection;
             this.TopicName = entityPath;
             this.InnerClient = new AmqpClient(serviceBusConnection, entityPath, MessagingEntityType.Topic);
         }
@@ -29,9 +28,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal IInnerSender InnerClient { get; }
 
-        protected ServiceBusConnection ServiceBusConnection { get; }
-
-        public sealed override async Task CloseAsync()
+        public override async Task CloseAsync()
         {
             await this.InnerClient.CloseAsync().ConfigureAwait(false);
         }
@@ -71,11 +68,6 @@ namespace Microsoft.Azure.ServiceBus
         public Task CancelScheduledMessageAsync(long sequenceNumber)
         {
             return this.InnerClient.InnerSender.CancelScheduledMessageAsync(sequenceNumber);
-        }
-
-        protected MessageSender CreateMessageSender()
-        {
-            return this.InnerClient.CreateMessageSender();
         }
     }
 }

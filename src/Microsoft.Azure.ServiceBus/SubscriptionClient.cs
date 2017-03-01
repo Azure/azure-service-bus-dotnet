@@ -11,7 +11,7 @@ namespace Microsoft.Azure.ServiceBus
     using Filters;
     using Primitives;
 
-    public class SubscriptionClient : ClientEntity, ISubscriptionClient
+    public sealed class SubscriptionClient : ClientEntity, ISubscriptionClient
     {
         public const string DefaultRule = "$Default";
 
@@ -20,10 +20,9 @@ namespace Microsoft.Azure.ServiceBus
         {
         }
 
-        protected SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode)
+        private SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode)
             : base($"{nameof(QueueClient)}{ClientEntity.GetNextId()}({subscriptionName})")
         {
-            this.ServiceBusConnection = serviceBusConnection;
             this.TopicPath = topicPath;
             this.SubscriptionName = subscriptionName;
             this.Path = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
@@ -41,9 +40,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal IInnerSubscriptionClient InnerSubscriptionClient { get; }
 
-        protected ServiceBusConnection ServiceBusConnection { get; }
-
-        public sealed override async Task CloseAsync()
+        public override async Task CloseAsync()
         {
             await this.InnerSubscriptionClient.CloseAsync().ConfigureAwait(false);
         }

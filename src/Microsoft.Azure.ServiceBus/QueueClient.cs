@@ -14,17 +14,16 @@ namespace Microsoft.Azure.ServiceBus
     /// <summary>
     /// Anchor class - all Queue client operations start here.
     /// </summary>
-    public class QueueClient : ClientEntity, IQueueClient
+    public sealed class QueueClient : ClientEntity, IQueueClient
     {
         public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode)
         {
         }
 
-        protected QueueClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode)
+        private QueueClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode)
             : base($"{nameof(QueueClient)}{ClientEntity.GetNextId()}({entityPath})")
         {
-            this.ServiceBusConnection = serviceBusConnection;
             this.QueueName = entityPath;
             this.ReceiveMode = receiveMode;
             this.InnerClient = new AmqpClient(serviceBusConnection, entityPath, MessagingEntityType.Queue, receiveMode);
@@ -38,10 +37,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal IInnerSenderReceiver InnerClient { get; }
 
-        // TODO nemakam: Remove this, and ensure someone is accountable for its closure. --> Across all clients
-        protected ServiceBusConnection ServiceBusConnection { get; }
-
-        public sealed override async Task CloseAsync()
+        public override async Task CloseAsync()
         {
             await this.InnerClient.CloseAsync().ConfigureAwait(false);
         }
@@ -111,16 +107,6 @@ namespace Microsoft.Azure.ServiceBus
         public Task CancelScheduledMessageAsync(long sequenceNumber)
         {
             return this.InnerClient.InnerSender.CancelScheduledMessageAsync(sequenceNumber);
-        }
-
-        protected MessageSender CreateMessageSender()
-        {
-            return this.InnerClient.CreateMessageSender();
-        }
-
-        protected MessageReceiver CreateMessageReceiver()
-        {
-            return this.InnerClient.CreateMessageReceiver();
         }
     }
 }
