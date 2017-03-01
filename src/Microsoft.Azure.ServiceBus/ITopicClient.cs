@@ -12,22 +12,19 @@ namespace Microsoft.Azure.ServiceBus
     /// <code>
     ///
     /// // Create the TopicClient
-    /// var connectionStringBuilder = new ServiceBusConnectionStringBuilder(serviceBusConnectionString)
-    ///     {
-    ///          EntityPath = TopicName
-    ///     };
-    /// ServiceBusClientFactory factory = new ServiceBusClientFactory();
-    /// ITopicClient myTopicClient = factory.CreateTopicClientFromConnectionString(connectionStringBuilder.ToString());
+    /// ITopicClient myTopicClient = new TopicClient(
+    ///     serviceBusConnectionString,
+    ///     topicName);
     ///
     /// //********************************************************************************
     /// //                          Sending messages to a Topic
     /// //********************************************************************************
     ///
     /// // Send messages
-    /// List &lt;object&gt; Issues = new List &lt;object&gt;();
+    /// List &lt;byte[]&gt; Issues = GetIssues();
     /// foreach (var issue in Issues)
     /// {
-    ///    myTopicClient.Send(new Message(issue));
+    ///    myTopicClient.SendAsync(new Message(issue));
     /// }
     /// </code>
     /// </example>

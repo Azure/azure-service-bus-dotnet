@@ -27,7 +27,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public string TopicName { get; }
 
-        internal IInnerClient InnerClient { get; }
+        internal IInnerSender InnerClient { get; }
 
         protected ServiceBusConnection ServiceBusConnection { get; }
 

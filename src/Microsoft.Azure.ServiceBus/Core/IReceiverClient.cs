@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus.Core
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public interface IReceiverClient : IClientEntity
@@ -11,6 +12,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         string Path { get; }
 
         ReceiveMode ReceiveMode { get; }
+
+        void OnMessageAsync(Func<Message, CancellationToken, Task> callback);
+
+        void OnMessageAsync(Func<Message, CancellationToken, Task> callback, OnMessageOptions onMessageOptions);
 
         Task CompleteAsync(Guid lockToken);
 

@@ -36,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public string Path => this.QueueName;
 
-        internal IInnerClient InnerClient { get; }
+        internal IInnerSenderReceiver InnerClient { get; }
 
         // TODO nemakam: Remove this, and ensure someone is accountable for its closure. --> Across all clients
         protected ServiceBusConnection ServiceBusConnection { get; }
@@ -79,17 +79,17 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>Asynchronously processes a message.</summary>
         /// <param name="callback">The method to invoke when the operation is complete.</param>
-        public void OnMessageAsync(Func<BrokeredMessage, CancellationToken, Task> callback)
+        public void OnMessageAsync(Func<Message, CancellationToken, Task> callback)
         {
-            this.InnerReceiver.OnMessageAsync(callback);
+            this.InnerClient.InnerReceiver.OnMessageAsync(callback);
         }
 
         /// <summary>Asynchronously processes a message.</summary>
         /// <param name="callback">The method to invoke when the operation is complete.</param>
         /// <param name="onMessageOptions">Calls a message option.</param>
-        public void OnMessageAsync(Func<BrokeredMessage, CancellationToken, Task> callback, OnMessageOptions onMessageOptions)
+        public void OnMessageAsync(Func<Message, CancellationToken, Task> callback, OnMessageOptions onMessageOptions)
         {
-            this.InnerReceiver.OnMessageAsync(callback, onMessageOptions);
+            this.InnerClient.InnerReceiver.OnMessageAsync(callback, onMessageOptions);
         }
 
         /// <summary>

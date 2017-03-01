@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using Core;
     using Primitives;
 
-    class AmqpClient : IInnerClient
+    class AmqpClient : IInnerSenderReceiver
     {
         MessageSender innerSender;
         MessageReceiver innerReceiver;

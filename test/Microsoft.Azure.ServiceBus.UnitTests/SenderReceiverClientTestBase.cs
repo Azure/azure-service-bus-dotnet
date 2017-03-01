@@ -231,8 +231,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         protected async Task OnMessageAsyncTestCase(
-            MessageSender messageSender,
-            MessageReceiver messageReceiver,
+            IMessageSender messageSender,
+            IMessageReceiver messageReceiver,
             int maxConcurrentCalls,
             bool autoComplete,
             int messageCount)
@@ -246,11 +246,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     count++;
                     if (messageReceiver.ReceiveMode == ReceiveMode.PeekLock && !autoComplete)
                     {
-                        await message.CompleteAsync();
+                        await messageReceiver.CompleteAsync(message.LockToken);
                     }
-                    await Task.FromResult(0);
                 },
-                new OnMessageOptions() { MaxConcurrentCalls = maxConcurrentCalls });
+                new OnMessageOptions() { MaxConcurrentCalls = maxConcurrentCalls, AutoComplete = autoComplete });
 
             // Wait for the OnMessage Tasks to finish
             Stopwatch stopwatch = Stopwatch.StartNew();

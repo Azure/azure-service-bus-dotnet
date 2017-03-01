@@ -6,14 +6,15 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Core;
+    using Primitives;
 
     sealed class MessageReceivePump
     {
         const int MaxInitialReceiveRetryCount = 3;
         static readonly TimeSpan ServerBusyExceptionBackoffAmount = TimeSpan.FromSeconds(10);
         static readonly TimeSpan OtherExceptionBackoffAmount = TimeSpan.FromSeconds(1);
-        readonly Func<BrokeredMessage, CancellationToken, Task> onMessageCallback;
+        readonly Func<Message, CancellationToken, Task> onMessageCallback;
         readonly OnMessageOptions onMessageOptions;
         readonly MessageReceiver messageReceiver;
         readonly CancellationToken pumpCancellationToken;
@@ -22,7 +23,7 @@ namespace Microsoft.Azure.ServiceBus
         public MessageReceivePump(
             MessageReceiver messageReceiver,
             OnMessageOptions onMessageOptions,
-            Func<BrokeredMessage, CancellationToken, Task> callback,
+            Func<Message, CancellationToken, Task> callback,
             CancellationToken pumpCancellationToken)
         {
             if (messageReceiver == null)
@@ -40,7 +41,7 @@ namespace Microsoft.Azure.ServiceBus
         public async Task StartPumpAsync()
         {
             int retryCount = 0;
-            BrokeredMessage initialMessage = null;
+            Message initialMessage = null;
             while (true)
             {
                 try
@@ -86,11 +87,11 @@ namespace Microsoft.Azure.ServiceBus
                 this.onMessageOptions.AutoRenewLock;
         }
 
-        async Task MessagePumpTask(BrokeredMessage initialMessage)
+        async Task MessagePumpTask(Message initialMessage)
         {
             while (!this.pumpCancellationToken.IsCancellationRequested)
             {
-                BrokeredMessage message = null;
+                Message message = null;
                 try
                 {
                     await this.maxConcurrentCallsSemaphoreSlim.WaitAsync(this.pumpCancellationToken).ConfigureAwait(false);
@@ -130,7 +131,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task MessageDispatchTask(BrokeredMessage message)
+        async Task MessageDispatchTask(Message message)
         {
             CancellationTokenSource renewLockCancellationTokenSource = null;
             Timer autoRenewLockCancellationTimer = null;
@@ -189,13 +190,13 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task AbandonMessageIfNeededAsync(BrokeredMessage message)
+        async Task AbandonMessageIfNeededAsync(Message message)
         {
             try
             {
                 if (this.messageReceiver.ReceiveMode == ReceiveMode.PeekLock)
                 {
-                    await this.messageReceiver.AbandonAsync(new[] { message.LockToken }).ConfigureAwait(false);
+                    await this.messageReceiver.AbandonAsync(message.LockToken).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)
@@ -204,7 +205,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task CompleteMessageIfNeededAsync(BrokeredMessage message)
+        async Task CompleteMessageIfNeededAsync(Message message)
         {
             try
             {
@@ -220,7 +221,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task RenewMessageLockTask(BrokeredMessage message, CancellationToken renewLockCancellationToken)
+        async Task RenewMessageLockTask(Message message, CancellationToken renewLockCancellationToken)
         {
             while (!this.pumpCancellationToken.IsCancellationRequested &&
                    !renewLockCancellationToken.IsCancellationRequested)
@@ -234,7 +235,7 @@ namespace Microsoft.Azure.ServiceBus
                     if (!this.pumpCancellationToken.IsCancellationRequested &&
                         !renewLockCancellationToken.IsCancellationRequested)
                     {
-                        await message.RenewLockAsync().ConfigureAwait(false);
+                        await this.messageReceiver.RenewLockAsync(message.LockToken).ConfigureAwait(false);
                         MessagingEventSource.Log.MessageReceiverPumpRenewMessageStop(this.messageReceiver.ClientId, message);
                     }
                     else

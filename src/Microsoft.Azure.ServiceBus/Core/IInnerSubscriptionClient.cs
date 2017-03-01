@@ -6,7 +6,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System.Threading.Tasks;
     using Filters;
 
-    internal interface IInnerSubscriptionClient : IInnerClient
+    internal interface IInnerSubscriptionClient : IInnerReceiver
     {
         Task OnAddRuleAsync(RuleDescription description);
 

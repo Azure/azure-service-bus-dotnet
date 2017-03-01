@@ -749,7 +749,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiverPumpInitialMessageReceived(string clientId, BrokeredMessage message)
+        public void MessageReceiverPumpInitialMessageReceived(string clientId, Message message)
         {
             if (this.IsEnabled())
             {
@@ -785,7 +785,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiverPumpTaskStart(string clientId, BrokeredMessage message, int currentSemaphoreCount)
+        public void MessageReceiverPumpTaskStart(string clientId, Message message, int currentSemaphoreCount)
         {
             if (this.IsEnabled())
             {
@@ -821,7 +821,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiverPumpDispatchTaskStart(string clientId, BrokeredMessage message)
+        public void MessageReceiverPumpDispatchTaskStart(string clientId, Message message)
         {
             if (this.IsEnabled())
             {
@@ -836,7 +836,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiverPumpDispatchTaskStop(string clientId, BrokeredMessage message, int currentSemaphoreCount)
+        public void MessageReceiverPumpDispatchTaskStop(string clientId, Message message, int currentSemaphoreCount)
         {
             if (this.IsEnabled())
             {
@@ -851,7 +851,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiverPumpUserCallbackStart(string clientId, BrokeredMessage message)
+        public void MessageReceiverPumpUserCallbackStart(string clientId, Message message)
         {
             if (this.IsEnabled())
             {
@@ -866,7 +866,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiverPumpUserCallbackStop(string clientId, BrokeredMessage message)
+        public void MessageReceiverPumpUserCallbackStop(string clientId, Message message)
         {
             if (this.IsEnabled())
             {
@@ -881,7 +881,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiverPumpUserCallbackException(string clientId, BrokeredMessage message, Exception exception)
+        public void MessageReceiverPumpUserCallbackException(string clientId, Message message, Exception exception)
         {
             if (this.IsEnabled())
             {
@@ -896,7 +896,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiverPumpRenewMessageStart(string clientId, BrokeredMessage message, TimeSpan renewAfterTimeSpan)
+        public void MessageReceiverPumpRenewMessageStart(string clientId, Message message, TimeSpan renewAfterTimeSpan)
         {
             if (this.IsEnabled())
             {
@@ -911,7 +911,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiverPumpRenewMessageStop(string clientId, BrokeredMessage message)
+        public void MessageReceiverPumpRenewMessageStop(string clientId, Message message)
         {
             if (this.IsEnabled())
             {
@@ -926,7 +926,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiverPumpRenewMessageException(string clientId, BrokeredMessage message, Exception exception)
+        public void MessageReceiverPumpRenewMessageException(string clientId, Message message, Exception exception)
         {
             if (this.IsEnabled())
             {

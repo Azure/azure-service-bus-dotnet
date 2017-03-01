@@ -336,12 +336,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             return messages;
         }
 
-        public void OnMessageAsync(Func<BrokeredMessage, CancellationToken, Task> callback)
+        public void OnMessageAsync(Func<Message, CancellationToken, Task> callback)
         {
             this.OnMessageAsync(callback, new OnMessageOptions() { ReceiveTimeOut = this.OperationTimeout });
         }
 
-        public void OnMessageAsync(Func<BrokeredMessage, CancellationToken, Task> callback, OnMessageOptions onMessageOptions)
+        public void OnMessageAsync(Func<Message, CancellationToken, Task> callback, OnMessageOptions onMessageOptions)
         {
             onMessageOptions.ReceiveTimeOut = this.OperationTimeout;
             this.OnMessageHandlerAsync(onMessageOptions, callback).GetAwaiter().GetResult();
@@ -395,7 +395,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         async Task OnMessageHandlerAsync(
             OnMessageOptions onMessageOptions,
-            Func<BrokeredMessage, CancellationToken, Task> callback)
+            Func<Message, CancellationToken, Task> callback)
         {
             MessagingEventSource.Log.RegisterOnMessageHandlerStart(this.ClientId, onMessageOptions);
 

@@ -5,15 +5,11 @@ namespace Microsoft.Azure.ServiceBus.Core
 {
     using System.Threading.Tasks;
 
-    internal interface IInnerClient
+    internal interface IInnerSender
     {
         MessageSender InnerSender { get; }
 
-        MessageReceiver InnerReceiver { get; }
-
         MessageSender CreateMessageSender();
-
-        MessageReceiver CreateMessageReceiver();
 
         Task CloseAsync();
     }
