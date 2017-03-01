@@ -10,7 +10,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using Microsoft.Azure.ServiceBus.Filters;
     using Microsoft.Azure.ServiceBus.Primitives;
 
-    public class AmqpSubscriptionClient : SubscriptionClient
+    sealed class AmqpSubscriptionClient : SubscriptionClient
     {
         public AmqpSubscriptionClient(ServiceBusConnection servicebusConnection, string topicPath, string subscriptionName, ReceiveMode mode)
             : base(servicebusConnection, topicPath, subscriptionName, mode)
@@ -33,7 +33,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return new AmqpMessageReceiver(
                 this.SubscriptionPath,
                 MessagingEntityType.Subscriber,
-                this.Mode,
+                this.ReceiveMode,
                 this.ServiceBusConnection.PrefetchCount,
                 this.ServiceBusConnection,
                 this.CbsTokenProvider);
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             AmqpMessageReceiver receiver = new AmqpMessageReceiver(
                 this.SubscriptionPath,
                 MessagingEntityType.Subscriber,
-                this.Mode,
+                this.ReceiveMode,
                 this.ServiceBusConnection.PrefetchCount,
                 this.ServiceBusConnection,
                 this.CbsTokenProvider,

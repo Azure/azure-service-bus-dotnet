@@ -8,9 +8,8 @@ namespace Microsoft.Azure.ServiceBus
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus.Filters;
-    using Microsoft.Azure.ServiceBus.Primitives;
 
-    public abstract class SubscriptionClient : ClientEntity
+    public abstract class SubscriptionClient : ClientEntity, ISubscriptionClient
     {
         public const string DefaultRule = "$Default";
         MessageReceiver innerReceiver;
@@ -20,16 +19,20 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ServiceBusConnection = serviceBusConnection;
             this.TopicPath = topicPath;
-            this.Name = name;
-            this.SubscriptionPath = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.Name);
-            this.Mode = receiveMode;
+            this.SubscriptionName = name;
+            this.SubscriptionPath = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
+            this.ReceiveMode = receiveMode;
         }
 
         public string TopicPath { get; private set; }
 
-        public string Name { get; }
+        public string Path => EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
 
-        public ReceiveMode Mode { get; private set; }
+        public string SubscriptionName { get; }
+
+        public ReceiveMode ReceiveMode { get; private set; }
+
+        public long LastPeekedSequenceNumber => this.InnerReceiver.LastPeekedSequenceNumber;
 
         public int PrefetchCount
         {
@@ -68,57 +71,6 @@ namespace Microsoft.Azure.ServiceBus
         protected object ThisLock { get; } = new object();
 
         protected ServiceBusConnection ServiceBusConnection { get; }
-
-        public static SubscriptionClient CreateFromConnectionString(string topicEntityConnectionString, string subscriptionName)
-        {
-            return CreateFromConnectionString(topicEntityConnectionString, subscriptionName, ReceiveMode.PeekLock);
-        }
-
-        public static SubscriptionClient CreateFromConnectionString(string topicEntityConnectionString, string subscriptionName, ReceiveMode mode)
-        {
-            if (string.IsNullOrWhiteSpace(topicEntityConnectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(topicEntityConnectionString));
-            }
-
-            ServiceBusEntityConnection topicConnection = new ServiceBusEntityConnection(topicEntityConnectionString);
-            return topicConnection.CreateSubscriptionClient(topicConnection.EntityPath, subscriptionName, mode);
-        }
-
-        public static SubscriptionClient Create(ServiceBusNamespaceConnection namespaceConnection, string topicPath, string subscriptionName)
-        {
-            return SubscriptionClient.Create(namespaceConnection, topicPath, subscriptionName, ReceiveMode.PeekLock);
-        }
-
-        public static SubscriptionClient Create(ServiceBusNamespaceConnection namespaceConnection, string topicPath, string subscriptionName, ReceiveMode mode)
-        {
-            if (namespaceConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            if (string.IsNullOrWhiteSpace(topicPath))
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Topic Path is null");
-            }
-
-            return namespaceConnection.CreateSubscriptionClient(topicPath, subscriptionName, mode);
-        }
-
-        public static SubscriptionClient Create(ServiceBusEntityConnection topicConnection, string subscriptionName)
-        {
-            return SubscriptionClient.Create(topicConnection, subscriptionName, ReceiveMode.PeekLock);
-        }
-
-        public static SubscriptionClient Create(ServiceBusEntityConnection topicConnection, string subscriptionName, ReceiveMode mode)
-        {
-            if (topicConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(topicConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            return topicConnection.CreateSubscriptionClient(topicConnection.EntityPath, subscriptionName, mode);
-        }
 
         public sealed override async Task CloseAsync()
         {
@@ -231,7 +183,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task AbandonAsync(Guid lockToken)
         {
-            return this.InnerReceiver.AbandonAsync(new[] { lockToken });
+            return this.InnerReceiver.AbandonAsync(lockToken);
         }
 
         public Task<MessageSession> AcceptMessageSessionAsync()
@@ -271,15 +223,15 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task DeferAsync(Guid lockToken)
         {
-            return this.InnerReceiver.DeferAsync(new[] { lockToken });
+            return this.InnerReceiver.DeferAsync(lockToken);
         }
 
         public Task DeadLetterAsync(Guid lockToken)
         {
-            return this.InnerReceiver.DeadLetterAsync(new[] { lockToken });
+            return this.InnerReceiver.DeadLetterAsync(lockToken);
         }
 
-        public Task<DateTime> RenewMessageLockAsync(Guid lockToken)
+        public Task<DateTime> RenewLockAsync(Guid lockToken)
         {
             return this.InnerReceiver.RenewLockAsync(lockToken);
         }

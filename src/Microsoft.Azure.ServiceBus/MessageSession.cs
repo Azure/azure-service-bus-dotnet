@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.IO;
     using System.Threading.Tasks;
 
-    public abstract class MessageSession : MessageReceiver
+    public abstract class MessageSession : MessageReceiver, IMessageSession
     {
         /// <summary>Represents a message session that allows grouping of related messages for processing in a single transaction.</summary>
         protected MessageSession(ReceiveMode receiveMode, string sessionId, DateTime lockedUntilUtc, MessageReceiver innerReceiver)
@@ -79,19 +79,19 @@ namespace Microsoft.Azure.ServiceBus
             return this.InnerMessageReceiver.CompleteAsync(lockTokens);
         }
 
-        protected override Task OnAbandonAsync(IEnumerable<Guid> lockTokens)
+        protected override Task OnAbandonAsync(Guid lockToken)
         {
-            return this.InnerMessageReceiver.AbandonAsync(lockTokens);
+            return this.InnerMessageReceiver.AbandonAsync(lockToken);
         }
 
-        protected override Task OnDeferAsync(IEnumerable<Guid> lockTokens)
+        protected override Task OnDeferAsync(Guid lockToken)
         {
-            return this.InnerMessageReceiver.DeferAsync(lockTokens);
+            return this.InnerMessageReceiver.DeferAsync(lockToken);
         }
 
-        protected override Task OnDeadLetterAsync(IEnumerable<Guid> lockTokens)
+        protected override Task OnDeadLetterAsync(Guid lockToken)
         {
-            return this.InnerMessageReceiver.DeadLetterAsync(lockTokens);
+            return this.InnerMessageReceiver.DeadLetterAsync(lockToken);
         }
 
         protected override Task<DateTime> OnRenewLockAsync(Guid lockToken)

@@ -14,8 +14,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task MessageLockLostExceptionTest()
         {
             const int messageCount = 2;
-            var queueClient = QueueClient.CreateFromConnectionString(
-                TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName));
+            var messagingFactory = new ServiceBusClientFactory();
+            var queueClient =
+                (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
+                    TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName));
 
             try
             {
@@ -44,8 +46,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task SessionLockLostExceptionTest()
         {
-            var queueClient = QueueClient.CreateFromConnectionString(
-                TestUtility.GetEntityConnectionString(Constants.SessionNonPartitionedQueueName));
+            var messagingFactory = new ServiceBusClientFactory();
+            var queueClient =
+                (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
+                    TestUtility.GetEntityConnectionString(Constants.SessionNonPartitionedQueueName));
 
             try
             {
@@ -93,9 +97,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task CompleteOnPeekedMessagesShouldThrowTest()
         {
-            var queueClient = QueueClient.CreateFromConnectionString(
-                        TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName),
-                        ReceiveMode.ReceiveAndDelete);
+            var messagingFactory = new ServiceBusClientFactory();
+            var queueClient =
+                (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
+                    TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName),
+                    ReceiveMode.ReceiveAndDelete);
+
             try
             {
                 await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);

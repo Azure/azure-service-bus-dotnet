@@ -114,20 +114,35 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         internal static async Task AbandonMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            await messageReceiver.AbandonAsync(messages.Select(message => message.LockToken));
-            Log($"Abandoned {messages.Count()} messages");
+            int count = 0;
+            foreach (var message in messages)
+            {
+                await messageReceiver.AbandonAsync(message.LockToken);
+                count++;
+            }
+            Log($"Abandoned {count} messages");
         }
 
         internal static async Task DeadLetterMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            await messageReceiver.DeadLetterAsync(messages.Select(message => message.LockToken));
-            Log($"Deadlettered {messages.Count()} messages");
+            int count = 0;
+            foreach (var message in messages)
+            {
+                await messageReceiver.DeadLetterAsync(message.LockToken);
+                count++;
+            }
+            Log($"Deadlettered {count} messages");
         }
 
         internal static async Task DeferMessagesAsync(MessageReceiver messageReceiver, IEnumerable<BrokeredMessage> messages)
         {
-            await messageReceiver.DeferAsync(messages.Select(message => message.LockToken));
-            Log($"Deferred {messages.Count()} messages");
+            int count = 0;
+            foreach (var message in messages)
+            {
+                await messageReceiver.DeferAsync(message.LockToken);
+                count++;
+            }
+            Log($"Deferred {count} messages");
         }
 
         static void VerifyUniqueMessages(List<BrokeredMessage> messages)

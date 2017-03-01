@@ -6,8 +6,9 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Primitives;
 
-    public abstract class MessageSender : ClientEntity
+    public abstract class MessageSender : ClientEntity, IMessageSender
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
              "StyleCop.CSharp.ReadabilityRules",
@@ -21,7 +22,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal TimeSpan OperationTimeout { get; }
 
-        protected MessagingEntityType EntityType { get; set; }
+        protected MessagingEntityType? EntityType { get; set; }
 
         public Task SendAsync(BrokeredMessage brokeredMessage)
         {

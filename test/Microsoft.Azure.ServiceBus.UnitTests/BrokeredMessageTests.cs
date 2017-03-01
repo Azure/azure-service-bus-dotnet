@@ -13,9 +13,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task BrokeredMessageOperationsTest()
         {
+            var messagingFactory = new ServiceBusClientFactory();
+
             // Create QueueClient with ReceiveDelete,
             // Send and Receive a message, Try to Complete/Abandon/Defer/DeadLetter should throw InvalidOperationException()
-            var queueClient = QueueClient.CreateFromConnectionString(
+            var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
                 TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName),
                 ReceiveMode.ReceiveAndDelete);
 
@@ -30,7 +32,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             // Create a PeekLock queueClient and do rest of the operations
             // Send a Message, Receive/ Abandon and Complete it using BrokeredMessage methods
-            queueClient = QueueClient.CreateFromConnectionString(
+            queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
                 TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName),
                 ReceiveMode.PeekLock);
 
@@ -49,7 +51,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             var builder = new ServiceBusConnectionStringBuilder(TestUtility.GetEntityConnectionString(Constants.PartitionedQueueName));
             builder.EntityPath = EntityNameHelper.FormatDeadLetterPath(queueClient.QueueName);
-            var deadLetterQueueClient = QueueClient.CreateFromConnectionString(builder.ToString());
+            var deadLetterQueueClient = messagingFactory.CreateQueueClientFromConnectionString(builder.ToString());
             message = await deadLetterQueueClient.ReceiveAsync();
             await message.CompleteAsync();
 
@@ -124,7 +126,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             [InlineData(ReceiveMode.PeekLock)]
             async Task Should_return_true_for_message_that_was_sent_and_received(ReceiveMode receiveMode)
             {
-                var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName), receiveMode);
+                var messagingFactory = new ServiceBusClientFactory();
+                var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
+                    TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName),
+                    receiveMode);
+
                 try
                 {
                     await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
@@ -147,7 +153,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             [DisplayTestMethodName]
             async Task Should_return_true_for_peeked_message()
             {
-                var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName), ReceiveMode.PeekLock);
+                var messagingFactory = new ServiceBusClientFactory();
+                var queueClient = (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
+                    TestUtility.GetEntityConnectionString(Constants.NonPartitionedQueueName),
+                    ReceiveMode.PeekLock);
                 try
                 {
                     await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);

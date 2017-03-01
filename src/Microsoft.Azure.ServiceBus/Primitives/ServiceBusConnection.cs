@@ -8,6 +8,7 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Transport;
     using Microsoft.Azure.ServiceBus.Amqp;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
     public abstract class ServiceBusConnection
     {
@@ -92,6 +93,26 @@ namespace Microsoft.Azure.ServiceBus
             AmqpSubscriptionClient subscriptionClient = new AmqpSubscriptionClient(this, topicPath, subscriptionName, mode);
             MessagingEventSource.Log.SubscriptionClientCreateStop(this.Endpoint.Host, topicPath, subscriptionName, subscriptionClient.ClientId);
             return subscriptionClient;
+        }
+
+        internal MessageSender CreateMessageSender(string entityPath)
+        {
+            MessagingEventSource.Log.MessageSenderCreateStart(this.Endpoint.Host, entityPath);
+            TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
+            var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
+            AmqpMessageSender messageSender = new AmqpMessageSender(entityPath, null, this, cbsTokenProvider);
+            MessagingEventSource.Log.MessageSenderCreateStop(this.Endpoint.Host, entityPath);
+            return messageSender;
+        }
+
+        internal MessageReceiver CreateMessageReceiver(string entityPath, ReceiveMode mode)
+        {
+            MessagingEventSource.Log.MessageReceiverCreateStart(this.Endpoint.Host, entityPath, mode.ToString());
+            TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
+            var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
+            AmqpMessageReceiver messageReceiver = new AmqpMessageReceiver(entityPath, null, mode, this.PrefetchCount, this, cbsTokenProvider);
+            MessagingEventSource.Log.MessageReceiverCreateStop(this.Endpoint.Host, entityPath);
+            return messageReceiver;
         }
 
         protected void InitializeConnection(ServiceBusConnectionStringBuilder builder)

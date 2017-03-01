@@ -8,8 +8,9 @@ namespace Microsoft.Azure.ServiceBus
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Primitives;
 
-    public abstract class MessageReceiver : ClientEntity
+    public abstract class MessageReceiver : ClientEntity, IMessageReceiver
     {
         readonly TimeSpan operationTimeout;
         readonly object messageReceivePumpSyncLock;
@@ -72,7 +73,7 @@ namespace Microsoft.Azure.ServiceBus
             get { return this.operationTimeout; }
         }
 
-        protected MessagingEntityType EntityType { get; set; }
+        protected MessagingEntityType? EntityType { get; set; }
 
         public override Task CloseAsync()
         {
@@ -147,6 +148,17 @@ namespace Microsoft.Azure.ServiceBus
             return messages;
         }
 
+        public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
+        {
+            IList<BrokeredMessage> messages = await this.ReceiveBySequenceNumberAsync(new long[] { sequenceNumber });
+            if (messages != null && messages.Count > 0)
+            {
+                return messages[0];
+            }
+
+            return null;
+        }
+
         public async Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
         {
             this.ThrowIfNotPeekLockMode();
@@ -170,6 +182,11 @@ namespace Microsoft.Azure.ServiceBus
             return messages;
         }
 
+        public Task CompleteAsync(Guid lockToken)
+        {
+            return this.CompleteAsync(new[] { lockToken });
+        }
+
         public async Task CompleteAsync(IEnumerable<Guid> lockTokens)
         {
             this.ThrowIfNotPeekLockMode();
@@ -190,15 +207,14 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageCompleteStop(this.ClientId);
         }
 
-        public async Task AbandonAsync(IEnumerable<Guid> lockTokens)
+        public async Task AbandonAsync(Guid lockToken)
         {
             this.ThrowIfNotPeekLockMode();
-            int count = MessageReceiver.ValidateLockTokens(lockTokens);
 
-            MessagingEventSource.Log.MessageAbandonStart(this.ClientId, count, lockTokens);
+            MessagingEventSource.Log.MessageAbandonStart(this.ClientId, 1, lockToken);
             try
             {
-                await this.OnAbandonAsync(lockTokens).ConfigureAwait(false);
+                await this.OnAbandonAsync(lockToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -209,16 +225,15 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageAbandonStop(this.ClientId);
         }
 
-        public async Task DeferAsync(IEnumerable<Guid> lockTokens)
+        public async Task DeferAsync(Guid lockToken)
         {
             this.ThrowIfNotPeekLockMode();
-            int count = MessageReceiver.ValidateLockTokens(lockTokens);
 
-            MessagingEventSource.Log.MessageDeferStart(this.ClientId, count, lockTokens);
+            MessagingEventSource.Log.MessageDeferStart(this.ClientId, 1, lockToken);
 
             try
             {
-                await this.OnDeferAsync(lockTokens).ConfigureAwait(false);
+                await this.OnDeferAsync(lockToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -229,16 +244,15 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageDeferStop(this.ClientId);
         }
 
-        public async Task DeadLetterAsync(IEnumerable<Guid> lockTokens)
+        public async Task DeadLetterAsync(Guid lockToken)
         {
             this.ThrowIfNotPeekLockMode();
-            int count = MessageReceiver.ValidateLockTokens(lockTokens);
 
-            MessagingEventSource.Log.MessageDeadLetterStart(this.ClientId, count, lockTokens);
+            MessagingEventSource.Log.MessageDeadLetterStart(this.ClientId, 1, lockToken);
 
             try
             {
-                await this.OnDeadLetterAsync(lockTokens).ConfigureAwait(false);
+                await this.OnDeadLetterAsync(lockToken).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -253,7 +267,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ThrowIfNotPeekLockMode();
 
-            MessagingEventSource.Log.MessageRenewLockStart(this.ClientId, 1, new[] { lockToken });
+            MessagingEventSource.Log.MessageRenewLockStart(this.ClientId, 1, lockToken);
 
             DateTime lockedUntilUtc;
             try
@@ -340,11 +354,11 @@ namespace Microsoft.Azure.ServiceBus
 
         protected abstract Task OnCompleteAsync(IEnumerable<Guid> lockTokens);
 
-        protected abstract Task OnAbandonAsync(IEnumerable<Guid> lockTokens);
+        protected abstract Task OnAbandonAsync(Guid lockToken);
 
-        protected abstract Task OnDeferAsync(IEnumerable<Guid> lockTokens);
+        protected abstract Task OnDeferAsync(Guid lockToken);
 
-        protected abstract Task OnDeadLetterAsync(IEnumerable<Guid> lockTokens);
+        protected abstract Task OnDeadLetterAsync(Guid lockToken);
 
         protected abstract Task<DateTime> OnRenewLockAsync(Guid lockToken);
 
