@@ -138,7 +138,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageCompleteStart(string clientId, int messageCount, IEnumerable<Guid> lockTokens)
+        public void MessageCompleteStart(string clientId, int messageCount, IEnumerable<string> lockTokens)
         {
             if (this.IsEnabled())
             {
@@ -177,19 +177,13 @@ namespace Microsoft.Azure.ServiceBus
             this.WriteEvent(15, clientId, exception);
         }
 
-        [NonEvent]
-        public void MessageAbandonStart(string clientId, int messageCount, Guid lockToken)
+        [Event(16, Level = EventLevel.Informational, Message = "{0}: AbandonAsync start. MessageCount = {1}, LockToken = {2}")]
+        public void MessageAbandonStart(string clientId, int messageCount, string lockToken)
         {
             if (this.IsEnabled())
             {
-                this.MessageAbandonStart(clientId, messageCount, lockToken.ToString());
+                this.WriteEvent(16, clientId, messageCount, lockToken);
             }
-        }
-
-        [Event(16, Level = EventLevel.Informational, Message = "{0}: AbandonAsync start. MessageCount = {1}, LockToken = {2}")]
-        void MessageAbandonStart(string clientId, int messageCount, string lockToken)
-        {
-            this.WriteEvent(16, clientId, messageCount, lockToken);
         }
 
         [Event(17, Level = EventLevel.Informational, Message = "{0}: AbandonAsync done.")]
@@ -216,19 +210,13 @@ namespace Microsoft.Azure.ServiceBus
             this.WriteEvent(18, clientId, exception);
         }
 
-        [NonEvent]
-        public void MessageDeferStart(string clientId, int messageCount, Guid lockToken)
+        [Event(19, Level = EventLevel.Informational, Message = "{0}: DeferAsync start. MessageCount = {1}, LockToken = {2}")]
+        public void MessageDeferStart(string clientId, int messageCount, string lockToken)
         {
             if (this.IsEnabled())
             {
-                this.MessageDeferStart(clientId, messageCount, lockToken.ToString());
+                this.WriteEvent(19, clientId, messageCount, lockToken);
             }
-        }
-
-        [Event(19, Level = EventLevel.Informational, Message = "{0}: DeferAsync start. MessageCount = {1}, LockToken = {2}")]
-        void MessageDeferStart(string clientId, int messageCount, string lockToken)
-        {
-            this.WriteEvent(19, clientId, messageCount, lockToken);
         }
 
         [Event(20, Level = EventLevel.Informational, Message = "{0}: DeferAsync done.")]
@@ -252,22 +240,16 @@ namespace Microsoft.Azure.ServiceBus
         [Event(21, Level = EventLevel.Error, Message = "{0}: DeferAsync Exception: {1}.")]
         void MessageDeferException(string clientId, string exception)
         {
-            this.WriteEvent(21, clientId, exception);
-        }
-
-        [NonEvent]
-        public void MessageDeadLetterStart(string clientId, int messageCount, Guid lockToken)
-        {
-            if (this.IsEnabled())
-            {
-                this.MessageDeadLetterStart(clientId, messageCount, lockToken.ToString());
-            }
+                this.WriteEvent(21, clientId, exception);
         }
 
         [Event(22, Level = EventLevel.Informational, Message = "{0}: DeadLetterAsync start. MessageCount = {1}, LockToken = {2}")]
-        void MessageDeadLetterStart(string clientId, int messageCount, string lockToken)
+        public void MessageDeadLetterStart(string clientId, int messageCount, string lockToken)
         {
-            this.WriteEvent(22, clientId, messageCount, lockToken);
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(22, clientId, messageCount, lockToken);
+            }
         }
 
         [Event(23, Level = EventLevel.Informational, Message = "{0}: DeadLetterAsync done.")]
@@ -294,19 +276,13 @@ namespace Microsoft.Azure.ServiceBus
             this.WriteEvent(24, clientId, exception);
         }
 
-        [NonEvent]
-        public void MessageRenewLockStart(string clientId, int messageCount, Guid lockToken)
+        [Event(25, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync start. MessageCount = {1}, LockToken = {2}")]
+        public void MessageRenewLockStart(string clientId, int messageCount, string lockToken)
         {
             if (this.IsEnabled())
             {
-                this.MessageRenewLockStart(clientId, messageCount, lockToken.ToString());
+                this.WriteEvent(25, clientId, messageCount, lockToken);
             }
-        }
-
-        [Event(25, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync start. MessageCount = {1}, LockToken = {2}")]
-        void MessageRenewLockStart(string clientId, int messageCount, string lockToken)
-        {
-            this.WriteEvent(25, clientId, messageCount, lockToken);
         }
 
         [Event(26, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync done.")]

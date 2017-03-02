@@ -75,27 +75,27 @@ namespace Microsoft.Azure.ServiceBus
             return this.InnerMessageReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers);
         }
 
-        protected override Task OnCompleteAsync(IEnumerable<Guid> lockTokens)
+        protected override Task OnCompleteAsync(IEnumerable<string> lockTokens)
         {
             return this.InnerMessageReceiver.CompleteAsync(lockTokens);
         }
 
-        protected override Task OnAbandonAsync(Guid lockToken)
+        protected override Task OnAbandonAsync(string lockToken)
         {
             return this.InnerMessageReceiver.AbandonAsync(lockToken);
         }
 
-        protected override Task OnDeferAsync(Guid lockToken)
+        protected override Task OnDeferAsync(string lockToken)
         {
             return this.InnerMessageReceiver.DeferAsync(lockToken);
         }
 
-        protected override Task OnDeadLetterAsync(Guid lockToken)
+        protected override Task OnDeadLetterAsync(string lockToken)
         {
             return this.InnerMessageReceiver.DeadLetterAsync(lockToken);
         }
 
-        protected override Task<DateTime> OnRenewLockAsync(Guid lockToken)
+        protected override Task<DateTime> OnRenewLockAsync(string lockToken)
         {
             return this.InnerMessageReceiver.RenewLockAsync(lockToken);
         }

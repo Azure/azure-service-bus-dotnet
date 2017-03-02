@@ -259,7 +259,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         Guid lockToken;
                         if (entry.TryGetValue(ManagementConstants.Properties.LockToken, out lockToken))
                         {
-                            message.LockToken = lockToken;
+                            message.LockTokenGuid = lockToken;
                             this.requestResponseLockedMessages.AddOrUpdate(lockToken, message.LockedUntilUtc);
                         }
 
@@ -279,21 +279,22 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return messages;
         }
 
-        protected override async Task OnCompleteAsync(IEnumerable<Guid> lockTokens)
+        protected override async Task OnCompleteAsync(IEnumerable<string> lockTokens)
         {
-                if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
+            var lockTokenGuids = lockTokens.Select(lt => new Guid(lt));
+            if (lockTokenGuids.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
-                await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Completed).ConfigureAwait(false);
+                await this.DisposeMessageRequestResponseAsync(lockTokenGuids, DispositionStatus.Completed).ConfigureAwait(false);
             }
             else
             {
-                await this.DisposeMessagesAsync(lockTokens, AmqpConstants.AcceptedOutcome).ConfigureAwait(false);
+                await this.DisposeMessagesAsync(lockTokenGuids, AmqpConstants.AcceptedOutcome).ConfigureAwait(false);
             }
         }
 
-        protected override async Task OnAbandonAsync(Guid lockToken)
+        protected override async Task OnAbandonAsync(string lockToken)
         {
-            IEnumerable<Guid> lockTokens = new[] { lockToken };
+            IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
             if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
             {
                 await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Abandoned).ConfigureAwait(false);
@@ -304,9 +305,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected override async Task OnDeferAsync(Guid lockToken)
+        protected override async Task OnDeferAsync(string lockToken)
         {
-            IEnumerable<Guid> lockTokens = new[] { lockToken };
+            IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
             if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
             {
                 await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Defered).ConfigureAwait(false);
@@ -317,9 +318,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected override async Task OnDeadLetterAsync(Guid lockToken)
+        protected override async Task OnDeadLetterAsync(string lockToken)
         {
-            IEnumerable<Guid> lockTokens = new[] { lockToken };
+            IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
             if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
             {
                 await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended).ConfigureAwait(false);
@@ -330,7 +331,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected override async Task<DateTime> OnRenewLockAsync(Guid lockToken)
+        protected override async Task<DateTime> OnRenewLockAsync(string lockToken)
         {
             DateTime lockedUntilUtc = DateTime.MinValue;
             try

@@ -5,7 +5,7 @@ namespace Microsoft.Azure.ServiceBus
 {
     using Core;
 
-    public interface IQueueClient : IReceiverClient, IMessageSender
+    public interface IQueueClient : IReceiverClient, ISenderClient
     {
         string QueueName { get; }
     }

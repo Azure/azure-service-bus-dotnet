@@ -58,17 +58,17 @@ namespace Microsoft.Azure.ServiceBus
             return this.InnerClient.InnerSender.SendAsync(messageList);
         }
 
-        public Task CompleteAsync(Guid lockToken)
+        public Task CompleteAsync(string lockToken)
         {
             return this.InnerClient.InnerReceiver.CompleteAsync(lockToken);
         }
 
-        public Task AbandonAsync(Guid lockToken)
+        public Task AbandonAsync(string lockToken)
         {
             return this.InnerClient.InnerReceiver.AbandonAsync(lockToken);
         }
 
-        public Task DeadLetterAsync(Guid lockToken)
+        public Task DeadLetterAsync(string lockToken)
         {
             return this.InnerClient.InnerReceiver.DeadLetterAsync(lockToken);
         }

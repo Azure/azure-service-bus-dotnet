@@ -36,11 +36,11 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         Task<IList<Message>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers);
 
-        Task CompleteAsync(IEnumerable<Guid> lockTokens);
+        Task CompleteAsync(IEnumerable<string> lockTokens);
 
-        Task DeferAsync(Guid lockToken);
+        Task DeferAsync(string lockToken);
 
-        Task<DateTime> RenewLockAsync(Guid lockToken);
+        Task<DateTime> RenewLockAsync(string lockToken);
 
         /// <summary>
         /// Asynchronously reads the next message without changing the state of the receiver or the message source.

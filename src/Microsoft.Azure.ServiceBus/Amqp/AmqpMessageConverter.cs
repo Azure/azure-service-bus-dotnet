@@ -232,7 +232,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 byte[] guidBuffer = new byte[GuidSize];
                 Buffer.BlockCopy(amqpMessage.DeliveryTag.Array, amqpMessage.DeliveryTag.Offset, guidBuffer, 0, GuidSize);
-                message.LockToken = new Guid(guidBuffer);
+                message.LockTokenGuid = new Guid(guidBuffer);
             }
 
             message.AttachDisposables(new[] { amqpMessage });

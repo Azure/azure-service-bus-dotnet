@@ -181,12 +181,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             return messages;
         }
 
-        public Task CompleteAsync(Guid lockToken)
+        public Task CompleteAsync(string lockToken)
         {
             return this.CompleteAsync(new[] { lockToken });
         }
 
-        public async Task CompleteAsync(IEnumerable<Guid> lockTokens)
+        public async Task CompleteAsync(IEnumerable<string> lockTokens)
         {
             this.ThrowIfNotPeekLockMode();
             int count = MessageReceiver.ValidateLockTokens(lockTokens);
@@ -206,7 +206,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessageCompleteStop(this.ClientId);
         }
 
-        public async Task AbandonAsync(Guid lockToken)
+        public async Task AbandonAsync(string lockToken)
         {
             this.ThrowIfNotPeekLockMode();
 
@@ -224,7 +224,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessageAbandonStop(this.ClientId);
         }
 
-        public async Task DeferAsync(Guid lockToken)
+        public async Task DeferAsync(string lockToken)
         {
             this.ThrowIfNotPeekLockMode();
 
@@ -243,7 +243,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessageDeferStop(this.ClientId);
         }
 
-        public async Task DeadLetterAsync(Guid lockToken)
+        public async Task DeadLetterAsync(string lockToken)
         {
             this.ThrowIfNotPeekLockMode();
 
@@ -262,7 +262,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessageDeadLetterStop(this.ClientId);
         }
 
-        public async Task<DateTime> RenewLockAsync(Guid lockToken)
+        public async Task<DateTime> RenewLockAsync(string lockToken)
         {
             this.ThrowIfNotPeekLockMode();
 
@@ -351,19 +351,19 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         protected abstract Task<IList<Message>> OnReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers);
 
-        protected abstract Task OnCompleteAsync(IEnumerable<Guid> lockTokens);
+        protected abstract Task OnCompleteAsync(IEnumerable<string> lockTokens);
 
-        protected abstract Task OnAbandonAsync(Guid lockToken);
+        protected abstract Task OnAbandonAsync(string lockToken);
 
-        protected abstract Task OnDeferAsync(Guid lockToken);
+        protected abstract Task OnDeferAsync(string lockToken);
 
-        protected abstract Task OnDeadLetterAsync(Guid lockToken);
+        protected abstract Task OnDeadLetterAsync(string lockToken);
 
-        protected abstract Task<DateTime> OnRenewLockAsync(Guid lockToken);
+        protected abstract Task<DateTime> OnRenewLockAsync(string lockToken);
 
         protected abstract Task<IList<Message>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1);
 
-        static int ValidateLockTokens(IEnumerable<Guid> lockTokens)
+        static int ValidateLockTokens(IEnumerable<string> lockTokens)
         {
             int count;
             if (lockTokens == null || (count = lockTokens.Count()) == 0)

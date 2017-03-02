@@ -45,24 +45,19 @@ namespace Microsoft.Azure.ServiceBus
             await this.InnerSubscriptionClient.CloseAsync().ConfigureAwait(false);
         }
 
-        public Task CompleteAsync(Guid lockToken)
+        public Task CompleteAsync(string lockToken)
         {
             return this.InnerSubscriptionClient.InnerReceiver.CompleteAsync(lockToken);
         }
 
-        public Task AbandonAsync(Guid lockToken)
+        public Task AbandonAsync(string lockToken)
         {
             return this.InnerSubscriptionClient.InnerReceiver.AbandonAsync(lockToken);
         }
 
-        public Task DeadLetterAsync(Guid lockToken)
+        public Task DeadLetterAsync(string lockToken)
         {
             return this.InnerSubscriptionClient.InnerReceiver.DeadLetterAsync(lockToken);
-        }
-
-        public Task<DateTime> RenewLockAsync(Guid lockToken)
-        {
-            return this.InnerSubscriptionClient.InnerReceiver.RenewLockAsync(lockToken);
         }
 
         /// <summary>Asynchronously processes a message.</summary>

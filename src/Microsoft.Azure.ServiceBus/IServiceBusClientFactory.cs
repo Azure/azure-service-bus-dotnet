@@ -6,6 +6,7 @@ namespace Microsoft.Azure.ServiceBus
     using Core;
     using Primitives;
 
+    // TODO: Remove this interface and class after refactoring of MessageSender and MessageReceiver
     public interface IServiceBusClientFactory
     {
         IMessageReceiver CreateMessageReceiverFromConnectionString(

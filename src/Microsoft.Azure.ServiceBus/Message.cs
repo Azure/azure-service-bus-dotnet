@@ -348,31 +348,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>The lock token assigned by Service Bus to this message.</value>
         /// <exception cref="System.ObjectDisposedException">Thrown if the message is in disposed state.</exception>
         /// <exception cref="System.InvalidOperationException">Thrown if the message was not received from the ServiceBus.</exception>
-        public Guid LockToken
-        {
-            get
-            {
-                this.ThrowIfDisposed();
-                this.ThrowIfNotLocked();
-                return this.receiverHeaders.LockToken;
-            }
-
-            internal set
-            {
-                this.ThrowIfDisposed();
-                this.EnsureReceiverHeaders();
-
-                this.receiverHeaders.LockToken = value;
-                if (value != Guid.Empty)
-                {
-                    this.initializedMembers |= MessageMembers.LockToken;
-                }
-                else
-                {
-                    this.ClearInitializedMember(MessageMembers.LockToken);
-                }
-            }
-        }
+        public string LockToken => this.LockTokenGuid.ToString();
 
         /// <summary>Gets or sets the identifier of the message. This is a
         /// user-defined value that Service Bus can use to identify duplicate messages, if enabled.</summary>
@@ -708,6 +684,32 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>Specifies if message is a received message or not.</summary>
         public bool IsReceived => this.receiverHeaders != null;
+
+        internal Guid LockTokenGuid
+        {
+            get
+            {
+                this.ThrowIfDisposed();
+                this.ThrowIfNotLocked();
+                return this.receiverHeaders.LockToken;
+            }
+
+            set
+            {
+                this.ThrowIfDisposed();
+                this.EnsureReceiverHeaders();
+
+                this.receiverHeaders.LockToken = value;
+                if (value != Guid.Empty)
+                {
+                    this.initializedMembers |= MessageMembers.LockToken;
+                }
+                else
+                {
+                    this.ClearInitializedMember(MessageMembers.LockToken);
+                }
+            }
+        }
 
         internal short PartitionId
         {

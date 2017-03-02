@@ -17,10 +17,10 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         void OnMessageAsync(Func<Message, CancellationToken, Task> callback, OnMessageOptions onMessageOptions);
 
-        Task CompleteAsync(Guid lockToken);
+        Task CompleteAsync(string lockToken);
 
-        Task AbandonAsync(Guid lockToken);
+        Task AbandonAsync(string lockToken);
 
-        Task DeadLetterAsync(Guid lockToken);
+        Task DeadLetterAsync(string lockToken);
     }
 }

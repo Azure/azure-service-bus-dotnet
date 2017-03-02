@@ -28,8 +28,7 @@ namespace Microsoft.Azure.ServiceBus
     /// }
     /// </code>
     /// </example>
-    /// <seealso cref="ServiceBusClientFactory"/>
-    public interface ITopicClient : IMessageSender
+    public interface ITopicClient : ISenderClient
     {
         string TopicName { get; }
     }
