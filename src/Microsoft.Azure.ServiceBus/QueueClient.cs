@@ -74,18 +74,18 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>Asynchronously processes a message.</summary>
-        /// <param name="callback">The method to invoke when the operation is complete.</param>
-        public void OnMessageAsync(Func<Message, CancellationToken, Task> callback)
+        /// <param name="handler"></param>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
         {
-            this.InnerClient.InnerReceiver.OnMessageAsync(callback);
+            this.InnerClient.InnerReceiver.RegisterMessageHandler(handler);
         }
 
         /// <summary>Asynchronously processes a message.</summary>
-        /// <param name="callback">The method to invoke when the operation is complete.</param>
+        /// <param name="handler"></param>
         /// <param name="onMessageOptions">Calls a message option.</param>
-        public void OnMessageAsync(Func<Message, CancellationToken, Task> callback, OnMessageOptions onMessageOptions)
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, OnMessageOptions onMessageOptions)
         {
-            this.InnerClient.InnerReceiver.OnMessageAsync(callback, onMessageOptions);
+            this.InnerClient.InnerReceiver.RegisterMessageHandler(handler, onMessageOptions);
         }
 
         /// <summary>

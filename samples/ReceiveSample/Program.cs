@@ -36,7 +36,7 @@ namespace ReceiveSample
             try
             {
                 // Register a OnMessage callback
-                queueClient.OnMessageAsync(
+                queueClient.RegisterMessageHandler(
                     async (message, token) =>
                     {
                         // Process the message

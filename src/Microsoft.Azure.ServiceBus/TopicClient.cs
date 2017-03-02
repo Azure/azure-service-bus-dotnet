@@ -18,7 +18,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         private TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath)
-            : base($"{nameof(QueueClient)}{GetNextId()}({entityPath})")
+            : base($"{nameof(TopicClient)}{GetNextId()}({entityPath})")
         {
             this.TopicName = entityPath;
             this.InnerClient = new AmqpClient(serviceBusConnection, entityPath, MessagingEntityType.Topic);

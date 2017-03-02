@@ -8,8 +8,8 @@ namespace Microsoft.Azure.ServiceBus
     using Primitives;
 
     /// <summary>Provides options associated with message pump processing using
-    /// <see cref="QueueClient.OnMessageAsync(System.Action{BrokeredMessage, CancellationToken})" /> and
-    /// <see cref="SubscriptionClient.OnMessageAsync(System.Action{BrokeredMessage, CancellationToken})" />.</summary>
+    /// <see cref="QueueClient.RegisterMessageHandler(System.Func{Microsoft.Azure.ServiceBus.Message,System.Threading.CancellationToken,System.Threading.Tasks.Task},Microsoft.Azure.ServiceBus.OnMessageOptions)" /> and
+    /// <see cref="SubscriptionClient.RegisterMessageHandler(System.Func{Microsoft.Azure.ServiceBus.Message,System.Threading.CancellationToken,System.Threading.Tasks.Task},Microsoft.Azure.ServiceBus.OnMessageOptions)" />.</summary>
     public sealed class OnMessageOptions
     {
         int maxConcurrentCalls;
@@ -55,8 +55,8 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>Gets or sets a value that indicates whether the message-pump should call
-        /// <see cref="QueueClient.Complete(System.Guid)" /> or
-        /// <see cref="SubscriptionClient.Complete(System.Guid)" /> on messages after the callback has completed processing.</summary>
+        /// <see cref="QueueClient.CompleteAsync(string)" /> or
+        /// <see cref="SubscriptionClient.CompleteAsync(string)" /> on messages after the callback has completed processing.</summary>
         /// <value>true to complete the message processing automatically on successful execution of the operation; otherwise, false.</value>
         public bool AutoComplete { get; set; }
 

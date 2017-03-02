@@ -239,7 +239,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             int count = 0;
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
-            messageReceiver.OnMessageAsync(
+            messageReceiver.RegisterMessageHandler(
                 async (message, token) =>
                 {
                     TestUtility.Log($"Received message: SequenceNumber: {message.SequenceNumber}");

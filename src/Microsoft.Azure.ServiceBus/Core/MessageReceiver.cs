@@ -336,15 +336,15 @@ namespace Microsoft.Azure.ServiceBus.Core
             return messages;
         }
 
-        public void OnMessageAsync(Func<Message, CancellationToken, Task> callback)
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
         {
-            this.OnMessageAsync(callback, new OnMessageOptions() { ReceiveTimeOut = this.OperationTimeout });
+            this.RegisterMessageHandler(handler, new OnMessageOptions() { ReceiveTimeOut = this.OperationTimeout });
         }
 
-        public void OnMessageAsync(Func<Message, CancellationToken, Task> callback, OnMessageOptions onMessageOptions)
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, OnMessageOptions onMessageOptions)
         {
             onMessageOptions.ReceiveTimeOut = this.OperationTimeout;
-            this.OnMessageHandlerAsync(onMessageOptions, callback).GetAwaiter().GetResult();
+            this.OnMessageHandlerAsync(onMessageOptions, handler).GetAwaiter().GetResult();
         }
 
         protected abstract Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime);

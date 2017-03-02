@@ -13,9 +13,9 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         ReceiveMode ReceiveMode { get; }
 
-        void OnMessageAsync(Func<Message, CancellationToken, Task> callback);
+        void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler);
 
-        void OnMessageAsync(Func<Message, CancellationToken, Task> callback, OnMessageOptions onMessageOptions);
+        void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, OnMessageOptions onMessageOptions);
 
         Task CompleteAsync(string lockToken);
 
