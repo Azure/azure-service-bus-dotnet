@@ -13,21 +13,21 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     public abstract class SenderReceiverClientTestBase
     {
-        protected async Task PeekLockTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
+        internal async Task PeekLockTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
             IEnumerable<Message> receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
             await TestUtility.CompleteMessagesAsync(messageReceiver, receivedMessages);
         }
 
-        protected async Task ReceiveDeleteTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
+        internal async Task ReceiveDeleteTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
             IEnumerable<Message> receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
             Assert.True(messageCount == receivedMessages.Count());
         }
 
-        protected async Task PeekLockWithAbandonTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
+        internal async Task PeekLockWithAbandonTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             // Send messages
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
@@ -53,7 +53,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await TestUtility.CompleteMessagesAsync(messageReceiver, receivedMessages);
         }
 
-        protected async Task PeekLockWithDeadLetterTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, IMessageReceiver deadLetterReceiver, int messageCount)
+        internal async Task PeekLockWithDeadLetterTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, IMessageReceiver deadLetterReceiver, int messageCount)
         {
             // Send messages
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
@@ -79,7 +79,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await TestUtility.CompleteMessagesAsync(deadLetterReceiver, receivedMessages);
         }
 
-        protected async Task PeekLockDeferTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
+        internal async Task PeekLockDeferTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             // Send messages
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
@@ -110,7 +110,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await TestUtility.CompleteMessagesAsync(messageReceiver, receivedMessages);
         }
 
-        protected async Task RenewLockTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
+        internal async Task RenewLockTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             // Send messages
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
@@ -142,7 +142,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.True(receivedMessages.Count() == messageCount);
         }
 
-        protected async Task PeekAsyncTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
+        internal async Task PeekAsyncTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             await TestUtility.SendMessagesAsync(messageSender, messageCount);
             List<Message> peekedMessages = new List<Message>();
@@ -160,7 +160,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
         }
 
-        protected async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
+        internal async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             Stopwatch timer = Stopwatch.StartNew();
             var message = await messageReceiver.ReceiveAsync(TimeSpan.FromSeconds(2));
@@ -175,7 +175,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.True(timer.Elapsed.TotalSeconds < 40);
         }
 
-        protected async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
+        internal async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             var startTime = DateTime.UtcNow;
             var scheduleTime = new DateTimeOffset(DateTime.UtcNow).AddSeconds(5);
@@ -198,7 +198,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.True(Math.Ceiling(message.ScheduledEnqueueTimeUtc.Subtract(startTime).TotalSeconds) >= 5);
         }
 
-        protected async Task CancelScheduledMessagesAsyncTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
+        internal async Task CancelScheduledMessagesAsyncTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             var scheduleTime = new DateTimeOffset(DateTime.UtcNow).AddSeconds(30);
             var brokeredMessage = new Message("Test1") { MessageId = Guid.NewGuid().ToString() };
@@ -230,7 +230,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.True(messages.First().MessageId == "Dummy");
         }
 
-        protected async Task OnMessageAsyncTestCase(
+        internal async Task OnMessageAsyncTestCase(
             IMessageSender messageSender,
             IMessageReceiver messageReceiver,
             int maxConcurrentCalls,

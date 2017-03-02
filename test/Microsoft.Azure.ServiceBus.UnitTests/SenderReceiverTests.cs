@@ -21,13 +21,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task MessageReceiverAndMessageSenderCreationWorksAsExpected(string queueName, int messageCount = 10)
         {
-            var clientFactory = new ServiceBusClientFactory();
-            var receiver = clientFactory.CreateMessageReceiver(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                queueName);
-            var sender = clientFactory.CreateMessageSender(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                queueName);
+            var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
+            var receiver = connection.CreateMessageReceiver(queueName, ReceiveMode.PeekLock);
+            var sender = connection.CreateMessageSender(queueName);
 
             try
             {
@@ -45,13 +41,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task TopicClientPeekLockDeferTestCase(string queueName, int messageCount = 10)
         {
-            var clientFactory = new ServiceBusClientFactory();
-            var receiver = clientFactory.CreateMessageReceiver(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                queueName);
-            var sender = clientFactory.CreateMessageSender(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                queueName);
+            var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
+            var receiver = connection.CreateMessageReceiver(queueName, ReceiveMode.PeekLock);
+            var sender = connection.CreateMessageSender(queueName);
 
             try
             {
@@ -70,14 +62,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekAsyncTest(string queueName, int messageCount = 10)
         {
-            var clientFactory = new ServiceBusClientFactory();
-            var receiver = clientFactory.CreateMessageReceiver(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                queueName,
-                ReceiveMode.ReceiveAndDelete);
-            var sender = clientFactory.CreateMessageSender(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                queueName);
+            var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
+            var receiver = connection.CreateMessageReceiver(queueName, ReceiveMode.ReceiveAndDelete);
+            var sender = connection.CreateMessageSender(queueName);
 
             try
             {
@@ -95,14 +82,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTest(string queueName, int messageCount = 1)
         {
-            var clientFactory = new ServiceBusClientFactory();
-            var receiver = clientFactory.CreateMessageReceiver(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                queueName,
-                ReceiveMode.ReceiveAndDelete);
-            var sender = clientFactory.CreateMessageSender(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                queueName);
+            var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
+            var receiver = connection.CreateMessageReceiver(queueName, ReceiveMode.ReceiveAndDelete);
+            var sender = connection.CreateMessageSender(queueName);
+
             try
             {
                 await this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(sender, receiver, messageCount);

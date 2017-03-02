@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System.Threading;
     using System.Threading.Tasks;
 
-    public abstract class MessageReceiver : ClientEntity, IMessageReceiver
+    internal abstract class MessageReceiver : ClientEntity, IMessageReceiver
     {
         readonly TimeSpan operationTimeout;
         readonly object messageReceivePumpSyncLock;
@@ -81,6 +81,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 if (this.receivePump != null)
                 {
                     this.receivePumpCancellationTokenSource.Cancel();
+                    this.receivePumpCancellationTokenSource.Dispose();
                     this.receivePump = null;
                 }
             }
@@ -417,10 +418,16 @@ namespace Microsoft.Azure.ServiceBus.Core
             catch (Exception exception)
             {
                 MessagingEventSource.Log.RegisterOnMessageHandlerException(this.ClientId, exception);
+                lock (this.messageReceivePumpSyncLock)
+                {
+                    if (this.receivePump != null)
+                    {
+                        this.receivePumpCancellationTokenSource.Cancel();
+                        this.receivePumpCancellationTokenSource.Dispose();
+                        this.receivePump = null;
+                    }
+                }
 
-                this.receivePumpCancellationTokenSource.Cancel();
-                this.receivePumpCancellationTokenSource.Dispose();
-                this.receivePump = null;
                 throw;
             }
 

@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Threading.Tasks;
     using Core;
 
-    public abstract class MessageSession : MessageReceiver, IMessageSession
+    internal abstract class MessageSession : MessageReceiver, IMessageSession
     {
         /// <summary>Represents a message session that allows grouping of related messages for processing in a single transaction.</summary>
         protected MessageSession(ReceiveMode receiveMode, string sessionId, DateTime lockedUntilUtc, MessageReceiver innerReceiver)

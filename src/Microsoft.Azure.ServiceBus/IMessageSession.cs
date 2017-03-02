@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Threading.Tasks;
     using Core;
 
-    public interface IMessageSession : IMessageReceiver
+    internal interface IMessageSession : IMessageReceiver
     {
         string SessionId { get; }
 

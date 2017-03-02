@@ -338,7 +338,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 // Create an AmqpRequest Message to renew  lock
                 AmqpRequestMessage requestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewLockOperation, this.OperationTimeout, null);
-                requestMessage.Map[ManagementConstants.Properties.LockTokens] = new[] { lockToken };
+                requestMessage.Map[ManagementConstants.Properties.LockTokens] = new[] { new Guid(lockToken) };
 
                 AmqpResponseMessage response = await this.ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
 

@@ -15,13 +15,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task MessageLockLostExceptionTest()
         {
             const int messageCount = 2;
-            var clientFactory = new ServiceBusClientFactory();
-            var receiver = clientFactory.CreateMessageReceiver(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                Constants.NonPartitionedQueueName);
-            var sender = clientFactory.CreateMessageSender(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                Constants.NonPartitionedQueueName);
+            var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
+            var receiver = connection.CreateMessageReceiver(Constants.NonPartitionedQueueName, ReceiveMode.PeekLock);
+            var sender = connection.CreateMessageSender(Constants.NonPartitionedQueueName);
 
             try
             {
@@ -107,14 +103,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         async Task CompleteOnPeekedMessagesShouldThrowTest()
         {
-            var clientFactory = new ServiceBusClientFactory();
-            var receiver = clientFactory.CreateMessageReceiver(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                Constants.NonPartitionedQueueName,
-                ReceiveMode.ReceiveAndDelete);
-            var sender = clientFactory.CreateMessageSender(
-                new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString),
-                Constants.NonPartitionedQueueName);
+            var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
+            var receiver = connection.CreateMessageReceiver(Constants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
+            var sender = connection.CreateMessageSender(Constants.NonPartitionedQueueName);
 
             try
             {

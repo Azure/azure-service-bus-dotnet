@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus.Core
 {
-    public interface IMessageSender : ISenderClient
+    internal interface IMessageSender : ISenderClient
     {
     }
 }

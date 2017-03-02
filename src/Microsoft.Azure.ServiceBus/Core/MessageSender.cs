@@ -7,7 +7,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public abstract class MessageSender : ClientEntity, IMessageSender
+    internal abstract class MessageSender : ClientEntity, IMessageSender
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
              "StyleCop.CSharp.ReadabilityRules",

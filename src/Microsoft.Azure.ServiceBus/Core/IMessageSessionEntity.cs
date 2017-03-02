@@ -6,7 +6,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System;
     using System.Threading.Tasks;
 
-    public interface IMessageSessionEntity
+    internal interface IMessageSessionEntity
     {
         Task<IMessageSession> AcceptMessageSessionAsync();
 
