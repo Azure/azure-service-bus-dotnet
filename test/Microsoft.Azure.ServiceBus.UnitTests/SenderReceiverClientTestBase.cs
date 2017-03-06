@@ -249,7 +249,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                         await messageReceiver.CompleteAsync(message.LockToken);
                     }
                 },
-                new OnMessageOptions() { MaxConcurrentCalls = maxConcurrentCalls, AutoComplete = autoComplete });
+                new RegisterHandlerOptions() { MaxConcurrentCalls = maxConcurrentCalls, AutoComplete = autoComplete });
 
             // Wait for the OnMessage Tasks to finish
             Stopwatch stopwatch = Stopwatch.StartNew();

@@ -9,8 +9,6 @@ namespace Microsoft.Azure.ServiceBus.Core
     {
         MessageReceiver InnerReceiver { get; }
 
-        MessageReceiver CreateMessageReceiver();
-
         Task CloseAsync();
     }
 }

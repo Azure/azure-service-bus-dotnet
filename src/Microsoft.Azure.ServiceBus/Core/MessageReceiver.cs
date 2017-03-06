@@ -339,13 +339,13 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
         {
-            this.RegisterMessageHandler(handler, new OnMessageOptions() { ReceiveTimeOut = this.OperationTimeout });
+            this.RegisterMessageHandler(handler, new RegisterHandlerOptions() { ReceiveTimeOut = this.OperationTimeout });
         }
 
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, OnMessageOptions onMessageOptions)
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterHandlerOptions registerHandlerOptions)
         {
-            onMessageOptions.ReceiveTimeOut = this.OperationTimeout;
-            this.OnMessageHandlerAsync(onMessageOptions, handler).GetAwaiter().GetResult();
+            registerHandlerOptions.ReceiveTimeOut = this.OperationTimeout;
+            this.OnMessageHandlerAsync(registerHandlerOptions, handler).GetAwaiter().GetResult();
         }
 
         protected abstract Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime);
@@ -395,10 +395,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         async Task OnMessageHandlerAsync(
-            OnMessageOptions onMessageOptions,
+            RegisterHandlerOptions registerHandlerOptions,
             Func<Message, CancellationToken, Task> callback)
         {
-            MessagingEventSource.Log.RegisterOnMessageHandlerStart(this.ClientId, onMessageOptions);
+            MessagingEventSource.Log.RegisterOnMessageHandlerStart(this.ClientId, registerHandlerOptions);
 
             lock (this.messageReceivePumpSyncLock)
             {
@@ -408,7 +408,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 }
 
                 this.receivePumpCancellationTokenSource = new CancellationTokenSource();
-                this.receivePump = new MessageReceivePump(this, onMessageOptions, callback, this.receivePumpCancellationTokenSource.Token);
+                this.receivePump = new MessageReceivePump(this, registerHandlerOptions, callback, this.receivePumpCancellationTokenSource.Token);
             }
 
             try

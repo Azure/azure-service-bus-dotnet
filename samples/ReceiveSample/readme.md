@@ -62,7 +62,7 @@ In this tutorial, we will write a console application to receive messages from a
     try
     {
         // Register a OnMessage callback
-        queueClient.OnMessageAsync(
+        queueClient.RegisterMessageHandler(
             async (message, token) =>
             {
                 // Process the message
@@ -72,7 +72,7 @@ In this tutorial, we will write a console application to receive messages from a
                 // This can be done only if the queueClient is opened in ReceiveMode.PeekLock mode.
                 await queueClient.CompleteAsync(message.LockToken);
             },
-            new OnMessageOptions() {MaxConcurrentCalls = 1, AutoComplete = false});
+            new RegisterHandlerOptions() {MaxConcurrentCalls = 1, AutoComplete = false});
     }
     catch (Exception exception)
     {

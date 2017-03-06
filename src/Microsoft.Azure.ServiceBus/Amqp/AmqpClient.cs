@@ -75,22 +75,22 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         TokenProvider TokenProvider { get; }
 
-        public MessageSender CreateMessageSender()
-        {
-            return new AmqpMessageSender(this.EntityPath, this.MessagingEntityType, this.ServiceBusConnection, this.CbsTokenProvider);
-        }
-
-        public MessageReceiver CreateMessageReceiver()
-        {
-            return new AmqpMessageReceiver(this.EntityPath, this.MessagingEntityType, this.ReceiveMode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider);
-        }
-
         public async Task CloseAsync()
         {
             // Closing the Connection will also close all Links associated with it.
             await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
             await this.InnerReceiver.CloseAsync().ConfigureAwait(false);
             await this.InnerSender.CloseAsync().ConfigureAwait(false);
+        }
+
+        MessageSender CreateMessageSender()
+        {
+            return new AmqpMessageSender(this.EntityPath, this.MessagingEntityType, this.ServiceBusConnection, this.CbsTokenProvider);
+        }
+
+        MessageReceiver CreateMessageReceiver()
+        {
+            return new AmqpMessageReceiver(this.EntityPath, this.MessagingEntityType, this.ReceiveMode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider);
         }
     }
 }
