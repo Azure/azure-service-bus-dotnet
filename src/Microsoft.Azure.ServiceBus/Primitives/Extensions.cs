@@ -21,6 +21,10 @@ namespace Microsoft.Azure.ServiceBus
 
         public IExtensions OutgoingMessageIdGenerator(Func<Message, string> generator)
         {
+            if (this.messageIdGenerator != null)
+            {
+                throw new Exception("Message ID generator was already provided. Only one generator can be used.");
+            }
             this.messageIdGenerator = generator;
 
             return this;
