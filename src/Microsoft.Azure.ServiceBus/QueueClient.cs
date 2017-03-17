@@ -27,6 +27,7 @@ namespace Microsoft.Azure.ServiceBus
             this.QueueName = entityPath;
             this.ReceiveMode = receiveMode;
             this.InnerClient = new AmqpClient(serviceBusConnection, entityPath, MessagingEntityType.Queue, receiveMode);
+            this.InnerClient.InnerSender.Extensions = this.Extensions;
         }
 
         public string QueueName { get; }

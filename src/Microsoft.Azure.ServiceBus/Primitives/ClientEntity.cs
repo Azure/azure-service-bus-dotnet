@@ -20,7 +20,7 @@ namespace Microsoft.Azure.ServiceBus
             this.Extensions = new Extensions();
         }
 
-        public IExtensions Extensions { get; }
+        public IExtensions Extensions { get; internal set; }
 
         public string ClientId { get; private set; }
 
