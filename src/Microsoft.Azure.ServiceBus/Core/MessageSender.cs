@@ -35,6 +35,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
+                await this.ApplyExtentionsOnOutgoingMessages(messageList).ConfigureAwait(false);
                 await this.OnSendAsync(messageList).ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -68,6 +69,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
+                await this.ApplyExtentionsOnOutgoingMessages(new List<Message> { message }).ConfigureAwait(false);
                 result = await this.OnScheduleMessageAsync(message).ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -125,6 +127,25 @@ namespace Microsoft.Azure.ServiceBus.Core
             if (message.IsLockTokenSet)
             {
                 throw Fx.Exception.Argument(nameof(message), "Cannot send a message that was already received.");
+            }
+        }
+
+        async Task ApplyExtentionsOnOutgoingMessages(IList<Message> messageList)
+        {
+            for (var i = 0; i < messageList.Count; i++)
+            {
+                var message = messageList[i];
+
+                // TODO: Quick and dirty for now
+                var extensionPoint = ((Extensions)this.Extensions);
+
+                // message id
+                message.MessageId = extensionPoint.MessageIdGenerator(message);
+
+                foreach (var mutator in extensionPoint.OutgoingMutators)
+                {
+                    message = await mutator(message).ConfigureAwait(false);
+                }
             }
         }
     }

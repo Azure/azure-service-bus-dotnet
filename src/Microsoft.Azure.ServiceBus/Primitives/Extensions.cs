@@ -1,0 +1,46 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.Azure.ServiceBus
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+
+    internal class Extensions : IExtensions
+    {
+        private Func<Message, string> messageIdGenerator;
+        private Func<Message, string> nullIdGenerator = message => null;
+        private List<Func<Message, Task<Message>>> incomingMutators = new List<Func<Message, Task<Message>>>();
+        private List<Func<Message, Task<Message>>> outgoingMutators = new List<Func<Message, Task<Message>>>();
+
+        public Func<Message, string> MessageIdGenerator => this.messageIdGenerator ?? this.nullIdGenerator;
+
+        public List<Func<Message, Task<Message>>> IncomingMutators => this.incomingMutators;
+
+        public List<Func<Message, Task<Message>>> OutgoingMutators => this.outgoingMutators;
+
+        public IExtensions OutgoingMessageIdGenerator(Func<Message, string> generator)
+        {
+            if (this.messageIdGenerator != null)
+            {
+                throw new Exception("Message ID generator was already provided. Only one generator can be used.");
+            }
+            this.messageIdGenerator = generator;
+
+            return this;
+        }
+
+        public IExtensions IncomingMessageMutator(Func<Message, Task<Message>> mutator)
+        {
+            this.incomingMutators.Add(mutator);
+            return this;
+        }
+
+        public IExtensions OutgoingMessageMutator(Func<Message, Task<Message>> mutator)
+        {
+            this.outgoingMutators.Add(mutator);
+            return this;
+        }
+    }
+}

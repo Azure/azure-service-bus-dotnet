@@ -7,6 +7,9 @@ namespace Microsoft.Azure.ServiceBus
 
     public interface IClientEntity
     {
+        /// <summary>Extensibility access point</summary>
+        IExtensions Extensions { get; }
+
         string ClientId { get; }
 
         Task CloseAsync();

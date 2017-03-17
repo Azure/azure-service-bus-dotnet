@@ -22,6 +22,7 @@ namespace SendSample
         {
             queueClient = new QueueClient(ServiceBusConnectionString, QueueName, ReceiveMode.PeekLock);
 
+            queueClient.Extensions.OutgoingMessageIdGenerator(message => Guid.NewGuid().ToString("D"));
             await SendMessagesToQueue(10);
 
             // Close the client after the ReceiveMessages method has exited.
