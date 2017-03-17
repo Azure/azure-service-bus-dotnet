@@ -17,7 +17,10 @@ namespace Microsoft.Azure.ServiceBus
         protected ClientEntity(string clientId)
         {
             this.ClientId = clientId;
+            this.Extensions = new Extensions();
         }
+
+        public IExtensions Extensions { get; }
 
         public string ClientId { get; private set; }
 
