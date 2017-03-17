@@ -9,11 +9,12 @@ namespace Microsoft.Azure.ServiceBus
 
     internal class Extensions : IExtensions
     {
-        Func<Message, string> messageIdGenerator = message => null;
-        List<Func<Message, Task<Message>>> incomingMutators = new List<Func<Message, Task<Message>>>();
-        List<Func<Message, Task<Message>>> outgoingMutators = new List<Func<Message, Task<Message>>>();
+        private Func<Message, string> messageIdGenerator;
+        private Func<Message, string> nullIdGenerator = message => null;
+        private List<Func<Message, Task<Message>>> incomingMutators = new List<Func<Message, Task<Message>>>();
+        private List<Func<Message, Task<Message>>> outgoingMutators = new List<Func<Message, Task<Message>>>();
 
-        public Func<Message, string> MessageIdGenerator => this.messageIdGenerator;
+        public Func<Message, string> MessageIdGenerator => this.messageIdGenerator ?? this.nullIdGenerator;
 
         public List<Func<Message, Task<Message>>> IncomingMutators => this.incomingMutators;
 
