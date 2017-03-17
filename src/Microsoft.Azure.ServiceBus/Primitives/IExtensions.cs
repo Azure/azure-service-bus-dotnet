@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus
     public interface IExtensions
     {
         /// <summary>Register message ID generator to be used.</summary>
-        IExtensions MessageIdGenerator(Func<Message, string> generator);
+        IExtensions OutgoingMessageIdGenerator(Func<Message, string> generator);
 
         /// <summary>Register incoming message mutator.</summary>
         IExtensions IncomingMessageMutator(Func<Message, Task<Message>> mutator);

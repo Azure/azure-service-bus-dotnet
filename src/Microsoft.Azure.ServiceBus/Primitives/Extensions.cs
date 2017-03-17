@@ -7,13 +7,19 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    class Extensions : IExtensions
+    internal class Extensions : IExtensions
     {
-        private Func<Message, string> messageIdGenerator = message => null;
-        private List<Func<Message, Task<Message>>> incomingMutators = new List<Func<Message, Task<Message>>>();
-        private List<Func<Message, Task<Message>>> outgoingMutators = new List<Func<Message, Task<Message>>>();
+        Func<Message, string> messageIdGenerator = message => null;
+        List<Func<Message, Task<Message>>> incomingMutators = new List<Func<Message, Task<Message>>>();
+        List<Func<Message, Task<Message>>> outgoingMutators = new List<Func<Message, Task<Message>>>();
 
-        public IExtensions MessageIdGenerator(Func<Message, string> generator)
+        public Func<Message, string> MessageIdGenerator => this.messageIdGenerator;
+
+        public List<Func<Message, Task<Message>>> IncomingMutators => this.incomingMutators;
+
+        public List<Func<Message, Task<Message>>> OutgoingMutators => this.outgoingMutators;
+
+        public IExtensions OutgoingMessageIdGenerator(Func<Message, string> generator)
         {
             this.messageIdGenerator = generator;
 
