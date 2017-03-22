@@ -5,51 +5,60 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
     using System.Linq;
+    using System.Text;
     using System.Threading.Tasks;
     using Xunit;
+    using BrokeredMessage = Microsoft.Azure.ServiceBus.Message;
 
     public class BrokeredMessageTests
     {
         [Fact]
-        [DisplayTestMethodName]
-        void DefaultMessageIdGenerator()
+        void TestClone()
         {
-            var message = new Message();
+            var messageBody = Encoding.UTF8.GetBytes("test");
+            var messageId = Guid.NewGuid().ToString();
+            var partitionKey = Guid.NewGuid().ToString();
+            var sessionId = Guid.NewGuid().ToString();
+            var correlationId = Guid.NewGuid().ToString();
+            var label = Guid.NewGuid().ToString();
+            var to = Guid.NewGuid().ToString();
+            var contentType = Guid.NewGuid().ToString();
+            var replyTo = Guid.NewGuid().ToString();
+            var replyToSessionId = Guid.NewGuid().ToString();
+            var publisher = Guid.NewGuid().ToString();
+            var deadLetterSource = Guid.NewGuid().ToString();
+            var properties = Guid.NewGuid().ToString();
 
-            Assert.Null(message.MessageId);
-        }
-
-        [Fact]
-        [DisplayTestMethodName]
-        void InvalidMessageIdGenerator()
-        {
-            var exceptionToThrow = new Exception("boom!");
-            Func<string> idGenerator = () =>
+            var brokeredMessage = new BrokeredMessage(messageBody)
             {
-                throw exceptionToThrow;
+                MessageId = messageId,
+                PartitionKey = partitionKey,
+                SessionId = sessionId,
+                CorrelationId = correlationId,
+                Label = label,
+                To = to,
+                ContentType = contentType,
+                ReplyTo = replyTo,
+                ReplyToSessionId = replyToSessionId,
+                Publisher = publisher,
+                DeadLetterSource = deadLetterSource,
             };
-            Message.SetMessageIdGenerator(idGenerator);
+            brokeredMessage.UserProperties.Add("UserProperty", "SomeUserProperty");
 
-            var exception = Assert.Throws<InvalidOperationException>(() => new Message());
-            Assert.Equal(exceptionToThrow, exception.InnerException);
+            var clone = brokeredMessage.Clone();
 
-            Message.SetMessageIdGenerator(null);
-        }
-
-        [Fact]
-        [DisplayTestMethodName]
-        void CustomMessageIdGenerator()
-        {
-            var seed = 1;
-            Message.SetMessageIdGenerator(() => $"id-{seed++}");
-
-            var message1 = new Message();
-            var message2 = new Message();
-
-            Assert.Equal("id-1", message1.MessageId);
-            Assert.Equal("id-2", message2.MessageId);
-
-            Message.SetMessageIdGenerator(null);
+            Assert.Equal("SomeUserProperty", clone.UserProperties["UserProperty"]);
+            Assert.Equal(messageId, clone.MessageId);
+            Assert.Equal(partitionKey, clone.PartitionKey);
+            Assert.Equal(sessionId, clone.SessionId);
+            Assert.Equal(correlationId, clone.CorrelationId);
+            Assert.Equal(label, clone.Label);
+            Assert.Equal(to, clone.To);
+            Assert.Equal(contentType, clone.ContentType);
+            Assert.Equal(replyTo, clone.ReplyTo);
+            Assert.Equal(replyToSessionId, clone.ReplyToSessionId);
+            Assert.Equal(publisher, clone.Publisher);
+            Assert.Equal(deadLetterSource, clone.DeadLetterSource);
         }
 
         public class WhenQueryingIsReceivedProperty
@@ -59,8 +68,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             void Should_return_false_for_message_that_was_not_sent()
             {
                 var message = new Message();
-                message.Properties["dummy"] = "dummy";
-                Assert.False(message.IsReceived);
+                message.UserProperties["dummy"] = "dummy";
+                Assert.False(message.SystemProperties.IsReceived);
             }
 
             [Theory]
@@ -75,7 +84,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     await TestUtility.SendMessagesAsync(queueClient.InnerClient.InnerSender, 1);
                     var receivedMessages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerClient.InnerReceiver, 1);
-                    Assert.True(receivedMessages.First().IsReceived);
+                    Assert.True(receivedMessages.First().SystemProperties.IsReceived);
 
                     // TODO: remove when per test cleanup is possible
                     if (receiveMode == ReceiveMode.PeekLock)
@@ -99,7 +108,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     await TestUtility.SendMessagesAsync(queueClient.InnerClient.InnerSender, 1);
                     var peekedMessage = await TestUtility.PeekMessageAsync(queueClient.InnerClient.InnerReceiver);
-                    var result = peekedMessage.IsReceived;
+                    var result = peekedMessage.SystemProperties.IsReceived;
                     Assert.True(result);
                 }
                 finally

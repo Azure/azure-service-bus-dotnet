@@ -7,6 +7,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Text;
     using System.Threading.Tasks;
     using Core;
 
@@ -53,7 +54,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var messagesToSend = new List<Message>();
             for (int i = 0; i < messageCount; i++)
             {
-                var message = new Message("test" + i);
+                var message = new Message(Encoding.UTF8.GetBytes("test" + i));
                 message.Label = "test" + i;
                 messagesToSend.Add(message);
             }
@@ -153,9 +154,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 HashSet<long> sequenceNumbers = new HashSet<long>();
                 foreach (var message in messages)
                 {
-                    if (!sequenceNumbers.Add(message.SequenceNumber))
+                    if (!sequenceNumbers.Add(message.SystemProperties.SequenceNumber))
                     {
-                        throw new Exception($"Sequence Number '{message.SequenceNumber}' was repeated");
+                        throw new Exception($"Sequence Number '{message.SystemProperties.SequenceNumber}' was repeated");
                     }
                 }
             }

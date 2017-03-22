@@ -4,6 +4,7 @@
 namespace SendSample
 {
     using System;
+    using System.Text;
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus;
 
@@ -42,7 +43,7 @@ namespace SendSample
                     var message = new Message($"Message {i}");
 
                     // Write the body of the message to the console
-                    Console.WriteLine($"Sending message: {message.GetBody<string>()}");
+                    Console.WriteLine($"Sending message: {Encoding.UTF8.GetString(message.Body.Array)}");
 
                     // Send the message to the queue
                     await queueClient.SendAsync(message);

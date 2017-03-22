@@ -45,7 +45,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             // TODO: Some reason for partitioned entities the delivery count is incorrect. Investigate and enable
             // 5 of these messages should have deliveryCount = 2
-            int messagesWithDeliveryCount2 = receivedMessages.Where(message => message.DeliveryCount == 2).Count();
+            int messagesWithDeliveryCount2 = receivedMessages.Where(message => message.SystemProperties.DeliveryCount == 2).Count();
             TestUtility.Log($"Messages with Delivery Count 2: {messagesWithDeliveryCount2}");
             Assert.True(messagesWithDeliveryCount2 == abandonMessagesCount);
 
@@ -88,7 +88,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             int deferMessagesCount = 5;
             var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, deferMessagesCount);
             Assert.True(receivedMessages.Count() == deferMessagesCount);
-            var sequenceNumbers = receivedMessages.Select(receivedMessage => receivedMessage.SequenceNumber);
+            var sequenceNumbers = receivedMessages.Select(receivedMessage => receivedMessage.SystemProperties.SequenceNumber);
             await TestUtility.DeferMessagesAsync(messageReceiver, receivedMessages);
 
             // Receive and Complete 5 other regular messages
@@ -103,7 +103,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             // Receive Again and Check delivery count
             receivedMessages = await messageReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers);
-            int count = receivedMessages.Count(message => message.DeliveryCount == 3);
+            int count = receivedMessages.Count(message => message.SystemProperties.DeliveryCount == 3);
             Assert.True(count == receivedMessages.Count());
 
             // Complete messages
@@ -119,7 +119,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var receivedMessages = await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
 
             Message message = receivedMessages.First();
-            DateTime firstLockedUntilUtcTime = message.LockedUntilUtc;
+            DateTime firstLockedUntilUtcTime = message.SystemProperties.LockedUntilUtc;
             TestUtility.Log($"MessageLockedUntil: {firstLockedUntilUtcTime}");
 
             TestUtility.Log("Sleeping 10 seconds...");
@@ -153,8 +153,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             long lastSequenceNumber = -1;
             foreach (Message message in peekedMessages)
             {
-                Assert.True(message.SequenceNumber != lastSequenceNumber);
-                lastSequenceNumber = message.SequenceNumber;
+                Assert.True(message.SystemProperties.SequenceNumber != lastSequenceNumber);
+                lastSequenceNumber = message.SystemProperties.SequenceNumber;
             }
 
             await TestUtility.ReceiveMessagesAsync(messageReceiver, messageCount);
@@ -242,7 +242,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             messageReceiver.RegisterMessageHandler(
                 async (message, token) =>
                 {
-                    TestUtility.Log($"Received message: SequenceNumber: {message.SequenceNumber}");
+                    TestUtility.Log($"Received message: SequenceNumber: {message.SystemProperties.SequenceNumber}");
                     count++;
                     if (messageReceiver.ReceiveMode == ReceiveMode.PeekLock && !autoComplete)
                     {
