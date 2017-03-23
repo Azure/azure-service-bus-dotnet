@@ -45,7 +45,7 @@ namespace ReceiveSample
 
                         // Complete the message so that it is not received again.
                         // This can be done only if the queueClient is opened in ReceiveMode.PeekLock mode.
-                        await queueClient.CompleteAsync(message.LockToken);
+                        await queueClient.CompleteAsync(message.SystemProperties.LockToken);
                     },
                     new RegisterHandlerOptions() {MaxConcurrentCalls = 1, AutoComplete = false});
             }

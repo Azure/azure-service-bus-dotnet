@@ -49,7 +49,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                this.ValidateMessageId(value);
+                Message.ValidateMessageId(value);
                 this.messageId = value;
             }
         }
@@ -63,7 +63,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                this.ValidatePartitionKey(nameof(this.PartitionKey), value);
+                Message.ValidatePartitionKey(nameof(this.PartitionKey), value);
                 this.partitionKey = value;
             }
         }
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                this.ValidatePartitionKey(nameof(this.ViaPartitionKey), value);
+                Message.ValidatePartitionKey(nameof(this.ViaPartitionKey), value);
                 this.viaPartitionKey = value;
             }
         }
@@ -91,7 +91,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                this.ValidateSessionId(nameof(this.SessionId), value);
+                Message.ValidateSessionId(nameof(this.SessionId), value);
                 this.sessionId = value;
             }
         }
@@ -105,7 +105,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                this.ValidateSessionId(nameof(this.ReplyToSessionId), value);
+                Message.ValidateSessionId(nameof(this.ReplyToSessionId), value);
                 this.replyToSessionId = value;
             }
         }
@@ -201,7 +201,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Thrown when messageId is null, or empty or greater than the maximum message length.
         /// </exception>
         /// <param name="messageId"> Identifier for the message. </param>
-        private void ValidateMessageId(string messageId)
+        private static void ValidateMessageId(string messageId)
         {
             if (string.IsNullOrEmpty(messageId) ||
                 messageId.Length > Constants.MaxMessageIdLength)
@@ -216,7 +216,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Thrown when sessionId is greater than the maximum session ID length.
         /// </exception>
         /// <param name="sessionId"> Identifier for the session. </param>
-        private void ValidateSessionId(string sessionIdPropertyName, string sessionId)
+        private static void ValidateSessionId(string sessionIdPropertyName, string sessionId)
         {
             if (sessionId != null && sessionId.Length > Constants.MaxSessionIdLength)
             {
@@ -225,7 +225,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        private void ValidatePartitionKey(string partitionKeyPropertyName, string partitionKey)
+        private static void ValidatePartitionKey(string partitionKeyPropertyName, string partitionKey)
         {
             if (partitionKey != null && partitionKey.Length > Constants.MaxPartitionKeyLength)
             {
