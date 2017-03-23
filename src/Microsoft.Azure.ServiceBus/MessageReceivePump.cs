@@ -196,7 +196,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (this.messageReceiver.ReceiveMode == ReceiveMode.PeekLock)
                 {
-                    await this.messageReceiver.AbandonAsync(message.LockToken).ConfigureAwait(false);
+                    await this.messageReceiver.AbandonAsync(message.SystemProperties.LockToken).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)
@@ -212,7 +212,7 @@ namespace Microsoft.Azure.ServiceBus
                 if (this.messageReceiver.ReceiveMode == ReceiveMode.PeekLock &&
                     this.registerHandlerOptions.AutoComplete)
                 {
-                    await this.messageReceiver.CompleteAsync(new[] { message.LockToken }).ConfigureAwait(false);
+                    await this.messageReceiver.CompleteAsync(new[] { message.SystemProperties.LockToken }).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)
@@ -235,7 +235,7 @@ namespace Microsoft.Azure.ServiceBus
                     if (!this.pumpCancellationToken.IsCancellationRequested &&
                         !renewLockCancellationToken.IsCancellationRequested)
                     {
-                        await this.messageReceiver.RenewLockAsync(message.LockToken).ConfigureAwait(false);
+                        await this.messageReceiver.RenewLockAsync(message.SystemProperties.LockToken).ConfigureAwait(false);
                         MessagingEventSource.Log.MessageReceiverPumpRenewMessageStop(this.messageReceiver.ClientId, message);
                     }
                     else

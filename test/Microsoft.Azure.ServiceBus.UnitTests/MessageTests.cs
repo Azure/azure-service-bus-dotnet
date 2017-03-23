@@ -8,10 +8,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Text;
     using System.Threading.Tasks;
     using Xunit;
-    using BrokeredMessage = Microsoft.Azure.ServiceBus.Message;
 
-    public class BrokeredMessageTests
+    public class MessageTests
     {
+        [Fact]
+        void BodyAsString()
+        {
+            var messageBody = "this is a test!";
+            var message = new Message(messageBody);
+            Assert.Equal(messageBody, message.BodyAsString);
+        }
+
         [Fact]
         void TestClone()
         {
@@ -29,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var deadLetterSource = Guid.NewGuid().ToString();
             var properties = Guid.NewGuid().ToString();
 
-            var brokeredMessage = new BrokeredMessage(messageBody)
+            var brokeredMessage = new Message(messageBody)
             {
                 MessageId = messageId,
                 PartitionKey = partitionKey,
@@ -46,7 +53,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             brokeredMessage.UserProperties.Add("UserProperty", "SomeUserProperty");
 
             var clone = brokeredMessage.Clone();
+            brokeredMessage.Body = null;
 
+            Assert.Null(brokeredMessage.Body);
+            Assert.NotNull(clone.Body);
             Assert.Equal("SomeUserProperty", clone.UserProperties["UserProperty"]);
             Assert.Equal(messageId, clone.MessageId);
             Assert.Equal(partitionKey, clone.PartitionKey);
@@ -89,7 +99,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     // TODO: remove when per test cleanup is possible
                     if (receiveMode == ReceiveMode.PeekLock)
                     {
-                        await queueClient.CompleteAsync(receivedMessages.First().LockToken);
+                        await queueClient.CompleteAsync(receivedMessages.First().SystemProperties.LockToken);
                     }
                 }
                 finally

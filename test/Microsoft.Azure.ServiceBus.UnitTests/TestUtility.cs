@@ -110,7 +110,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         internal static async Task CompleteMessagesAsync(IMessageReceiver messageReceiver, IEnumerable<Message> messages)
         {
-            await messageReceiver.CompleteAsync(messages.Select(message => message.LockToken));
+            await messageReceiver.CompleteAsync(messages.Select(message => message.SystemProperties.LockToken));
             Log($"Completed {messages.Count()} messages");
         }
 
@@ -119,7 +119,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             int count = 0;
             foreach (var message in messages)
             {
-                await messageReceiver.AbandonAsync(message.LockToken);
+                await messageReceiver.AbandonAsync(message.SystemProperties.LockToken);
                 count++;
             }
             Log($"Abandoned {count} messages");
@@ -130,7 +130,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             int count = 0;
             foreach (var message in messages)
             {
-                await messageReceiver.DeadLetterAsync(message.LockToken);
+                await messageReceiver.DeadLetterAsync(message.SystemProperties.LockToken);
                 count++;
             }
             Log($"Deadlettered {count} messages");
@@ -141,7 +141,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             int count = 0;
             foreach (var message in messages)
             {
-                await messageReceiver.DeferAsync(message.LockToken);
+                await messageReceiver.DeferAsync(message.SystemProperties.LockToken);
                 count++;
             }
             Log($"Deferred {count} messages");

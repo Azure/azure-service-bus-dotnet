@@ -18,28 +18,27 @@ namespace Microsoft.Azure.ServiceBus
         private TimeSpan timeToLive;
 
         public Message()
-            : this(default(ArraySegment<byte>))
+            : this(default(byte[]))
         {
         }
 
+        /// <summary>
+        /// Creates a new Message using a string that is UTF8 encoded.
+        /// </summary>
+        /// <param name="body">The body of the message.</param>
         public Message(string body)
             : this(Encoding.UTF8.GetBytes(body))
         {
         }
 
         public Message(byte[] array)
-            : this(new ArraySegment<byte>(array))
         {
-        }
-
-        public Message(ArraySegment<byte> arraySegment)
-        {
-            this.Body = arraySegment;
+            this.Body = array;
             this.SystemProperties = new SystemPropertiesCollection();
             this.UserProperties = new Dictionary<string, object>();
         }
 
-        public ArraySegment<byte> Body { get; set; }
+        public byte[] Body { get; set; }
 
         public string MessageId
         {
@@ -146,8 +145,6 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        public string LockToken => this.SystemProperties.LockTokenGuid.ToString();
-
         public string CorrelationId { get; set; }
 
         public string Label { get; set; }
@@ -166,6 +163,11 @@ namespace Microsoft.Azure.ServiceBus
 
         // TODO: Calculate the size of the properties and body
         public long Size { get; set; }
+
+        /// <summary>
+        /// Returns the current body as a UTF8 encoded string.
+        /// </summary>
+        public string BodyAsString => Encoding.UTF8.GetString(this.Body);
 
         public IDictionary<string, object> UserProperties { get; internal set; }
 
@@ -187,9 +189,9 @@ namespace Microsoft.Azure.ServiceBus
 
             if (this.Body != null)
             {
-                var clonedBody = new byte[this.Body.Count];
-                Array.Copy(this.Body.Array, clonedBody, this.Body.Count);
-                clone.Body = new ArraySegment<byte>(clonedBody);
+                var clonedBody = new byte[this.Body.Length];
+                Array.Copy(this.Body, clonedBody, this.Body.Length);
+                clone.Body = clonedBody;
             }
             return clone;
         }
@@ -247,6 +249,8 @@ namespace Microsoft.Azure.ServiceBus
             public DateTime EnqueuedTimeUtc { get; internal set; }
 
             public bool IsLockTokenSet => this.LockTokenGuid != default(Guid);
+
+            public string LockToken => this.LockTokenGuid.ToString();
 
             /// <summary>Specifies if message is a received message or not.</summary>
             public bool IsReceived => this.SequenceNumber > -1;

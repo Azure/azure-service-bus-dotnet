@@ -41,7 +41,7 @@ namespace ReceiveSample
                     async (message, token) =>
                     {
                         // Process the message
-                        Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body.Array)}");
+                        Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{message.BodyAsString}");
 
                         // Complete the message so that it is not received again.
                         // This can be done only if the queueClient is opened in ReceiveMode.PeekLock mode.

@@ -43,7 +43,7 @@ namespace SendSample
                     var message = new Message($"Message {i}");
 
                     // Write the body of the message to the console
-                    Console.WriteLine($"Sending message: {Encoding.UTF8.GetString(message.Body.Array)}");
+                    Console.WriteLine($"Sending message: {Encoding.UTF8.GetString(message.BodyAsString)}");
 
                     // Send the message to the queue
                     await queueClient.SendAsync(message);

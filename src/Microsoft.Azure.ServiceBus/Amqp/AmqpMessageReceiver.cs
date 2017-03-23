@@ -163,7 +163,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             receiveLink.DisposeDelivery(amqpMessage, true, AmqpConstants.AcceptedOutcome);
                         }
 
-                        Message message = AmqpMessageConverter.AmqpMessageToBrokeredMessage(amqpMessage);
+                        Message message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
                         brokeredMessages.Add(message);
                     }
 
@@ -208,7 +208,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         var payload = (ArraySegment<byte>)entry[ManagementConstants.Properties.Message];
                         AmqpMessage amqpMessage =
                             AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(new[] { payload }), true);
-                        message = AmqpMessageConverter.AmqpMessageToBrokeredMessage(amqpMessage);
+                        message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
                         messages.Add(message);
                     }
 
@@ -253,7 +253,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     {
                         ArraySegment<byte> payload = (ArraySegment<byte>)entry[ManagementConstants.Properties.Message];
                         AmqpMessage amqpMessage = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(new[] { payload }), true);
-                        Message message = AmqpMessageConverter.AmqpMessageToBrokeredMessage(amqpMessage);
+                        Message message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
                         Guid lockToken;
                         if (entry.TryGetValue(ManagementConstants.Properties.LockToken, out lockToken))
                         {
