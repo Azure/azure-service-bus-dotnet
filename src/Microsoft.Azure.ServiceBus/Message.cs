@@ -236,26 +236,132 @@ namespace Microsoft.Azure.ServiceBus
 
         public sealed class SystemPropertiesCollection
         {
-            public int DeliveryCount { get; internal set; }
+            private int deliveryCount;
 
-            public DateTime LockedUntilUtc { get; internal set; }
+            private DateTime lockedUntilUtc;
 
-            public long SequenceNumber { get; internal set; } = -1;
+            private long sequenceNumber = -1;
 
-            public short PartitionId { get; internal set; }
+            private short partitionId;
 
-            public long EnqueuedSequenceNumber { get; internal set; }
+            private long enqueuedSequenceNumber;
 
-            public DateTime EnqueuedTimeUtc { get; internal set; }
+            private DateTime enqueuedTimeUtc;
 
-            public bool IsLockTokenSet => this.LockTokenGuid != default(Guid);
+            private Guid lockTokenGuid;
+
+            public bool IsLockTokenSet => this.lockTokenGuid != default(Guid);
 
             public string LockToken => this.LockTokenGuid.ToString();
 
             /// <summary>Specifies if message is a received message or not.</summary>
-            public bool IsReceived => this.SequenceNumber > -1;
+            public bool IsReceived => this.sequenceNumber > -1;
 
-            internal Guid LockTokenGuid { get; set; }
+            public int DeliveryCount
+            {
+                get
+                {
+                    this.ThrowIfNotReceived();
+                    return this.deliveryCount;
+                }
+
+                internal set
+                {
+                    this.deliveryCount = value;
+                }
+            }
+
+            public DateTime LockedUntilUtc
+            {
+                get
+                {
+                    this.ThrowIfNotReceived();
+                    return this.lockedUntilUtc;
+                }
+
+                internal set
+                {
+                    this.lockedUntilUtc = value;
+                }
+            }
+
+            public long SequenceNumber
+            {
+                get
+                {
+                    this.ThrowIfNotReceived();
+                    return this.sequenceNumber;
+                }
+
+                internal set
+                {
+                    this.sequenceNumber = value;
+                }
+            }
+
+            public short PartitionId
+            {
+                get
+                {
+                    this.ThrowIfNotReceived();
+                    return this.partitionId;
+                }
+
+                internal set
+                {
+                    this.partitionId = value;
+                }
+            }
+
+            public long EnqueuedSequenceNumber
+            {
+                get
+                {
+                    this.ThrowIfNotReceived();
+                    return this.enqueuedSequenceNumber;
+                }
+
+                internal set
+                {
+                    this.enqueuedSequenceNumber = value;
+                }
+            }
+
+            public DateTime EnqueuedTimeUtc
+            {
+                get
+                {
+                    this.ThrowIfNotReceived();
+                    return this.enqueuedTimeUtc;
+                }
+
+                internal set
+                {
+                    this.enqueuedTimeUtc = value;
+                }
+            }
+
+            internal Guid LockTokenGuid
+            {
+                get
+                {
+                    this.ThrowIfNotReceived();
+                    return this.lockTokenGuid;
+                }
+
+                set
+                {
+                    this.lockTokenGuid = value;
+                }
+            }
+
+            private void ThrowIfNotReceived()
+            {
+                if (!this.IsReceived)
+                {
+                    throw Fx.Exception.AsError(new InvalidOperationException());
+                }
+            }
         }
     }
 }
