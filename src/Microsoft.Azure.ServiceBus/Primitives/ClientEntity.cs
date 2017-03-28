@@ -14,12 +14,15 @@ namespace Microsoft.Azure.ServiceBus
     {
         static int nextId;
 
-        protected ClientEntity(string clientId)
+        protected ClientEntity(string clientId, RetryPolicy retryPolicy)
         {
             this.ClientId = clientId;
+            this.RetryPolicy = retryPolicy ?? RetryPolicy.Default;
         }
 
         public string ClientId { get; private set; }
+
+        public RetryPolicy RetryPolicy { get; private set; }
 
         public abstract Task CloseAsync();
 

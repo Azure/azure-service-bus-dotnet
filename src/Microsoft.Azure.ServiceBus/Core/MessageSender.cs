@@ -13,8 +13,8 @@ namespace Microsoft.Azure.ServiceBus.Core
              "StyleCop.CSharp.ReadabilityRules",
              "SA1126:PrefixCallsCorrectly",
              Justification = "This is not a method call, but a type.")]
-        protected MessageSender(TimeSpan operationTimeout)
-            : base(nameof(MessageSender) + StringUtility.GetRandomString())
+        protected MessageSender(TimeSpan operationTimeout, RetryPolicy retryPolicy)
+            : base(nameof(MessageSender) + StringUtility.GetRandomString(), retryPolicy)
         {
             this.OperationTimeout = operationTimeout;
         }
@@ -35,7 +35,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.OnSendAsync(messageList).ConfigureAwait(false);
+                await this.RetryPolicy.RunOperation(async () => { await this.OnSendAsync(messageList).ConfigureAwait(false); }, this.OperationTimeout);
             }
             catch (Exception exception)
             {
@@ -64,11 +64,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             message.ScheduledEnqueueTimeUtc = scheduleEnqueueTimeUtc.UtcDateTime;
             MessageSender.ValidateMessage(message);
             MessagingEventSource.Log.ScheduleMessageStart(this.ClientId, scheduleEnqueueTimeUtc);
-            long result;
+            long result = 0;
 
             try
             {
-                result = await this.OnScheduleMessageAsync(message).ConfigureAwait(false);
+                await this.RetryPolicy.RunOperation(async () => { result = await this.OnScheduleMessageAsync(message).ConfigureAwait(false); }, this.OperationTimeout);
             }
             catch (Exception exception)
             {
@@ -86,7 +86,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.OnCancelScheduledMessageAsync(sequenceNumber).ConfigureAwait(false);
+                await this.RetryPolicy.RunOperation(async () => { await this.OnCancelScheduledMessageAsync(sequenceNumber).ConfigureAwait(false); }, this.OperationTimeout);
             }
             catch (Exception exception)
             {
