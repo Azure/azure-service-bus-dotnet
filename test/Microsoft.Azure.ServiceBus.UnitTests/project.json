@@ -5,16 +5,16 @@
   "testRunner": "xunit",
 
   "buildOptions": {
-    //"warningsAsErrors": true,
+    "warningsAsErrors": true,
     "keyFile": "../../build/keyfile.snk",
-    //"additionalArguments": [ "/ruleset:./../../build/StyleCop.Analyzers.ruleset", "/additionalfile:./../../build/stylecop.json" ]
+    "additionalArguments": [ "/ruleset:./../../build/StyleCop.Analyzers.ruleset", "/additionalfile:./../../build/stylecop.json" ]
   },
 
   "dependencies": {
-    //"StyleCop.Analyzers": {
-    //  "version": "1.0.0",
-    //  "type": "build"
-    //},
+    "StyleCop.Analyzers": {
+      "version": "1.0.0",
+      "type": "build"
+    },
     "Microsoft.Azure.ServiceBus": {
       "target": "project"
     },

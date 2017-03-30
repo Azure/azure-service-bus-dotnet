@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -16,8 +17,13 @@ namespace Microsoft.Azure.ServiceBus
 
         protected ClientEntity(string clientId, RetryPolicy retryPolicy)
         {
+            if (retryPolicy == null)
+            {
+                throw new ArgumentNullException(nameof(retryPolicy));
+            }
+
             this.ClientId = clientId;
-            this.RetryPolicy = retryPolicy ?? RetryPolicy.Default;
+            this.RetryPolicy = retryPolicy;
         }
 
         public string ClientId { get; private set; }

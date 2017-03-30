@@ -13,11 +13,11 @@ namespace Microsoft.Azure.ServiceBus
     public sealed class TopicClient : ClientEntity, ITopicClient
     {
         public TopicClient(string connectionString, string entityPath, RetryPolicy retryPolicy = null)
-            : this(new ServiceBusNamespaceConnection(connectionString), entityPath, retryPolicy)
+            : this(new ServiceBusNamespaceConnection(connectionString), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
         }
 
-        private TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, RetryPolicy retryPolicy)
+        TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, RetryPolicy retryPolicy)
             : base($"{nameof(TopicClient)}{GetNextId()}({entityPath})", retryPolicy)
         {
             this.TopicName = entityPath;

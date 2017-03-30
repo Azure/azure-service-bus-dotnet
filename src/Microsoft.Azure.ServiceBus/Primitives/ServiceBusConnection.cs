@@ -103,7 +103,7 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageSenderCreateStart(this.Endpoint.Host, entityPath);
             TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
             var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
-            AmqpMessageSender messageSender = new AmqpMessageSender(entityPath, null, this, cbsTokenProvider, null);
+            AmqpMessageSender messageSender = new AmqpMessageSender(entityPath, null, this, cbsTokenProvider, RetryPolicy.Default);
             MessagingEventSource.Log.MessageSenderCreateStop(this.Endpoint.Host, entityPath);
             return messageSender;
         }
@@ -113,7 +113,7 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageReceiverCreateStart(this.Endpoint.Host, entityPath, mode.ToString());
             TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
             var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
-            AmqpMessageReceiver messageReceiver = new AmqpMessageReceiver(entityPath, null, mode, this.PrefetchCount, this, cbsTokenProvider, null);
+            AmqpMessageReceiver messageReceiver = new AmqpMessageReceiver(entityPath, null, mode, this.PrefetchCount, this, cbsTokenProvider, RetryPolicy.Default);
             MessagingEventSource.Log.MessageReceiverCreateStop(this.Endpoint.Host, entityPath);
             return messageReceiver;
         }

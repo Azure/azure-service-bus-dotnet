@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus
     /// RetryPolicy implementation where the delay between retries will grow in a staggered exponential manner.
     /// RetryIntervals will be computed using a retryFactor which is a function of deltaBackOff (MaximumBackoff - MinimumBackoff) and MaximumRetryCount
     /// </summary>
-    public class RetryExponential : RetryPolicy
+    public sealed class RetryExponential : RetryPolicy
     {
         public RetryExponential(TimeSpan minimumBackoff, TimeSpan maximumBackoff, int maximumRetryCount)
             : this(minimumBackoff, maximumBackoff, Constants.DefaultRetryDeltaBackoff, maximumRetryCount)
@@ -24,12 +24,12 @@ namespace Microsoft.Azure.ServiceBus
 
             if (maxRetryCount <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(maxRetryCount), "The value of this argument must be positive.");
+                throw new ArgumentOutOfRangeException(nameof(maxRetryCount), Resources.MaxRetryCountRange);
             }
 
             if (minBackoff >= maxBackoff)
             {
-                throw new ArgumentException($"The minimum back off period '{minBackoff}' cannot exceed the maximum back off period of '{maxBackoff}'.");
+                throw new ArgumentException(Resources.ExponentialRetryBackoffRange.FormatForUser(minBackoff, maxBackoff));
             }
 
             this.MinimalBackoff = minBackoff;
@@ -61,26 +61,6 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         /// <value>The maximum number of allowed retries.</value>
         public int MaxRetryCount { get; }
-
-        /// <summary>
-        /// Creates a new copy of this instance.
-        /// </summary>
-        /// <returns>The created new copy of this instance.</returns>
-        public override RetryPolicy Clone()
-        {
-            var policy = new RetryExponential(
-                this.MinimalBackoff,
-                this.MaximumBackoff,
-                this.DeltaBackoff,
-                this.MaxRetryCount);
-
-            if (this.IsServerBusy)
-            {
-                policy.SetServerBusy(this.ServerBusyExceptionMessage);
-            }
-
-            return policy;
-        }
 
         protected override bool OnShouldRetry(TimeSpan remainingTime, int currentRetryCount, out TimeSpan retryInterval)
         {

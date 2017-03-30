@@ -19,7 +19,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         CancellationTokenSource receivePumpCancellationTokenSource;
 
         protected MessageReceiver(ReceiveMode receiveMode, TimeSpan operationTimeout, RetryPolicy retryPolicy)
-            : base(nameof(MessageReceiver) + StringUtility.GetRandomString(), retryPolicy)
+            : base(nameof(MessageReceiver) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
             this.ReceiveMode = receiveMode;
             this.operationTimeout = operationTimeout;

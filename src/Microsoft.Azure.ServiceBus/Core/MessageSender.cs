@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus.Core
              "SA1126:PrefixCallsCorrectly",
              Justification = "This is not a method call, but a type.")]
         protected MessageSender(TimeSpan operationTimeout, RetryPolicy retryPolicy)
-            : base(nameof(MessageSender) + StringUtility.GetRandomString(), retryPolicy)
+            : base(nameof(MessageSender) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
             this.OperationTimeout = operationTimeout;
         }

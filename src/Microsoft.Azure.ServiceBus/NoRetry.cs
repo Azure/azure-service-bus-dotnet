@@ -5,17 +5,8 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
 
-    public class NoRetry : RetryPolicy
+    public sealed class NoRetry : RetryPolicy
     {
-        /// <summary>
-        /// Creates a copy of this instance.
-        /// </summary>
-        /// <returns>The created copy of this instance.</returns>
-        public override RetryPolicy Clone()
-        {
-            return new NoRetry();
-        }
-
         protected override bool OnShouldRetry(
             TimeSpan remainingTime,
             int currentRetryCount,

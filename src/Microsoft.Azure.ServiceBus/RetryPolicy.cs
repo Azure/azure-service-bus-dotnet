@@ -10,7 +10,6 @@ namespace Microsoft.Azure.ServiceBus
 
     public abstract class RetryPolicy
     {
-        internal const string DefaultServerBusyException = "This request has been blocked because the entity or namespace is being throttled. Please retry the operation, and if condition continues, please slow down your rate of request.";
         internal static readonly TimeSpan ServerBusyBaseSleepTime = TimeSpan.FromSeconds(10);
 
         const int DefaultRetryMaxCount = 5;
@@ -23,7 +22,11 @@ namespace Microsoft.Azure.ServiceBus
         // This is a volatile copy of IsServerBusy. IsServerBusy is synchronized with a lock, whereas encounteredServerBusy is kept volatile for performance reasons.
         volatile bool encounteredServerBusy;
 
-        // Should this be changed to NoRetry?
+        protected RetryPolicy()
+        {
+            this.serverBusyResetTimer = new Timer(OnTimerCallback, this, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
+        }
+
         public static RetryPolicy Default => new RetryExponential(DefaultRetryMinBackoff, DefaultRetryMaxBackoff, DefaultRetryMaxCount);
 
         public bool IsServerBusy { get; protected set; }
@@ -73,17 +76,13 @@ namespace Microsoft.Azure.ServiceBus
                         timeoutHelper.RemainingTime(), currentRetryCount, exception, out retryInterval)
                         && retryInterval < timeoutHelper.RemainingTime())
                     {
+                        // Log intermediate exceptions.
+                        MessagingEventSource.Log.RunOperationExceptionEncountered(exception);
                         await Task.Delay(retryInterval);
                         continue;
                     }
 
-                    if (exceptions.Count == 1)
-                    {
-                        throw;
-                    }
-
-                    // Wrap all the exceptions in an aggregate exception if there are more than one.
-                    throw new AggregateException(exceptions);
+                    throw;
                 }
             }
         }
@@ -103,8 +102,6 @@ namespace Microsoft.Azure.ServiceBus
 
             return false;
         }
-
-        public abstract RetryPolicy Clone();
 
         internal bool ShouldRetry(TimeSpan remainingTime, int currentRetryCount, Exception lastException, out TimeSpan retryInterval)
         {
@@ -143,10 +140,9 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     this.encounteredServerBusy = true;
                     this.ServerBusyExceptionMessage = string.IsNullOrWhiteSpace(exceptionMessage) ?
-                        DefaultServerBusyException
-                        : exceptionMessage;
+                        Resources.DefaultServerBusyException : exceptionMessage;
                     this.IsServerBusy = true;
-                    this.serverBusyResetTimer = new Timer(OnTimerCallback, this, RetryPolicy.ServerBusyBaseSleepTime, TimeSpan.FromMilliseconds(-1));
+                    this.serverBusyResetTimer.Change(RetryPolicy.ServerBusyBaseSleepTime, TimeSpan.FromMilliseconds(-1));
                 }
             }
         }
@@ -163,10 +159,9 @@ namespace Microsoft.Azure.ServiceBus
                 if (this.encounteredServerBusy)
                 {
                     this.encounteredServerBusy = false;
-                    this.ServerBusyExceptionMessage = DefaultServerBusyException;
+                    this.ServerBusyExceptionMessage = Resources.DefaultServerBusyException;
                     this.IsServerBusy = false;
-                    this.serverBusyResetTimer.Dispose();
-                    this.serverBusyResetTimer = null;
+                    this.serverBusyResetTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
                 }
             }
         }

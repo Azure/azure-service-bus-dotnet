@@ -17,7 +17,7 @@ namespace Microsoft.Azure.ServiceBus
     public sealed class QueueClient : ClientEntity, IQueueClient
     {
         public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
-            : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode, retryPolicy)
+            : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
         }
 

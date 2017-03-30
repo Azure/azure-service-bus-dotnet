@@ -1,13 +1,12 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Threading.Tasks;
-
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
+    using System.Diagnostics;
     using System.Security.Authentication;
+    using System.Threading.Tasks;
     using Xunit;
 
     public class RetryTests
@@ -26,23 +25,23 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Tuple<Exception, int, bool>[] listOfExceptions =
             {
                 // Retry-able exceptions
-                new Tuple<Exception, int, bool>(new ServiceBusCommunicationException("A"), 0, true),
-                new Tuple<Exception, int, bool>(new ServerBusyException("A"), 0, true),
-                new Tuple<Exception, int, bool>(new ServerBusyException("A"), 5, true),
+                new Tuple<Exception, int, bool>(new ServiceBusCommunicationException(string.Empty), 0, true),
+                new Tuple<Exception, int, bool>(new ServerBusyException(string.Empty), 0, true),
+                new Tuple<Exception, int, bool>(new ServerBusyException(string.Empty), 5, true),
 
                 // Non retry-able exceptions
-                new Tuple<Exception, int, bool>(new ServerBusyException("A"), 6, false),
+                new Tuple<Exception, int, bool>(new ServerBusyException(string.Empty), 6, false),
                 new Tuple<Exception, int, bool>(new TimeoutException(), 0, false),
                 new Tuple<Exception, int, bool>(new AuthenticationException(), 0, false),
                 new Tuple<Exception, int, bool>(new ArgumentException(), 0, false),
                 new Tuple<Exception, int, bool>(new FormatException(), 0, false),
-                new Tuple<Exception, int, bool>(new InvalidOperationException(""), 0, false),
-                new Tuple<Exception, int, bool>(new QuotaExceededException(""), 0, false),
-                new Tuple<Exception, int, bool>(new MessagingEntityNotFoundException(""), 0, false),
-                new Tuple<Exception, int, bool>(new MessageLockLostException(""), 0, false),
-                new Tuple<Exception, int, bool>(new MessagingEntityDisabledException(""), 0, false),
-                new Tuple<Exception, int, bool>(new ReceiverDisconnectedException(""), 0, false),
-                new Tuple<Exception, int, bool>(new SessionLockLostException(""), 0, false)  
+                new Tuple<Exception, int, bool>(new InvalidOperationException(string.Empty), 0, false),
+                new Tuple<Exception, int, bool>(new QuotaExceededException(string.Empty), 0, false),
+                new Tuple<Exception, int, bool>(new MessagingEntityNotFoundException(string.Empty), 0, false),
+                new Tuple<Exception, int, bool>(new MessageLockLostException(string.Empty), 0, false),
+                new Tuple<Exception, int, bool>(new MessagingEntityDisabledException(string.Empty), 0, false),
+                new Tuple<Exception, int, bool>(new ReceiverDisconnectedException(string.Empty), 0, false),
+                new Tuple<Exception, int, bool>(new SessionLockLostException(string.Empty), 0, false)
             };
 
             var retry = new RetryExponential(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(20), 5);
@@ -59,12 +58,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         void RetryExponentialRetryIntervalShouldIncreaseTest()
         {
-            RetryExponential policy = (RetryExponential)RetryPolicy.Default.Clone();
+            RetryExponential policy = (RetryExponential)RetryPolicy.Default;
             bool retry = true;
             int retryCount = 0;
             TimeSpan duration = Constants.DefaultOperationTimeout;
             TimeSpan lastRetryInterval = TimeSpan.Zero;
-            ServiceBusException exception = new ServiceBusException(true, "");
+            ServiceBusException exception = new ServiceBusException(true, string.Empty);
             while (retry)
             {
                 TimeSpan retryInterval;
@@ -79,14 +78,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        public void RetryExponentialEnsureRandomTest()
+        void RetryExponentialEnsureRandomTest()
         {
             // We use a constant retryCount to just test random-ness. We are
             // not testing increasing interval.
             int retryCount = 1;
-            RetryExponential policy1 = (RetryExponential)RetryPolicy.Default.Clone();
-            RetryExponential policy2 = (RetryExponential)RetryPolicy.Default.Clone();
-            ServiceBusException exception = new ServiceBusException(true, "");
+            RetryExponential policy1 = (RetryExponential)RetryPolicy.Default;
+            RetryExponential policy2 = (RetryExponential)RetryPolicy.Default;
+            ServiceBusException exception = new ServiceBusException(true, string.Empty);
             int retryMatchingInstances = 0;
             for (int i = 0; i < 10; i++)
             {
@@ -104,29 +103,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        void RetryPolicyCloneShouldCloneServerBusy()
-        {
-            var policy1 = RetryPolicy.Default;
-            Assert.False(policy1.IsServerBusy);
-
-            policy1.SetServerBusy(RetryPolicy.DefaultServerBusyException);
-            Assert.True(policy1.IsServerBusy);
-
-            RetryExponential policy2 = (RetryExponential)policy1.Clone();
-            Assert.True(policy2.IsServerBusy);
-
-            policy1.ResetServerBusy();
-            Assert.False(policy1.IsServerBusy);
-            Assert.True(policy2.IsServerBusy);
-        }
-
-        [Fact]
         void RetryExponentialServerBusyShouldSelfResetTest()
         {
             RetryExponential policy1 = (RetryExponential)RetryPolicy.Default;
             int retryCount = 0;
             TimeSpan duration = Constants.DefaultOperationTimeout;
-            ServerBusyException exception = new ServerBusyException("");
+            ServerBusyException exception = new ServerBusyException(string.Empty);
             TimeSpan retryInterval;
 
             // First ServerBusy exception
@@ -156,7 +138,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Stopwatch watch = Stopwatch.StartNew();
             try
             {
-                await policy.RunOperation(() => { throw new ServiceBusException(true, ""); }, TimeSpan.FromSeconds(3));
+                await policy.RunOperation(() => { throw new ServiceBusException(true, string.Empty); }, TimeSpan.FromSeconds(3));
             }
             catch (Exception)
             {
@@ -169,7 +151,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async void RunOperationShouldWaitFor10SecondsForOperationIfServerBusy()
         {
             var policy = RetryPolicy.Default;
-            policy.SetServerBusy(RetryPolicy.DefaultServerBusyException);
+            policy.SetServerBusy(Resources.DefaultServerBusyException);
             Stopwatch watch = Stopwatch.StartNew();
             try
             {
@@ -190,13 +172,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Stopwatch watch = Stopwatch.StartNew();
             try
             {
-                await policy.RunOperation(async () =>
-                {
-                    for (int i = 0; i < 5; i++)
+                await policy.RunOperation(
+                    async () =>
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(2));
-                    }
-                }, TimeSpan.FromMinutes(3));
+                        for (int i = 0; i < 5; i++)
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(2));
+                        }
+                    }, TimeSpan.FromMinutes(3));
             }
             catch (Exception)
             {
