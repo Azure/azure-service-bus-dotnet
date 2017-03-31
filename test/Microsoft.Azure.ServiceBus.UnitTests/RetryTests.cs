@@ -138,10 +138,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     () =>
                     {
                         throw new ServiceBusException(true, string.Empty);
-                    }, TimeSpan.FromSeconds(3))
+                    }, TimeSpan.FromSeconds(8))
                 .ConfigureAwait(false));
 
-            Assert.True(watch.Elapsed.TotalSeconds < 3);
+            Assert.True(watch.Elapsed.TotalSeconds < 7);
         }
 
         [Fact]
