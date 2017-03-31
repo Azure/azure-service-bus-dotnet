@@ -13,7 +13,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     public class RetryTests
     {
         // ExceptionType, CurrentRetryCount, ShouldRetry
-        static IEnumerable<object[]> ListOfExceptions => new[]
+        public static IEnumerable<object> ListOfExceptions => new object[]
         {
             // Retry-able exceptions
             new object[] { new ServiceBusCommunicationException(string.Empty), 0, true },
