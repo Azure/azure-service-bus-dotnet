@@ -43,7 +43,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 // We are in a server busy state before we start processing.
                 // Since ServerBusyBaseSleepTime > remaining time for the operation, we don't wait for the entire Sleep time.
-                await Task.Delay(timeoutHelper.RemainingTime());
+                await Task.Delay(timeoutHelper.RemainingTime()).ConfigureAwait(false);
                 throw new ServerBusyException(this.ServerBusyExceptionMessage);
             }
 
@@ -51,7 +51,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (this.IsServerBusy)
                 {
-                    await Task.Delay(RetryPolicy.ServerBusyBaseSleepTime);
+                    await Task.Delay(RetryPolicy.ServerBusyBaseSleepTime).ConfigureAwait(false);
                 }
 
                 try
@@ -78,7 +78,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         // Log intermediate exceptions.
                         MessagingEventSource.Log.RunOperationExceptionEncountered(exception);
-                        await Task.Delay(retryInterval);
+                        await Task.Delay(retryInterval).ConfigureAwait(false);
                         continue;
                     }
 
@@ -105,16 +105,16 @@ namespace Microsoft.Azure.ServiceBus
 
         internal bool ShouldRetry(TimeSpan remainingTime, int currentRetryCount, Exception lastException, out TimeSpan retryInterval)
         {
-            if (lastException is ServerBusyException)
-            {
-                this.SetServerBusy(lastException.Message);
-            }
-
             if (lastException == null)
             {
                 // there are no exceptions.
                 retryInterval = TimeSpan.Zero;
                 return false;
+            }
+
+            if (lastException is ServerBusyException)
+            {
+                this.SetServerBusy(lastException.Message);
             }
 
             if (this.IsRetryableException(lastException))

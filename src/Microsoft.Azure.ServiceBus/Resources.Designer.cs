@@ -78,6 +78,15 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to The value of the argument {0} must be positive..
+        /// </summary>
+        public static string ArgumentMustBePositive {
+            get {
+                return ResourceManager.GetString("ArgumentMustBePositive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to The argument {0} is null or white space..
         /// </summary>
         public static string ArgumentNullOrWhiteSpace {
@@ -191,15 +200,6 @@ namespace Microsoft.Azure.ServiceBus {
         public static string MaxConcurrentCallsMustBeGreaterThanZero {
             get {
                 return ResourceManager.GetString("MaxConcurrentCallsMustBeGreaterThanZero", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///    Looks up a localized string similar to The value of this argument must be positive..
-        /// </summary>
-        public static string MaxRetryCountRange {
-            get {
-                return ResourceManager.GetString("MaxRetryCountRange", resourceCulture);
             }
         }
         

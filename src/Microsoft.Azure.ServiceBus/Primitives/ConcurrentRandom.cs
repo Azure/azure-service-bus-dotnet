@@ -5,7 +5,7 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
 
-    public static class ConcurrentRandom
+    internal static class ConcurrentRandom
     {
         // We lock on this when generating a seed for a threadLocalRandom
         [Fx.Tag.SynchronizationObject]

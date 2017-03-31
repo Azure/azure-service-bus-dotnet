@@ -24,7 +24,9 @@ namespace Microsoft.Azure.ServiceBus
 
             if (maxRetryCount <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(maxRetryCount), Resources.MaxRetryCountRange);
+                throw new ArgumentOutOfRangeException(
+                    nameof(maxRetryCount),
+                    Resources.ArgumentMustBePositive.FormatForUser(nameof(maxRetryCount)));
             }
 
             if (minBackoff >= maxBackoff)

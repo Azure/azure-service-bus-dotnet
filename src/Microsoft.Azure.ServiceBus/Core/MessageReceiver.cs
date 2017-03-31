@@ -136,7 +136,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             IList<Message> messages = null;
             try
             {
-                await this.RetryPolicy.RunOperation(async () => { messages = await this.OnReceiveAsync(maxMessageCount, serverWaitTime).ConfigureAwait(false); }, serverWaitTime);
+                await this.RetryPolicy.RunOperation(
+                    async () =>
+                    {
+                        messages = await this.OnReceiveAsync(maxMessageCount, serverWaitTime).ConfigureAwait(false);
+                    }, serverWaitTime)
+                    .ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -169,7 +174,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             IList<Message> messages = null;
             try
             {
-                await this.RetryPolicy.RunOperation(async () => { messages = await this.OnReceiveBySequenceNumberAsync(sequenceNumbers).ConfigureAwait(false); }, this.OperationTimeout);
+                await this.RetryPolicy.RunOperation(
+                    async () =>
+                    {
+                        messages = await this.OnReceiveBySequenceNumberAsync(sequenceNumbers).ConfigureAwait(false);
+                    }, this.OperationTimeout)
+                    .ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -196,7 +206,12 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.RetryPolicy.RunOperation(async () => { await this.OnCompleteAsync(lockTokens).ConfigureAwait(false); }, this.OperationTimeout);
+                await this.RetryPolicy.RunOperation(
+                    async () =>
+                    {
+                        await this.OnCompleteAsync(lockTokens).ConfigureAwait(false);
+                    }, this.OperationTimeout)
+                    .ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -214,7 +229,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessageAbandonStart(this.ClientId, 1, lockToken);
             try
             {
-                await this.RetryPolicy.RunOperation(async () => { await this.OnAbandonAsync(lockToken).ConfigureAwait(false); }, this.OperationTimeout);
+                await this.RetryPolicy.RunOperation(
+                    async () =>
+                    {
+                        await this.OnAbandonAsync(lockToken).ConfigureAwait(false);
+                    }, this.OperationTimeout)
+                    .ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -233,7 +253,12 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.RetryPolicy.RunOperation(async () => { await this.OnDeferAsync(lockToken).ConfigureAwait(false); }, this.OperationTimeout);
+                await this.RetryPolicy.RunOperation(
+                    async () =>
+                    {
+                        await this.OnDeferAsync(lockToken).ConfigureAwait(false);
+                    }, this.OperationTimeout)
+                    .ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -252,7 +277,12 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.RetryPolicy.RunOperation(async () => { await this.OnDeadLetterAsync(lockToken).ConfigureAwait(false); }, this.OperationTimeout);
+                await this.RetryPolicy.RunOperation(
+                    async () =>
+                    {
+                        await this.OnDeadLetterAsync(lockToken).ConfigureAwait(false);
+                    }, this.OperationTimeout)
+                    .ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -272,7 +302,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             DateTime lockedUntilUtc = DateTime.Now;
             try
             {
-                await this.RetryPolicy.RunOperation(async () => { lockedUntilUtc = await this.OnRenewLockAsync(lockToken).ConfigureAwait(false); }, this.OperationTimeout);
+                await this.RetryPolicy.RunOperation(
+                    async () =>
+                    {
+                        lockedUntilUtc = await this.OnRenewLockAsync(lockToken).ConfigureAwait(false);
+                    }, this.OperationTimeout)
+                    .ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -325,7 +360,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessagePeekStart(this.ClientId, fromSequenceNumber, messageCount);
             try
             {
-                await this.RetryPolicy.RunOperation(async () => { messages = await this.OnPeekAsync(fromSequenceNumber, messageCount).ConfigureAwait(false); }, this.OperationTimeout);
+                await this.RetryPolicy.RunOperation(
+                    async () =>
+                    {
+                        messages = await this.OnPeekAsync(fromSequenceNumber, messageCount).ConfigureAwait(false);
+                    }, this.OperationTimeout)
+                    .ConfigureAwait(false);
             }
             catch (Exception exception)
             {

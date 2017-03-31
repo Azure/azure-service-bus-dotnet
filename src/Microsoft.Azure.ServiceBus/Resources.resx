@@ -198,7 +198,7 @@
   <data name="ExponentialRetryBackoffRange" xml:space="preserve">
     <value>The minimum back off period '{0}' cannot exceed the maximum back off period of '{1}'.</value>
   </data>
-  <data name="MaxRetryCountRange" xml:space="preserve">
-    <value>The value of this argument must be positive.</value>
+  <data name="ArgumentMustBePositive" xml:space="preserve">
+    <value>The value of the argument {0} must be positive.</value>
   </data>
 </root>
