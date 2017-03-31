@@ -164,16 +164,22 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             var policy = RetryPolicy.Default;
             Stopwatch watch = Stopwatch.StartNew();
-
+            var tasks = new List<Task>();
             await policy.RunOperation(
                 async () =>
                 {
                     for (int i = 0; i < 5; i++)
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(2));
+                        var task = Task.Delay(TimeSpan.FromSeconds(2));
+                        tasks.Add(task);
+                        await task;
                     }
                 }, TimeSpan.FromMinutes(3));
 
+            foreach (var task in tasks)
+            {
+                Assert.True(task.Status == TaskStatus.RanToCompletion);
+            }
             Assert.True(watch.Elapsed.TotalSeconds > 9);
             Assert.False(policy.IsServerBusy);
         }
