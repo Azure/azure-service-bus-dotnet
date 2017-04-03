@@ -14,10 +14,8 @@
 This is the next generation Service Bus .NET client library that focuses on queues & topics. If you are looking for Event Hubs and Relay clients, follow the below links:
 * [Event Hubs](https://github.com/azure/azure-event-hubs-dotnet)
 * [Relay](https://github.com/azure/azure-relay-dotnet)
- 
-For information on the current set of implemented features and features to come, see our [Road map](#road-map).
 
-Azure Service Bus Messaging is an asynchronous messaging cloud platform that enables you to send messages between decoupled systems. Microsoft offers this feature as a service, which means that you do not need to host any of your own hardware in order to use it.
+Azure Service Bus is an asynchronous messaging cloud platform that enables you to send messages between decoupled systems. Microsoft offers this feature as a service, which means that you do not need to host any of your own hardware in order to use it.
 
 Refer to the [online documentation](https://azure.microsoft.com/services/service-bus/) to learn more about Service Bus.
 
