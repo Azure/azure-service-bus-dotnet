@@ -917,21 +917,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void RunOperationExceptionEncountered(Exception exception)
-        {
-            if (this.IsEnabled())
-            {
-                this.RunOperationExceptionEncountered(exception.ToString());
-            }
-        }
-
-        [Event(77, Level = EventLevel.Warning, Message = "RunOperation encountered an exception and will retry. Exception: {0}")]
-        void RunOperationExceptionEncountered(string exception)
-        {
-            this.WriteEvent(77, exception);
-        }
-
-        [NonEvent]
+<<<<<<< HEAD
         public void RegisterOnSessionHandlerStart(string clientId, RegisterSessionHandlerOptions registerSessionHandlerOptions)
         {
             if (this.IsEnabled())
@@ -971,6 +957,20 @@ namespace Microsoft.Azure.ServiceBus
             {
                 this.WriteEvent(80, clientId, exception);
             }
+=======
+        public void RunOperationExceptionEncountered(Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.RunOperationExceptionEncountered(exception.ToString());
+            }
+        }
+
+        [Event(77, Level = EventLevel.Warning, Message = "RunOperation encountered an exception and will retry. Exception: {0}")]
+        void RunOperationExceptionEncountered(string exception)
+        {
+            this.WriteEvent(77, exception);
+>>>>>>> 9754784c22338e14999594ea0df7bd44b3359824
         }
     }
 }

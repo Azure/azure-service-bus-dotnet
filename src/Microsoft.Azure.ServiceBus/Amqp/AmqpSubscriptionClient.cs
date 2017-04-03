@@ -17,8 +17,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             ServiceBusConnection servicebusConnection,
             string entityPath,
             MessagingEntityType entityType,
+            RetryPolicy retryPolicy,
             ReceiveMode mode = ReceiveMode.ReceiveAndDelete)
-            : base(clientId, servicebusConnection, entityPath, entityType, mode)
+            : base(clientId, servicebusConnection, entityPath, entityType, retryPolicy, mode)
         {
         }
 

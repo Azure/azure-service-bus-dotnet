@@ -18,8 +18,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     {
         int deliveryCount;
 
-        internal AmqpMessageSender(string entityName, MessagingEntityType? entityType, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider)
-            : base(serviceBusConnection.OperationTimeout)
+        internal AmqpMessageSender(string entityName, MessagingEntityType? entityType, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider, RetryPolicy retryPolicy)
+            : base(serviceBusConnection.OperationTimeout, retryPolicy)
         {
             this.Path = entityName;
             this.EntityType = entityType;
@@ -63,7 +63,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         protected override async Task OnSendAsync(IList<Message> messageList)
         {
             TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-            using (AmqpMessage amqpMessage = AmqpMessageConverter.BrokeredMessagesToAmqpMessage(messageList, true))
+            using (AmqpMessage amqpMessage = AmqpMessageConverter.BatchSBMessagesAsAmqpMessage(messageList, true))
             {
                 SendingAmqpLink amqpLink = null;
                 try
@@ -98,7 +98,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         protected override async Task<long> OnScheduleMessageAsync(Message message)
         {
             // TODO: Ensure System.Transactions.Transaction.Current is null. Transactions are not supported by 1.0.0 version of dotnet core.
-            using (AmqpMessage amqpMessage = AmqpMessageConverter.ClientGetMessage(message))
+            using (AmqpMessage amqpMessage = AmqpMessageConverter.SBMessageToAmqpMessage(message))
             {
                 var request = AmqpRequestMessage.CreateRequest(
                     ManagementConstants.Operations.ScheduleMessageOperation,

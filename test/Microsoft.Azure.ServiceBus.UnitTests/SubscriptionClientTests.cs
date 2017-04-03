@@ -14,11 +14,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { Constants.NonPartitionedTopicName },
-            new object[] { Constants.PartitionedTopicName }
+            new object[] { TestConstants.NonPartitionedTopicName },
+            new object[] { TestConstants.PartitionedTopicName }
         };
 
-        string SubscriptionName => Constants.SubscriptionName;
+        string SubscriptionName => TestConstants.SubscriptionName;
 
         [Theory]
         [MemberData(nameof(TestPermutations))]
@@ -105,7 +105,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     MessageId = messageId1,
                     Label = "BlueSql",
-                    Properties = { { "color", "BlueSql" } }
+                    UserProperties = { { "color", "BlueSql" } }
                 });
                 TestUtility.Log($"Sent Message: {messageId1}");
 
@@ -114,7 +114,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     MessageId = messageId2,
                     Label = "RedSql",
-                    Properties = { { "color", "RedSql" } }
+                    UserProperties = { { "color", "RedSql" } }
                 });
                 TestUtility.Log($"Sent Message: {messageId2}");
 
@@ -167,7 +167,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     MessageId = messageId1,
                     Label = "BlueSqlAction",
-                    Properties = { { "color", "BlueSqlAction" } }
+                    UserProperties = { { "color", "BlueSqlAction" } }
                 });
                 TestUtility.Log($"Sent Message: {messageId1}");
 
@@ -176,7 +176,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     MessageId = messageId2,
                     Label = "RedSqlAction",
-                    Properties = { { "color", "RedSqlAction" } }
+                    UserProperties = { { "color", "RedSqlAction" } }
                 });
                 TestUtility.Log($"Sent Message: {messageId2}");
 
@@ -184,7 +184,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 Assert.NotNull(messages);
                 Assert.True(messages.Count == 1);
                 Assert.True(messageId2.Equals(messages.First().MessageId));
-                Assert.True(messages.First().Properties["Color"].Equals("RedSqlActionProcessed"));
+                Assert.True(messages.First().UserProperties["color"].Equals("RedSqlActionProcessed"));
             }
             finally
             {

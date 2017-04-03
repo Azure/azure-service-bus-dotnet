@@ -18,16 +18,25 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         SessionReceivePump sessionReceivePump = null;
         CancellationTokenSource sessionPumpCancellationTokenSource;
 
-        internal AmqpClient(string clientId, ServiceBusConnection servicebusConnection, string entityPath, MessagingEntityType entityType, ReceiveMode mode = ReceiveMode.ReceiveAndDelete)
+        internal AmqpClient(
+            string clientId,
+            ServiceBusConnection servicebusConnection,
+            string entityPath,
+            MessagingEntityType entityType,
+            RetryPolicy retryPolicy,
+            ReceiveMode mode = ReceiveMode.ReceiveAndDelete)
         {
             this.ClientId = clientId;
+            this.syncLock = new object();
             this.ServiceBusConnection = servicebusConnection;
             this.EntityPath = entityPath;
             this.MessagingEntityType = entityType;
             this.ReceiveMode = mode;
-            this.syncLock = new object();
-            this.TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(servicebusConnection.SasKeyName, servicebusConnection.SasKey);
+            this.TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(
+                servicebusConnection.SasKeyName,
+                servicebusConnection.SasKey);
             this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, servicebusConnection.OperationTimeout);
+            this.RetryPolicy = retryPolicy;
         }
 
         public string ClientId { get; }
@@ -80,6 +89,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         internal ICbsTokenProvider CbsTokenProvider { get; }
 
+        internal RetryPolicy RetryPolicy { get; }
+
         protected object ThisLock { get; } = new object();
 
         TokenProvider TokenProvider { get; }
@@ -131,17 +142,23 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 this.ServiceBusConnection,
                 this.CbsTokenProvider,
                 emptySessionId,
+                this.RetryPolicy,
                 true);
             try
             {
-                await receiver.GetSessionReceiverLinkAsync(this.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
+                await this.RetryPolicy.RunOperation(
+                    async () =>
+                    {
+                       await receiver.GetSessionReceiverLinkAsync(this.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
+                    }, this.ServiceBusConnection.OperationTimeout)
+                    .ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 await receiver.CloseAsync().ConfigureAwait(false);
                 throw AmqpExceptionHelper.GetClientException(exception);
             }
-            MessageSession session = new AmqpMessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver);
+            MessageSession session = new AmqpMessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver, this.RetryPolicy);
             return session;
         }
 
@@ -194,12 +211,24 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         MessageSender CreateMessageSender()
         {
-            return new AmqpMessageSender(this.EntityPath, this.MessagingEntityType, this.ServiceBusConnection, this.CbsTokenProvider);
+            return new AmqpMessageSender(
+                this.EntityPath,
+                this.MessagingEntityType,
+                this.ServiceBusConnection,
+                this.CbsTokenProvider,
+                this.RetryPolicy);
         }
 
         MessageReceiver CreateMessageReceiver()
         {
-            return new AmqpMessageReceiver(this.EntityPath, this.MessagingEntityType, this.ReceiveMode, this.ServiceBusConnection.PrefetchCount, this.ServiceBusConnection, this.CbsTokenProvider);
+            return new AmqpMessageReceiver(
+                this.EntityPath,
+                this.MessagingEntityType,
+                this.ReceiveMode,
+                this.ServiceBusConnection.PrefetchCount,
+                this.ServiceBusConnection,
+                this.CbsTokenProvider,
+                this.RetryPolicy);
         }
     }
 }

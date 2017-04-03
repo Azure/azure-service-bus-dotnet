@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -16,9 +17,15 @@ namespace Microsoft.Azure.ServiceBus
         object syncLock;
         bool isClosedOrClosing;
 
-        protected ClientEntity(string clientId)
+        protected ClientEntity(string clientId, RetryPolicy retryPolicy)
         {
+            if (retryPolicy == null)
+            {
+                throw new ArgumentNullException(nameof(retryPolicy));
+            }
+
             this.ClientId = clientId;
+            this.RetryPolicy = retryPolicy;
             this.syncLock = new object();
         }
 
@@ -29,6 +36,8 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         public string ClientId { get; private set; }
+
+        public RetryPolicy RetryPolicy { get; private set; }
 
         public async Task CloseAsync()
         {

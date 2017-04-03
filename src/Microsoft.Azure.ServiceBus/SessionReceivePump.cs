@@ -121,7 +121,7 @@ namespace Microsoft.Azure.ServiceBus
                 if (this.client.ReceiveMode == ReceiveMode.PeekLock &&
                     this.registerSessionHandlerOptions.AutoComplete)
                 {
-                    await session.CompleteAsync(new[] { message.LockToken }).ConfigureAwait(false);
+                    await session.CompleteAsync(new[] { message.SystemProperties.LockToken }).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)
@@ -136,7 +136,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (session.ReceiveMode == ReceiveMode.PeekLock)
                 {
-                    await session.AbandonAsync(message.LockToken).ConfigureAwait(false);
+                    await session.AbandonAsync(message.SystemProperties.LockToken).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)
