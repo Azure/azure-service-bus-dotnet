@@ -13,20 +13,42 @@ namespace Microsoft.Azure.ServiceBus
     public abstract class ClientEntity : IClientEntity
     {
         static int nextId;
+        object syncLock;
+        bool isClosedOrClosing;
 
         protected ClientEntity(string clientId)
         {
             this.ClientId = clientId;
+            this.syncLock = new object();
+        }
+
+        public bool IsClosedOrClosing
+        {
+            get;
+            set;
         }
 
         public string ClientId { get; private set; }
 
-        public abstract Task CloseAsync();
-
-        public void Close()
+        public async Task CloseAsync()
         {
-            this.CloseAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            bool callClose = false;
+            lock (this.syncLock)
+            {
+                if (!this.IsClosedOrClosing)
+                {
+                    this.IsClosedOrClosing = true;
+                    callClose = true;
+                }
+            }
+
+            if (callClose)
+            {
+                await this.OnClosingAsync().ConfigureAwait(false);
+            }
         }
+
+        public abstract Task OnClosingAsync();
 
         protected static long GetNextId()
         {

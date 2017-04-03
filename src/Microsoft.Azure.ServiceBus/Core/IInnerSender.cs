@@ -9,6 +9,6 @@ namespace Microsoft.Azure.ServiceBus.Core
     {
         MessageSender InnerSender { get; }
 
-        Task CloseAsync();
+        Task CloseSenderAsync();
     }
 }

@@ -3,10 +3,21 @@
 
 namespace Microsoft.Azure.ServiceBus.Core
 {
+    using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     internal interface IInnerSenderReceiver : IInnerSender, IInnerReceiver
     {
-        new Task CloseAsync();
+        // new Task CloseAsync();
+        string ClientId { get; }
+
+        ReceiveMode ReceiveMode { get;  }
+
+        void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> callback, RegisterSessionHandlerOptions registerSessionHandlerOptions);
+
+        Task<IMessageSession> AcceptMessageSessionAsync();
+
+        Task OnClosingAsync();
     }
 }

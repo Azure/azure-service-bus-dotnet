@@ -34,5 +34,11 @@ namespace Microsoft.Azure.ServiceBus
         public static readonly TimeSpan MinimumLockDuration = TimeSpan.FromSeconds(5);
 
         public static readonly TimeSpan MaximumRenewBufferDuration = TimeSpan.FromSeconds(10);
+
+        public static readonly int DefaultClientPumpPrefetchCount = 5;
+
+        public static readonly TimeSpan ServerBusyExceptionBackoffAmount = TimeSpan.FromSeconds(10);
+
+        public static readonly TimeSpan OtherExceptionBackoffAmount = TimeSpan.FromSeconds(1);
     }
 }

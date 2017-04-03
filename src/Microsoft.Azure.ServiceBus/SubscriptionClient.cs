@@ -24,11 +24,14 @@ namespace Microsoft.Azure.ServiceBus
             : base($"{nameof(SubscriptionClient)}{ClientEntity.GetNextId()}({subscriptionName})")
         {
             this.TopicPath = topicPath;
+            this.ServiceBusConnection = serviceBusConnection;
             this.SubscriptionName = subscriptionName;
             this.Path = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
             this.ReceiveMode = receiveMode;
-            this.InnerSubscriptionClient = new AmqpSubscriptionClient(serviceBusConnection, this.Path, MessagingEntityType.Subscriber, receiveMode);
+            this.InnerSubscriptionClient = new AmqpSubscriptionClient(this.ClientId, serviceBusConnection, this.Path, MessagingEntityType.Subscriber, receiveMode);
         }
+
+        public ServiceBusNamespaceConnection ServiceBusConnection { get; set; }
 
         public string TopicPath { get; }
 
@@ -40,9 +43,10 @@ namespace Microsoft.Azure.ServiceBus
 
         internal IInnerSubscriptionClient InnerSubscriptionClient { get; }
 
-        public override async Task CloseAsync()
+        public override async Task OnClosingAsync()
         {
-            await this.InnerSubscriptionClient.CloseAsync().ConfigureAwait(false);
+            await this.InnerSubscriptionClient.CloseReceiverAsync().ConfigureAwait(false);
+            await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
         }
 
         public Task CompleteAsync(string lockToken)
@@ -70,7 +74,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>Asynchronously processes a message.</summary>
         /// <param name="handler"></param>
         /// <param name="registerHandlerOptions">Calls a message option.</param>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterHandlerOptions registerHandlerOptions)
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterMessageHandlerOptions registerHandlerOptions)
         {
             this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, registerHandlerOptions);
         }

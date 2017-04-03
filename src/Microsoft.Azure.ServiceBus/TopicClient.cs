@@ -21,16 +21,20 @@ namespace Microsoft.Azure.ServiceBus
             : base($"{nameof(TopicClient)}{GetNextId()}({entityPath})")
         {
             this.TopicName = entityPath;
-            this.InnerClient = new AmqpClient(serviceBusConnection, entityPath, MessagingEntityType.Topic);
+            this.ServiceBusConnection = serviceBusConnection;
+            this.InnerClient = new AmqpClient(this.ClientId, serviceBusConnection, entityPath, MessagingEntityType.Topic);
         }
+
+        public ServiceBusNamespaceConnection ServiceBusConnection { get; set; }
 
         public string TopicName { get; }
 
         internal IInnerSender InnerClient { get; }
 
-        public override async Task CloseAsync()
+        public override async Task OnClosingAsync()
         {
-            await this.InnerClient.CloseAsync().ConfigureAwait(false);
+            await this.InnerClient.CloseSenderAsync().ConfigureAwait(false);
+            await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
         }
 
         /// <summary>

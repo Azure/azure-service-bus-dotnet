@@ -12,17 +12,15 @@ namespace Microsoft.Azure.ServiceBus
     sealed class MessageReceivePump
     {
         const int MaxInitialReceiveRetryCount = 3;
-        static readonly TimeSpan ServerBusyExceptionBackoffAmount = TimeSpan.FromSeconds(10);
-        static readonly TimeSpan OtherExceptionBackoffAmount = TimeSpan.FromSeconds(1);
         readonly Func<Message, CancellationToken, Task> onMessageCallback;
-        readonly RegisterHandlerOptions registerHandlerOptions;
+        readonly RegisterMessageHandlerOptions registerHandlerOptions;
         readonly MessageReceiver messageReceiver;
         readonly CancellationToken pumpCancellationToken;
         readonly SemaphoreSlim maxConcurrentCallsSemaphoreSlim;
 
         public MessageReceivePump(
             MessageReceiver messageReceiver,
-            RegisterHandlerOptions registerHandlerOptions,
+            RegisterMessageHandlerOptions registerHandlerOptions,
             Func<Message, CancellationToken, Task> callback,
             CancellationToken pumpCancellationToken)
         {
@@ -56,28 +54,17 @@ namespace Microsoft.Azure.ServiceBus
                     MessagingEventSource.Log.MessageReceiverPumpInitialMessageReceiveException(this.messageReceiver.ClientId, retryCount, exception);
 
                     if (retryCount == MaxInitialReceiveRetryCount ||
-                        !this.ShouldRetry(exception))
+                        !MessagingUtilities.ShouldRetry(exception))
                     {
                         throw;
                     }
 
-                    TimeSpan backOffTime = this.GetBackOffTime(exception);
+                    TimeSpan backOffTime = MessagingUtilities.GetBackOffTime(exception);
                     await Task.Delay(backOffTime, this.pumpCancellationToken).ConfigureAwait(false);
                 }
             }
 
             TaskExtensionHelper.Schedule(() => this.MessagePumpTask(initialMessage));
-        }
-
-        TimeSpan GetBackOffTime(Exception exception)
-        {
-            return exception is ServerBusyException ? ServerBusyExceptionBackoffAmount : OtherExceptionBackoffAmount;
-        }
-
-        bool ShouldRetry(Exception exception)
-        {
-            ServiceBusException serviceBusException = exception as ServiceBusException;
-            return serviceBusException != null && serviceBusException.IsTransient;
         }
 
         bool ShouldRenewLock()
@@ -98,7 +85,7 @@ namespace Microsoft.Azure.ServiceBus
 
                     if (initialMessage == null)
                     {
-                        message = await this.messageReceiver.ReceiveAsync();
+                        message = await this.messageReceiver.ReceiveAsync().ConfigureAwait(false);
                     }
                     else
                     {
@@ -116,7 +103,7 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     MessagingEventSource.Log.MessageReceivePumpTaskException(this.messageReceiver.ClientId, exception);
                     this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "Receive"));
-                    TimeSpan backOffTimeSpan = this.GetBackOffTime(exception);
+                    TimeSpan backOffTimeSpan = MessagingUtilities.GetBackOffTime(exception);
                     await Task.Delay(backOffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
                 }
                 finally
@@ -144,7 +131,7 @@ namespace Microsoft.Azure.ServiceBus
                 TaskExtensionHelper.Schedule(() => this.RenewMessageLockTask(message, renewLockCancellationTokenSource.Token));
 
                 // After a threshold time of renewal('AutoRenewTimeout'), create timer to cancel anymore renewals.
-                autoRenewLockCancellationTimer = new Timer(this.CancelAutoRenewlock, renewLockCancellationTokenSource, this.registerHandlerOptions.AutoRenewTimeout, TimeSpan.FromMilliseconds(-1));
+                autoRenewLockCancellationTimer = new Timer(this.CancelAutoRenewlock, renewLockCancellationTokenSource, this.registerHandlerOptions.MaxAutoRenewTimeout, TimeSpan.FromMilliseconds(-1));
             }
 
             try
@@ -249,16 +236,16 @@ namespace Microsoft.Azure.ServiceBus
 
                     // TaskCancelled is expected here as renewTasks will be cancelled after the Complete call is made.
                     // Lets not bother user with this exception.
-                    if (exception is TaskCanceledException)
+                    if (!(exception is TaskCanceledException))
                     {
                         this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "RenewLock"));
                     }
-                    if (!this.ShouldRetry(exception))
+                    if (!MessagingUtilities.ShouldRetry(exception))
                     {
                         break;
                     }
 
-                    TimeSpan backoffTimeSpan = this.GetBackOffTime(exception);
+                    TimeSpan backoffTimeSpan = MessagingUtilities.GetBackOffTime(exception);
                     await Task.Delay(backoffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
                 }
             }

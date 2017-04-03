@@ -683,11 +683,11 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void RegisterOnMessageHandlerStart(string clientId, RegisterHandlerOptions registerHandlerOptions)
+        public void RegisterOnMessageHandlerStart(string clientId, RegisterMessageHandlerOptions registerHandlerOptions)
         {
             if (this.IsEnabled())
             {
-                this.RegisterOnMessageHandlerStart(clientId, registerHandlerOptions.AutoComplete, registerHandlerOptions.AutoRenewLock, registerHandlerOptions.MaxConcurrentCalls, (long)registerHandlerOptions.AutoRenewTimeout.TotalSeconds);
+                this.RegisterOnMessageHandlerStart(clientId, registerHandlerOptions.AutoComplete, registerHandlerOptions.AutoRenewLock, registerHandlerOptions.MaxConcurrentCalls, (long)registerHandlerOptions.MaxAutoRenewTimeout.TotalSeconds);
             }
         }
 
@@ -914,6 +914,48 @@ namespace Microsoft.Azure.ServiceBus
         void MessageReceiverPumpRenewMessageException(string clientId, long sequenceNumber, string exception)
         {
             this.WriteEvent(76, clientId, sequenceNumber, exception);
+        }
+
+        [NonEvent]
+        public void RegisterOnSessionHandlerStart(string clientId, RegisterSessionHandlerOptions registerSessionHandlerOptions)
+        {
+            if (this.IsEnabled())
+            {
+                this.RegisterOnSessionHandlerStart(clientId, registerSessionHandlerOptions.AutoComplete, registerSessionHandlerOptions.MaxConcurrentSessions, (long)registerSessionHandlerOptions.MessageWaitTimeout.TotalSeconds, (long)registerSessionHandlerOptions.MaxAutoRenewTimeout.TotalSeconds);
+            }
+        }
+
+        [Event(78, Level = EventLevel.Informational, Message = "{0}: Register OnSessionHandler start: RegisterSessionHandler Options: AutoComplete: {1}, MaxConcurrentSessions: {2}, MessageWaitTimeout: {3}, AutoRenewTimeout: {4}")]
+        void RegisterOnSessionHandlerStart(string clientId, bool autoComplete, int maxConcurrentSessions, long messageWaitTimeoutInSeconds, long autorenewTimeoutInSeconds)
+        {
+            this.WriteEvent(78, clientId, autoComplete, maxConcurrentSessions, messageWaitTimeoutInSeconds, autorenewTimeoutInSeconds);
+        }
+
+        [Event(79, Level = EventLevel.Informational, Message = "{0}: Register OnSessionHandler done.")]
+        public void RegisterOnSessionHandlerStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(79, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void RegisterOnSessionHandlerException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.RegisterOnSessionHandlerException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(80, Level = EventLevel.Error, Message = "{0}: Register OnSessionHandler Exception: {1}")]
+        void RegisterOnSessionHandlerException(string clientId, string exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(80, clientId, exception);
+            }
         }
     }
 }

@@ -177,6 +177,15 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
+        ///    Looks up a localized string similar to A session handler has already been registered..
+        /// </summary>
+        public static string MessageHandlerAlreadyRegistered {
+            get {
+                return ResourceManager.GetString("MessageHandlerAlreadyRegistered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///    Looks up a localized string similar to The lock supplied is invalid. Either the lock expired, or the message has already been removed from the queue..
         /// </summary>
         public static string MessageLockLost {
@@ -195,15 +204,6 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to The method &apos;OnMessageAsync&apos; has already been called..
-        /// </summary>
-        public static string OnMessageAlreadyCalled {
-            get {
-                return ResourceManager.GetString("OnMessageAlreadyCalled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///    Looks up a localized string similar to This operation is only supported for a message receiver in &apos;PeekLock&apos; receive mode..
         /// </summary>
         public static string PeekLockModeRequired {
@@ -218,6 +218,15 @@ namespace Microsoft.Azure.ServiceBus {
         public static string RuleFilterNotSupported {
             get {
                 return ResourceManager.GetString("RuleFilterNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///    Looks up a localized string similar to A session handler has already been registered..
+        /// </summary>
+        public static string SessionHandlerAlreadyRegistered {
+            get {
+                return ResourceManager.GetString("SessionHandlerAlreadyRegistered", resourceCulture);
             }
         }
         

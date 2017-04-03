@@ -26,7 +26,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.QueueName = entityPath;
             this.ReceiveMode = receiveMode;
-            this.InnerClient = new AmqpClient(serviceBusConnection, entityPath, MessagingEntityType.Queue, receiveMode);
+            this.InnerClient = new AmqpClient(this.ClientId, serviceBusConnection, entityPath, MessagingEntityType.Queue, receiveMode);
         }
 
         public string QueueName { get; }
@@ -37,9 +37,9 @@ namespace Microsoft.Azure.ServiceBus
 
         internal IInnerSenderReceiver InnerClient { get; }
 
-        public override async Task CloseAsync()
+        public override async Task OnClosingAsync()
         {
-            await this.InnerClient.CloseAsync().ConfigureAwait(false);
+            await this.InnerClient.OnClosingAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -82,10 +82,26 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>Asynchronously processes a message.</summary>
         /// <param name="handler"></param>
-        /// <param name="registerHandlerOptions">Calls a message option.</param>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterHandlerOptions registerHandlerOptions)
+        /// <param name="registerMessageHandlerOptions">Options associated with message pump processing.</param>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterMessageHandlerOptions registerMessageHandlerOptions)
         {
-            this.InnerClient.InnerReceiver.RegisterMessageHandler(handler, registerHandlerOptions);
+            this.InnerClient.InnerReceiver.RegisterMessageHandler(handler, registerMessageHandlerOptions);
+        }
+
+        /// <summary>Register a session handler.</summary>
+        /// <param name="handler"></param>
+        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler)
+        {
+            var sessionHandlerOptions = new RegisterSessionHandlerOptions();
+            this.RegisterSessionHandler(handler, sessionHandlerOptions);
+        }
+
+        /// <summary>Register a session handler.</summary>
+        /// <param name="handler"></param>
+        /// <param name="registerSessionHandlerOptions">Options associated with session pump processing.</param>
+        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, RegisterSessionHandlerOptions registerSessionHandlerOptions)
+        {
+            this.InnerClient.RegisterSessionHandler(handler, registerSessionHandlerOptions);
         }
 
         /// <summary>

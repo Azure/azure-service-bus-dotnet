@@ -13,11 +13,12 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     internal sealed class AmqpSubscriptionClient : AmqpClient, IInnerSubscriptionClient
     {
         public AmqpSubscriptionClient(
+            string clientId,
             ServiceBusConnection servicebusConnection,
             string entityPath,
             MessagingEntityType entityType,
             ReceiveMode mode = ReceiveMode.ReceiveAndDelete)
-            : base(servicebusConnection, entityPath, entityType, mode)
+            : base(clientId, servicebusConnection, entityPath, entityType, mode)
         {
         }
 

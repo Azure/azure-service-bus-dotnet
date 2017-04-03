@@ -9,14 +9,14 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal abstract class MessageReceiver : ClientEntity, IMessageReceiver
+    public abstract class MessageReceiver : ClientEntity, IMessageReceiver
     {
         readonly TimeSpan operationTimeout;
-        readonly object messageReceivePumpSyncLock;
+        readonly object syncLock;
         int prefetchCount;
         long lastPeekedSequenceNumber;
-        MessageReceivePump receivePump;
-        CancellationTokenSource receivePumpCancellationTokenSource;
+        MessageReceivePump messagePump;
+        CancellationTokenSource messagePumpCancellationTokenSource;
 
         protected MessageReceiver(ReceiveMode receiveMode, TimeSpan operationTimeout)
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString())
@@ -24,7 +24,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ReceiveMode = receiveMode;
             this.operationTimeout = operationTimeout;
             this.lastPeekedSequenceNumber = Constants.DefaultLastPeekedSequenceNumber;
-            this.messageReceivePumpSyncLock = new object();
+            this.syncLock = new object();
         }
 
         public abstract string Path { get; }
@@ -74,15 +74,15 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         protected MessagingEntityType? EntityType { get; set; }
 
-        public override Task CloseAsync()
+        public override Task OnClosingAsync()
         {
-            lock (this.messageReceivePumpSyncLock)
+            lock (this.syncLock)
             {
-                if (this.receivePump != null)
+                if (this.messagePump != null)
                 {
-                    this.receivePumpCancellationTokenSource.Cancel();
-                    this.receivePumpCancellationTokenSource.Dispose();
-                    this.receivePump = null;
+                    this.messagePumpCancellationTokenSource.Cancel();
+                    this.messagePumpCancellationTokenSource.Dispose();
+                    this.messagePump = null;
                 }
             }
             return Task.FromResult(0);
@@ -339,13 +339,14 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
         {
-            this.RegisterMessageHandler(handler, new RegisterHandlerOptions() { ReceiveTimeOut = this.OperationTimeout });
+            this.RegisterMessageHandler(handler, new RegisterMessageHandlerOptions() { ReceiveTimeOut = this.OperationTimeout });
         }
 
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterHandlerOptions registerHandlerOptions)
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterMessageHandlerOptions registerMessageHandlerOptions)
         {
-            registerHandlerOptions.ReceiveTimeOut = this.OperationTimeout;
-            this.OnMessageHandlerAsync(registerHandlerOptions, handler).GetAwaiter().GetResult();
+            registerMessageHandlerOptions.MessageClientEntity = this;
+            registerMessageHandlerOptions.ReceiveTimeOut = this.OperationTimeout;
+            this.OnMessageHandlerAsync(registerMessageHandlerOptions, handler).GetAwaiter().GetResult();
         }
 
         protected abstract Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime);
@@ -395,36 +396,36 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         async Task OnMessageHandlerAsync(
-            RegisterHandlerOptions registerHandlerOptions,
+            RegisterMessageHandlerOptions registerHandlerOptions,
             Func<Message, CancellationToken, Task> callback)
         {
             MessagingEventSource.Log.RegisterOnMessageHandlerStart(this.ClientId, registerHandlerOptions);
 
-            lock (this.messageReceivePumpSyncLock)
+            lock (this.syncLock)
             {
-                if (this.receivePump != null)
+                if (this.messagePump != null)
                 {
-                    throw new InvalidOperationException(Resources.OnMessageAlreadyCalled);
+                    throw new InvalidOperationException(Resources.MessageHandlerAlreadyRegistered);
                 }
 
-                this.receivePumpCancellationTokenSource = new CancellationTokenSource();
-                this.receivePump = new MessageReceivePump(this, registerHandlerOptions, callback, this.receivePumpCancellationTokenSource.Token);
+                this.messagePumpCancellationTokenSource = new CancellationTokenSource();
+                this.messagePump = new MessageReceivePump(this, registerHandlerOptions, callback, this.messagePumpCancellationTokenSource.Token);
             }
 
             try
             {
-                await this.receivePump.StartPumpAsync().ConfigureAwait(false);
+                await this.messagePump.StartPumpAsync().ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.RegisterOnMessageHandlerException(this.ClientId, exception);
-                lock (this.messageReceivePumpSyncLock)
+                lock (this.syncLock)
                 {
-                    if (this.receivePump != null)
+                    if (this.messagePump != null)
                     {
-                        this.receivePumpCancellationTokenSource.Cancel();
-                        this.receivePumpCancellationTokenSource.Dispose();
-                        this.receivePump = null;
+                        this.messagePumpCancellationTokenSource.Cancel();
+                        this.messagePumpCancellationTokenSource.Dispose();
+                        this.messagePump = null;
                     }
                 }
 
