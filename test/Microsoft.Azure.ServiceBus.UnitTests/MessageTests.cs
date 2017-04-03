@@ -12,14 +12,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     public class MessageTests
     {
         [Fact]
-        void BodyAsString()
-        {
-            var messageBody = "this is a test!";
-            var message = new Message(messageBody);
-            Assert.Equal(messageBody, message.BodyAsString);
-        }
-
-        [Fact]
         void TestClone()
         {
             var messageBody = Encoding.UTF8.GetBytes("test");

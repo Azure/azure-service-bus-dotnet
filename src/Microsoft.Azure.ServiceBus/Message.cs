@@ -22,15 +22,6 @@ namespace Microsoft.Azure.ServiceBus
         {
         }
 
-        /// <summary>
-        /// Creates a new Message using a string that is UTF8 encoded.
-        /// </summary>
-        /// <param name="body">The body of the message.</param>
-        public Message(string body)
-            : this(Encoding.UTF8.GetBytes(body))
-        {
-        }
-
         public Message(byte[] array)
         {
             this.Body = array;
@@ -163,11 +154,6 @@ namespace Microsoft.Azure.ServiceBus
 
         // TODO: Calculate the size of the properties and body
         public long Size { get; set; }
-
-        /// <summary>
-        /// Returns the current body as a UTF8 encoded string.
-        /// </summary>
-        public string BodyAsString => Encoding.UTF8.GetString(this.Body);
 
         public IDictionary<string, object> UserProperties { get; internal set; }
 

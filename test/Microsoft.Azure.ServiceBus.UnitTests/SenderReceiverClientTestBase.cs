@@ -7,6 +7,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Text;
     using System.Threading.Tasks;
     using Core;
     using Xunit;
@@ -184,7 +185,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var sequenceNumber =
                 await
                     messageSender.ScheduleMessageAsync(
-                        new Message("Test") { MessageId = "randomId", Label = "randomLabel" }, scheduleTime);
+                        new Message(Encoding.UTF8.GetBytes("Test")) { MessageId = "randomId", Label = "randomLabel" }, scheduleTime);
             TestUtility.Log($"Received sequence number: {sequenceNumber}");
             Assert.True(sequenceNumber > 0);
 
@@ -201,7 +202,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         internal async Task CancelScheduledMessagesAsyncTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             var scheduleTime = new DateTimeOffset(DateTime.UtcNow).AddSeconds(30);
-            var brokeredMessage = new Message("Test1") { MessageId = Guid.NewGuid().ToString() };
+            var brokeredMessage = new Message(Encoding.UTF8.GetBytes("Test1")) { MessageId = Guid.NewGuid().ToString() };
             TestUtility.Log(
                 $"Sending message with schedule time: {scheduleTime.UtcDateTime} and messageID {brokeredMessage.MessageId}");
 
@@ -217,7 +218,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             // Sending a dummy message so that ReceiveAsync(2) returns immediately after getting 1 message
             // instead of waiting for connection timeout on a single message.
-            await messageSender.SendAsync(new Message("Dummy") { MessageId = "Dummy" });
+            await messageSender.SendAsync(new Message(Encoding.UTF8.GetBytes(("Dummy"))) { MessageId = "Dummy" });
             IList<Message> messages = null;
             int retryCount = 5;
             while (messages == null && --retryCount > 0)
