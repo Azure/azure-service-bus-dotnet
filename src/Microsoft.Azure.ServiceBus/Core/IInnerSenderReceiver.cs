@@ -9,7 +9,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 
     internal interface IInnerSenderReceiver : IInnerSender, IInnerReceiver
     {
-        // new Task CloseAsync();
         string ClientId { get; }
 
         ReceiveMode ReceiveMode { get;  }

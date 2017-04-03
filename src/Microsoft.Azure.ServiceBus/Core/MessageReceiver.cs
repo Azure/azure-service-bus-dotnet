@@ -12,7 +12,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     public abstract class MessageReceiver : ClientEntity, IMessageReceiver
     {
         readonly TimeSpan operationTimeout;
-        readonly object syncLock;
+        readonly object messageReceivePumpSyncLock;
         int prefetchCount;
         long lastPeekedSequenceNumber;
         MessageReceivePump messagePump;
@@ -24,7 +24,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ReceiveMode = receiveMode;
             this.operationTimeout = operationTimeout;
             this.lastPeekedSequenceNumber = Constants.DefaultLastPeekedSequenceNumber;
-            this.syncLock = new object();
+            this.messageReceivePumpSyncLock = new object();
         }
 
         public abstract string Path { get; }
@@ -76,7 +76,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         public override Task OnClosingAsync()
         {
-            lock (this.syncLock)
+            lock (this.messageReceivePumpSyncLock)
             {
                 if (this.messagePump != null)
                 {
@@ -441,7 +441,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             MessagingEventSource.Log.RegisterOnMessageHandlerStart(this.ClientId, registerHandlerOptions);
 
-            lock (this.syncLock)
+            lock (this.messageReceivePumpSyncLock)
             {
                 if (this.messagePump != null)
                 {
@@ -459,7 +459,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             catch (Exception exception)
             {
                 MessagingEventSource.Log.RegisterOnMessageHandlerException(this.ClientId, exception);
-                lock (this.syncLock)
+                lock (this.messageReceivePumpSyncLock)
                 {
                     if (this.messagePump != null)
                     {
