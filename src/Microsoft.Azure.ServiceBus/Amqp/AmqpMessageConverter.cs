@@ -11,42 +11,47 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
+    using Microsoft.Azure.Messaging.Amqp;
+    using Microsoft.Azure.ServiceBus.Filters;
+    using SBMessage = Microsoft.Azure.ServiceBus.Message;
 
     static class AmqpMessageConverter
     {
-        public const string EnqueuedTimeUtcName = "x-opt-enqueued-time";
-        public const string ScheduledEnqueueTimeUtcName = "x-opt-scheduled-enqueue-time";
-        public const string SequenceNumberName = "x-opt-sequence-number";
-        public const string OffsetName = "x-opt-offset";
-        public const string LockTokenName = "x-opt-lock-token";
-        public const string LockedUntilName = "x-opt-locked-until";
-        public const string PublisherName = "x-opt-publisher";
-        public const string PartitionKeyName = "x-opt-partition-key";
-        public const string PartitionIdName = "x-opt-partition-id";
-        public const string PrefilteredMessageHeadersName = "x-opt-prefiltered-headers";
-        public const string PrefilteredMessagePropertiesName = "x-opt-prefiltered-properties";
-        public const string DeadLetterSourceName = "x-opt-deadletter-source";
-        public const string TimeSpanName = AmqpConstants.Vendor + ":timespan";
-        public const string UriName = AmqpConstants.Vendor + ":uri";
-        public const string DateTimeOffsetName = AmqpConstants.Vendor + ":datetime-offset";
+        const string EnqueuedTimeUtcName = "x-opt-enqueued-time";
+        const string ScheduledEnqueueTimeUtcName = "x-opt-scheduled-enqueue-time";
+        const string SequenceNumberName = "x-opt-sequence-number";
+        const string OffsetName = "x-opt-offset";
+        const string LockedUntilName = "x-opt-locked-until";
+        const string PublisherName = "x-opt-publisher";
+        const string PartitionKeyName = "x-opt-partition-key";
+        const string PartitionIdName = "x-opt-partition-id";
+        const string DeadLetterSourceName = "x-opt-deadletter-source";
+        const string TimeSpanName = AmqpConstants.Vendor + ":timespan";
+        const string UriName = AmqpConstants.Vendor + ":uri";
+        const string DateTimeOffsetName = AmqpConstants.Vendor + ":datetime-offset";
         const int GuidSize = 16;
 
-        public static AmqpMessage BrokeredMessagesToAmqpMessage(IEnumerable<BrokeredMessage> brokeredMessages, bool batchable)
+        public static AmqpMessage BatchSBMessagesAsAmqpMessage(IEnumerable<SBMessage> sbMessages, bool batchable)
         {
-            AmqpMessage amqpMessage = null;
+            if (sbMessages == null)
+            {
+                throw Fx.Exception.ArgumentNull(nameof(sbMessages));
+            }
+
+            AmqpMessage amqpMessage;
             AmqpMessage firstAmqpMessage = null;
-            BrokeredMessage firstBrokeredMessage = null;
+            SBMessage firstMessage = null;
             List<Data> dataList = null;
             int messageCount = 0;
-            foreach (var brokeredMessage in brokeredMessages)
+            foreach (var sbMessage in sbMessages)
             {
                 messageCount++;
 
-                amqpMessage = AmqpMessageConverter.ClientGetMessage(brokeredMessage);
+                amqpMessage = AmqpMessageConverter.SBMessageToAmqpMessage(sbMessage);
                 if (firstAmqpMessage == null)
                 {
                     firstAmqpMessage = amqpMessage;
-                    firstBrokeredMessage = brokeredMessage;
+                    firstMessage = sbMessage;
                     continue;
                 }
 
@@ -67,50 +72,109 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             amqpMessage = AmqpMessage.Create(dataList);
             amqpMessage.MessageFormat = AmqpConstants.AmqpBatchedMessageFormat;
 
-            if (firstBrokeredMessage.MessageId != null)
+            if (firstMessage.MessageId != null)
             {
-                amqpMessage.Properties.MessageId = firstBrokeredMessage.MessageId;
+                amqpMessage.Properties.MessageId = firstMessage.MessageId;
             }
-            if (firstBrokeredMessage.SessionId != null)
+            if (firstMessage.SessionId != null)
             {
-                amqpMessage.Properties.GroupId = firstBrokeredMessage.SessionId;
+                amqpMessage.Properties.GroupId = firstMessage.SessionId;
             }
 
-            if (firstBrokeredMessage.PartitionKey != null)
+            if (firstMessage.PartitionKey != null)
             {
                 amqpMessage.MessageAnnotations.Map[AmqpMessageConverter.PartitionKeyName] =
-                    firstBrokeredMessage.PartitionKey;
+                    firstMessage.PartitionKey;
             }
 
             amqpMessage.Batchable = batchable;
             return amqpMessage;
         }
 
-        // return from AMQP lib to client API for a received message
-        // TODO: expose other AMQP sections in BrokeredMessage
-        public static BrokeredMessage ClientGetMessage(AmqpMessage amqpMessage)
+        public static AmqpMessage SBMessageToAmqpMessage(SBMessage sbMessage)
         {
-            BrokeredMessage brokeredMessage;
+            var amqpMessage = AmqpMessage.Create(new AmqpValue() { Value = sbMessage.Body });
 
-            if ((amqpMessage.BodyType & SectionFlag.Data) != 0 ||
-                (amqpMessage.BodyType & SectionFlag.AmqpSequence) != 0)
+            amqpMessage.Properties.MessageId = sbMessage.MessageId;
+            amqpMessage.Properties.CorrelationId = sbMessage.CorrelationId;
+            amqpMessage.Properties.ContentType = sbMessage.ContentType;
+            amqpMessage.Properties.Subject = sbMessage.Label;
+            amqpMessage.Properties.To = sbMessage.To;
+            amqpMessage.Properties.ReplyTo = sbMessage.ReplyTo;
+            amqpMessage.Properties.GroupId = sbMessage.SessionId;
+            amqpMessage.Properties.ReplyToGroupId = sbMessage.ReplyToSessionId;
+
+            if (sbMessage.TimeToLive != null)
             {
-                Stream bodyStream = AmqpMessageConverter.GetMessageBodyStream(amqpMessage);
-                brokeredMessage = new BrokeredMessage(bodyStream, true);
-            }
-            else if ((amqpMessage.BodyType & SectionFlag.AmqpValue) != 0)
-            {
-                object netObject;
-                if (!TryGetNetObjectFromAmqpObject(amqpMessage.ValueBody.Value, MappingType.MessageBody, out netObject))
+                amqpMessage.Header.Ttl = (uint)sbMessage.TimeToLive.TotalMilliseconds;
+                amqpMessage.Properties.CreationTime = DateTime.UtcNow;
+
+                if (AmqpConstants.MaxAbsoluteExpiryTime - amqpMessage.Properties.CreationTime.Value > sbMessage.TimeToLive)
                 {
-                    netObject = amqpMessage.ValueBody.Value;
+                    amqpMessage.Properties.AbsoluteExpiryTime = amqpMessage.Properties.CreationTime.Value + sbMessage.TimeToLive;
+                }
+                else
+                {
+                    amqpMessage.Properties.AbsoluteExpiryTime = AmqpConstants.MaxAbsoluteExpiryTime;
+                }
+            }
+
+            if ((sbMessage.ScheduledEnqueueTimeUtc != null) && sbMessage.ScheduledEnqueueTimeUtc > DateTime.MinValue)
+            {
+                amqpMessage.MessageAnnotations.Map.Add(ScheduledEnqueueTimeUtcName, sbMessage.ScheduledEnqueueTimeUtc);
+            }
+
+            if (sbMessage.Publisher != null)
+            {
+                amqpMessage.MessageAnnotations.Map.Add(PublisherName, sbMessage.Publisher);
+            }
+
+            if (sbMessage.DeadLetterSource != null)
+            {
+                amqpMessage.MessageAnnotations.Map.Add(DeadLetterSourceName, sbMessage.DeadLetterSource);
+            }
+
+            if (sbMessage.PartitionKey != null)
+            {
+                amqpMessage.MessageAnnotations.Map.Add(PartitionKeyName, sbMessage.PartitionKey);
+            }
+
+            if (sbMessage.UserProperties != null && sbMessage.UserProperties.Count > 0)
+            {
+                if (amqpMessage.ApplicationProperties == null)
+                {
+                    amqpMessage.ApplicationProperties = new ApplicationProperties();
                 }
 
-                brokeredMessage = new BrokeredMessage(netObject, amqpMessage.BodyStream);
+                foreach (var pair in sbMessage.UserProperties)
+                {
+                    object amqpObject;
+                    if (TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
+                    {
+                        amqpMessage.ApplicationProperties.Map.Add(pair.Key, amqpObject);
+                    }
+                }
+            }
+
+            return amqpMessage;
+        }
+
+        public static SBMessage AmqpMessageToSBMessage(AmqpMessage amqpMessage)
+        {
+            if (amqpMessage == null)
+            {
+                throw Fx.Exception.ArgumentNull(nameof(amqpMessage));
+            }
+
+            SBMessage sbMessage;
+            if (amqpMessage.BodyType == SectionFlag.AmqpValue && amqpMessage.ValueBody.Value != null)
+            {
+                var byteArrayValue = (byte[])amqpMessage.ValueBody.Value;
+                sbMessage = new SBMessage(byteArrayValue);
             }
             else
             {
-                brokeredMessage = new BrokeredMessage();
+                sbMessage = new SBMessage();
             }
 
             SectionFlag sections = amqpMessage.Sections;
@@ -118,12 +182,12 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 if (amqpMessage.Header.Ttl != null)
                 {
-                    brokeredMessage.TimeToLive = TimeSpan.FromMilliseconds(amqpMessage.Header.Ttl.Value);
+                    sbMessage.TimeToLive = TimeSpan.FromMilliseconds(amqpMessage.Header.Ttl.Value);
                 }
 
                 if (amqpMessage.Header.DeliveryCount != null)
                 {
-                    brokeredMessage.DeliveryCount = (int)(amqpMessage.Header.DeliveryCount.Value + 1);
+                    sbMessage.SystemProperties.DeliveryCount = (int)(amqpMessage.Header.DeliveryCount.Value + 1);
                 }
             }
 
@@ -131,42 +195,42 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 if (amqpMessage.Properties.MessageId != null)
                 {
-                    brokeredMessage.MessageId = amqpMessage.Properties.MessageId.ToString();
+                    sbMessage.MessageId = amqpMessage.Properties.MessageId.ToString();
                 }
 
                 if (amqpMessage.Properties.CorrelationId != null)
                 {
-                    brokeredMessage.CorrelationId = amqpMessage.Properties.CorrelationId.ToString();
+                    sbMessage.CorrelationId = amqpMessage.Properties.CorrelationId.ToString();
                 }
 
                 if (amqpMessage.Properties.ContentType.Value != null)
                 {
-                    brokeredMessage.ContentType = amqpMessage.Properties.ContentType.Value;
+                    sbMessage.ContentType = amqpMessage.Properties.ContentType.Value;
                 }
 
                 if (amqpMessage.Properties.Subject != null)
                 {
-                    brokeredMessage.Label = amqpMessage.Properties.Subject;
+                    sbMessage.Label = amqpMessage.Properties.Subject;
                 }
 
                 if (amqpMessage.Properties.To != null)
                 {
-                    brokeredMessage.To = amqpMessage.Properties.To.ToString();
+                    sbMessage.To = amqpMessage.Properties.To.ToString();
                 }
 
                 if (amqpMessage.Properties.ReplyTo != null)
                 {
-                    brokeredMessage.ReplyTo = amqpMessage.Properties.ReplyTo.ToString();
+                    sbMessage.ReplyTo = amqpMessage.Properties.ReplyTo.ToString();
                 }
 
                 if (amqpMessage.Properties.GroupId != null)
                 {
-                    brokeredMessage.SessionId = amqpMessage.Properties.GroupId;
+                    sbMessage.SessionId = amqpMessage.Properties.GroupId;
                 }
 
                 if (amqpMessage.Properties.ReplyToGroupId != null)
                 {
-                    brokeredMessage.ReplyToSessionId = amqpMessage.Properties.ReplyToGroupId;
+                    sbMessage.ReplyToSessionId = amqpMessage.Properties.ReplyToGroupId;
                 }
             }
 
@@ -179,7 +243,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     object netObject;
                     if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out netObject))
                     {
-                        brokeredMessage.Properties[pair.Key.ToString()] = netObject;
+                        sbMessage.UserProperties[pair.Key.ToString()] = netObject;
                     }
                 }
             }
@@ -192,37 +256,37 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     switch (key)
                     {
                         case EnqueuedTimeUtcName:
-                            brokeredMessage.EnqueuedTimeUtc = (DateTime)pair.Value;
+                            sbMessage.SystemProperties.EnqueuedTimeUtc = (DateTime)pair.Value;
                             break;
                         case ScheduledEnqueueTimeUtcName:
-                            brokeredMessage.ScheduledEnqueueTimeUtc = (DateTime)pair.Value;
+                            sbMessage.ScheduledEnqueueTimeUtc = (DateTime)pair.Value;
                             break;
                         case SequenceNumberName:
-                            brokeredMessage.SequenceNumber = (long)pair.Value;
+                            sbMessage.SystemProperties.SequenceNumber = (long)pair.Value;
                             break;
                         case OffsetName:
-                            brokeredMessage.EnqueuedSequenceNumber = long.Parse((string)pair.Value);
+                            sbMessage.SystemProperties.EnqueuedSequenceNumber = long.Parse((string)pair.Value);
                             break;
                         case LockedUntilName:
-                            brokeredMessage.LockedUntilUtc = (DateTime)pair.Value;
+                            sbMessage.SystemProperties.LockedUntilUtc = (DateTime)pair.Value;
                             break;
                         case PublisherName:
-                            brokeredMessage.Publisher = (string)pair.Value;
+                            sbMessage.Publisher = (string)pair.Value;
                             break;
                         case PartitionKeyName:
-                            brokeredMessage.PartitionKey = (string)pair.Value;
+                            sbMessage.PartitionKey = (string)pair.Value;
                             break;
                         case PartitionIdName:
-                            brokeredMessage.PartitionId = (short)pair.Value;
+                            sbMessage.SystemProperties.PartitionId = (short)pair.Value;
                             break;
                         case DeadLetterSourceName:
-                            brokeredMessage.DeadLetterSource = (string)pair.Value;
+                            sbMessage.DeadLetterSource = (string)pair.Value;
                             break;
                         default:
                             object netObject;
                             if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out netObject))
                             {
-                                brokeredMessage.Properties[key] = netObject;
+                                sbMessage.UserProperties[key] = netObject;
                             }
                             break;
                     }
@@ -233,114 +297,43 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 byte[] guidBuffer = new byte[GuidSize];
                 Buffer.BlockCopy(amqpMessage.DeliveryTag.Array, amqpMessage.DeliveryTag.Offset, guidBuffer, 0, GuidSize);
-                brokeredMessage.LockToken = new Guid(guidBuffer);
+                sbMessage.SystemProperties.LockTokenGuid = new Guid(guidBuffer);
             }
 
-            brokeredMessage.AttachDisposables(new[] { amqpMessage });
+            amqpMessage.Dispose();
 
-            return brokeredMessage;
+            return sbMessage;
         }
 
-        // return from Client API to AMQP lib for send
-        public static AmqpMessage ClientGetMessage(BrokeredMessage brokeredMessage)
+        public static AmqpMap GetRuleDescriptionMap(RuleDescription description)
         {
-            AmqpMessage amqpMessage = AmqpMessageConverter.CreateAmqpMessageFromSbmpMessage(brokeredMessage);
-
-            amqpMessage.Properties.MessageId = brokeredMessage.MessageId;
-            amqpMessage.Properties.CorrelationId = brokeredMessage.CorrelationId;
-            amqpMessage.Properties.ContentType = brokeredMessage.ContentType;
-            amqpMessage.Properties.Subject = brokeredMessage.Label;
-            amqpMessage.Properties.To = brokeredMessage.To;
-            amqpMessage.Properties.ReplyTo = brokeredMessage.ReplyTo;
-            amqpMessage.Properties.GroupId = brokeredMessage.SessionId;
-            amqpMessage.Properties.ReplyToGroupId = brokeredMessage.ReplyToSessionId;
-
-            if ((brokeredMessage.InitializedMembers & BrokeredMessage.MessageMembers.TimeToLive) != 0)
+            AmqpMap ruleDescriptionMap = new AmqpMap();
+            if (description.Filter is SqlFilter)
             {
-                amqpMessage.Header.Ttl = (uint)brokeredMessage.TimeToLive.TotalMilliseconds;
-                amqpMessage.Properties.CreationTime = DateTime.UtcNow;
-
-                if (AmqpConstants.MaxAbsoluteExpiryTime - amqpMessage.Properties.CreationTime.Value > brokeredMessage.TimeToLive)
-                {
-                    amqpMessage.Properties.AbsoluteExpiryTime = amqpMessage.Properties.CreationTime.Value + brokeredMessage.TimeToLive;
-                }
-                else
-                {
-                    amqpMessage.Properties.AbsoluteExpiryTime = AmqpConstants.MaxAbsoluteExpiryTime;
-                }
+                AmqpMap filterMap = GetSqlFilterMap(description.Filter as SqlFilter);
+                ruleDescriptionMap[ManagementConstants.Properties.SqlFilter] = filterMap;
             }
-
-            if ((brokeredMessage.InitializedMembers & BrokeredMessage.MessageMembers.ScheduledEnqueueTimeUtc) != 0 &&
-                brokeredMessage.ScheduledEnqueueTimeUtc > DateTime.MinValue)
+            else if (description.Filter is CorrelationFilter)
             {
-                amqpMessage.MessageAnnotations.Map.Add(ScheduledEnqueueTimeUtcName, brokeredMessage.ScheduledEnqueueTimeUtc);
-            }
-
-            if ((brokeredMessage.InitializedMembers & BrokeredMessage.MessageMembers.Publisher) != 0 &&
-                brokeredMessage.Publisher != null)
-            {
-                amqpMessage.MessageAnnotations.Map.Add(PublisherName, brokeredMessage.Publisher);
-            }
-
-            if ((brokeredMessage.InitializedMembers & BrokeredMessage.MessageMembers.DeadLetterSource) != 0 &&
-                brokeredMessage.DeadLetterSource != null)
-            {
-                amqpMessage.MessageAnnotations.Map.Add(DeadLetterSourceName, brokeredMessage.DeadLetterSource);
-            }
-
-            if ((brokeredMessage.InitializedMembers & BrokeredMessage.MessageMembers.PartitionKey) != 0 &&
-                brokeredMessage.PartitionKey != null)
-            {
-                amqpMessage.MessageAnnotations.Map.Add(PartitionKeyName, brokeredMessage.PartitionKey);
-            }
-
-            foreach (KeyValuePair<string, object> pair in brokeredMessage.Properties)
-            {
-                object amqpObject;
-                if (TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
-                {
-                    amqpMessage.ApplicationProperties.Map.Add(pair.Key, amqpObject);
-                }
-            }
-
-            return amqpMessage;
-        }
-
-        public static AmqpMessage CreateAmqpMessageFromSbmpMessage(BrokeredMessage brokeredMessage)
-        {
-            AmqpMessage amqpMessage;
-
-            object bodyObject = brokeredMessage.ClearBodyObject();
-            object mappedBodyObject = null;
-
-            if (bodyObject != null)
-            {
-                TryGetAmqpObjectFromNetObject(bodyObject, MappingType.MessageBody, out mappedBodyObject);
-            }
-
-            if (mappedBodyObject != null)
-            {
-                amqpMessage = AmqpMessage.Create(new AmqpValue() { Value = mappedBodyObject });
-            }
-            else if (brokeredMessage.BodyStream != null)
-            {
-                if (brokeredMessage.BodyStream.CanSeek && brokeredMessage.BodyStream.Position != 0)
-                {
-                    // TODO:throw new InvalidOperationException(SRClient.CannotSerializeMessageWithPartiallyConsumedBodyStream);
-                    throw new InvalidOperationException("CannotSerializeMessageWithPartiallyConsumedBodyStream");
-                }
-
-                amqpMessage = AmqpMessage.Create(brokeredMessage.BodyStream, false);
+                AmqpMap correlationFilterMap = GetCorrelationFilterMap(description.Filter as CorrelationFilter);
+                ruleDescriptionMap[ManagementConstants.Properties.CorrelationFilter] = correlationFilterMap;
             }
             else
             {
-                amqpMessage = AmqpMessage.Create();
+                throw new NotSupportedException(
+                    Resources.RuleFilterNotSupported.FormatForUser(
+                        description.Filter.GetType(),
+                        nameof(SqlFilter),
+                        nameof(CorrelationFilter)));
             }
 
-            return amqpMessage;
+            AmqpMap amqpAction = GetRuleActionMap(description.Action as SqlRuleAction);
+            ruleDescriptionMap[ManagementConstants.Properties.SqlRuleAction] = amqpAction;
+
+            return ruleDescriptionMap;
         }
 
-        public static bool TryGetAmqpObjectFromNetObject(object netObject, MappingType mappingType, out object amqpObject)
+        static bool TryGetAmqpObjectFromNetObject(object netObject, MappingType mappingType, out object amqpObject)
         {
             amqpObject = null;
             if (netObject == null)
@@ -393,8 +386,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                     else if (mappingType == MappingType.ApplicationProperty)
                     {
-                        // TODO: throw FxTrace.Exception.AsError(new SerializationException(SRClient.FailedToSerializeUnsupportedType(netObject.GetType().FullName)));
-                        throw new SerializationException("netObject.GetType().FullName");
+                        throw Fx.Exception.AsError(new SerializationException(Resources.FailedToSerializeUnsupportedType.FormatForUser(netObject.GetType().FullName)));
                     }
                     else if (netObject is byte[])
                     {
@@ -410,14 +402,12 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         amqpObject = new AmqpMap((IDictionary)netObject);
                     }
                     break;
-                default:
-                    break;
             }
 
             return amqpObject != null;
         }
 
-        public static bool TryGetNetObjectFromAmqpObject(object amqpObject, MappingType mappingType, out object netObject)
+        static bool TryGetNetObjectFromAmqpObject(object amqpObject, MappingType mappingType, out object netObject)
         {
             netObject = null;
             if (amqpObject == null)
@@ -470,15 +460,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         if (describedType.Descriptor is AmqpSymbol)
                         {
                             AmqpSymbol symbol = (AmqpSymbol)describedType.Descriptor;
-                            if (symbol.Equals(UriName))
+                            if (symbol.Equals((AmqpSymbol)UriName))
                             {
                                 netObject = new Uri((string)describedType.Value);
                             }
-                            else if (symbol.Equals(TimeSpanName))
+                            else if (symbol.Equals((AmqpSymbol)TimeSpanName))
                             {
                                 netObject = new TimeSpan((long)describedType.Value);
                             }
-                            else if (symbol.Equals(DateTimeOffsetName))
+                            else if (symbol.Equals((AmqpSymbol)DateTimeOffsetName))
                             {
                                 netObject = new DateTimeOffset(new DateTime((long)describedType.Value, DateTimeKind.Utc));
                             }
@@ -486,8 +476,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                     else if (mappingType == MappingType.ApplicationProperty)
                     {
-                        // TODO: throw FxTrace.Exception.AsError(new SerializationException(SRClient.FailedToSerializeUnsupportedType(amqpObject.GetType().FullName)));
-                        throw new SerializationException("netObject.GetType().FullName");
+                        throw Fx.Exception.AsError(new SerializationException(Resources.FailedToSerializeUnsupportedType.FormatForUser(amqpObject.GetType().FullName)));
                     }
                     else if (amqpObject is AmqpMap)
                     {
@@ -505,44 +494,28 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         netObject = amqpObject;
                     }
                     break;
-                default:
-                    break;
             }
 
             return netObject != null;
         }
 
-        public static ArraySegment<byte> StreamToBytes(Stream stream)
+        static ArraySegment<byte> StreamToBytes(Stream stream)
         {
-            MemoryStream memoryStream = new MemoryStream();
-            int bytesRead;
-            byte[] readBuffer = new byte[512];
-            while ((bytesRead = stream.Read(readBuffer, 0, readBuffer.Length)) > 0)
+            ArraySegment<byte> buffer;
+            if (stream == null || stream.Length < 1)
             {
-                memoryStream.Write(readBuffer, 0, bytesRead);
+                buffer = default(ArraySegment<byte>);
             }
-
-            ArraySegment<byte> buffer = new ArraySegment<byte>(memoryStream.ToArray());
-
-            memoryStream.Dispose();
-            return buffer;
-        }
-
-        private static Stream GetMessageBodyStream(AmqpMessage message)
-        {
-            if ((message.BodyType & SectionFlag.Data) != 0 &&
-                message.DataBody != null)
+            else
             {
-                List<ArraySegment<byte>> dataSegments = new List<ArraySegment<byte>>();
-                foreach (Data data in message.DataBody)
+                using (var memoryStream = new MemoryStream(512))
                 {
-                    dataSegments.Add((ArraySegment<byte>)data.Value);
+                    stream.CopyTo(memoryStream, 512);
+                    buffer = new ArraySegment<byte>(memoryStream.ToArray());
                 }
-
-                return new BufferListStream(dataSegments.ToArray());
             }
 
-            return null;
+            return buffer;
         }
 
         private static Data ToData(AmqpMessage message)
@@ -551,6 +524,51 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             BufferListStream buffer = new BufferListStream(payload);
             ArraySegment<byte> value = buffer.ReadBytes((int)buffer.Length);
             return new Data { Value = value };
+        }
+
+        static AmqpMap GetSqlFilterMap(SqlFilter sqlFilter)
+        {
+            AmqpMap amqpFilterMap = new AmqpMap
+            {
+                [ManagementConstants.Properties.Expression] = sqlFilter.SqlExpression
+            };
+            return amqpFilterMap;
+        }
+
+        static AmqpMap GetCorrelationFilterMap(CorrelationFilter correlationFilter)
+        {
+            AmqpMap correlationFilterMap = new AmqpMap
+            {
+                [ManagementConstants.Properties.CorrelationId] = correlationFilter.CorrelationId,
+                [ManagementConstants.Properties.MessageId] = correlationFilter.MessageId,
+                [ManagementConstants.Properties.To] = correlationFilter.To,
+                [ManagementConstants.Properties.ReplyTo] = correlationFilter.ReplyTo,
+                [ManagementConstants.Properties.Label] = correlationFilter.Label,
+                [ManagementConstants.Properties.SessionId] = correlationFilter.SessionId,
+                [ManagementConstants.Properties.ReplyToSessionId] = correlationFilter.ReplyToSessionId,
+                [ManagementConstants.Properties.ContentType] = correlationFilter.ContentType
+            };
+
+            var propertiesMap = new AmqpMap();
+            foreach (var property in correlationFilter.Properties)
+            {
+                propertiesMap[new MapKey(property.Key)] = property.Value;
+            }
+
+            correlationFilterMap[ManagementConstants.Properties.CorrelationFilterProperties] = propertiesMap;
+
+            return correlationFilterMap;
+        }
+
+        static AmqpMap GetRuleActionMap(SqlRuleAction sqlRuleAction)
+        {
+            AmqpMap ruleActionMap = null;
+            if (sqlRuleAction != null)
+            {
+                ruleActionMap = new AmqpMap { [ManagementConstants.Properties.Expression] = sqlRuleAction.SqlExpression };
+            }
+
+            return ruleActionMap;
         }
     }
 }

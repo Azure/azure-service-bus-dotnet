@@ -4,258 +4,141 @@
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
-    using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Amqp;
+    using Core;
+    using Filters;
+    using Primitives;
 
-    public abstract class SubscriptionClient : ClientEntity
+    public sealed class SubscriptionClient : ClientEntity, ISubscriptionClient
     {
-        MessageReceiver innerReceiver;
+        public const string DefaultRule = "$Default";
 
-        protected SubscriptionClient(ServiceBusConnection serviceBusConnection, string topicPath, string name, ReceiveMode receiveMode)
-            : base($"{nameof(SubscriptionClient)}{ClientEntity.GetNextId()}({name})")
+        public SubscriptionClient(string connectionString, string topicPath, string subscriptionName, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
+            : this(new ServiceBusNamespaceConnection(connectionString), topicPath, subscriptionName, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
-            this.ServiceBusConnection = serviceBusConnection;
+        }
+
+        SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode, RetryPolicy retryPolicy)
+            : base($"{nameof(SubscriptionClient)}{ClientEntity.GetNextId()}({subscriptionName})", retryPolicy)
+        {
             this.TopicPath = topicPath;
-            this.Name = name;
-            this.SubscriptionPath = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.Name);
-            this.Mode = receiveMode;
+            this.SubscriptionName = subscriptionName;
+            this.Path = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
+            this.ReceiveMode = receiveMode;
+            this.InnerSubscriptionClient = new AmqpSubscriptionClient(serviceBusConnection, this.Path, MessagingEntityType.Subscriber, retryPolicy, receiveMode);
         }
 
-        public string TopicPath { get; private set; }
+        public string TopicPath { get; }
 
-        public string Name { get; }
+        public string Path { get; }
 
-        public ReceiveMode Mode { get; private set; }
+        public string SubscriptionName { get; }
 
-        public int PrefetchCount
+        public ReceiveMode ReceiveMode { get; }
+
+        internal IInnerSubscriptionClient InnerSubscriptionClient { get; }
+
+        public override async Task CloseAsync()
         {
-            get
-            {
-                return this.InnerReceiver.PrefetchCount;
-            }
-
-            set
-            {
-                this.InnerReceiver.PrefetchCount = value;
-            }
+            await this.InnerSubscriptionClient.CloseAsync().ConfigureAwait(false);
         }
 
-        internal string SubscriptionPath { get; private set; }
-
-        internal MessageReceiver InnerReceiver
+        public Task CompleteAsync(string lockToken)
         {
-            get
-            {
-                if (this.innerReceiver == null)
-                {
-                    lock (this.ThisLock)
-                    {
-                        if (this.innerReceiver == null)
-                        {
-                            this.innerReceiver = this.CreateMessageReceiver();
-                        }
-                    }
-                }
-
-                return this.innerReceiver;
-            }
+            return this.InnerSubscriptionClient.InnerReceiver.CompleteAsync(lockToken);
         }
 
-        protected object ThisLock { get; } = new object();
-
-        protected ServiceBusConnection ServiceBusConnection { get; }
-
-        public static SubscriptionClient CreateFromConnectionString(string topicEntityConnectionString, string subscriptionName)
+        public Task AbandonAsync(string lockToken)
         {
-            return CreateFromConnectionString(topicEntityConnectionString, subscriptionName, ReceiveMode.PeekLock);
+            return this.InnerSubscriptionClient.InnerReceiver.AbandonAsync(lockToken);
         }
 
-        public static SubscriptionClient CreateFromConnectionString(string topicEntityConnectionString, string subscriptionName, ReceiveMode mode)
+        public Task DeadLetterAsync(string lockToken)
         {
-            if (string.IsNullOrWhiteSpace(topicEntityConnectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(topicEntityConnectionString));
-            }
-
-            ServiceBusEntityConnection topicConnection = new ServiceBusEntityConnection(topicEntityConnectionString);
-            return topicConnection.CreateSubscriptionClient(topicConnection.EntityPath, subscriptionName, mode);
+            return this.InnerSubscriptionClient.InnerReceiver.DeadLetterAsync(lockToken);
         }
 
-        public static SubscriptionClient Create(ServiceBusNamespaceConnection namespaceConnection, string topicPath, string subscriptionName)
+        /// <summary>Asynchronously processes a message.</summary>
+        /// <param name="handler"></param>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
         {
-            return SubscriptionClient.Create(namespaceConnection, topicPath, subscriptionName, ReceiveMode.PeekLock);
+            this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler);
         }
 
-        public static SubscriptionClient Create(ServiceBusNamespaceConnection namespaceConnection, string topicPath, string subscriptionName, ReceiveMode mode)
+        /// <summary>Asynchronously processes a message.</summary>
+        /// <param name="handler"></param>
+        /// <param name="registerHandlerOptions">Calls a message option.</param>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterHandlerOptions registerHandlerOptions)
         {
-            if (namespaceConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            if (string.IsNullOrWhiteSpace(topicPath))
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Topic Path is null");
-            }
-
-            return namespaceConnection.CreateSubscriptionClient(topicPath, subscriptionName, mode);
-        }
-
-        public static SubscriptionClient Create(ServiceBusEntityConnection topicConnection, string subscriptionName)
-        {
-            return SubscriptionClient.Create(topicConnection, subscriptionName, ReceiveMode.PeekLock);
-        }
-
-        public static SubscriptionClient Create(ServiceBusEntityConnection topicConnection, string subscriptionName, ReceiveMode mode)
-        {
-            if (topicConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(topicConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            return topicConnection.CreateSubscriptionClient(topicConnection.EntityPath, subscriptionName, mode);
-        }
-
-        public sealed override async Task CloseAsync()
-        {
-            await this.OnCloseAsync().ConfigureAwait(false);
-        }
-
-        public async Task<BrokeredMessage> ReceiveAsync()
-        {
-            IList<BrokeredMessage> messages = await this.ReceiveAsync(1).ConfigureAwait(false);
-            if (messages != null && messages.Count > 0)
-            {
-                return messages[0];
-            }
-
-            return null;
-        }
-
-        public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
-        {
-            return this.InnerReceiver.ReceiveAsync(maxMessageCount);
-        }
-
-        public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
-        {
-            IList<BrokeredMessage> messages = await this.ReceiveBySequenceNumberAsync(new long[] { sequenceNumber });
-            if (messages != null && messages.Count > 0)
-            {
-                return messages[0];
-            }
-
-            return null;
-        }
-
-        public Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
-        {
-            return this.InnerReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers);
+            this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, registerHandlerOptions);
         }
 
         /// <summary>
-        /// Asynchronously reads the next message without changing the state of the receiver or the message source.
+        /// Asynchronously adds a rule to the current subscription with the specified name and filter expression.
         /// </summary>
-        /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
-        public Task<BrokeredMessage> PeekAsync()
+        /// <param name="ruleName">The name of the rule to add.</param>
+        /// <param name="filter">The filter expression against which messages will be matched.</param>
+        /// <returns>A task instance that represents the asynchronous add rule operation.</returns>
+        public Task AddRuleAsync(string ruleName, Filter filter)
         {
-            return this.innerReceiver.PeekAsync();
+            return this.AddRuleAsync(new RuleDescription(name: ruleName, filter: filter));
         }
 
         /// <summary>
-        /// Asynchronously reads the next batch of message without changing the state of the receiver or the message source.
+        /// Asynchronously adds a new rule to the subscription using the specified rule description.
         /// </summary>
-        /// <param name="maxMessageCount">The number of messages.</param>
-        /// <returns>The asynchronous operation that returns a list of <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> to be read.</returns>
-        public Task<IList<BrokeredMessage>> PeekAsync(int maxMessageCount)
+        /// <param name="description">The rule description that provides metadata of the rule to add.</param>
+        /// <returns>A task instance that represents the asynchronous add rule operation.</returns>
+        public async Task AddRuleAsync(RuleDescription description)
         {
-            return this.innerReceiver.PeekAsync(maxMessageCount);
-        }
+            if (description == null)
+            {
+                throw Fx.Exception.ArgumentNull(nameof(description));
+            }
 
-        /// <summary>
-        /// Asynchronously reads the next message without changing the state of the receiver or the message source.
-        /// </summary>
-        /// <param name="fromSequenceNumber">The sequence number from where to read the message.</param>
-        /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
-        public Task<BrokeredMessage> PeekBySequenceNumberAsync(long fromSequenceNumber)
-        {
-            return this.innerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber);
-        }
-
-        /// <summary>Peeks a batch of messages.</summary>
-        /// <param name="fromSequenceNumber">The starting point from which to browse a batch of messages.</param>
-        /// <param name="messageCount">The number of messages.</param>
-        /// <returns>A batch of messages peeked.</returns>
-        public Task<IList<BrokeredMessage>> PeekBySequenceNumberAsync(long fromSequenceNumber, int messageCount)
-        {
-            return this.innerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber, messageCount);
-        }
-
-        public Task CompleteAsync(Guid lockToken)
-        {
-            return this.CompleteAsync(new Guid[] { lockToken });
-        }
-
-        public Task CompleteAsync(IEnumerable<Guid> lockTokens)
-        {
-            return this.InnerReceiver.CompleteAsync(lockTokens);
-        }
-
-        public Task AbandonAsync(Guid lockToken)
-        {
-            return this.InnerReceiver.AbandonAsync(new Guid[] { lockToken });
-        }
-
-        public Task<MessageSession> AcceptMessageSessionAsync()
-        {
-            return this.AcceptMessageSessionAsync(null);
-        }
-
-        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
-        {
-            MessageSession session = null;
-
-            MessagingEventSource.Log.AcceptMessageSessionStart(this.ClientId, sessionId);
+            description.ValidateDescriptionName();
+            MessagingEventSource.Log.AddRuleStart(this.ClientId, description.Name);
 
             try
             {
-                session = await this.OnAcceptMessageSessionAsync(sessionId).ConfigureAwait(false);
+                await this.InnerSubscriptionClient.OnAddRuleAsync(description).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.AcceptMessageSessionException(this.ClientId, exception);
+                MessagingEventSource.Log.AddRuleException(this.ClientId, exception);
                 throw;
             }
 
-            MessagingEventSource.Log.AcceptMessageSessionStop(this.ClientId);
-            return session;
+            MessagingEventSource.Log.AddRuleStop(this.ClientId);
         }
 
-        public Task DeferAsync(Guid lockToken)
+        /// <summary>
+        /// Asynchronously removes the rule described by <paramref name="ruleName" />.
+        /// </summary>
+        /// <param name="ruleName">The name of the rule.</param>
+        /// <returns>A task instance that represents the asynchronous remove rule operation.</returns>
+        public async Task RemoveRuleAsync(string ruleName)
         {
-            return this.InnerReceiver.DeferAsync(new Guid[] { lockToken });
+            if (string.IsNullOrWhiteSpace(ruleName))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(ruleName));
+            }
+
+            MessagingEventSource.Log.RemoveRuleStart(this.ClientId, ruleName);
+
+            try
+            {
+                await this.InnerSubscriptionClient.OnRemoveRuleAsync(ruleName).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                MessagingEventSource.Log.RemoveRuleException(this.ClientId, exception);
+                throw;
+            }
+
+            MessagingEventSource.Log.RemoveRuleStop(this.ClientId);
         }
-
-        public Task DeadLetterAsync(Guid lockToken)
-        {
-            return this.InnerReceiver.DeadLetterAsync(new Guid[] { lockToken });
-        }
-
-        public Task<DateTime> RenewMessageLockAsync(Guid lockToken)
-        {
-            return this.InnerReceiver.RenewLockAsync(lockToken);
-        }
-
-        protected MessageReceiver CreateMessageReceiver()
-        {
-            return this.OnCreateMessageReceiver();
-        }
-
-        protected abstract MessageReceiver OnCreateMessageReceiver();
-
-        protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId);
-
-        protected abstract Task OnCloseAsync();
     }
 }

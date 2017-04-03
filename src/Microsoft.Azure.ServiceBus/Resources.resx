@@ -135,11 +135,20 @@
   <data name="CannotSendAnEmptyMessage" xml:space="preserve">
     <value>Sending empty {0} is not a valid operation.</value>
   </data>
+  <data name="CannotSerializeSessionStateWithPartiallyConsumedStream" xml:space="preserve">
+    <value>Failed to serialize the session state because its state stream has been partially consumed.</value>
+  </data>
   <data name="FailedToSerializeUnsupportedType" xml:space="preserve">
     <value>Serialization operation failed due to unsupported type {0}.</value>
   </data>
   <data name="InvalidEncoding" xml:space="preserve">
     <value>The string has an invalid encoding format.</value>
+  </data>
+  <data name="MessageLockLost" xml:space="preserve">
+    <value>The lock supplied is invalid. Either the lock expired, or the message has already been removed from the queue.</value>
+  </data>
+  <data name="SessionLockExpiredOnMessageSession" xml:space="preserve">
+    <value>The session lock has expired on the MessageSession. Accept a new MessageSession.</value>
   </data>
   <data name="TimeoutMustBeNonNegative" xml:space="preserve">
     <value>Argument {0} must be a non-negative timeout value. The provided value was {1}.</value>
@@ -152,5 +161,44 @@
   </data>
   <data name="TokenMissingExpiresOn" xml:space="preserve">
     <value>The provided token does not specify the 'ExpiresOn' value.</value>
+  </data>
+  <data name="NotSupportedPropertyType" xml:space="preserve">
+    <value>'{0}' is not a supported type.</value>
+  </data>
+  <data name="SqlFilterStatmentTooLong" xml:space="preserve">
+    <value>The length of the filter statement is {0}, which exceeds the maximum length of {1}</value>
+  </data>
+  <data name="SqlFilterActionStatmentTooLong" xml:space="preserve">
+    <value>The length of the filter action statement is {0}, which exceeds the maximum length of {1}.</value>
+  </data>
+  <data name="CharacterReservedForUriScheme" xml:space="preserve">
+    <value>'{0}' contains character '{1}' which is not allowed because it is reserved in the Uri scheme.</value>
+  </data>
+  <data name="EntityNameLengthExceedsLimit" xml:space="preserve">
+    <value>The entity path/name '{0}' exceeds the '{1}' character limit.</value>
+  </data>
+  <data name="InvalidCharacterInEntityName" xml:space="preserve">
+    <value>The entity name or path contains an invalid character '{0}'. The supplied value is '{1}'.</value>
+  </data>
+  <data name="RuleFilterNotSupported" xml:space="preserve">
+    <value>Provided rule filter {0} is not supported. Supported values are: {1}, {2}</value>
+  </data>
+  <data name="PeekLockModeRequired" xml:space="preserve">
+    <value>This operation is only supported for a message receiver in 'PeekLock' receive mode.</value>
+  </data>
+  <data name="MaxConcurrentCallsMustBeGreaterThanZero" xml:space="preserve">
+    <value>The specified value '{0}' is invalid. "maxConcurrentCalls" must be greater than zero.</value>
+  </data>
+  <data name="OnMessageAlreadyCalled" xml:space="preserve">
+    <value>The method 'OnMessageAsync' has already been called.</value>
+  </data>
+  <data name="DefaultServerBusyException" xml:space="preserve">
+    <value>This request has been blocked because the entity or namespace is being throttled. Please retry the operation, and if condition continues, please slow down your rate of request.</value>
+  </data>
+  <data name="ExponentialRetryBackoffRange" xml:space="preserve">
+    <value>The minimum back off period '{0}' cannot exceed the maximum back off period of '{1}'.</value>
+  </data>
+  <data name="ArgumentMustBePositive" xml:space="preserve">
+    <value>The value of the argument {0} must be positive.</value>
   </data>
 </root>

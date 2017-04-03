@@ -6,15 +6,16 @@
 
 **Please be aware that this library is currently in active development, and is not intended for production**
 
-[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/master)
+|Build/Package|Status|
+|------|-------------|
+|master|[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/master)|
+|dev|[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/dev)|
 
 This is the next generation Service Bus .NET client library that focuses on queues & topics. If you are looking for Event Hubs and Relay clients, follow the below links:
 * [Event Hubs](https://github.com/azure/azure-event-hubs-dotnet)
 * [Relay](https://github.com/azure/azure-relay-dotnet)
- 
-For information on the current set of implemented features and features to come, see our [Road map](#road-map).
 
-Azure Service Bus Messaging is an asynchronous messaging cloud platform that enables you to send messages between decoupled systems. Microsoft offers this feature as a service, which means that you do not need to host any of your own hardware in order to use it.
+Azure Service Bus is an asynchronous messaging cloud platform that enables you to send messages between decoupled systems. Microsoft offers this feature as a service, which means that you do not need to host any of your own hardware in order to use it.
 
 Refer to the [online documentation](https://azure.microsoft.com/services/service-bus/) to learn more about Service Bus.
 
@@ -55,38 +56,3 @@ The standard way to manage Azure resources is by using [Azure Resource Manager](
 * GitHub repo - [https://github.com/Azure/azure-sdk-for-net/tree/AutoRest/src/ResourceManagement/ServiceBus](https://github.com/Azure/azure-sdk-for-net/tree/AutoRest/src/ResourceManagement/ServiceBus)
 * NuGet package - [https://www.nuget.org/packages/Microsoft.Azure.Management.ServiceBus/](https://www.nuget.org/packages/Microsoft.Azure.Management.ServiceBus/)
 * Sample - [https://github.com/Azure-Samples/service-bus-dotnet-management](https://github.com/Azure-Samples/service-bus-dotnet-management)
-
-## Road map
-
-- [x] Sprint 1: **Complete**
-
-  All runtime operations for queues (not topics / subscriptions)
-    * Send
-    * Receive/Peeklock (without receive by sequence number)
-    * Abandon
-    * Deadletter
-    * Defer
-  
-- [x] Sprint 2: **Complete**
-  * RenewLock (Request/Response)
-  * Batch operation  - Explicit batching only
-  * Runtime operation only
-  * Linux testing setup/investigation
-
-- [x] Sprint 3: **Complete**
-  * Add topic/subscription support
-  * Session support
-    * Accept session
-    * Session Receive/ReceiveBatch
-	
-- [x] Sprint 4: **Complete**
-  * Retry policy
-  * Receive by sequence number
-
-- [ ] Sprint 5: Early 2017
-  * Add major error conditions (ex. preventing all operations that are not supported, for Ex Transaction scenarios, etc)
-  * Request/Response features:
-      * Add/Remove Rule
-      * Browse messages and sessions
-  * Scheduled messages specific API (Scheduling of messages can be done today through the queue/topic client, but this item is to add specific API's for scheduled messages)
-  * OnMessage/OnSession handlers

@@ -5,14 +5,14 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Transport;
-    using Microsoft.Azure.ServiceBus.Amqp;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Amqp;
+    using Azure.Amqp;
+    using Azure.Amqp.Transport;
+    using Core;
+    using Primitives;
 
     public abstract class ServiceBusConnection
     {
-        public static readonly TimeSpan DefaultOperationTimeout = TimeSpan.FromMinutes(1);
         static readonly Version AmqpVersion = new Version(1, 0, 0, 0);
         int prefetchCount;
 
@@ -72,28 +72,24 @@ namespace Microsoft.Azure.ServiceBus
             return this.ConnectionManager.CloseAsync();
         }
 
-        internal QueueClient CreateQueueClient(string entityPath, ReceiveMode mode)
+        internal MessageSender CreateMessageSender(string entityPath)
         {
-            MessagingEventSource.Log.QueueClientCreateStart(this.Endpoint.Host, entityPath, mode.ToString());
-            AmqpQueueClient queueClient = new AmqpQueueClient(this, entityPath, mode);
-            MessagingEventSource.Log.QueueClientCreateStop(this.Endpoint.Host, entityPath, queueClient.ClientId);
-            return queueClient;
+            MessagingEventSource.Log.MessageSenderCreateStart(this.Endpoint.Host, entityPath);
+            TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
+            var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
+            AmqpMessageSender messageSender = new AmqpMessageSender(entityPath, null, this, cbsTokenProvider, RetryPolicy.Default);
+            MessagingEventSource.Log.MessageSenderCreateStop(this.Endpoint.Host, entityPath);
+            return messageSender;
         }
 
-        internal TopicClient CreateTopicClient(string topicPath)
+        internal MessageReceiver CreateMessageReceiver(string entityPath, ReceiveMode mode)
         {
-            MessagingEventSource.Log.TopicClientCreateStart(this.Endpoint.Host, topicPath);
-            AmqpTopicClient topicClient = new AmqpTopicClient(this, topicPath);
-            MessagingEventSource.Log.TopicClientCreateStop(this.Endpoint.Host, topicPath, topicClient.ClientId);
-            return topicClient;
-        }
-
-        internal SubscriptionClient CreateSubscriptionClient(string topicPath, string subscriptionName, ReceiveMode mode)
-        {
-            MessagingEventSource.Log.SubscriptionClientCreateStart(this.Endpoint.Host, topicPath, subscriptionName, mode.ToString());
-            AmqpSubscriptionClient subscriptionClient = new AmqpSubscriptionClient(this, topicPath, subscriptionName, mode);
-            MessagingEventSource.Log.SubscriptionClientCreateStop(this.Endpoint.Host, topicPath, subscriptionName, subscriptionClient.ClientId);
-            return subscriptionClient;
+            MessagingEventSource.Log.MessageReceiverCreateStart(this.Endpoint.Host, entityPath, mode.ToString());
+            TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
+            var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
+            AmqpMessageReceiver messageReceiver = new AmqpMessageReceiver(entityPath, null, mode, this.PrefetchCount, this, cbsTokenProvider, RetryPolicy.Default);
+            MessagingEventSource.Log.MessageReceiverCreateStop(this.Endpoint.Host, entityPath);
+            return messageReceiver;
         }
 
         protected void InitializeConnection(ServiceBusConnectionStringBuilder builder)
@@ -101,7 +97,7 @@ namespace Microsoft.Azure.ServiceBus
             this.Endpoint = builder.Endpoint;
             this.SasKeyName = builder.SasKeyName;
             this.SasKey = builder.SasKey;
-            this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, ServiceBusConnection.CloseConnection);
+            this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, CloseConnection);
         }
 
         static void CloseConnection(AmqpConnection connection)
@@ -117,7 +113,7 @@ namespace Microsoft.Azure.ServiceBus
 
             TimeoutHelper timeoutHelper = new TimeoutHelper(timeout);
             AmqpSettings amqpSettings = AmqpConnectionHelper.CreateAmqpSettings(
-                amqpVersion: ServiceBusConnection.AmqpVersion,
+                amqpVersion: AmqpVersion,
                 useSslStreamSecurity: true,
                 hasTokenProvider: true);
 

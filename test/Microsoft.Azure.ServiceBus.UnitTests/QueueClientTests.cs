@@ -11,8 +11,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { Constants.NonPartitionedQueueName },
-            new object[] { Constants.PartitionedQueueName }
+            new object[] { TestConstants.NonPartitionedQueueName },
+            new object[] { TestConstants.PartitionedQueueName }
         };
 
         [Theory]
@@ -20,10 +20,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekLockTest(string queueName, int messageCount = 10)
         {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName);
             try
             {
-                await this.PeekLockTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await this.PeekLockTestCase(queueClient.InnerClient.InnerSender, queueClient.InnerClient.InnerReceiver, messageCount);
             }
             finally
             {
@@ -36,10 +36,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task ReceiveDeleteTest(string queueName, int messageCount = 10)
         {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.ReceiveDeleteTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await this.ReceiveDeleteTestCase(queueClient.InnerClient.InnerSender, queueClient.InnerClient.InnerReceiver, messageCount);
             }
             finally
             {
@@ -52,10 +52,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekLockWithAbandonTest(string queueName, int messageCount = 10)
         {
-            QueueClient queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName);
             try
             {
-                await this.PeekLockWithAbandonTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await this.PeekLockWithAbandonTestCase(queueClient.InnerClient.InnerSender, queueClient.InnerClient.InnerReceiver, messageCount);
             }
             finally
             {
@@ -68,16 +68,19 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task PeekLockWithDeadLetterTest(string queueName, int messageCount = 10)
         {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName);
 
             // Create DLQ Client To Receive DeadLetteredMessages
-            var builder = new ServiceBusConnectionStringBuilder(TestUtility.GetEntityConnectionString(queueName));
-            builder.EntityPath = EntityNameHelper.FormatDeadLetterPath(queueClient.QueueName);
-            var deadLetterQueueClient = QueueClient.CreateFromConnectionString(builder.ToString());
+            var deadLetterQueueClient = new QueueClient(TestUtility.NamespaceConnectionString, EntityNameHelper.FormatDeadLetterPath(queueClient.QueueName));
 
             try
             {
-                await this.PeekLockWithDeadLetterTestCase(queueClient.InnerSender, queueClient.InnerReceiver, deadLetterQueueClient.InnerReceiver, messageCount);
+                await
+                    this.PeekLockWithDeadLetterTestCase(
+                        queueClient.InnerClient.InnerSender,
+                        queueClient.InnerClient.InnerReceiver,
+                        deadLetterQueueClient.InnerClient.InnerReceiver,
+                        messageCount);
             }
             finally
             {
@@ -89,28 +92,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task PeekLockDeferTest(string queueName, int messageCount = 10)
-        {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
-            try
-            {
-                await this.PeekLockDeferTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
-            }
-            finally
-            {
-                await queueClient.CloseAsync();
-            }
-        }
-
-        [Theory]
-        [MemberData(nameof(TestPermutations))]
-        [DisplayTestMethodName]
         async Task BasicRenewLockTest(string queueName, int messageCount = 10)
         {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName));
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName);
             try
             {
-                await this.RenewLockTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await this.RenewLockTestCase(queueClient.InnerClient.InnerSender, queueClient.InnerClient.InnerReceiver, messageCount);
             }
             finally
             {
@@ -121,12 +108,28 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task PeekAsyncTest(string queueName, int messageCount = 10)
+        async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTest(string queueName, int messageCount = 1)
         {
-            var queueClient = QueueClient.CreateFromConnectionString(TestUtility.GetEntityConnectionString(queueName), ReceiveMode.ReceiveAndDelete);
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.PeekAsyncTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await this.ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(queueClient.InnerClient.InnerSender, queueClient.InnerClient.InnerReceiver, messageCount);
+            }
+            finally
+            {
+                await queueClient.CloseAsync();
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        async Task CancelScheduledMessagesAsyncTest(string queueName, int messageCount = 1)
+        {
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
+            try
+            {
+                await this.CancelScheduledMessagesAsyncTestCase(queueClient.InnerClient.InnerSender, queueClient.InnerClient.InnerReceiver, messageCount);
             }
             finally
             {

@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -10,16 +11,24 @@ namespace Microsoft.Azure.ServiceBus
     /// Contract for all client entities with Open-Close/Abort state m/c
     /// main-purpose: closeAll related entities
     /// </summary>
-    public abstract class ClientEntity
+    public abstract class ClientEntity : IClientEntity
     {
         static int nextId;
 
-        protected ClientEntity(string clientId)
+        protected ClientEntity(string clientId, RetryPolicy retryPolicy)
         {
+            if (retryPolicy == null)
+            {
+                throw new ArgumentNullException(nameof(retryPolicy));
+            }
+
             this.ClientId = clientId;
+            this.RetryPolicy = retryPolicy;
         }
 
         public string ClientId { get; private set; }
+
+        public RetryPolicy RetryPolicy { get; private set; }
 
         public abstract Task CloseAsync();
 

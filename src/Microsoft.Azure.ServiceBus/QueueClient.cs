@@ -5,299 +5,108 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Amqp;
+    using Core;
+    using Primitives;
 
     /// <summary>
     /// Anchor class - all Queue client operations start here.
-    /// See <see cref="QueueClient.Create(string)"/>
     /// </summary>
-    public abstract class QueueClient : ClientEntity
+    public sealed class QueueClient : ClientEntity, IQueueClient
     {
-        MessageSender innerSender;
-        MessageReceiver innerReceiver;
-
-        protected QueueClient(ServiceBusConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode)
-            : base($"{nameof(QueueClient)}{ClientEntity.GetNextId()}({entityPath})")
+        public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
+            : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
-            this.ServiceBusConnection = serviceBusConnection;
+        }
+
+        QueueClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode, RetryPolicy retryPolicy)
+            : base($"{nameof(QueueClient)}{ClientEntity.GetNextId()}({entityPath})", retryPolicy)
+        {
             this.QueueName = entityPath;
-            this.Mode = receiveMode;
+            this.ReceiveMode = receiveMode;
+            this.InnerClient = new AmqpClient(serviceBusConnection, entityPath, MessagingEntityType.Queue, retryPolicy, receiveMode);
         }
 
         public string QueueName { get; }
 
-        public ReceiveMode Mode { get; private set; }
+        public ReceiveMode ReceiveMode { get; private set; }
 
-        public int PrefetchCount
+        public string Path => this.QueueName;
+
+        internal IInnerSenderReceiver InnerClient { get; }
+
+        public override async Task CloseAsync()
         {
-            get
-            {
-                return this.InnerReceiver.PrefetchCount;
-            }
-
-            set
-            {
-                this.InnerReceiver.PrefetchCount = value;
-            }
-        }
-
-        internal MessageSender InnerSender
-        {
-            get
-            {
-                if (this.innerSender == null)
-                {
-                    lock (this.ThisLock)
-                    {
-                        if (this.innerSender == null)
-                        {
-                            this.innerSender = this.CreateMessageSender();
-                        }
-                    }
-                }
-
-                return this.innerSender;
-            }
-        }
-
-        internal MessageReceiver InnerReceiver
-        {
-            get
-            {
-                if (this.innerReceiver == null)
-                {
-                    lock (this.ThisLock)
-                    {
-                        if (this.innerReceiver == null)
-                        {
-                            this.innerReceiver = this.CreateMessageReceiver();
-                        }
-                    }
-                }
-
-                return this.innerReceiver;
-            }
-        }
-
-        protected object ThisLock { get; } = new object();
-
-        protected ServiceBusConnection ServiceBusConnection { get; }
-
-        public static QueueClient CreateFromConnectionString(string entityConnectionString)
-        {
-            return CreateFromConnectionString(entityConnectionString, ReceiveMode.PeekLock);
-        }
-
-        public static QueueClient CreateFromConnectionString(string entityConnectionString, ReceiveMode mode)
-        {
-            if (string.IsNullOrWhiteSpace(entityConnectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(entityConnectionString));
-            }
-
-            ServiceBusEntityConnection entityConnection = new ServiceBusEntityConnection(entityConnectionString);
-            return entityConnection.CreateQueueClient(entityConnection.EntityPath, mode);
-        }
-
-        public static QueueClient Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath)
-        {
-            return QueueClient.Create(namespaceConnection, entityPath, ReceiveMode.PeekLock);
-        }
-
-        public static QueueClient Create(ServiceBusNamespaceConnection namespaceConnection, string entityPath, ReceiveMode mode)
-        {
-            if (namespaceConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.Argument(nameof(namespaceConnection), "Entity Path is null");
-            }
-
-            return namespaceConnection.CreateQueueClient(entityPath, mode);
-        }
-
-        public static QueueClient Create(ServiceBusEntityConnection entityConnection)
-        {
-            return QueueClient.Create(entityConnection, ReceiveMode.PeekLock);
-        }
-
-        public static QueueClient Create(ServiceBusEntityConnection entityConnection, ReceiveMode mode)
-        {
-            if (entityConnection == null)
-            {
-                throw Fx.Exception.Argument(nameof(entityConnection), "Namespace Connection is null. Create a connection using the NamespaceConnection class");
-            }
-
-            return entityConnection.CreateQueueClient(entityConnection.EntityPath, mode);
-        }
-
-        public sealed override async Task CloseAsync()
-        {
-            await this.InnerReceiver.CloseAsync().ConfigureAwait(false);
-            await this.OnCloseAsync().ConfigureAwait(false);
+            await this.InnerClient.CloseAsync().ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Send <see cref="BrokeredMessage"/> to Queue.
-        /// <see cref="SendAsync(BrokeredMessage)"/> sends the <see cref="BrokeredMessage"/> to a Service Gateway, which in-turn will forward the BrokeredMessage to the queue.
+        /// Send <see cref="Message"/> to Queue.
+        /// <see cref="SendAsync(Message)"/> sends the <see cref="Message"/> to a Service Gateway, which in-turn will forward the Message to the queue.
         /// </summary>
-        /// <param name="brokeredMessage">the <see cref="BrokeredMessage"/> to be sent.</param>
+        /// <param name="message">the <see cref="Message"/> to be sent.</param>
         /// <returns>A Task that completes when the send operations is done.</returns>
-        public Task SendAsync(BrokeredMessage brokeredMessage)
+        public Task SendAsync(Message message)
         {
-            return this.SendAsync(new BrokeredMessage[] { brokeredMessage });
+            return this.SendAsync(new[] { message });
         }
 
-        public Task SendAsync(IEnumerable<BrokeredMessage> brokeredMessages)
+        public Task SendAsync(IList<Message> messageList)
         {
-            return this.InnerSender.SendAsync(brokeredMessages);
+            return this.InnerClient.InnerSender.SendAsync(messageList);
         }
 
-        public async Task<BrokeredMessage> ReceiveAsync()
+        public Task CompleteAsync(string lockToken)
         {
-            IList<BrokeredMessage> messages = await this.ReceiveAsync(1).ConfigureAwait(false);
-            if (messages != null && messages.Count > 0)
-            {
-                return messages[0];
-            }
-
-            return null;
+            return this.InnerClient.InnerReceiver.CompleteAsync(lockToken);
         }
 
-        public Task<IList<BrokeredMessage>> ReceiveAsync(int maxMessageCount)
+        public Task AbandonAsync(string lockToken)
         {
-            return this.InnerReceiver.ReceiveAsync(maxMessageCount);
+            return this.InnerClient.InnerReceiver.AbandonAsync(lockToken);
         }
 
-        public async Task<BrokeredMessage> ReceiveBySequenceNumberAsync(long sequenceNumber)
+        public Task DeadLetterAsync(string lockToken)
         {
-            IList<BrokeredMessage> messages = await this.ReceiveBySequenceNumberAsync(new long[] { sequenceNumber });
-            if (messages != null && messages.Count > 0)
-            {
-                return messages[0];
-            }
-
-            return null;
+            return this.InnerClient.InnerReceiver.DeadLetterAsync(lockToken);
         }
 
-        public Task<IList<BrokeredMessage>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers)
+        /// <summary>Asynchronously processes a message.</summary>
+        /// <param name="handler"></param>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
         {
-            return this.InnerReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers);
+            this.InnerClient.InnerReceiver.RegisterMessageHandler(handler);
         }
 
-        /// <summary>
-        /// Asynchronously reads the next message without changing the state of the receiver or the message source.
-        /// </summary>
-        /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
-        public Task<BrokeredMessage> PeekAsync()
+        /// <summary>Asynchronously processes a message.</summary>
+        /// <param name="handler"></param>
+        /// <param name="registerHandlerOptions">Calls a message option.</param>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterHandlerOptions registerHandlerOptions)
         {
-            return this.innerReceiver.PeekAsync();
+            this.InnerClient.InnerReceiver.RegisterMessageHandler(handler, registerHandlerOptions);
         }
 
         /// <summary>
-        /// Asynchronously reads the next batch of message without changing the state of the receiver or the message source.
+        /// Sends a scheduled message
         /// </summary>
-        /// <param name="maxMessageCount">The number of messages.</param>
-        /// <returns>The asynchronous operation that returns a list of <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> to be read.</returns>
-        public Task<IList<BrokeredMessage>> PeekAsync(int maxMessageCount)
+        /// <param name="message">Message to be scheduled</param>
+        /// <param name="scheduleEnqueueTimeUtc">Time of enqueue</param>
+        /// <returns>Sequence number that is needed for cancelling.</returns>
+        public Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
-            return this.innerReceiver.PeekAsync(maxMessageCount);
+            return this.InnerClient.InnerSender.ScheduleMessageAsync(message, scheduleEnqueueTimeUtc);
         }
 
         /// <summary>
-        /// Asynchronously reads the next message without changing the state of the receiver or the message source.
+        /// Cancels a scheduled message
         /// </summary>
-        /// <param name="fromSequenceNumber">The sequence number from where to read the message.</param>
-        /// <returns>The asynchronous operation that returns the <see cref="Microsoft.Azure.ServiceBus.BrokeredMessage" /> that represents the next message to be read.</returns>
-        public Task<BrokeredMessage> PeekBySequenceNumberAsync(long fromSequenceNumber)
+        /// <param name="sequenceNumber">Returned on scheduling a message.</param>
+        /// <returns></returns>
+        public Task CancelScheduledMessageAsync(long sequenceNumber)
         {
-            return this.innerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber);
+            return this.InnerClient.InnerSender.CancelScheduledMessageAsync(sequenceNumber);
         }
-
-        /// <summary>Peeks a batch of messages.</summary>
-        /// <param name="fromSequenceNumber">The starting point from which to browse a batch of messages.</param>
-        /// <param name="messageCount">The number of messages.</param>
-        /// <returns>A batch of messages peeked.</returns>
-        public Task<IList<BrokeredMessage>> PeekBySequenceNumberAsync(long fromSequenceNumber, int messageCount)
-        {
-            return this.innerReceiver.PeekBySequenceNumberAsync(fromSequenceNumber, messageCount);
-        }
-
-        public Task CompleteAsync(Guid lockToken)
-        {
-            return this.CompleteAsync(new Guid[] { lockToken });
-        }
-
-        public Task CompleteAsync(IEnumerable<Guid> lockTokens)
-        {
-            return this.InnerReceiver.CompleteAsync(lockTokens);
-        }
-
-        public Task AbandonAsync(Guid lockToken)
-        {
-            return this.InnerReceiver.AbandonAsync(new Guid[] { lockToken });
-        }
-
-        public Task<MessageSession> AcceptMessageSessionAsync()
-        {
-            return this.AcceptMessageSessionAsync(null);
-        }
-
-        public async Task<MessageSession> AcceptMessageSessionAsync(string sessionId)
-        {
-            MessageSession session = null;
-
-            MessagingEventSource.Log.AcceptMessageSessionStart(this.ClientId, sessionId);
-
-            try
-            {
-                session = await this.OnAcceptMessageSessionAsync(sessionId).ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                MessagingEventSource.Log.AcceptMessageSessionException(this.ClientId, exception);
-                throw;
-            }
-
-            MessagingEventSource.Log.AcceptMessageSessionStop(this.ClientId);
-            return session;
-        }
-
-        public Task DeferAsync(Guid lockToken)
-        {
-            return this.InnerReceiver.DeferAsync(new Guid[] { lockToken });
-        }
-
-        public Task DeadLetterAsync(Guid lockToken)
-        {
-            return this.InnerReceiver.DeadLetterAsync(new Guid[] { lockToken });
-        }
-
-        public Task<DateTime> RenewMessageLockAsync(Guid lockToken)
-        {
-            return this.InnerReceiver.RenewLockAsync(lockToken);
-        }
-
-        protected MessageSender CreateMessageSender()
-        {
-            return this.OnCreateMessageSender();
-        }
-
-        protected MessageReceiver CreateMessageReceiver()
-        {
-            return this.OnCreateMessageReceiver();
-        }
-
-        protected abstract MessageSender OnCreateMessageSender();
-
-        protected abstract MessageReceiver OnCreateMessageReceiver();
-
-        protected abstract Task<MessageSession> OnAcceptMessageSessionAsync(string sessionId);
-
-        protected abstract Task OnCloseAsync();
     }
 }

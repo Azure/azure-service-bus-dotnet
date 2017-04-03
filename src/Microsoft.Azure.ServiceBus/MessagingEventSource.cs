@@ -7,7 +7,6 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Diagnostics.Tracing;
-    using System.Linq;
 
     [SuppressMessage(
         "Microsoft.StyleCop.CSharp.OrderingRules",
@@ -139,7 +138,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageCompleteStart(string clientId, int messageCount, IEnumerable<Guid> lockTokens)
+        public void MessageCompleteStart(string clientId, int messageCount, IEnumerable<string> lockTokens)
         {
             if (this.IsEnabled())
             {
@@ -178,20 +177,13 @@ namespace Microsoft.Azure.ServiceBus
             this.WriteEvent(15, clientId, exception);
         }
 
-        [NonEvent]
-        public void MessageAbandonStart(string clientId, int messageCount, IEnumerable<Guid> lockTokens)
+        [Event(16, Level = EventLevel.Informational, Message = "{0}: AbandonAsync start. MessageCount = {1}, LockToken = {2}")]
+        public void MessageAbandonStart(string clientId, int messageCount, string lockToken)
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
-                this.MessageAbandonStart(clientId, messageCount, formattedLockTokens);
+                this.WriteEvent(16, clientId, messageCount, lockToken);
             }
-        }
-
-        [Event(16, Level = EventLevel.Informational, Message = "{0}: AbandonAsync start. MessageCount = {1}, LockTokens = {2}")]
-        void MessageAbandonStart(string clientId, int messageCount, string lockTokens)
-        {
-            this.WriteEvent(16, clientId, messageCount, lockTokens);
         }
 
         [Event(17, Level = EventLevel.Informational, Message = "{0}: AbandonAsync done.")]
@@ -218,20 +210,13 @@ namespace Microsoft.Azure.ServiceBus
             this.WriteEvent(18, clientId, exception);
         }
 
-        [NonEvent]
-        public void MessageDeferStart(string clientId, int messageCount, IEnumerable<Guid> lockTokens)
+        [Event(19, Level = EventLevel.Informational, Message = "{0}: DeferAsync start. MessageCount = {1}, LockToken = {2}")]
+        public void MessageDeferStart(string clientId, int messageCount, string lockToken)
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
-                this.MessageDeferStart(clientId, messageCount, formattedLockTokens);
+                this.WriteEvent(19, clientId, messageCount, lockToken);
             }
-        }
-
-        [Event(19, Level = EventLevel.Informational, Message = "{0}: DeferAsync start. MessageCount = {1}, LockTokens = {2}")]
-        void MessageDeferStart(string clientId, int messageCount, string lockTokens)
-        {
-            this.WriteEvent(19, clientId, messageCount, lockTokens);
         }
 
         [Event(20, Level = EventLevel.Informational, Message = "{0}: DeferAsync done.")]
@@ -255,23 +240,16 @@ namespace Microsoft.Azure.ServiceBus
         [Event(21, Level = EventLevel.Error, Message = "{0}: DeferAsync Exception: {1}.")]
         void MessageDeferException(string clientId, string exception)
         {
-            this.WriteEvent(21, clientId, exception);
+                this.WriteEvent(21, clientId, exception);
         }
 
-        [NonEvent]
-        public void MessageDeadLetterStart(string clientId, int messageCount, IEnumerable<Guid> lockTokens)
+        [Event(22, Level = EventLevel.Informational, Message = "{0}: DeadLetterAsync start. MessageCount = {1}, LockToken = {2}")]
+        public void MessageDeadLetterStart(string clientId, int messageCount, string lockToken)
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
-                this.MessageDeadLetterStart(clientId, messageCount, formattedLockTokens);
+                this.WriteEvent(22, clientId, messageCount, lockToken);
             }
-        }
-
-        [Event(22, Level = EventLevel.Informational, Message = "{0}: DeadLetterAsync start. MessageCount = {1}, LockTokens = {2}")]
-        void MessageDeadLetterStart(string clientId, int messageCount, string lockTokens)
-        {
-            this.WriteEvent(22, clientId, messageCount, lockTokens);
         }
 
         [Event(23, Level = EventLevel.Informational, Message = "{0}: DeadLetterAsync done.")]
@@ -298,20 +276,13 @@ namespace Microsoft.Azure.ServiceBus
             this.WriteEvent(24, clientId, exception);
         }
 
-        [NonEvent]
-        public void MessageRenewLockStart(string clientId, int messageCount, IEnumerable<Guid> lockTokens)
+        [Event(25, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync start. MessageCount = {1}, LockToken = {2}")]
+        public void MessageRenewLockStart(string clientId, int messageCount, string lockToken)
         {
             if (this.IsEnabled())
             {
-                string formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
-                this.MessageRenewLockStart(clientId, messageCount, formattedLockTokens);
+                this.WriteEvent(25, clientId, messageCount, lockToken);
             }
-        }
-
-        [Event(25, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync start. MessageCount = {1}, LockTokens = {2}")]
-        void MessageRenewLockStart(string clientId, int messageCount, string lockTokens)
-        {
-            this.WriteEvent(25, clientId, messageCount, lockTokens);
         }
 
         [Event(26, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync done.")]
@@ -412,11 +383,11 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void AmqpSendLinkCreateStart(string clientId, MessagingEntityType entityType, string entityPath)
+        public void AmqpSendLinkCreateStart(string clientId, MessagingEntityType? entityType, string entityPath)
         {
             if (this.IsEnabled())
             {
-                this.AmqpSendLinkCreateStart(clientId, entityType.ToString(), entityPath);
+                this.AmqpSendLinkCreateStart(clientId, entityType?.ToString() ?? string.Empty, entityPath);
             }
         }
 
@@ -436,11 +407,11 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void AmqpReceiveLinkCreateStart(string clientId, bool isRequestResponseLink, MessagingEntityType entityType, string entityPath)
+        public void AmqpReceiveLinkCreateStart(string clientId, bool isRequestResponseLink, MessagingEntityType? entityType, string entityPath)
         {
             if (this.IsEnabled())
             {
-                this.AmqpReceiveLinkCreateStart(clientId, isRequestResponseLink.ToString(), entityType.ToString(), entityPath);
+                this.AmqpReceiveLinkCreateStart(clientId, isRequestResponseLink.ToString(), entityType?.ToString() ?? string.Empty, entityPath);
             }
         }
 
@@ -532,6 +503,432 @@ namespace Microsoft.Azure.ServiceBus
         void MessagePeekException(string clientId, string exception)
         {
             this.WriteEvent(44, clientId, exception);
+        }
+
+        [Event(45, Level = EventLevel.Informational, Message = "Creating MessageSender (Namespace '{0}'; Entity '{1}').")]
+        public void MessageSenderCreateStart(string namespaceName, string entityName)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(45, namespaceName, entityName);
+            }
+        }
+
+        [Event(46, Level = EventLevel.Informational, Message = "MessageSender (Namespace '{0}'; Entity '{1}' created).")]
+        public void MessageSenderCreateStop(string namespaceName, string entityName)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(46, namespaceName, entityName);
+            }
+        }
+
+        [Event(47, Level = EventLevel.Informational, Message = "Creating MessageReceiver (Namespace '{0}'; Entity '{1}'; ReceiveMode '{2}').")]
+        public void MessageReceiverCreateStart(string namespaceName, string entityName, string receiveMode)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(47, namespaceName, entityName);
+            }
+        }
+
+        [Event(48, Level = EventLevel.Informational, Message = "MessageReceiver (Namespace '{0}'; Entity '{1}' created).")]
+        public void MessageReceiverCreateStop(string namespaceName, string entityName)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(48, namespaceName, entityName);
+            }
+        }
+
+        [NonEvent]
+        public void ScheduleMessageStart(string clientId, DateTimeOffset scheduleEnqueueTimeUtc)
+        {
+            if (this.IsEnabled())
+            {
+                this.ScheduleMessageException(clientId, scheduleEnqueueTimeUtc.ToString());
+            }
+        }
+
+        [Event(49, Level = EventLevel.Informational, Message = "{0}: ScheduleMessageAsync start. ScheduleTimeUtc = {1}")]
+        public void ScheduleMessageStart(string clientId, string scheduleEnqueueTimeUtc)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(49, clientId, scheduleEnqueueTimeUtc);
+            }
+        }
+
+        [Event(50, Level = EventLevel.Informational, Message = "{0}: ScheduleMessageAsync done.")]
+        public void ScheduleMessageStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(50, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void ScheduleMessageException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.ScheduleMessageException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(51, Level = EventLevel.Error, Message = "{0}: ScheduleMessageAsync Exception: {1}.")]
+        void ScheduleMessageException(string clientId, string exception)
+        {
+            this.WriteEvent(51, clientId, exception);
+        }
+
+        [Event(52, Level = EventLevel.Informational, Message = "{0}: CancelScheduledMessageAsync start. SequenceNumber = {1}")]
+        public void CancelScheduledMessageStart(string clientId, long sequenceNumber)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(52, clientId, sequenceNumber);
+            }
+        }
+
+        [Event(53, Level = EventLevel.Informational, Message = "{0}: CancelScheduledMessageAsync done.")]
+        public void CancelScheduledMessageStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(53, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void CancelScheduledMessageException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.CancelScheduledMessageException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(54, Level = EventLevel.Error, Message = "{0}: CancelScheduledMessageAsync Exception: {1}.")]
+        void CancelScheduledMessageException(string clientId, string exception)
+        {
+            this.WriteEvent(54, clientId, exception);
+        }
+
+        [Event(55, Level = EventLevel.Informational, Message = "{0}: AddRuleAsync start. RuleName = {1}")]
+        public void AddRuleStart(string clientId, string ruleName)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(55, clientId, ruleName);
+            }
+        }
+
+        [Event(56, Level = EventLevel.Informational, Message = "{0}: AddRuleAsync done.")]
+        public void AddRuleStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(56, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void AddRuleException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.AddRuleException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(57, Level = EventLevel.Error, Message = "{0}: AddRuleAsync Exception: {1}.")]
+        void AddRuleException(string clientId, string exception)
+        {
+            this.WriteEvent(57, clientId, exception);
+        }
+
+        [Event(58, Level = EventLevel.Informational, Message = "{0}: RemoveRuleAsync start. RuleName = {1}")]
+        public void RemoveRuleStart(string clientId, string ruleName)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(58, clientId, ruleName);
+            }
+        }
+
+        [Event(59, Level = EventLevel.Informational, Message = "{0}: RemoveRuleAsync done.")]
+        public void RemoveRuleStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(59, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void RemoveRuleException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.RemoveRuleException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(60, Level = EventLevel.Error, Message = "{0}: RemoveRuleAsync Exception: {1}.")]
+        void RemoveRuleException(string clientId, string exception)
+        {
+            this.WriteEvent(60, clientId, exception);
+        }
+
+        [NonEvent]
+        public void RegisterOnMessageHandlerStart(string clientId, RegisterHandlerOptions registerHandlerOptions)
+        {
+            if (this.IsEnabled())
+            {
+                this.RegisterOnMessageHandlerStart(clientId, registerHandlerOptions.AutoComplete, registerHandlerOptions.AutoRenewLock, registerHandlerOptions.MaxConcurrentCalls, (long)registerHandlerOptions.AutoRenewTimeout.TotalSeconds);
+            }
+        }
+
+        [Event(61, Level = EventLevel.Informational, Message = "{0}: Register OnMessageHandler start: OnMessage Options: AutoComplete: {1}, AutoRenewLock: {2}, MaxConcurrentCalls: {3}, AutoRenewTimeout: {4}")]
+        void RegisterOnMessageHandlerStart(string clientId, bool autoComplete, bool autorenewLock, int maxConcurrentCalls, long autorenewTimeoutInSeconds)
+        {
+            this.WriteEvent(61, clientId, autoComplete, autorenewLock, maxConcurrentCalls, autorenewTimeoutInSeconds);
+        }
+
+        [Event(62, Level = EventLevel.Informational, Message = "{0}: Register OnMessageHandler done.")]
+        public void RegisterOnMessageHandlerStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(62, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void RegisterOnMessageHandlerException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.RegisterOnMessageHandlerException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(63, Level = EventLevel.Error, Message = "{0}: Register OnMessageHandler Exception: {1}")]
+        void RegisterOnMessageHandlerException(string clientId, string exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(63, clientId, exception);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpInitialMessageReceived(string clientId, Message message)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpInitialMessageReceived(clientId, message.SystemProperties.SequenceNumber);
+            }
+        }
+
+        [Event(64, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump Received Initial Message: SequenceNumber: {1}")]
+        void MessageReceiverPumpInitialMessageReceived(string clientId, long sequenceNumber)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(64, clientId, sequenceNumber);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpInitialMessageReceiveException(string clientId, int retryCount, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpInitialMessageReceiveException(clientId, retryCount, exception.ToString());
+            }
+        }
+
+        [Event(65, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump Receive Initial Message Exception: RetryCount: {1}, Exception: {2}")]
+        void MessageReceiverPumpInitialMessageReceiveException(string clientId, int retryCount, string exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(65, clientId, retryCount, exception);
+            }
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpTaskStart(string clientId, Message message, int currentSemaphoreCount)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpTaskStart(clientId, message?.SystemProperties.SequenceNumber ?? -1, currentSemaphoreCount);
+            }
+        }
+
+        [Event(66, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump PumpTask Started: Message: SequenceNumber: {1}, Available Semaphore Count: {2}")]
+        void MessageReceiverPumpTaskStart(string clientId, long sequenceNumber, int currentSemaphoreCount)
+        {
+            this.WriteEvent(66, clientId, sequenceNumber, currentSemaphoreCount);
+        }
+
+        [Event(67, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump PumpTask done: Available Semaphore Count: {1}")]
+        public void MessageReceiverPumpTaskStop(string clientId, int currentSemaphoreCount)
+        {
+            this.WriteEvent(67, clientId, currentSemaphoreCount);
+        }
+
+        [NonEvent]
+        public void MessageReceivePumpTaskException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceivePumpTaskException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(68, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump PumpTask Exception: Exception: {1}")]
+        void MessageReceivePumpTaskException(string clientId, string exception)
+        {
+            this.WriteEvent(68, clientId, exception);
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpDispatchTaskStart(string clientId, Message message)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpDispatchTaskStart(clientId, message?.SystemProperties.SequenceNumber ?? -1);
+            }
+        }
+
+        [Event(69, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump DispatchTask start: Message: SequenceNumber: {1}")]
+        void MessageReceiverPumpDispatchTaskStart(string clientId, long sequenceNumber)
+        {
+            this.WriteEvent(69, clientId, sequenceNumber);
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpDispatchTaskStop(string clientId, Message message, int currentSemaphoreCount)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpDispatchTaskStop(clientId, message?.SystemProperties.SequenceNumber ?? -1, currentSemaphoreCount);
+            }
+        }
+
+        [Event(70, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump DispatchTask done: Message: SequenceNumber: {1}, Current Semaphore Count: {2}")]
+        void MessageReceiverPumpDispatchTaskStop(string clientId, long sequenceNumber, int currentSemaphoreCount)
+        {
+            this.WriteEvent(70, clientId, sequenceNumber, currentSemaphoreCount);
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpUserCallbackStart(string clientId, Message message)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpUserCallbackStart(clientId, message?.SystemProperties.SequenceNumber ?? -1);
+            }
+        }
+
+        [Event(71, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback start: Message: SequenceNumber: {1}")]
+        void MessageReceiverPumpUserCallbackStart(string clientId, long sequenceNumber)
+        {
+            this.WriteEvent(71, clientId, sequenceNumber);
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpUserCallbackStop(string clientId, Message message)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpUserCallbackStop(clientId, message?.SystemProperties.SequenceNumber ?? -1);
+            }
+        }
+
+        [Event(72, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump UserCallback done: Message: SequenceNumber: {1}")]
+        void MessageReceiverPumpUserCallbackStop(string clientId, long sequenceNumber)
+        {
+            this.WriteEvent(72, clientId, sequenceNumber);
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpUserCallbackException(string clientId, Message message, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpUserCallbackException(clientId, message?.SystemProperties.SequenceNumber ?? -1, exception.ToString());
+            }
+        }
+
+        [Event(73, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump UserCallback Exception: Message: SequenceNumber: {1}, Exception: {2}")]
+        void MessageReceiverPumpUserCallbackException(string clientId, long sequenceNumber, string exception)
+        {
+            this.WriteEvent(73, clientId, sequenceNumber, exception);
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpRenewMessageStart(string clientId, Message message, TimeSpan renewAfterTimeSpan)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpRenewMessageStart(clientId, message?.SystemProperties.SequenceNumber ?? -1, (long)renewAfterTimeSpan.TotalSeconds);
+            }
+        }
+
+        [Event(74, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump RenewMessage start: Message: SequenceNumber: {1}, RenewAfterTimeInSeconds: {2}")]
+        void MessageReceiverPumpRenewMessageStart(string clientId, long sequenceNumber, long renewAfterTimeSpanInSeconds)
+        {
+            this.WriteEvent(74, clientId, sequenceNumber, renewAfterTimeSpanInSeconds);
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpRenewMessageStop(string clientId, Message message)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpRenewMessageStop(clientId, message?.SystemProperties.SequenceNumber ?? -1);
+            }
+        }
+
+        [Event(75, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump RenewMessage done: Message: SequenceNumber: {1}")]
+        void MessageReceiverPumpRenewMessageStop(string clientId, long sequenceNumber)
+        {
+            this.WriteEvent(75, clientId, sequenceNumber);
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpRenewMessageException(string clientId, Message message, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpRenewMessageException(clientId, message?.SystemProperties.SequenceNumber ?? -1, exception.ToString());
+            }
+        }
+
+        [Event(76, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump RenewMessage Exception: Message: SequenceNumber: {1}, Exception: {2}")]
+        void MessageReceiverPumpRenewMessageException(string clientId, long sequenceNumber, string exception)
+        {
+            this.WriteEvent(76, clientId, sequenceNumber, exception);
+        }
+
+        [NonEvent]
+        public void RunOperationExceptionEncountered(Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.RunOperationExceptionEncountered(exception.ToString());
+            }
+        }
+
+        [Event(77, Level = EventLevel.Warning, Message = "RunOperation encountered an exception and will retry. Exception: {0}")]
+        void RunOperationExceptionEncountered(string exception)
+        {
+            this.WriteEvent(77, exception);
         }
     }
 }

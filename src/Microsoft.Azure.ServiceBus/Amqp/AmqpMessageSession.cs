@@ -6,13 +6,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System;
     using System.IO;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Messaging.Amqp;
+    using Azure.Amqp;
+    using Core;
+    using Messaging.Amqp;
 
-    public class AmqpMessageSession : MessageSession
+    class AmqpMessageSession : MessageSession
     {
-        public AmqpMessageSession(string sessionId, DateTime lockedUntilUtc, MessageReceiver innerMessageReceiver)
-            : base(innerMessageReceiver.ReceiveMode, sessionId, lockedUntilUtc, innerMessageReceiver)
+        public AmqpMessageSession(string sessionId, DateTime lockedUntilUtc, MessageReceiver innerMessageReceiver, RetryPolicy retryPolicy)
+            : base(innerMessageReceiver.ReceiveMode, sessionId, lockedUntilUtc, innerMessageReceiver, retryPolicy)
         {
         }
 
@@ -33,12 +34,16 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         sessionState = new BufferListStream(new[] { amqpResponseMessage.GetValue<ArraySegment<byte>>(ManagementConstants.Properties.SessionState) });
                     }
                 }
+                else
+                {
+                    throw amqpResponseMessage.ToMessagingContractException();
+                }
 
                 return sessionState;
             }
-            catch (AmqpException amqpException)
+            catch (Exception exception)
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                throw AmqpExceptionHelper.GetClientException(exception);
             }
         }
 
@@ -48,7 +53,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 if (sessionState != null && sessionState.CanSeek && sessionState.Position != 0)
                 {
-                    throw new InvalidOperationException("CannotSerializeSessionStateWithPartiallyConsumedStream");
+                    throw new InvalidOperationException(Resources.CannotSerializeSessionStateWithPartiallyConsumedStream);
                 }
 
                 AmqpRequestMessage amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.SetSessionStateOperation, this.OperationTimeout, null);
@@ -65,11 +70,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     amqpRequestMessage.Map[ManagementConstants.Properties.SessionState] = null;
                 }
 
-                await ((AmqpMessageReceiver)this.InnerMessageReceiver).ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                AmqpResponseMessage amqpResponseMessage = await ((AmqpMessageReceiver)this.InnerMessageReceiver).ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                if (amqpResponseMessage.StatusCode != AmqpResponseStatusCode.OK)
+                {
+                    throw amqpResponseMessage.ToMessagingContractException();
+                }
             }
-            catch (AmqpException amqpException)
+            catch (Exception exception)
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                throw AmqpExceptionHelper.GetClientException(exception);
             }
         }
 
@@ -86,10 +95,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 {
                     this.LockedUntilUtc = amqpResponseMessage.GetValue<DateTime>(ManagementConstants.Properties.Expiration);
                 }
+                else
+                {
+                    throw amqpResponseMessage.ToMessagingContractException();
+                }
             }
-            catch (AmqpException amqpException)
+            catch (Exception exception)
             {
-                throw AmqpExceptionHelper.ToMessagingContract(amqpException.Error);
+                throw AmqpExceptionHelper.GetClientException(exception);
             }
         }
     }
