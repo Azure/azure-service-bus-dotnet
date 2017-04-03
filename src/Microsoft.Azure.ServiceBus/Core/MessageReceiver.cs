@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System.Threading;
     using System.Threading.Tasks;
 
-    public abstract class MessageReceiver : ClientEntity, IMessageReceiver
+    internal abstract class MessageReceiver : ClientEntity, IMessageReceiver
     {
         readonly TimeSpan operationTimeout;
         readonly object messageReceivePumpSyncLock;
