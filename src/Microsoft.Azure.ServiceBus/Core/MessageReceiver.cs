@@ -15,8 +15,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         readonly object messageReceivePumpSyncLock;
         int prefetchCount;
         long lastPeekedSequenceNumber;
-        MessageReceivePump messagePump;
-        CancellationTokenSource messagePumpCancellationTokenSource;
+        MessageReceivePump receivePump;
+        CancellationTokenSource receivePumpCancellationTokenSource;
 
         protected MessageReceiver(ReceiveMode receiveMode, TimeSpan operationTimeout, RetryPolicy retryPolicy)
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
@@ -78,11 +78,11 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             lock (this.messageReceivePumpSyncLock)
             {
-                if (this.messagePump != null)
+                if (this.receivePump != null)
                 {
-                    this.messagePumpCancellationTokenSource.Cancel();
-                    this.messagePumpCancellationTokenSource.Dispose();
-                    this.messagePump = null;
+                    this.receivePumpCancellationTokenSource.Cancel();
+                    this.receivePumpCancellationTokenSource.Dispose();
+                    this.receivePump = null;
                 }
             }
             return Task.FromResult(0);
@@ -443,29 +443,29 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             lock (this.messageReceivePumpSyncLock)
             {
-                if (this.messagePump != null)
+                if (this.receivePump != null)
                 {
                     throw new InvalidOperationException(Resources.MessageHandlerAlreadyRegistered);
                 }
 
-                this.messagePumpCancellationTokenSource = new CancellationTokenSource();
-                this.messagePump = new MessageReceivePump(this, registerHandlerOptions, callback, this.messagePumpCancellationTokenSource.Token);
+                this.receivePumpCancellationTokenSource = new CancellationTokenSource();
+                this.receivePump = new MessageReceivePump(this, registerHandlerOptions, callback, this.receivePumpCancellationTokenSource.Token);
             }
 
             try
             {
-                await this.messagePump.StartPumpAsync().ConfigureAwait(false);
+                await this.receivePump.StartPumpAsync().ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.RegisterOnMessageHandlerException(this.ClientId, exception);
                 lock (this.messageReceivePumpSyncLock)
                 {
-                    if (this.messagePump != null)
+                    if (this.receivePump != null)
                     {
-                        this.messagePumpCancellationTokenSource.Cancel();
-                        this.messagePumpCancellationTokenSource.Dispose();
-                        this.messagePump = null;
+                        this.receivePumpCancellationTokenSource.Cancel();
+                        this.receivePumpCancellationTokenSource.Dispose();
+                        this.receivePump = null;
                     }
                 }
 
