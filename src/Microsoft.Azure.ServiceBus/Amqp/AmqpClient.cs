@@ -123,14 +123,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 this.sessionPumpCancellationTokenSource?.Dispose();
                 this.sessionReceivePump = null;
             }
-
-            await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
         }
 
         public async Task<IMessageSession> AcceptMessageSessionAsync()
         {
-            string emptySessionId = string.Empty;
-
             // No point fetching sessions without messages for Session pump handler
             int prefetchCount = this.ServiceBusConnection.PrefetchCount != 0 ? this.ServiceBusConnection.PrefetchCount : Constants.DefaultClientPumpPrefetchCount;
 
@@ -141,7 +137,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 prefetchCount,
                 this.ServiceBusConnection,
                 this.CbsTokenProvider,
-                emptySessionId,
+                null,
                 this.RetryPolicy,
                 true);
             try

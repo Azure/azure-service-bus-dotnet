@@ -7,52 +7,52 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>Provides options associated with session pump processing using
-    /// <see cref="QueueClient.RegisterSessionHandler(System.Func{MessageSession, Message,System.Threading.CancellationToken,System.Threading.Tasks.Task},RegisterSessionHandlerOptions)" /> and
-    /// <see cref="SubscriptionClient.RegisterSessionHandler(System.Func{MessageSession, Message,System.Threading.CancellationToken,System.Threading.Tasks.Task},RegisterSessionHandlerOptions)" />.</summary>
+    /// <see cref="QueueClient.RegisterSessionHandler(System.Func{IMessageSession, Message, System.Threading.CancellationToken, System.Threading.Tasks.Task}, RegisterSessionHandlerOptions)" /> and
+    /// <see cref="SubscriptionClient.RegisterSessionHandler(System.Func{IMessageSession, Message, System.Threading.CancellationToken, System.Threading.Tasks.Task}, RegisterSessionHandlerOptions)" />.</summary>
     public sealed class RegisterSessionHandlerOptions
     {
         int maxConcurrentSessions;
         TimeSpan messageWaitTimeout;
-        TimeSpan maxAutoRenewTimeout;
+        TimeSpan maxAutoRenewDuration;
 
         /// <summary>Initializes a new instance of the <see cref="RegisterSessionHandlerOptions" /> class.
         /// Default Values:
         ///     <see cref="MaxConcurrentSessions"/> = 2000
         ///     <see cref="AutoComplete"/> = true
         ///     <see cref="MessageWaitTimeout"/> = 1 minute
-        ///     <see cref="MaxAutoRenewTimeout"/> = 5 minutes
+        ///     <see cref="MaxAutoRenewDuration"/> = 5 minutes
         /// </summary>
         public RegisterSessionHandlerOptions()
         {
             // These are default values
             this.AutoComplete = true;
             this.MaxConcurrentSessions = 2000;
-            this.MessageWaitTimeout = TimeSpan.FromMinutes(1);
-            this.MaxAutoRenewTimeout = Constants.ClientPumpRenewLockTimeout;
+            this.MessageWaitTimeout = TimeSpan.FromSeconds(30);
+            this.MaxAutoRenewDuration = Constants.ClientPumpRenewLockTimeout;
         }
 
         /// <summary>Occurs when an exception is received. Enables you to be notified of any errors encountered by the session pump.
         /// When errors are received calls will automatically be retried, so this is informational. </summary>
         public event EventHandler<ExceptionReceivedEventArgs> ExceptionReceived;
 
-        /// <summary>Gets or sets the time needed before the session renew its state.</summary>
-        /// <value>The time needed before the session renew its state.</value>
-        public TimeSpan MaxAutoRenewTimeout
+        /// <summary>Gets or sets the duration for which the session lock will be renewed automatically.</summary>
+        /// <value>The duration for which the session renew its state.</value>
+        public TimeSpan MaxAutoRenewDuration
         {
             get
             {
-                return this.maxAutoRenewTimeout;
+                return this.maxAutoRenewDuration;
             }
 
             set
             {
                 TimeoutHelper.ThrowIfNegativeArgument(value, nameof(value));
-                this.maxAutoRenewTimeout = value;
+                this.maxAutoRenewDuration = value;
             }
         }
 
-        /// <summary>Gets or sets the time needed before the message waiting expires.</summary>
-        /// <value>The time needed before the message waiting expires.</value>
+        /// <summary>Gets or sets the time to wait for receiving a message.</summary>
+        /// <value>The time to wait for receiving the message.</value>
         public TimeSpan MessageWaitTimeout
         {
             get
@@ -67,8 +67,8 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        /// <summary>Gets or sets the maximum number of existing sessions.</summary>
-        /// <value>The maximum number of existing sessions.</value>
+        /// <summary>Gets or sets the maximum number of existing sessions that the User wants to handle concurrently.</summary>
+        /// <value>The maximum number of sessions that the User wants to handle concurrently.</value>
         public int MaxConcurrentSessions
         {
             get
@@ -84,7 +84,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
 
                 this.maxConcurrentSessions = value;
-                this.MaxPendingAcceptSessionCalls = Math.Min(value, Environment.ProcessorCount);
+                this.MaxConcurrentAcceptSessionCalls = Math.Min(value, 5);
             }
         }
 
@@ -92,9 +92,9 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>true if the autocomplete option of the session handler is enabled; otherwise, false.</value>
         public bool AutoComplete { get; set; }
 
-        internal bool AutoRenewLock => this.MaxAutoRenewTimeout > TimeSpan.Zero;
+        internal bool AutoRenewLock => this.MaxAutoRenewDuration > TimeSpan.Zero;
 
-        internal int MaxPendingAcceptSessionCalls { get; set; }
+        internal int MaxConcurrentAcceptSessionCalls { get; set; }
 
         internal void RaiseExceptionReceived(ExceptionReceivedEventArgs e)
         {

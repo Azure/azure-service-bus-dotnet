@@ -14,8 +14,7 @@ namespace Microsoft.Azure.ServiceBus
     public abstract class ClientEntity : IClientEntity
     {
         static int nextId;
-        object syncLock;
-        bool isClosedOrClosing;
+        readonly object syncLock;
 
         protected ClientEntity(string clientId, RetryPolicy retryPolicy)
         {

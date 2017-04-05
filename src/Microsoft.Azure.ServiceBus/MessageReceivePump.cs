@@ -38,30 +38,11 @@ namespace Microsoft.Azure.ServiceBus
 
         public async Task StartPumpAsync()
         {
-            int retryCount = 0;
             Message initialMessage = null;
-            while (true)
+            initialMessage = await this.messageReceiver.ReceiveAsync(TimeSpan.Zero).ConfigureAwait(false);
+            if (initialMessage != null)
             {
-                try
-                {
-                    initialMessage = await this.messageReceiver.ReceiveAsync().ConfigureAwait(false);
-                    MessagingEventSource.Log.MessageReceiverPumpInitialMessageReceived(this.messageReceiver.ClientId, initialMessage);
-                    break;
-                }
-                catch (Exception exception)
-                {
-                    retryCount++;
-                    MessagingEventSource.Log.MessageReceiverPumpInitialMessageReceiveException(this.messageReceiver.ClientId, retryCount, exception);
-
-                    if (retryCount == MaxInitialReceiveRetryCount ||
-                        !MessagingUtilities.ShouldRetry(exception))
-                    {
-                        throw;
-                    }
-
-                    TimeSpan backOffTime = MessagingUtilities.GetBackOffTime(exception);
-                    await Task.Delay(backOffTime, this.pumpCancellationToken).ConfigureAwait(false);
-                }
+                MessagingEventSource.Log.MessageReceiverPumpInitialMessageReceived(this.messageReceiver.ClientId, initialMessage);
             }
 
             TaskExtensionHelper.Schedule(() => this.MessagePumpTask(initialMessage));
@@ -85,7 +66,7 @@ namespace Microsoft.Azure.ServiceBus
 
                     if (initialMessage == null)
                     {
-                        message = await this.messageReceiver.ReceiveAsync().ConfigureAwait(false);
+                        message = await this.messageReceiver.ReceiveAsync(this.registerHandlerOptions.ReceiveTimeOut).ConfigureAwait(false);
                     }
                     else
                     {
@@ -103,14 +84,13 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     MessagingEventSource.Log.MessageReceivePumpTaskException(this.messageReceiver.ClientId, exception);
                     this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "Receive"));
-                    TimeSpan backOffTimeSpan = MessagingUtilities.GetBackOffTime(exception);
-                    await Task.Delay(backOffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
                 }
                 finally
                 {
                     // Either an exception or for some reason message was null, release semaphore and retry.
                     if (message == null)
                     {
+                        await Task.Delay(Constants.NoMessageBackoffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
                         this.maxConcurrentCallsSemaphoreSlim.Release();
                         MessagingEventSource.Log.MessageReceiverPumpTaskStop(this.messageReceiver.ClientId, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
                     }
@@ -131,7 +111,7 @@ namespace Microsoft.Azure.ServiceBus
                 TaskExtensionHelper.Schedule(() => this.RenewMessageLockTask(message, renewLockCancellationTokenSource.Token));
 
                 // After a threshold time of renewal('AutoRenewTimeout'), create timer to cancel anymore renewals.
-                autoRenewLockCancellationTimer = new Timer(this.CancelAutoRenewlock, renewLockCancellationTokenSource, this.registerHandlerOptions.MaxAutoRenewTimeout, TimeSpan.FromMilliseconds(-1));
+                autoRenewLockCancellationTimer = new Timer(this.CancelAutoRenewlock, renewLockCancellationTokenSource, this.registerHandlerOptions.MaxAutoRenewDuration, TimeSpan.FromMilliseconds(-1));
             }
 
             try
@@ -240,13 +220,11 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "RenewLock"));
                     }
+
                     if (!MessagingUtilities.ShouldRetry(exception))
                     {
                         break;
                     }
-
-                    TimeSpan backoffTimeSpan = MessagingUtilities.GetBackOffTime(exception);
-                    await Task.Delay(backoffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
                 }
             }
         }

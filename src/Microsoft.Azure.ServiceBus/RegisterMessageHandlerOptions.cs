@@ -12,21 +12,21 @@ namespace Microsoft.Azure.ServiceBus
     public sealed class RegisterMessageHandlerOptions
     {
         int maxConcurrentCalls;
-        TimeSpan maxAutoRenewTimeout;
+        TimeSpan maxAutoRenewDuration;
 
         /// <summary>Initializes a new instance of the <see cref="RegisterMessageHandlerOptions" /> class.
         /// Default Values:
         ///     <see cref="MaxConcurrentCalls"/> = 1
         ///     <see cref="AutoComplete"/> = true
         ///     <see cref="ReceiveTimeOut"/> = 1 minute
-        ///     <see cref="MaxAutoRenewTimeout"/> = 5 minutes
+        ///     <see cref="MaxAutoRenewDuration"/> = 5 minutes
         /// </summary>
         public RegisterMessageHandlerOptions()
         {
             this.MaxConcurrentCalls = 1;
             this.AutoComplete = true;
             this.ReceiveTimeOut = Constants.DefaultOperationTimeout;
-            this.MaxAutoRenewTimeout = Constants.ClientPumpRenewLockTimeout;
+            this.MaxAutoRenewDuration = Constants.ClientPumpRenewLockTimeout;
         }
 
         /// <summary>Occurs when an exception is received. Enables you to be notified of any errors encountered by the message pump.
@@ -62,21 +62,21 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>Gets or sets the maximum duration within which the lock will be renewed automatically. This
         /// value should be greater than the longest message lock duration; for example, the LockDuration Property. </summary>
         /// <value>The maximum duration during which locks are automatically renewed.</value>
-        public TimeSpan MaxAutoRenewTimeout
+        public TimeSpan MaxAutoRenewDuration
         {
             get
             {
-                return this.maxAutoRenewTimeout;
+                return this.maxAutoRenewDuration;
             }
 
             set
             {
                 TimeoutHelper.ThrowIfNegativeArgument(value, nameof(value));
-                this.maxAutoRenewTimeout = value;
+                this.maxAutoRenewDuration = value;
             }
         }
 
-        internal bool AutoRenewLock => this.MaxAutoRenewTimeout > TimeSpan.Zero;
+        internal bool AutoRenewLock => this.MaxAutoRenewDuration > TimeSpan.Zero;
 
         internal ClientEntity MessageClientEntity { get; set; }
 

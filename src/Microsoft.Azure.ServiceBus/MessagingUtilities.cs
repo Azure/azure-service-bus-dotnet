@@ -23,11 +23,6 @@ namespace Microsoft.Azure.ServiceBus
             return renewAfter;
         }
 
-        public static TimeSpan GetBackOffTime(Exception exception)
-        {
-            return exception is ServerBusyException ? Constants.ServerBusyExceptionBackoffAmount : Constants.OtherExceptionBackoffAmount;
-        }
-
         public static bool ShouldRetry(Exception exception)
         {
             ServiceBusException serviceBusException = exception as ServiceBusException;

@@ -204,7 +204,7 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///    Looks up a localized string similar to A session handler has already been registered..
+        ///    Looks up a localized string similar to A message handler has already been registered..
         /// </summary>
         public static string MessageHandlerAlreadyRegistered {
             get {

@@ -76,6 +76,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 if (value != base.PrefetchCount)
                 {
+                    base.PrefetchCount = value;
                     ReceivingAmqpLink link;
                     if (this.ReceiveLinkManager.TryGetOpenedObject(out link))
                     {

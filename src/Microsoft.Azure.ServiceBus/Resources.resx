@@ -190,7 +190,7 @@
     <value>The specified value '{0}' is invalid. "maxConcurrentCalls" must be greater than zero.</value>
   </data>
   <data name="MessageHandlerAlreadyRegistered" xml:space="preserve">
-    <value>A session handler has already been registered.</value>
+    <value>A message handler has already been registered.</value>
   </data>
   <data name="SessionHandlerAlreadyRegistered" xml:space="preserve">
     <value>A session handler has already been registered.</value>

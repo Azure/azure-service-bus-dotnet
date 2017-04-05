@@ -687,7 +687,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.RegisterOnMessageHandlerStart(clientId, registerHandlerOptions.AutoComplete, registerHandlerOptions.AutoRenewLock, registerHandlerOptions.MaxConcurrentCalls, (long)registerHandlerOptions.MaxAutoRenewTimeout.TotalSeconds);
+                this.RegisterOnMessageHandlerStart(clientId, registerHandlerOptions.AutoComplete, registerHandlerOptions.AutoRenewLock, registerHandlerOptions.MaxConcurrentCalls, (long)registerHandlerOptions.MaxAutoRenewDuration.TotalSeconds);
             }
         }
 
@@ -936,7 +936,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.RegisterOnSessionHandlerStart(clientId, registerSessionHandlerOptions.AutoComplete, registerSessionHandlerOptions.MaxConcurrentSessions, (long)registerSessionHandlerOptions.MessageWaitTimeout.TotalSeconds, (long)registerSessionHandlerOptions.MaxAutoRenewTimeout.TotalSeconds);
+                this.RegisterOnSessionHandlerStart(clientId, registerSessionHandlerOptions.AutoComplete, registerSessionHandlerOptions.MaxConcurrentSessions, (long)registerSessionHandlerOptions.MessageWaitTimeout.TotalSeconds, (long)registerSessionHandlerOptions.MaxAutoRenewDuration.TotalSeconds);
             }
         }
 

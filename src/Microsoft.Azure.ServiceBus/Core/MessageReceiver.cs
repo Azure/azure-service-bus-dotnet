@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal abstract class MessageReceiver : ClientEntity, IMessageReceiver
+    public abstract class MessageReceiver : ClientEntity, IMessageReceiver
     {
         readonly TimeSpan operationTimeout;
         readonly object messageReceivePumpSyncLock;
@@ -379,7 +379,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
         {
-            this.RegisterMessageHandler(handler, new RegisterMessageHandlerOptions() { ReceiveTimeOut = this.OperationTimeout });
+            this.RegisterMessageHandler(handler, new RegisterMessageHandlerOptions());
         }
 
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterMessageHandlerOptions registerMessageHandlerOptions)

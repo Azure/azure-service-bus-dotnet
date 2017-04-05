@@ -13,6 +13,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         ReceiveMode ReceiveMode { get;  }
 
+        // void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> callback);
         void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> callback, RegisterSessionHandlerOptions registerSessionHandlerOptions);
 
         Task<IMessageSession> AcceptMessageSessionAsync();
