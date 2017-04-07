@@ -5,6 +5,7 @@
   "authors": [ "Microsoft" ],
 
   "buildOptions": {
+    "debugType": "full",
     "warningsAsErrors": true,
     "keyFile": "../../build/keyfile.snk",
     "additionalArguments": [ "/ruleset:./../../build/StyleCop.Analyzers.ruleset", "/additionalfile:./../../build/stylecop.json" ]

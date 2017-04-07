@@ -93,12 +93,23 @@ function Run-UnitTests
     {
         Write-Host "Running unit tests."
 
-        dotnet test test/Microsoft.Azure.ServiceBus.UnitTests/project.json
+        $openCoverConsole = $ENV:USERPROFILE + '\.nuget\packages\OpenCover\4.6.519\tools\OpenCover.Console.exe'
+        $coverageFile = $ENV:APPVEYOR_BUILD_FOLDER + '\coverage.xml'
+        $target = '-target:C:\Program Files\dotnet\dotnet.exe'
+        $targetArgs = '-targetargs: test ' + $ENV:APPVEYOR_BUILD_FOLDER + 'test\Microsoft.Azure.ServiceBus.UnitTests\project.json'
+        $filter = '-filter:+[Microsoft.Azure.ServiceBus*]* -[Microsoft.Azure.ServiceBus.UnitTests]*'
+        
+        & $openCoverConsole $target $targetArgs $filter $output '-register:user' '-oldStyle'
 
         if (-not $?)
         {
             throw "Unit tests failed."
         }
+
+        $ENV:PATH = 'C:\\Python34;C:\\Python34\\Scripts;' + $ENV:PATH
+        python -m pip install --upgrade pip
+        pip install git+git://github.com/codecov/codecov-python.git
+        codecov -f $coverageFile -t $ENV:CodeCov
     }
     else
     {

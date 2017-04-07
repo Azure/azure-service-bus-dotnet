@@ -5,6 +5,7 @@
   "testRunner": "xunit",
 
   "buildOptions": {
+    "debugType": "full",
     "warningsAsErrors": true,
     "keyFile": "../../build/keyfile.snk",
     "additionalArguments": [ "/ruleset:./../../build/StyleCop.Analyzers.ruleset", "/additionalfile:./../../build/stylecop.json" ]
@@ -19,9 +20,13 @@
       "target": "project"
     },
     "Microsoft.NETCore.Platforms": "1.1.0",
+    "Microsoft.DotNet.InternalAbstractions": "1.0.0", // https://github.com/dotnet/core/issues/366
     "xunit": "2.2.0",
     "dotnet-test-xunit": "2.2.0-preview2-build1029",
-    "Microsoft.Extensions.PlatformAbstractions": "1.1.0"
+    "Microsoft.Extensions.PlatformAbstractions": "1.1.0",
+    "xunit.runner.visualstudio": "2.2.0",
+    "xunit.runner.console": "2.2.0",
+    "OpenCover": "4.6.519"
   },
 
   "frameworks": {
