@@ -96,7 +96,7 @@ function Run-UnitTests
         $openCoverConsole = $ENV:USERPROFILE + '\.nuget\packages\OpenCover\4.6.519\tools\OpenCover.Console.exe'
         $coverageFile = $ENV:APPVEYOR_BUILD_FOLDER + '\coverage.xml'
         $target = '-target:C:\Program Files\dotnet\dotnet.exe'
-        $targetArgs = '-targetargs: test ' + $ENV:APPVEYOR_BUILD_FOLDER + 'test\Microsoft.Azure.ServiceBus.UnitTests\project.json'
+        $targetArgs = '-targetargs: test ' + $ENV:APPVEYOR_BUILD_FOLDER + '\test\Microsoft.Azure.ServiceBus.UnitTests\project.json -f netcoreapp1.0'
         $filter = '-filter:+[Microsoft.Azure.ServiceBus*]* -[Microsoft.Azure.ServiceBus.UnitTests]*'
         
         & $openCoverConsole $target $targetArgs $filter $output '-register:user' '-oldStyle'
