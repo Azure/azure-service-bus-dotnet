@@ -98,7 +98,8 @@ function Run-UnitTests
         $target = '-target:C:\Program Files\dotnet\dotnet.exe'
         $targetArgs = '-targetargs: test ' + $ENV:APPVEYOR_BUILD_FOLDER + '\test\Microsoft.Azure.ServiceBus.UnitTests\project.json -f netcoreapp1.0'
         $filter = '-filter:+[Microsoft.Azure.ServiceBus*]* -[Microsoft.Azure.ServiceBus.UnitTests]*'
-        
+        $output = '-output:' + $coverageFile
+
         & $openCoverConsole $target $targetArgs $filter $output '-register:user' '-oldStyle'
 
         if (-not $?)
