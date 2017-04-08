@@ -20,6 +20,6 @@ before_test:
 test_script:
 - ps: >-
     Run-UnitTests
-after_test:
+on_finish:
 - ps: >-
     Delete-AzureResources

@@ -21,12 +21,10 @@
     },
     "Microsoft.NETCore.Platforms": "1.1.0",
     "Microsoft.DotNet.InternalAbstractions": "1.0.0", // https://github.com/dotnet/core/issues/366
+    "Microsoft.Extensions.PlatformAbstractions": "1.1.0",
     "xunit": "2.2.0",
     "dotnet-test-xunit": "2.2.0-preview2-build1029",
-    "Microsoft.Extensions.PlatformAbstractions": "1.1.0",
-    "xunit.runner.visualstudio": "2.2.0",
-    "xunit.runner.console": "2.2.0",
-    "OpenCover": "4.6.519"
+    "xunit.runner.visualstudio": "2.2.0"
   },
 
   "frameworks": {
