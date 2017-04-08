@@ -6,13 +6,12 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Amqp;
     using Microsoft.Azure.ServiceBus.Core;
     using Microsoft.Azure.ServiceBus.Primitives;
 
     sealed class SessionReceivePump
     {
-        readonly IInnerSenderReceiver client;
+        readonly IMessageSessionEntity client;
         readonly Func<IMessageSession, Message, CancellationToken, Task> userOnSessionCallback;
         readonly RegisterSessionHandlerOptions registerSessionHandlerOptions;
         readonly CancellationToken pumpCancellationToken;
@@ -20,7 +19,8 @@ namespace Microsoft.Azure.ServiceBus
         readonly SemaphoreSlim maxPendingAcceptSessionsSemaphoreSlim;
 
         public SessionReceivePump(
-            IInnerSenderReceiver client,
+            IMessageSessionEntity client,
+            ReceiveMode receiveMode,
             RegisterSessionHandlerOptions registerSessionHandlerOptions,
             Func<IMessageSession, Message, CancellationToken, Task> callback,
             CancellationToken token)
@@ -31,12 +31,15 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             this.client = client;
+            this.ReceiveMode = receiveMode;
             this.registerSessionHandlerOptions = registerSessionHandlerOptions;
             this.userOnSessionCallback = callback;
             this.pumpCancellationToken = token;
             this.maxConcurrentSessionsSemaphoreSlim = new SemaphoreSlim(this.registerSessionHandlerOptions.MaxConcurrentSessions);
             this.maxPendingAcceptSessionsSemaphoreSlim = new SemaphoreSlim(this.registerSessionHandlerOptions.MaxConcurrentAcceptSessionCalls);
         }
+
+        ReceiveMode ReceiveMode { get; }
 
         public async Task StartPumpAsync()
         {
@@ -48,11 +51,10 @@ namespace Microsoft.Azure.ServiceBus
             {
                 initialSession = await this.client.AcceptMessageSessionAsync().ConfigureAwait(false);
 
-                // TODO: MessagingEventSource.Log.SessionReceiverPumpInitialSessionReceived(this.client.ClientId, session);
+                // MessagingEventSource.Log.SessionReceiverPumpInitialSessionReceived(this.client.ClientId, initialSession);
             }
             catch (TimeoutException)
             {
-                // TODO: Log the exception
             }
 
             // Schedule Tasks for doing PendingAcceptSession calls
@@ -85,7 +87,7 @@ namespace Microsoft.Azure.ServiceBus
         bool ShouldRenewSessionLock()
         {
             return
-                this.client.ReceiveMode == ReceiveMode.PeekLock &&
+                this.ReceiveMode == ReceiveMode.PeekLock &&
                 this.registerSessionHandlerOptions.AutoRenewLock;
         }
 
@@ -99,7 +101,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                if (this.client.ReceiveMode == ReceiveMode.PeekLock &&
+                if (this.ReceiveMode == ReceiveMode.PeekLock &&
                     this.registerSessionHandlerOptions.AutoComplete)
                 {
                     await session.CompleteAsync(new[] { message.SystemProperties.LockToken }).ConfigureAwait(false);

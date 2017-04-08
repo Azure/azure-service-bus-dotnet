@@ -27,7 +27,7 @@ namespace Microsoft.Azure.ServiceBus
             // These are default values
             this.AutoComplete = true;
             this.MaxConcurrentSessions = 2000;
-            this.MessageWaitTimeout = TimeSpan.FromSeconds(30);
+            this.MessageWaitTimeout = TimeSpan.FromMinutes(1);
             this.MaxAutoRenewDuration = Constants.ClientPumpRenewLockTimeout;
         }
 
