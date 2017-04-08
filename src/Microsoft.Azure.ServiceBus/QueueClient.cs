@@ -20,6 +20,7 @@ namespace Microsoft.Azure.ServiceBus
         readonly object syncLock;
         MessageSender innerSender;
         MessageReceiver innerReceiver;
+        AmqpSessionClient sessionClient;
         SessionPumpHost pumpHost;
 
         public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
@@ -93,6 +94,32 @@ namespace Microsoft.Azure.ServiceBus
                 }
 
                 return this.innerReceiver;
+            }
+        }
+
+        internal AmqpSessionClient SessionClient
+        {
+            get
+            {
+                if (this.sessionClient == null)
+                {
+                    lock (this.syncLock)
+                    {
+                        if (this.innerReceiver == null)
+                        {
+                            this.sessionClient = new AmqpSessionClient(
+                                this.Path,
+                                MessagingEntityType.Queue,
+                                this.ReceiveMode,
+                                this.ServiceBusConnection.PrefetchCount,
+                                this.ServiceBusConnection,
+                                this.CbsTokenProvider,
+                                this.RetryPolicy);
+                        }
+                    }
+                }
+
+                return this.sessionClient;
             }
         }
 
@@ -183,16 +210,7 @@ namespace Microsoft.Azure.ServiceBus
                     throw new InvalidOperationException(Resources.SessionHandlerAlreadyRegistered);
                 }
 
-                AmqpSessionClient sessionClient = new AmqpSessionClient(
-                    this.Path,
-                    MessagingEntityType.Queue,
-                    this.ReceiveMode,
-                    this.ServiceBusConnection.PrefetchCount,
-                    this.ServiceBusConnection,
-                    this.CbsTokenProvider,
-                    this.RetryPolicy);
-
-                this.pumpHost = new SessionPumpHost(this.ClientId, this.ReceiveMode, sessionClient);
+                this.pumpHost = new SessionPumpHost(this.ClientId, this.ReceiveMode, this.SessionClient);
             }
 
             try
