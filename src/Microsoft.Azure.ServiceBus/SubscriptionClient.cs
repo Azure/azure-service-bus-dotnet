@@ -16,6 +16,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         public const string DefaultRule = "$Default";
         readonly object syncLock;
+        readonly bool ownsConnection;
         IInnerSubscriptionClient innerSubscriptionClient;
         SessionPumpHost pumpHost;
         AmqpSessionClient sessionClient;
@@ -23,6 +24,7 @@ namespace Microsoft.Azure.ServiceBus
         public SubscriptionClient(string connectionString, string topicPath, string subscriptionName, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), topicPath, subscriptionName, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
+            this.ownsConnection = true;
         }
 
         SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode, RetryPolicy retryPolicy)
@@ -109,6 +111,11 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             this.pumpHost?.OnClosingAsync();
+
+            if (this.ownsConnection)
+            {
+                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+            }
         }
 
         public Task CompleteAsync(string lockToken)

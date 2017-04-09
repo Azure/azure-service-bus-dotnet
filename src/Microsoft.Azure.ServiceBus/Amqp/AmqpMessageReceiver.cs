@@ -111,7 +111,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public override async Task OnClosingAsync()
         {
-            await base.OnClosingAsync();
+            await base.OnClosingAsync().ConfigureAwait(false);
             await this.ReceiveLinkManager.CloseAsync().ConfigureAwait(false);
             await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
         }

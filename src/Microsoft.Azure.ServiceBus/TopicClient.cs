@@ -13,12 +13,14 @@ namespace Microsoft.Azure.ServiceBus
 
     public sealed class TopicClient : ClientEntity, ITopicClient
     {
+        readonly bool ownsConnection;
         readonly object syncLock;
         MessageSender innerSender;
 
         public TopicClient(string connectionString, string entityPath, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
+            this.ownsConnection = true;
         }
 
         TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, RetryPolicy retryPolicy)
@@ -70,6 +72,11 @@ namespace Microsoft.Azure.ServiceBus
             if (this.innerSender != null)
             {
                 await this.innerSender.CloseAsync().ConfigureAwait(false);
+            }
+
+            if (this.ownsConnection)
+            {
+                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
             }
         }
 

@@ -44,6 +44,7 @@ namespace Microsoft.Azure.ServiceBus
 
             this.sessionPumpCancellationTokenSource = new CancellationTokenSource();
             this.sessionReceivePump = new SessionReceivePump(
+                this.ClientId,
                 this.SessionClient,
                 this.ReceiveMode,
                 registerSessionHandlerOptions,

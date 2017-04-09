@@ -82,7 +82,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
                 catch (Exception exception)
                 {
-                    MessagingEventSource.Log.MessageReceivePumpTaskException(this.messageReceiver.ClientId, exception);
+                    MessagingEventSource.Log.MessageReceivePumpTaskException(this.messageReceiver.ClientId, string.Empty, exception);
                     this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, "Receive"));
                 }
                 finally

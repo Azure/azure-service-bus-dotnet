@@ -11,6 +11,7 @@ namespace Microsoft.Azure.ServiceBus
 
     sealed class SessionReceivePump
     {
+        readonly string clientId;
         readonly IMessageSessionEntity client;
         readonly Func<IMessageSession, Message, CancellationToken, Task> userOnSessionCallback;
         readonly RegisterSessionHandlerOptions registerSessionHandlerOptions;
@@ -19,6 +20,7 @@ namespace Microsoft.Azure.ServiceBus
         readonly SemaphoreSlim maxPendingAcceptSessionsSemaphoreSlim;
 
         public SessionReceivePump(
+            string clientId,
             IMessageSessionEntity client,
             ReceiveMode receiveMode,
             RegisterSessionHandlerOptions registerSessionHandlerOptions,
@@ -31,6 +33,7 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             this.client = client;
+            this.clientId = clientId;
             this.ReceiveMode = receiveMode;
             this.registerSessionHandlerOptions = registerSessionHandlerOptions;
             this.userOnSessionCallback = callback;
@@ -159,7 +162,8 @@ namespace Microsoft.Azure.ServiceBus
                 }
                 catch (Exception exception)
                 {
-                    // TODO: Log the Session pump exception
+                    MessagingEventSource.Log.SessionReceivePumpSessionReceiveException(this.clientId, exception);
+
                     if (concurrentSessionSemaphoreAquired)
                     {
                         this.maxConcurrentSessionsSemaphoreSlim.Release();
@@ -215,12 +219,14 @@ namespace Microsoft.Azure.ServiceBus
                 }
                 catch (Exception exception)
                 {
+                    MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
                     this.RaiseExceptionRecieved(exception, "Receive Message");
                     break;
                 }
 
                 if (message == null)
                 {
+                    MessagingEventSource.Log.SessionReceivePumpSessionEmpty(this.clientId, session.SessionId);
                     break;
                 }
 
@@ -233,6 +239,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
                 catch (Exception exception)
                 {
+                    MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
                     this.RaiseExceptionRecieved(exception, "User Callback Exception");
                     callbackExceptionOccured = true;
                     await this.AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
@@ -266,9 +273,11 @@ namespace Microsoft.Azure.ServiceBus
                 try
                 {
                     await session.CloseAsync().ConfigureAwait(false);
+                    MessagingEventSource.Log.SessionReceivePumpSessionClosed(this.clientId, session.SessionId);
                 }
                 catch (Exception exception)
                 {
+                    MessagingEventSource.Log.SessionReceivePumpSessionCloseException(this.clientId, session.SessionId, exception);
                     this.RaiseExceptionRecieved(exception, "Session Close Exception");
                 }
             }
@@ -283,15 +292,14 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     TimeSpan amount = MessagingUtilities.CalculateRenewAfterDuration(session.LockedUntilUtc);
 
-                    // TODO: log RenewSessionLock Start message
+                    MessagingEventSource.Log.SessionReceivePumpSessionRenewLockStart(this.clientId, session.SessionId, amount);
                     await Task.Delay(amount, renewLockCancellationToken).ConfigureAwait(false);
 
                     if (!this.pumpCancellationToken.IsCancellationRequested &&
                         !renewLockCancellationToken.IsCancellationRequested)
                     {
                         await session.RenewLockAsync().ConfigureAwait(false);
-
-                        // TODO: Log RenewSessionLock Completed message
+                        MessagingEventSource.Log.SessionReceivePumpSessionRenewLockStop(this.clientId, session.SessionId);
                     }
                     else
                     {
@@ -300,7 +308,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
                 catch (Exception exception)
                 {
-                    // TODO: Log RenewSessionLock Exception message
+                    MessagingEventSource.Log.SessionReceivePumpSessionRenewLockExeption(this.clientId, session.SessionId, exception);
 
                     // TaskCancelled is expected here as renewTasks will be cancelled after the Complete call is made.
                     // Lets not bother user with this exception.

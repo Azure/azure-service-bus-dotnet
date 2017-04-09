@@ -782,18 +782,18 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceivePumpTaskException(string clientId, Exception exception)
+        public void MessageReceivePumpTaskException(string clientId, string sessionId, Exception exception)
         {
             if (this.IsEnabled())
             {
-                this.MessageReceivePumpTaskException(clientId, exception.ToString());
+                this.MessageReceivePumpTaskException(clientId, sessionId, exception.ToString());
             }
         }
 
-        [Event(68, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump PumpTask Exception: Exception: {1}")]
-        void MessageReceivePumpTaskException(string clientId, string exception)
+        [Event(68, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump PumpTask Exception: SessionId: {1}, Exception: {2}")]
+        void MessageReceivePumpTaskException(string clientId, string sessionId, string exception)
         {
-            this.WriteEvent(68, clientId, exception);
+            this.WriteEvent(68, clientId, sessionId, exception);
         }
 
         [NonEvent]
@@ -971,6 +971,93 @@ namespace Microsoft.Azure.ServiceBus
             {
                 this.WriteEvent(80, clientId, exception);
             }
+        }
+
+        [NonEvent]
+        public void SessionReceivePumpSessionReceiveException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.SessionReceivePumpSessionReceiveException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(81, Level = EventLevel.Error, Message = "{0}: Exception while Receving a session: SessionId: {1}")]
+        void SessionReceivePumpSessionReceiveException(string clientId, string exception)
+        {
+            this.WriteEvent(81, clientId, exception);
+        }
+
+        [Event(82, Level = EventLevel.Informational, Message = "{0}: Session has no more messages: SessionId: {1}")]
+        public void SessionReceivePumpSessionEmpty(string clientId, string sessionId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(82, clientId, sessionId);
+            }
+        }
+
+        [Event(83, Level = EventLevel.Informational, Message = "{0}: Session closed: SessionId: {1}")]
+        public void SessionReceivePumpSessionClosed(string clientId, string sessionId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(83, clientId, sessionId);
+            }
+        }
+
+        [NonEvent]
+        public void SessionReceivePumpSessionCloseException(string clientId, string sessionId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.SessionReceivePumpSessionCloseException(clientId, sessionId, exception.ToString());
+            }
+        }
+
+        [Event(84, Level = EventLevel.Error, Message = "{0}: Exception while closing session: SessionId: {1}, Exception: {2}")]
+        void SessionReceivePumpSessionCloseException(string clientId, string sessionId, string exception)
+        {
+            this.WriteEvent(84, clientId, sessionId, exception);
+        }
+
+        [NonEvent]
+        public void SessionReceivePumpSessionRenewLockStart(string clientId, string sessionId, TimeSpan renewAfterTimeSpan)
+        {
+            if (this.IsEnabled())
+            {
+                this.SessionReceivePumpSessionRenewLockStart(clientId, sessionId, (long)renewAfterTimeSpan.TotalSeconds);
+            }
+        }
+
+        [Event(85, Level = EventLevel.Informational, Message = "{0}: SessionRenewLock start. SessionId: {1}, RenewAfterTimeInSeconds: {2}")]
+        void SessionReceivePumpSessionRenewLockStart(string clientId, string sessionId, long totalSeconds)
+        {
+            this.WriteEvent(85, clientId, sessionId, totalSeconds);
+        }
+
+        [Event(86, Level = EventLevel.Informational, Message = "{0}: RenewSession done: SessionId: {1}")]
+        public void SessionReceivePumpSessionRenewLockStop(string clientId, string sessionId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(86, clientId, sessionId);
+            }
+        }
+
+        [NonEvent]
+        public void SessionReceivePumpSessionRenewLockExeption(string clientId, string sessionId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.SessionReceivePumpSessionRenewLockExeption(clientId, sessionId, exception.ToString());
+            }
+        }
+
+        [Event(87, Level = EventLevel.Error, Message = "{0}: Exception while renewing session lock: SessionId: {1}, Exception: {2}")]
+        void SessionReceivePumpSessionRenewLockExeption(string clientId, string sessionId, string exception)
+        {
+            this.WriteEvent(87, clientId, sessionId, exception);
         }
     }
 }

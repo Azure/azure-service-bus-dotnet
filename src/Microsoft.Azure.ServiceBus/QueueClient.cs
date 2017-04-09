@@ -17,6 +17,7 @@ namespace Microsoft.Azure.ServiceBus
     /// </summary>
     public sealed class QueueClient : ClientEntity, IQueueClient
     {
+        readonly bool ownsConnection;
         readonly object syncLock;
         MessageSender innerSender;
         MessageReceiver innerReceiver;
@@ -26,6 +27,7 @@ namespace Microsoft.Azure.ServiceBus
         public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
+            this.ownsConnection = true;
         }
 
         QueueClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode, RetryPolicy retryPolicy)
@@ -142,6 +144,11 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             this.pumpHost?.OnClosingAsync();
+
+            if (this.ownsConnection)
+            {
+                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+            }
         }
 
         /// <summary>
