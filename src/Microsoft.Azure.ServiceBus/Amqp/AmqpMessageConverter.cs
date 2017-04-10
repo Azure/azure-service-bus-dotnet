@@ -154,6 +154,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     {
                         amqpMessage.ApplicationProperties.Map.Add(pair.Key, amqpObject);
                     }
+                    else
+                    {
+                        throw new NotSupportedException(Resources.InvalidAmqpMessageProperty.FormatForUser(pair.Key.GetType()));
+                    }
                 }
             }
 
