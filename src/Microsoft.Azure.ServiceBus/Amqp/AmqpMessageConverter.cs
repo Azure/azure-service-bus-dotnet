@@ -168,17 +168,18 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
 
             SBMessage sbMessage;
-            if (amqpMessage.BodyType == SectionFlag.AmqpValue && amqpMessage.ValueBody.Value != null)
+
+            if ((amqpMessage.BodyType & SectionFlag.AmqpValue) != 0
+                && amqpMessage.ValueBody.Value != null)
             {
                 var byteArrayValue = (byte[])amqpMessage.ValueBody.Value;
                 sbMessage = new SBMessage(byteArrayValue);
             }
-            else if (amqpMessage.BodyType == SectionFlag.Data
-                && amqpMessage.DataBody != null
-                && amqpMessage.DataBody.Count() > 0)
+            else if ((amqpMessage.BodyType & SectionFlag.Data) != 0
+                && amqpMessage.DataBody?.Count() > 0)
             {
                 var dataSegments = new List<byte>();
-                foreach (Data data in amqpMessage.DataBody)
+                foreach (var data in amqpMessage.DataBody)
                 {
                     var arraySegmentValue = (ArraySegment<byte>)data.Value;
                     dataSegments.AddRange(arraySegmentValue.ToArray());
