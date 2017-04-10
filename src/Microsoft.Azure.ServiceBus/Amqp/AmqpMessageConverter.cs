@@ -7,7 +7,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.Collections;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
     using System.Runtime.Serialization;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Encoding;
@@ -180,13 +179,13 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 sbMessage = new SBMessage(byteArrayValue);
             }
             else if ((amqpMessage.BodyType & SectionFlag.Data) != 0
-                && amqpMessage.DataBody?.Count() > 0)
+                && amqpMessage.DataBody != null)
             {
                 var dataSegments = new List<byte>();
                 foreach (var data in amqpMessage.DataBody)
                 {
                     var arraySegmentValue = (ArraySegment<byte>)data.Value;
-                    dataSegments.AddRange(arraySegmentValue.ToArray());
+                    dataSegments.AddRange(arraySegmentValue);
                 }
                 sbMessage = new SBMessage(dataSegments.ToArray());
             }
