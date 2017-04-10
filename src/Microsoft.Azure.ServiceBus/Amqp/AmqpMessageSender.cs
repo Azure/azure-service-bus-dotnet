@@ -168,7 +168,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         async Task<SendingAmqpLink> CreateLinkAsync(TimeSpan timeout)
         {
-            MessagingEventSource.Log.AmqpSendLinkCreateStart(this.ClientId, this.Path);
+            MessagingEventSource.Log.AmqpSendLinkCreateStart(this.ClientId, this.EntityType, this.Path);
 
             AmqpLinkSettings linkSettings = new AmqpLinkSettings
             {

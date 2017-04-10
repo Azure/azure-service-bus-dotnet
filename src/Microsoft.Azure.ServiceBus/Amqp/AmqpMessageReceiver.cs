@@ -465,7 +465,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         {
             FilterSet filterMap = null;
 
-            MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, false, this.Path);
+            MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, false, this.EntityType, this.Path);
 
             if (this.isSessionReceiver)
             {
@@ -501,7 +501,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         {
             string entityPath = this.Path + '/' + AmqpClientConstants.ManagementAddress;
 
-            MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, true, entityPath);
+            MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, true, this.EntityType, entityPath);
             AmqpLinkSettings linkSettings = new AmqpLinkSettings();
             linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, AmqpClientConstants.EntityTypeManagement);
 
