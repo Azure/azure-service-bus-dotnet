@@ -7,12 +7,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.Collections;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Runtime.Serialization;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Messaging.Amqp;
     using Microsoft.Azure.ServiceBus.Filters;
+
+
     using SBMessage = Microsoft.Azure.ServiceBus.Message;
 
     static class AmqpMessageConverter
@@ -171,6 +174,21 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 var byteArrayValue = (byte[])amqpMessage.ValueBody.Value;
                 sbMessage = new SBMessage(byteArrayValue);
+            }
+            else if (amqpMessage.BodyType == SectionFlag.Data && amqpMessage.DataBody != null)
+            {
+                var data = amqpMessage.DataBody.FirstOrDefault();
+                if (data != null)
+                {
+                    // Chek cast ???
+                    var seg = (ArraySegment<byte>)data.Value;
+                    sbMessage = new SBMessage(seg.ToArray());
+                }
+                else
+                {
+                    // ??
+                    sbMessage = null;                   
+                }
             }
             else
             {
