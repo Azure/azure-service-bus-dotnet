@@ -383,11 +383,11 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void AmqpSendLinkCreateStart(string clientId, MessagingEntityType? entityType, string entityPath)
+        public void AmqpSendLinkCreateStart(string clientId, string entityPath)
         {
             if (this.IsEnabled())
             {
-                this.AmqpSendLinkCreateStart(clientId, entityType?.ToString() ?? string.Empty, entityPath);
+                this.AmqpSendLinkCreateStart(clientId, entityPath);
             }
         }
 
@@ -407,18 +407,18 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void AmqpReceiveLinkCreateStart(string clientId, bool isRequestResponseLink, MessagingEntityType? entityType, string entityPath)
+        public void AmqpReceiveLinkCreateStart(string clientId, bool isRequestResponseLink, string entityPath)
         {
             if (this.IsEnabled())
             {
-                this.AmqpReceiveLinkCreateStart(clientId, isRequestResponseLink.ToString(), entityType?.ToString() ?? string.Empty, entityPath);
+                this.AmqpReceiveLinkCreateStart(clientId, isRequestResponseLink.ToString(), entityPath);
             }
         }
 
         [Event(36, Level = EventLevel.Informational, Message = "{0}: AmqpReceiveLinkCreate started. IsRequestResponseLink: {1},  EntityType: {1}, EntityPath: {2}")]
-        void AmqpReceiveLinkCreateStart(string clientId, string isRequestResponseLink, string entityType, string entityPath)
+        void AmqpReceiveLinkCreateStart(string clientId, string isRequestResponseLink, string entityPath)
         {
-            this.WriteEvent(36, clientId, isRequestResponseLink, entityType, entityPath);
+            this.WriteEvent(36, clientId, isRequestResponseLink, entityPath);
         }
 
         [Event(37, Level = EventLevel.Informational, Message = "{0}: AmqpReceiveLinkCreate done.")]
