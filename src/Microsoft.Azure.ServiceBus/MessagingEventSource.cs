@@ -683,11 +683,11 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void RegisterOnMessageHandlerStart(string clientId, RegisterHandlerOptions registerHandlerOptions)
+        public void RegisterOnMessageHandlerStart(string clientId, MessageHandlerOptions messageHandlerOptions)
         {
             if (this.IsEnabled())
             {
-                this.RegisterOnMessageHandlerStart(clientId, registerHandlerOptions.AutoComplete, registerHandlerOptions.AutoRenewLock, registerHandlerOptions.MaxConcurrentCalls, (long)registerHandlerOptions.AutoRenewTimeout.TotalSeconds);
+                this.RegisterOnMessageHandlerStart(clientId, messageHandlerOptions.AutoComplete, messageHandlerOptions.AutoRenewLock, messageHandlerOptions.MaxConcurrentCalls, (long)messageHandlerOptions.AutoRenewTimeout.TotalSeconds);
             }
         }
 

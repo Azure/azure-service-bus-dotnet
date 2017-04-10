@@ -69,10 +69,10 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>Asynchronously processes a message.</summary>
         /// <param name="handler"></param>
-        /// <param name="registerHandlerOptions">Calls a message option.</param>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterHandlerOptions registerHandlerOptions)
+        /// <param name="messageHandlerOptions">Calls a message option.</param>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
         {
-            this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, registerHandlerOptions);
+            this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, messageHandlerOptions);
         }
 
         /// <summary>
