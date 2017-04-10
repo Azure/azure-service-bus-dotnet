@@ -83,7 +83,7 @@ namespace Microsoft.Azure.ServiceBus
                         {
                             this.sessionClient = new AmqpSessionClient(
                                 this.Path,
-                                MessagingEntityType.Queue,
+                                MessagingEntityType.Subscriber,
                                 this.ReceiveMode,
                                 this.ServiceBusConnection.PrefetchCount,
                                 this.ServiceBusConnection,
@@ -183,7 +183,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="registerSessionHandlerOptions">Options associated with session pump processing.</param>
         public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, RegisterSessionHandlerOptions registerSessionHandlerOptions)
         {
-            this.sessionPumpHost.OnSessionHandlerAsync(handler, registerSessionHandlerOptions).GetAwaiter().GetResult();
+            this.SessionPumpHost.OnSessionHandlerAsync(handler, registerSessionHandlerOptions).GetAwaiter().GetResult();
         }
 
         /// <summary>
