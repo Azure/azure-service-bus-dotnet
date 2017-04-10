@@ -80,11 +80,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     topicClient.InnerSender,
                     subscriptionClient.SessionPumpHost);
 
-                // Register handler first without any messages
-                testSessionHandler.RegisterSessionHandler(handlerOptions);
-
                 // Send messages to Session
                 await testSessionHandler.SendSessionMessages();
+
+                // Register handler
+                testSessionHandler.RegisterSessionHandler(handlerOptions);
 
                 // Verify messages were received.
                 await testSessionHandler.VerifyRun();
