@@ -39,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus
         public async Task StartPumpAsync()
         {
             Message initialMessage = null;
-            initialMessage = await this.messageReceiver.ReceiveAsync(TimeSpan.Zero).ConfigureAwait(false);
+            initialMessage = await this.messageReceiver.ReceiveAsync().ConfigureAwait(false);
             if (initialMessage != null)
             {
                 MessagingEventSource.Log.MessageReceiverPumpInitialMessageReceived(this.messageReceiver.ClientId, initialMessage);
