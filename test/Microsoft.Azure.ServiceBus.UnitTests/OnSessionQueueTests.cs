@@ -19,6 +19,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             new object[] { TestConstants.SessionPartitionedQueueName, 5 },
         };
 
+        public static IEnumerable<object> PartitionedNonPartitionedTestPermutations => new object[]
+        {
+            new object[] { TestConstants.SessionNonPartitionedQueueName, 5 },
+            new object[] { TestConstants.SessionPartitionedQueueName, 5 },
+        };
+
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
@@ -33,6 +39,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task OnSessionPeekLockWithAutoCompleteFalse(string queueName, int maxConcurrentCalls)
         {
             await this.OnSessionTestAsync(queueName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
+        }
+
+        [Theory]
+        [MemberData(nameof(PartitionedNonPartitionedTestPermutations))]
+        [DisplayTestMethodName]
+        async Task OnSessionReceiveDelete(string queueName, int maxConcurrentCalls)
+        {
+            await this.OnSessionTestAsync(queueName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
         }
 
         [Fact]

@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Threading;
@@ -20,7 +21,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         readonly ReceiveMode receiveMode;
         readonly MessageSender sender;
         readonly RegisterSessionHandlerOptions sessionHandlerOptions;
-        Dictionary<string, int> sessionMessageMap;
+        ConcurrentDictionary<string, int> sessionMessageMap;
         int totalMessageCount;
 
         public TestSessionHandler(
@@ -33,7 +34,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             this.sessionHandlerOptions = sessionHandlerOptions;
             this.sender = sender;
             this.sessionPumpHost = sessionPumpHost;
-            this.sessionMessageMap = new Dictionary<string, int>();
+            this.sessionMessageMap = new ConcurrentDictionary<string, int>();
         }
 
         public void RegisterSessionHandler(RegisterSessionHandlerOptions handlerOptions)
@@ -98,7 +99,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         public void ClearData()
         {
             this.totalMessageCount = 0;
-            this.sessionMessageMap = new Dictionary<string, int>();
+            this.sessionMessageMap = new ConcurrentDictionary<string, int>();
         }
     }
 }
