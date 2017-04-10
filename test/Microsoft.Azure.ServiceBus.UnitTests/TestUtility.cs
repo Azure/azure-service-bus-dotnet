@@ -133,6 +133,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await messageReceiver.DeadLetterAsync(message.SystemProperties.LockToken);
                 count++;
             }
+
             Log($"Deadlettered {count} messages");
         }
 
@@ -144,6 +145,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await messageReceiver.DeferAsync(message.SystemProperties.LockToken);
                 count++;
             }
+
             Log($"Deferred {count} messages");
         }
 

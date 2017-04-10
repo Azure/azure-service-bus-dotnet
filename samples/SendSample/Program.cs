@@ -11,8 +11,8 @@ namespace SendSample
     public class Program
     {
         private static IQueueClient queueClient;
-        private const string ServiceBusConnectionString = "{Service Bus connection string}";
-        private const string QueueName = "{Queue path/name}";
+        private const string ServiceBusConnectionString = "{TODO}";
+        private const string QueueName = "test";
 
         public static void Main(string[] args)
         {
