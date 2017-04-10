@@ -169,14 +169,13 @@ namespace Microsoft.Azure.ServiceBus
                         this.maxConcurrentSessionsSemaphoreSlim.Release();
                     }
 
-                    if (!MessagingUtilities.ShouldRetry(exception))
-                    {
-                        break;
-                    }
-
                     if (!(exception is TimeoutException))
                     {
                         this.RaiseExceptionRecieved(exception, "AcceptMessageSession");
+                        if (!MessagingUtilities.ShouldRetry(exception))
+                        {
+                            break;
+                        }
                     }
                     else
                     {

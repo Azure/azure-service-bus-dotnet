@@ -66,7 +66,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 this.PrefetchCount,
                 this.ServiceBusConnection,
                 this.CbsTokenProvider,
-                null,
+                sessionId,
                 this.RetryPolicy,
                 true);
             try
@@ -74,8 +74,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 await this.RetryPolicy.RunOperation(
                     async () =>
                     {
-                        await receiver.GetSessionReceiverLinkAsync(this.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
-                    }, this.ServiceBusConnection.OperationTimeout)
+                        await receiver.GetSessionReceiverLinkAsync(serverWaitTime).ConfigureAwait(false);
+                    }, serverWaitTime)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)

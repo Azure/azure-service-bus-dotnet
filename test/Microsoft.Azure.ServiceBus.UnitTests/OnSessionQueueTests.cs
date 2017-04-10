@@ -5,7 +5,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Threading.Tasks;
     using Core;
     using Xunit;
@@ -38,6 +37,52 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         [Fact]
         [DisplayTestMethodName]
+        async Task OnSessionCanStartWithNullMessageButReturnSessionLater()
+        {
+            var queueClient = new QueueClient(
+                        TestUtility.NamespaceConnectionString,
+                        TestConstants.SessionNonPartitionedQueueName,
+                        ReceiveMode.PeekLock);
+            try
+            {
+                RegisterSessionHandlerOptions handlerOptions =
+                    new RegisterSessionHandlerOptions()
+                    {
+                        MaxConcurrentSessions = 5,
+                        MessageWaitTimeout = TimeSpan.FromSeconds(5),
+                        AutoComplete = true
+                    };
+
+                TestSessionHandler testSessionHandler = new TestSessionHandler(
+                    queueClient.ReceiveMode,
+                    handlerOptions,
+                    queueClient.InnerSender,
+                    queueClient.SessionPumpHost);
+
+                // Register handler first without any messages
+                testSessionHandler.RegisterSessionHandler(handlerOptions);
+
+                // Send messages to Session
+                await testSessionHandler.SendSessionMessages();
+
+                // Verify messages were received.
+                await testSessionHandler.VerifyRun();
+
+                // Clear the data and re-run the scenario.
+                testSessionHandler.ClearData();
+                await testSessionHandler.SendSessionMessages();
+
+                // Verify messages were received.
+                await testSessionHandler.VerifyRun();
+            }
+            finally
+            {
+                await queueClient.CloseAsync();
+            }
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
         void OnSessionHandlerShouldFailOnNonSessionFulQueue()
         {
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
@@ -52,17 +97,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         async Task OnSessionTestAsync(string queueName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
         {
-            const int numberOfSessions = 5;
-            const int messagesPerSession = 10;
-
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, mode);
             try
             {
-                int totalMessageCount = 0;
-                Dictionary<string, int> sessionMessageMap = new Dictionary<string, int>();
-
-                await TestUtility.SendSessionMessagesAsync(queueClient.InnerSender, numberOfSessions, messagesPerSession);
-
                 RegisterSessionHandlerOptions handlerOptions =
                     new RegisterSessionHandlerOptions()
                     {
@@ -71,53 +108,20 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                         AutoComplete = autoComplete
                     };
 
-                queueClient.RegisterSessionHandler(
-                    async (session, message, token) =>
-                    {
-                        Assert.NotNull(session);
-                        Assert.NotNull(message);
+                TestSessionHandler testSessionHandler = new TestSessionHandler(
+                    queueClient.ReceiveMode,
+                    handlerOptions,
+                    queueClient.InnerSender,
+                    queueClient.SessionPumpHost);
 
-                        totalMessageCount++;
-                        TestUtility.Log($"Received Session: {session.SessionId} message: SequenceNumber: {message.SystemProperties.SequenceNumber}");
+                // Send messages to Session first
+                await testSessionHandler.SendSessionMessages();
 
-                        if (queueClient.ReceiveMode == ReceiveMode.PeekLock && !autoComplete)
-                        {
-                            await session.CompleteAsync(message.SystemProperties.LockToken);
-                        }
+                // Register handler
+                testSessionHandler.RegisterSessionHandler(handlerOptions);
 
-                        if (!sessionMessageMap.ContainsKey(session.SessionId))
-                        {
-                            sessionMessageMap[session.SessionId] = 1;
-                        }
-                        else
-                        {
-                            sessionMessageMap[session.SessionId]++;
-                        }
-                    },
-                    handlerOptions);
-
-                // Wait for the OnMessage Tasks to finish
-                Stopwatch stopwatch = Stopwatch.StartNew();
-                while (stopwatch.Elapsed.TotalSeconds <= 300)
-                {
-                    if (totalMessageCount == messagesPerSession * numberOfSessions)
-                    {
-                        TestUtility.Log($"All '{totalMessageCount}' messages Received.");
-                        break;
-                    }
-                    else
-                    {
-                        await Task.Delay(TimeSpan.FromSeconds(5));
-                    }
-                }
-
-                foreach (KeyValuePair<string, int> keyValuePair in sessionMessageMap)
-                {
-                    TestUtility.Log($"Session: {keyValuePair.Key}, Messages Received in this Session: {keyValuePair.Value}");
-                }
-
-                Assert.True(sessionMessageMap.Keys.Count == numberOfSessions);
-                Assert.True(totalMessageCount == messagesPerSession * numberOfSessions);
+                // Verify messages were received.
+                await testSessionHandler.VerifyRun();
             }
             finally
             {

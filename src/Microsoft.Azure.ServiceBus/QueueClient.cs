@@ -22,7 +22,7 @@ namespace Microsoft.Azure.ServiceBus
         MessageSender innerSender;
         MessageReceiver innerReceiver;
         AmqpSessionClient sessionClient;
-        SessionPumpHost pumpHost;
+        SessionPumpHost sessionPumpHost;
 
         public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode, retryPolicy ?? RetryPolicy.Default)
@@ -107,7 +107,7 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     lock (this.syncLock)
                     {
-                        if (this.innerReceiver == null)
+                        if (this.sessionClient == null)
                         {
                             this.sessionClient = new AmqpSessionClient(
                                 this.Path,
@@ -122,6 +122,28 @@ namespace Microsoft.Azure.ServiceBus
                 }
 
                 return this.sessionClient;
+            }
+        }
+
+        internal SessionPumpHost SessionPumpHost
+        {
+            get
+            {
+                if (this.sessionPumpHost == null)
+                {
+                    lock (this.syncLock)
+                    {
+                        if (this.sessionPumpHost == null)
+                        {
+                            this.sessionPumpHost = new SessionPumpHost(
+                                this.ClientId,
+                                this.ReceiveMode,
+                                this.SessionClient);
+                        }
+                    }
+                }
+
+                return this.sessionPumpHost;
             }
         }
 
@@ -143,7 +165,7 @@ namespace Microsoft.Azure.ServiceBus
                 await this.innerReceiver.CloseAsync().ConfigureAwait(false);
             }
 
-            this.pumpHost?.OnClosingAsync();
+            this.sessionPumpHost?.OnClosingAsync();
 
             if (this.ownsConnection)
             {
@@ -210,25 +232,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="registerSessionHandlerOptions">Options associated with session pump processing.</param>
         public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, RegisterSessionHandlerOptions registerSessionHandlerOptions)
         {
-            lock (this.syncLock)
-            {
-                if (this.pumpHost != null)
-                {
-                    throw new InvalidOperationException(Resources.SessionHandlerAlreadyRegistered);
-                }
-
-                this.pumpHost = new SessionPumpHost(this.ClientId, this.ReceiveMode, this.SessionClient);
-            }
-
-            try
-            {
-                this.pumpHost.OnSessionHandlerAsync(handler, registerSessionHandlerOptions).GetAwaiter().GetResult();
-            }
-            catch (Exception)
-            {
-                this.pumpHost = null;
-                throw;
-            }
+            this.SessionPumpHost.OnSessionHandlerAsync(handler, registerSessionHandlerOptions).GetAwaiter().GetResult();
         }
 
         /// <summary>

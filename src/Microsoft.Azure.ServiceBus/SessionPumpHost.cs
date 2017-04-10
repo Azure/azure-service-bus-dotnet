@@ -8,13 +8,15 @@ namespace Microsoft.Azure.ServiceBus
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus.Core;
 
-    sealed class SessionPumpHost
+    internal sealed class SessionPumpHost
     {
+        readonly object syncLock;
         SessionReceivePump sessionReceivePump;
         CancellationTokenSource sessionPumpCancellationTokenSource;
 
         public SessionPumpHost(string clientId, ReceiveMode receiveMode, IMessageSessionEntity sessionClient)
         {
+            this.syncLock = new object();
             this.ClientId = clientId;
             this.ReceiveMode = receiveMode;
             this.SessionClient = sessionClient;
@@ -42,14 +44,22 @@ namespace Microsoft.Azure.ServiceBus
         {
             MessagingEventSource.Log.RegisterOnSessionHandlerStart(this.ClientId, registerSessionHandlerOptions);
 
-            this.sessionPumpCancellationTokenSource = new CancellationTokenSource();
-            this.sessionReceivePump = new SessionReceivePump(
-                this.ClientId,
-                this.SessionClient,
-                this.ReceiveMode,
-                registerSessionHandlerOptions,
-                callback,
-                this.sessionPumpCancellationTokenSource.Token);
+            lock (this.syncLock)
+            {
+                if (this.sessionReceivePump != null)
+                {
+                    throw new InvalidOperationException(Resources.SessionHandlerAlreadyRegistered);
+                }
+
+                this.sessionPumpCancellationTokenSource = new CancellationTokenSource();
+                this.sessionReceivePump = new SessionReceivePump(
+                    this.ClientId,
+                    this.SessionClient,
+                    this.ReceiveMode,
+                    registerSessionHandlerOptions,
+                    callback,
+                    this.sessionPumpCancellationTokenSource.Token);
+            }
 
             try
             {

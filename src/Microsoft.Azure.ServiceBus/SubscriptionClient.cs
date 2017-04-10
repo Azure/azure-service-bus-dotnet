@@ -18,8 +18,8 @@ namespace Microsoft.Azure.ServiceBus
         readonly object syncLock;
         readonly bool ownsConnection;
         IInnerSubscriptionClient innerSubscriptionClient;
-        SessionPumpHost pumpHost;
         AmqpSessionClient sessionClient;
+        SessionPumpHost sessionPumpHost;
 
         public SubscriptionClient(string connectionString, string topicPath, string subscriptionName, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), topicPath, subscriptionName, receiveMode, retryPolicy ?? RetryPolicy.Default)
@@ -97,6 +97,28 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
+        internal SessionPumpHost SessionPumpHost
+        {
+            get
+            {
+                if (this.sessionPumpHost == null)
+                {
+                    lock (this.syncLock)
+                    {
+                        if (this.sessionPumpHost == null)
+                        {
+                            this.sessionPumpHost = new SessionPumpHost(
+                                this.ClientId,
+                                this.ReceiveMode,
+                                this.SessionClient);
+                        }
+                    }
+                }
+
+                return this.sessionPumpHost;
+            }
+        }
+
         ServiceBusNamespaceConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
@@ -110,7 +132,7 @@ namespace Microsoft.Azure.ServiceBus
                 await this.innerSubscriptionClient.InnerReceiver.CloseAsync().ConfigureAwait(false);
             }
 
-            this.pumpHost?.OnClosingAsync();
+            this.sessionPumpHost?.OnClosingAsync();
 
             if (this.ownsConnection)
             {
@@ -161,25 +183,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="registerSessionHandlerOptions">Options associated with session pump processing.</param>
         public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, RegisterSessionHandlerOptions registerSessionHandlerOptions)
         {
-            lock (this.syncLock)
-            {
-                if (this.pumpHost != null)
-                {
-                    throw new InvalidOperationException(Resources.SessionHandlerAlreadyRegistered);
-                }
-
-                this.pumpHost = new SessionPumpHost(this.ClientId, this.ReceiveMode, this.SessionClient);
-            }
-
-            try
-            {
-                this.pumpHost.OnSessionHandlerAsync(handler, registerSessionHandlerOptions).GetAwaiter().GetResult();
-            }
-            catch (Exception)
-            {
-                this.pumpHost = null;
-                throw;
-            }
+            this.sessionPumpHost.OnSessionHandlerAsync(handler, registerSessionHandlerOptions).GetAwaiter().GetResult();
         }
 
         /// <summary>

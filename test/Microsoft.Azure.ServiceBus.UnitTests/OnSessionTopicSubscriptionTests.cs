@@ -5,7 +5,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Threading.Tasks;
     using Xunit;
 
@@ -58,9 +57,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         async Task OnSessionTestAsync(string topicName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
         {
-            const int numberOfSessions = 5;
-            const int messagesPerSession = 10;
-
             var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
@@ -70,65 +66,28 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             try
             {
-                int totalMessageCount = 0;
-                Dictionary<string, int> sessionMessageMap = new Dictionary<string, int>();
-
-                await TestUtility.SendSessionMessagesAsync(topicClient.InnerSender, numberOfSessions, messagesPerSession);
                 RegisterSessionHandlerOptions handlerOptions =
                     new RegisterSessionHandlerOptions()
                     {
-                        MaxConcurrentSessions = maxConcurrentCalls,
+                        MaxConcurrentSessions = 5,
                         MessageWaitTimeout = TimeSpan.FromSeconds(5),
-                        AutoComplete = autoComplete
+                        AutoComplete = true
                     };
 
-                subscriptionClient.RegisterSessionHandler(
-                    async (session, message, token) =>
-                    {
-                        Assert.NotNull(session);
-                        Assert.NotNull(message);
+                TestSessionHandler testSessionHandler = new TestSessionHandler(
+                    subscriptionClient.ReceiveMode,
+                    handlerOptions,
+                    topicClient.InnerSender,
+                    subscriptionClient.SessionPumpHost);
 
-                        totalMessageCount++;
-                        TestUtility.Log($"Received Session: {session.SessionId} message: SequenceNumber: {message.SystemProperties.SequenceNumber}");
+                // Register handler first without any messages
+                testSessionHandler.RegisterSessionHandler(handlerOptions);
 
-                        if (subscriptionClient.ReceiveMode == ReceiveMode.PeekLock && !autoComplete)
-                        {
-                            await session.CompleteAsync(message.SystemProperties.LockToken);
-                        }
+                // Send messages to Session
+                await testSessionHandler.SendSessionMessages();
 
-                        if (!sessionMessageMap.ContainsKey(session.SessionId))
-                        {
-                            sessionMessageMap[session.SessionId] = 1;
-                        }
-                        else
-                        {
-                            sessionMessageMap[session.SessionId]++;
-                        }
-                    },
-                    handlerOptions);
-
-                // Wait for the OnMessage Tasks to finish
-                Stopwatch stopwatch = Stopwatch.StartNew();
-                while (stopwatch.Elapsed.TotalSeconds <= 300)
-                {
-                    if (totalMessageCount == messagesPerSession * numberOfSessions)
-                    {
-                        TestUtility.Log($"All '{totalMessageCount}' messages Received.");
-                        break;
-                    }
-                    else
-                    {
-                        await Task.Delay(TimeSpan.FromSeconds(5));
-                    }
-                }
-
-                foreach (KeyValuePair<string, int> keyValuePair in sessionMessageMap)
-                {
-                    TestUtility.Log($"Session: {keyValuePair.Key}, Messages Received in this Session: {keyValuePair.Value}");
-                }
-
-                Assert.True(sessionMessageMap.Keys.Count == numberOfSessions);
-                Assert.True(totalMessageCount == messagesPerSession * numberOfSessions);
+                // Verify messages were received.
+                await testSessionHandler.VerifyRun();
             }
             finally
             {
