@@ -177,9 +177,13 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 && amqpMessage.DataBody != null
                 && amqpMessage.DataBody.Count() > 0)
             {
-                var dataBody = amqpMessage.DataBody.FirstOrDefault().Value;
-                var dataBodyAsByteArray = (ArraySegment<byte>)dataBody;
-                sbMessage = new SBMessage(dataBodyAsByteArray.ToArray());
+                var dataSegments = new List<byte>();
+                foreach (Data data in amqpMessage.DataBody)
+                {
+                    var arraySegmentValue = (ArraySegment<byte>)data.Value;
+                    dataSegments.AddRange(arraySegmentValue.ToArray());
+                }
+                sbMessage = new SBMessage(dataSegments.ToArray());
             }
             else
             {
