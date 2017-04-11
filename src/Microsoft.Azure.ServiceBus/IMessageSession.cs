@@ -18,6 +18,6 @@ namespace Microsoft.Azure.ServiceBus
 
         Task SetStateAsync(Stream sessionState);
 
-        Task RenewLockAsync();
+        Task RenewSessionLockAsync();
     }
 }

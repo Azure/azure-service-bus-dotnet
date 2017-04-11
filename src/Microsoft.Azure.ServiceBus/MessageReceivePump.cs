@@ -90,7 +90,6 @@ namespace Microsoft.Azure.ServiceBus
                     // Either an exception or for some reason message was null, release semaphore and retry.
                     if (message == null)
                     {
-                        await Task.Delay(Constants.NoMessageBackoffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
                         this.maxConcurrentCallsSemaphoreSlim.Release();
                         MessagingEventSource.Log.MessageReceiverPumpTaskStop(this.messageReceiver.ClientId, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
                     }

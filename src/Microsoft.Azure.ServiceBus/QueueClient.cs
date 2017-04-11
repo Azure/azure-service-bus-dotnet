@@ -110,6 +110,7 @@ namespace Microsoft.Azure.ServiceBus
                         if (this.sessionClient == null)
                         {
                             this.sessionClient = new AmqpSessionClient(
+                                this.ClientId,
                                 this.Path,
                                 MessagingEntityType.Queue,
                                 this.ReceiveMode,
@@ -165,7 +166,7 @@ namespace Microsoft.Azure.ServiceBus
                 await this.innerReceiver.CloseAsync().ConfigureAwait(false);
             }
 
-            this.sessionPumpHost?.OnClosingAsync();
+            this.sessionPumpHost?.Close();
 
             if (this.ownsConnection)
             {

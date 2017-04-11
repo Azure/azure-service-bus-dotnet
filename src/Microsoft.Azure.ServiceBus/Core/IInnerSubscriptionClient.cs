@@ -13,5 +13,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         Task OnAddRuleAsync(RuleDescription description);
 
         Task OnRemoveRuleAsync(string ruleName);
+
+        Task CloseAsync();
     }
 }

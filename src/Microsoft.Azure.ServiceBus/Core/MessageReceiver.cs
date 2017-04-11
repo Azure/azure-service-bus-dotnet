@@ -385,7 +385,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, RegisterMessageHandlerOptions registerMessageHandlerOptions)
         {
             registerMessageHandlerOptions.MessageClientEntity = this;
-            registerMessageHandlerOptions.ReceiveTimeOut = this.OperationTimeout;
             this.OnMessageHandlerAsync(registerMessageHandlerOptions, handler).GetAwaiter().GetResult();
         }
 

@@ -208,61 +208,74 @@ namespace Microsoft.Azure.ServiceBus
                 Timeout.Infinite,
                 Timeout.Infinite);
 
-            while (!this.pumpCancellationToken.IsCancellationRequested &&
-                   (!session.IsClosedOrClosing))
+            try
             {
-                Message message;
-                try
+                while (!this.pumpCancellationToken.IsCancellationRequested &&
+                       (!session.IsClosedOrClosing))
                 {
-                    message = await session.ReceiveAsync(this.registerSessionHandlerOptions.MessageWaitTimeout).ConfigureAwait(false);
-                }
-                catch (Exception exception)
-                {
-                    MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
-                    this.RaiseExceptionRecieved(exception, "Receive Message");
-                    break;
-                }
+                    Message message;
+                    try
+                    {
+                        message = await session.ReceiveAsync(this.registerSessionHandlerOptions.MessageWaitTimeout).ConfigureAwait(false);
+                    }
+                    catch (Exception exception)
+                    {
+                        MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
+                        if (exception is TimeoutException)
+                        {
+                            // Timeout Exceptions are pretty common. Not alerting the User on this.
+                            continue;
+                        }
+                        else
+                        {
+                            this.RaiseExceptionRecieved(exception, "Receive Message");
+                            break;
+                        }
+                    }
 
-                if (message == null)
-                {
-                    MessagingEventSource.Log.SessionReceivePumpSessionEmpty(this.clientId, session.SessionId);
-                    break;
-                }
+                    if (message == null)
+                    {
+                        MessagingEventSource.Log.SessionReceivePumpSessionEmpty(this.clientId, session.SessionId);
+                        break;
+                    }
 
-                // Set the timer
-                userCallbackTimer.Change(this.registerSessionHandlerOptions.MaxAutoRenewDuration, TimeSpan.FromMilliseconds(-1));
-                bool callbackExceptionOccured = false;
-                try
-                {
-                    await this.userOnSessionCallback(session, message, this.pumpCancellationToken).ConfigureAwait(false);
-                }
-                catch (Exception exception)
-                {
-                    MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
-                    this.RaiseExceptionRecieved(exception, "User Callback Exception");
-                    callbackExceptionOccured = true;
-                    await this.AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
-                }
-                finally
-                {
-                    userCallbackTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                }
+                    // Set the timer
+                    userCallbackTimer.Change(this.registerSessionHandlerOptions.MaxAutoRenewDuration, TimeSpan.FromMilliseconds(-1));
+                    bool callbackExceptionOccured = false;
+                    try
+                    {
+                        await this.userOnSessionCallback(session, message, this.pumpCancellationToken).ConfigureAwait(false);
+                    }
+                    catch (Exception exception)
+                    {
+                        MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
+                        this.RaiseExceptionRecieved(exception, "User Callback Exception");
+                        callbackExceptionOccured = true;
+                        await this.AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        userCallbackTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    }
 
-                if (!callbackExceptionOccured)
-                {
-                    await this.CompleteMessageIfNeededAsync(session, message).ConfigureAwait(false);
-                }
-                else if (session.IsClosedOrClosing)
-                {
-                    // If User closed the session as part of the callback, break out of the loop
-                    break;
+                    if (!callbackExceptionOccured)
+                    {
+                        await this.CompleteMessageIfNeededAsync(session, message).ConfigureAwait(false);
+                    }
+                    else if (session.IsClosedOrClosing)
+                    {
+                        // If User closed the session as part of the callback, break out of the loop
+                        break;
+                    }
                 }
             }
-
-            userCallbackTimer.Dispose();
-            await this.CloseSessionIfNeededAsync(session).ConfigureAwait(false);
-            CancelAndDisposeCancellationTokenSource(renewLockCancellationTokenSource);
-            this.maxConcurrentSessionsSemaphoreSlim.Release();
+            finally
+            {
+                userCallbackTimer.Dispose();
+                await this.CloseSessionIfNeededAsync(session).ConfigureAwait(false);
+                CancelAndDisposeCancellationTokenSource(renewLockCancellationTokenSource);
+                this.maxConcurrentSessionsSemaphoreSlim.Release();
+            }
         }
 
         async Task CloseSessionIfNeededAsync(IMessageSession session)
@@ -297,7 +310,7 @@ namespace Microsoft.Azure.ServiceBus
                     if (!this.pumpCancellationToken.IsCancellationRequested &&
                         !renewLockCancellationToken.IsCancellationRequested)
                     {
-                        await session.RenewLockAsync().ConfigureAwait(false);
+                        await session.RenewSessionLockAsync().ConfigureAwait(false);
                         MessagingEventSource.Log.SessionReceivePumpSessionRenewLockStop(this.clientId, session.SessionId);
                     }
                     else

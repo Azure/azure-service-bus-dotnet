@@ -28,7 +28,7 @@ namespace Microsoft.Azure.ServiceBus
 
         string ClientId { get; }
 
-        public void OnClosingAsync()
+        public void Close()
         {
             if (this.sessionReceivePump != null)
             {

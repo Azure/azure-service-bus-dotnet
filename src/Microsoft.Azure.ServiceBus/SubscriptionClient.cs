@@ -82,6 +82,7 @@ namespace Microsoft.Azure.ServiceBus
                         if (this.sessionClient == null)
                         {
                             this.sessionClient = new AmqpSessionClient(
+                                this.ClientId,
                                 this.Path,
                                 MessagingEntityType.Subscriber,
                                 this.ReceiveMode,
@@ -127,12 +128,12 @@ namespace Microsoft.Azure.ServiceBus
 
         public override async Task OnClosingAsync()
         {
-            if (this.innerSubscriptionClient?.InnerReceiver != null)
+            if (this.innerSubscriptionClient != null)
             {
-                await this.innerSubscriptionClient.InnerReceiver.CloseAsync().ConfigureAwait(false);
+                await this.innerSubscriptionClient.CloseAsync().ConfigureAwait(false);
             }
 
-            this.sessionPumpHost?.OnClosingAsync();
+            this.sessionPumpHost?.Close();
 
             if (this.ownsConnection)
             {

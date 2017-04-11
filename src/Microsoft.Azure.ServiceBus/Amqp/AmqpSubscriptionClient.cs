@@ -66,6 +66,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         string Path { get; }
 
+        public Task CloseAsync()
+        {
+            return this.innerReceiver?.CloseAsync();
+        }
+
         public async Task OnAddRuleAsync(RuleDescription description)
         {
             try

@@ -11,6 +11,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     sealed class AmqpSessionClient : IMessageSessionEntity
     {
         public AmqpSessionClient(
+            string clientId,
             string entityPath,
             MessagingEntityType entityType,
             ReceiveMode receiveMode,
@@ -19,6 +20,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy)
         {
+            this.ClientId = clientId;
             this.EntityPath = entityPath;
             this.EntityType = entityType;
             this.ReceiveMode = receiveMode;
@@ -29,6 +31,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         }
 
         ReceiveMode ReceiveMode { get; }
+
+        string ClientId { get; }
 
         string EntityPath { get; }
 
@@ -59,6 +63,13 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public async Task<IMessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
+            MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionStart(
+                this.ClientId,
+                this.EntityPath,
+                this.ReceiveMode,
+                this.PrefetchCount,
+                sessionId);
+
             AmqpMessageReceiver receiver = new AmqpMessageReceiver(
                 this.EntityPath,
                 this.EntityType,
@@ -80,11 +91,22 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
             catch (Exception exception)
             {
+                MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionException(
+                    this.ClientId,
+                    this.EntityPath,
+                    exception);
+
                 await receiver.CloseAsync().ConfigureAwait(false);
                 throw AmqpExceptionHelper.GetClientException(exception);
             }
 
             MessageSession session = new AmqpMessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver, this.RetryPolicy);
+
+            MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionStop(
+                this.ClientId,
+                this.EntityPath,
+                session.SessionId);
+
             return session;
         }
     }

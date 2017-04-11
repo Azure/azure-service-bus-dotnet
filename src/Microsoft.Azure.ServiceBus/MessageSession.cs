@@ -54,7 +54,7 @@ namespace Microsoft.Azure.ServiceBus
             return this.OnSetStateAsync(sessionState);
         }
 
-        public Task RenewLockAsync()
+        public Task RenewSessionLockAsync()
         {
             return this.OnRenewLockAsync();
         }

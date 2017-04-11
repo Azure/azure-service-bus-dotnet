@@ -84,7 +84,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
 
                 this.maxConcurrentSessions = value;
-                this.MaxConcurrentAcceptSessionCalls = Math.Min(value, 5);
+                this.MaxConcurrentAcceptSessionCalls = Math.Min(value, 2 * Environment.ProcessorCount);
             }
         }
 

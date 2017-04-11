@@ -16,7 +16,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         static TestUtility()
         {
             var envConnectionString = Environment.GetEnvironmentVariable(TestConstants.ConnectionStringEnvironmentVariable);
-            envConnectionString = "Endpoint=sb://vinsuaftersendfix.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=7BYaIUh2s9zd3IduA17+PyYj26pAWEzN/nHNmY8w9Mw=";
 
             if (string.IsNullOrWhiteSpace(envConnectionString))
             {

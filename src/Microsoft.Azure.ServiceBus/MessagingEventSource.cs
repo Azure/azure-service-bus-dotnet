@@ -1059,5 +1059,41 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.WriteEvent(87, clientId, sessionId, exception);
         }
+
+        [NonEvent]
+        public void AmqpSessionClientAcceptMessageSessionStart(string clientId, string entityPath, ReceiveMode receiveMode, int prefetchCount, string sessionId)
+        {
+            if (this.IsEnabled())
+            {
+                this.AmqpSessionClientAcceptMessageSessionStart(clientId, entityPath, receiveMode.ToString(), prefetchCount, sessionId);
+            }
+        }
+
+        [Event(88, Level = EventLevel.Informational, Message = "{0}: AcceptMessageSession start: EntityPath: {1}, ReceiveMode: {2}, PrefetchCount: {3}, SessionId: {4}")]
+        void AmqpSessionClientAcceptMessageSessionStart(string clientId, string entityPath, string receiveMode, int prefetchCount, string sessionId)
+        {
+            this.WriteEvent(88, clientId, entityPath, receiveMode, prefetchCount, sessionId);
+        }
+
+        [Event(89, Level = EventLevel.Informational, Message = "{0}: AcceptMessageSession done: EntityPath: {1}, SessionId: {2}")]
+        public void AmqpSessionClientAcceptMessageSessionStop(string clientId, string entityPath, string sessionId)
+        {
+            this.WriteEvent(89, clientId, entityPath, sessionId);
+        }
+
+        [NonEvent]
+        public void AmqpSessionClientAcceptMessageSessionException(string clientId, string entityPath, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.AmqpSessionClientAcceptMessageSessionException(clientId, entityPath, exception.ToString());
+            }
+        }
+
+        [Event(90, Level = EventLevel.Error, Message = "{0}: AcceptMessageSession Exception: EntityPath: {1}, Exception: {2}")]
+        void AmqpSessionClientAcceptMessageSessionException(string clientId, string entityPath, string exception)
+        {
+            this.WriteEvent(90, clientId, entityPath, exception);
+        }
     }
 }
