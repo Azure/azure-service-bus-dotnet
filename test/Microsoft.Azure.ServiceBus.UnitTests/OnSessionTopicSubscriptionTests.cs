@@ -57,6 +57,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         async Task OnSessionTestAsync(string topicName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
         {
+            TestUtility.Log($"Topic: {topicName}, MaxConcurrentCalls: {maxConcurrentCalls}, Receive Mode: {mode.ToString()}, AutoComplete: {autoComplete}");
             var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
