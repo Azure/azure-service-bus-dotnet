@@ -36,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus
 
         protected MessageReceiver InnerMessageReceiver { get; set; }
 
-        public override async Task CloseAsync()
+        public override async Task OnClosingAsync()
         {
             if (this.InnerMessageReceiver != null)
             {
