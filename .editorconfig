@@ -29,10 +29,10 @@ indent_size = 2
 # Sort using and Import directives with System.* appearing first
 dotnet_sort_system_directives_first = true
 # Avoid "this." and "Me." if not necessary
-dotnet_style_qualification_for_field = false:suggestion
-dotnet_style_qualification_for_property = false:suggestion
-dotnet_style_qualification_for_method = false:suggestion
-dotnet_style_qualification_for_event = false:suggestion
+#dotnet_style_qualification_for_field = false:suggestion
+#dotnet_style_qualification_for_property = false:suggestion
+#dotnet_style_qualification_for_method = false:suggestion
+#dotnet_style_qualification_for_event = false:suggestion
 
 # Use language keywords instead of framework type names for type references
 dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
