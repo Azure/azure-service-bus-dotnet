@@ -72,7 +72,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             get { return this.operationTimeout; }
         }
 
-        protected MessagingEntityType? EntityType { get; set; }
+        internal MessagingEntityType? EntityType { get; set; }
 
         public override Task OnClosingAsync()
         {
