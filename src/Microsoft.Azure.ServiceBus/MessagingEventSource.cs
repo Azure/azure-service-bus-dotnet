@@ -7,6 +7,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Diagnostics.Tracing;
+    using Microsoft.Azure.Amqp;
 
     [SuppressMessage(
         "Microsoft.StyleCop.CSharp.OrderingRules",
@@ -439,12 +440,12 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(39, Level = EventLevel.Verbose, Message = "AmqpGetOrCreateConnection done.")]
-        public void AmqpGetOrCreateConnectionStop()
+        [Event(39, Level = EventLevel.Verbose, Message = "AmqpGetOrCreateConnection done. EntityPath: {0}, ConnectionInfo: {1}, ConnectionState: {2}")]
+        public void AmqpGetOrCreateConnectionStop(string entityPath, string connectionInfo, string connectionState)
         {
             if (this.IsEnabled())
             {
-                this.WriteEvent(39);
+                this.WriteEvent(39, entityPath, connectionInfo, connectionState);
             }
         }
 
@@ -1094,6 +1095,63 @@ namespace Microsoft.Azure.ServiceBus
         void AmqpSessionClientAcceptMessageSessionException(string clientId, string entityPath, string exception)
         {
             this.WriteEvent(90, clientId, entityPath, exception);
+        }
+
+        [NonEvent]
+        public void AmqpLinkCreationException(string entityPath, AmqpSession session, AmqpConnection connection, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.AmqpLinkCreationException(entityPath, session.ToString(), session.State.ToString(), session.TerminalException != null ? session.TerminalException.ToString() : string.Empty, connection.ToString(), connection.State.ToString(), exception.ToString());
+            }
+        }
+
+        [Event(91, Level = EventLevel.Error, Message = "AmqpLinkCreatorException Exception: EntityPath: {0}, SessionString: {1}, SessionState: {2}, TerminalException: {3}, ConnectionInfo: {4}, ConnectionState: {5}, Exception: {6}")]
+        void AmqpLinkCreationException(string entityPath, string session, string sessionState, string terminalException,  string connectionInfo, string connectionState, string exception)
+        {
+            this.WriteEvent(91, entityPath, session, sessionState, terminalException, connectionInfo, connectionState, exception);
+        }
+
+        [NonEvent]
+        public void AmqpConnectionCreated(string hostName, AmqpConnection connection)
+        {
+            this.AmqpConnectionCreated(hostName, connection.ToString(), connection.State.ToString());
+        }
+
+        [Event(92, Level = EventLevel.Verbose, Message = "AmqpConnectionCreated: HostName: {0}, ConnectionInfo: {1}, ConnectionState: {2}")]
+        void AmqpConnectionCreated(string hostName, string connectionInfo, string connectionState)
+        {
+            this.WriteEvent(92, hostName, connectionInfo, connectionState);
+        }
+
+        [NonEvent]
+        public void AmqpConnectionClosed(AmqpConnection connection)
+        {
+            if (this.IsEnabled())
+            {
+                this.AmqpConnectionClosed(connection.RemoteEndpoint.ToString(), connection.ToString(), connection.State.ToString());
+            }
+        }
+
+        [Event(93, Level = EventLevel.Verbose, Message = "AmqpConnectionClosed: HostName: {0}, ConnectionInfo: {1}, ConnectionState: {2}")]
+        public void AmqpConnectionClosed(string hostName, string connectionInfo, string connectionState)
+        {
+            this.WriteEvent(93, hostName, connectionInfo, connectionState);
+        }
+
+        [NonEvent]
+        public void AmqpSessionCreationException(string entityPath, AmqpConnection connection, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.AmqpSessionCreationException(entityPath, connection.ToString(), connection.State.ToString(), exception.ToString());
+            }
+        }
+
+        [Event(94, Level = EventLevel.Error, Message = "AmqpSessionCreationException Exception: EntityPath: {0}, ConnectionInfo: {1}, ConnectionState: {2}, Exception: {3}")]
+        void AmqpSessionCreationException(string entityPath, string connectionInfo, string connectionState, string exception)
+        {
+            this.WriteEvent(94, entityPath, connectionInfo, connectionState, exception);
         }
     }
 }
