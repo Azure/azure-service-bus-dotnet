@@ -22,11 +22,12 @@ namespace ReceiveSample
         private static async Task MainAsync()
         {
             queueClient = new QueueClient(ServiceBusConnectionString, QueueName, ReceiveMode.PeekLock);
+
+            Console.WriteLine("Press ctrl-c to stop receiving messages.");
+
             ReceiveMessages();
 
-            Console.WriteLine("Press any key to stop receiving messages.");
             Console.ReadKey();
-
             // Close the client after the ReceiveMessages method has exited.
             await queueClient.CloseAsync();
         }
@@ -47,7 +48,7 @@ namespace ReceiveSample
                         // This can be done only if the queueClient is opened in ReceiveMode.PeekLock mode.
                         await queueClient.CompleteAsync(message.SystemProperties.LockToken);
                     },
-                    new RegisterHandlerOptions() {MaxConcurrentCalls = 1, AutoComplete = false});
+                    new MessageHandlerOptions() {MaxConcurrentCalls = 1, AutoComplete = false});
             }
             catch (Exception exception)
             {
