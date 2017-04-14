@@ -175,8 +175,20 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             if ((amqpMessage.BodyType & SectionFlag.AmqpValue) != 0
                 && amqpMessage.ValueBody.Value != null)
             {
-                var byteArrayValue = (byte[])amqpMessage.ValueBody.Value;
-                sbMessage = new SBMessage(byteArrayValue);
+                if (amqpMessage.ValueBody.Value is byte[] byteArrayValue)
+                {
+                    sbMessage = new SBMessage(byteArrayValue);
+                }
+                else if (amqpMessage.ValueBody.Value is ArraySegment<byte> arraySegmentValue)
+                {
+                    var byteArray = new byte[arraySegmentValue.Count];
+                    Array.ConstrainedCopy(arraySegmentValue.Array, arraySegmentValue.Offset, byteArray, 0, arraySegmentValue.Count);
+                    sbMessage = new SBMessage(byteArray);
+                }
+                else
+                {
+                    sbMessage = new SBMessage();
+                }
             }
             else if ((amqpMessage.BodyType & SectionFlag.Data) != 0
                 && amqpMessage.DataBody != null)
@@ -184,8 +196,16 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 var dataSegments = new List<byte>();
                 foreach (var data in amqpMessage.DataBody)
                 {
-                    var arraySegmentValue = (ArraySegment<byte>)data.Value;
-                    dataSegments.AddRange(arraySegmentValue);
+                    if (data.Value is byte[] byteArrayValue)
+                    {
+                        dataSegments.AddRange(byteArrayValue);
+                    }
+                    else if (data.Value is ArraySegment<byte> arraySegmentValue)
+                    {
+                        var byteArray = new byte[arraySegmentValue.Count];
+                        Array.ConstrainedCopy(arraySegmentValue.Array, arraySegmentValue.Offset, byteArray, 0, arraySegmentValue.Count);
+                        dataSegments.AddRange(arraySegmentValue);
+                    }
                 }
                 sbMessage = new SBMessage(dataSegments.ToArray());
             }
