@@ -197,7 +197,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         [Fact]
         [DisplayTestMethodName]
-        void UpdatingPrefetchCountOnSubscriptionClientUpdatesTheReceiverPrefetchCount()
+        async Task UpdatingPrefetchCountOnSubscriptionClientUpdatesTheReceiverPrefetchCount()
         {
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
@@ -225,7 +225,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                subscriptionClient.CloseAsync().Wait();
+                await subscriptionClient.CloseAsync();
             }
         }
     }

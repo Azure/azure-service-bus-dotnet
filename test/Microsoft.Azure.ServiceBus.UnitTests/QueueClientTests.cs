@@ -139,7 +139,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         [Fact]
         [DisplayTestMethodName]
-        void UpdatingPrefetchCountOnQueueClientUpdatesTheReceiverPrefetchCount()
+        async Task UpdatingPrefetchCountOnQueueClientUpdatesTheReceiverPrefetchCount()
         {
             string queueName = TestConstants.NonPartitionedQueueName;
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
@@ -164,7 +164,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                queueClient.CloseAsync().Wait();
+                await queueClient.CloseAsync();
             }
         }
     }
