@@ -42,7 +42,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Construct a TokenProvider based on the provided Key Name & Shared Access Key.
+        /// Construct a TokenProvider based on the provided Key Name and Shared Access Key.
         /// </summary>
         /// <param name="keyName">The key name of the corresponding SharedAccessKeyAuthorizationRule.</param>
         /// <param name="sharedAccessKey">The key associated with the SharedAccessKeyAuthorizationRule</param>
@@ -58,7 +58,7 @@ namespace Microsoft.Azure.ServiceBus
         ////}
 
         /// <summary>
-        /// Construct a TokenProvider based on the provided Key Name & Shared Access Key.
+        /// Construct a TokenProvider based on the provided Key Name and Shared Access Key.
         /// </summary>
         /// <param name="keyName">The key name of the corresponding SharedAccessKeyAuthorizationRule.</param>
         /// <param name="sharedAccessKey">The key associated with the SharedAccessKeyAuthorizationRule</param>
@@ -70,7 +70,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Construct a TokenProvider based on the provided Key Name & Shared Access Key.
+        /// Construct a TokenProvider based on the provided Key Name and Shared Access Key.
         /// </summary>
         /// <param name="keyName">The key name of the corresponding SharedAccessKeyAuthorizationRule.</param>
         /// <param name="sharedAccessKey">The key associated with the SharedAccessKeyAuthorizationRule</param>
@@ -82,7 +82,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Construct a TokenProvider based on the provided Key Name & Shared Access Key.
+        /// Construct a TokenProvider based on the provided Key Name and Shared Access Key.
         /// </summary>
         /// <param name="keyName">The key name of the corresponding SharedAccessKeyAuthorizationRule.</param>
         /// <param name="sharedAccessKey">The key associated with the SharedAccessKeyAuthorizationRule</param>
