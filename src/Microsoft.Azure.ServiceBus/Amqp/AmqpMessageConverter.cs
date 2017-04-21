@@ -172,6 +172,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             SBMessage sbMessage;
 
+            // ToDo: Further testing is needed to ensure interop scenarios with other clients.
             if ((amqpMessage.BodyType & SectionFlag.AmqpValue) != 0
                 && amqpMessage.ValueBody.Value != null)
             {
