@@ -97,7 +97,7 @@ function Run-UnitTests
         $openCoverVersion = '4.6.684'
         # Using a temporary version of OpenCover until a NuGet is published. https://github.com/OpenCover/opencover/issues/669
         Invoke-WebRequest -Uri "https://ci.appveyor.com/api/buildjobs/v896p89ur5qpd4he/artifacts/main%2Fbin%2Fpackages%2Fnuget%2Fopencover%2FOpenCover.4.6.684.nupkg" -OutFile "OpenCover.4.6.684.nupkg"
-        & .\nuget.exe install opencover -version $openCoverVersion -source $ENV:APPVEYOR_BUILD_FOLDER
+        & .\nuget.exe install opencover -version $openCoverVersion -source $ENV:APPVEYOR_BUILD_FOLDER\
         $openCoverConsole = $ENV:APPVEYOR_BUILD_FOLDER + '\OpenCover.' + $openCoverVersion + '\tools\OpenCover.Console.exe'
         $coverageFile = $ENV:APPVEYOR_BUILD_FOLDER + '\coverage.xml'
         $target = '-target:C:\Program Files\dotnet\dotnet.exe'
