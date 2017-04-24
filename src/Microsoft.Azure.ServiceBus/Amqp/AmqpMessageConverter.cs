@@ -182,8 +182,17 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 }
                 else if (amqpMessage.ValueBody.Value is ArraySegment<byte> arraySegmentValue)
                 {
-                    var byteArray = new byte[arraySegmentValue.Count];
-                    Array.ConstrainedCopy(arraySegmentValue.Array, arraySegmentValue.Offset, byteArray, 0, arraySegmentValue.Count);
+                    byte[] byteArray;
+                    if (arraySegmentValue.Count == arraySegmentValue.Array.Length)
+                    {
+                        byteArray = arraySegmentValue.Array;
+                    }
+                    else
+                    {
+                        byteArray = new byte[arraySegmentValue.Count];
+                        Array.ConstrainedCopy(arraySegmentValue.Array, arraySegmentValue.Offset, byteArray, 0, arraySegmentValue.Count);
+                    }
+                    
                     sbMessage = new SBMessage(byteArray);
                 }
                 else
@@ -203,8 +212,16 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                     else if (data.Value is ArraySegment<byte> arraySegmentValue)
                     {
-                        var byteArray = new byte[arraySegmentValue.Count];
-                        Array.ConstrainedCopy(arraySegmentValue.Array, arraySegmentValue.Offset, byteArray, 0, arraySegmentValue.Count);
+                        byte[] byteArray;
+                        if (arraySegmentValue.Count == arraySegmentValue.Array.Length)
+                        {
+                            byteArray = arraySegmentValue.Array;
+                        }
+                        else
+                        {
+                            byteArray = new byte[arraySegmentValue.Count];
+                            Array.ConstrainedCopy(arraySegmentValue.Array, arraySegmentValue.Offset, byteArray, 0, arraySegmentValue.Count);
+                        }
                         dataSegments.AddRange(arraySegmentValue);
                     }
                 }
