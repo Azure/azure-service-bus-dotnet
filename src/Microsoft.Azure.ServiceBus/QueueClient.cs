@@ -76,6 +76,24 @@ namespace Microsoft.Azure.ServiceBus
 
         public string Path => this.QueueName;
 
+        /// <summary>
+        /// Gets or sets the number of messages that the queue client can simultaneously request.
+        /// </summary>
+        /// <value>The number of messages that the queue client can simultaneously request.</value>
+        public int PrefetchCount
+        {
+            get => this.ServiceBusConnection.PrefetchCount;
+
+            set
+            {
+                this.ServiceBusConnection.PrefetchCount = value;
+                if (this.innerReceiver != null)
+                {
+                    this.innerReceiver.PrefetchCount = value;
+                }
+            }
+        }
+
         internal MessageSender InnerSender
         {
             get
@@ -175,7 +193,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        ServiceBusConnection ServiceBusConnection { get; }
+        internal ServiceBusConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
