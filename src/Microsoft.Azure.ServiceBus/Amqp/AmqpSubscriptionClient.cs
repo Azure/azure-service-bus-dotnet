@@ -57,12 +57,13 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         }
 
         /// <summary>
-        /// Gets or sets the number of messages that the queue client can simultaneously request.
+        /// Gets or sets the number of messages that the subscription client can simultaneously request.
         /// </summary>
-        /// <value>The number of messages that the queue client can simultaneously request.</value>
+        /// <value>The number of messages that the subscription client can simultaneously request.</value>
         public int PrefetchCount
         {
             get => this.ServiceBusConnection.PrefetchCount;
+
             set
             {
                 this.ServiceBusConnection.PrefetchCount = value;

@@ -57,6 +57,7 @@ namespace Microsoft.Azure.ServiceBus
         public int PrefetchCount
         {
             get => this.ServiceBusConnection.PrefetchCount;
+
             set
             {
                 this.ServiceBusConnection.PrefetchCount = value;
