@@ -6,10 +6,9 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Amqp;
-    using Core;
     using Microsoft.Azure.Amqp;
-    using Primitives;
+    using Microsoft.Azure.ServiceBus.Core;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
     public sealed class TopicClient : ClientEntity, ITopicClient
     {
@@ -72,7 +71,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.innerSender == null)
                         {
-                            this.innerSender = new AmqpMessageSender(
+                            this.innerSender = new MessageSender(
                                 this.TopicName,
                                 MessagingEntityType.Topic,
                                 this.ServiceBusConnection,

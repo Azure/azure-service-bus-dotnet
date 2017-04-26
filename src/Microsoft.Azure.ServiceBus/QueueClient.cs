@@ -104,7 +104,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.innerSender == null)
                         {
-                            this.innerSender = new AmqpMessageSender(
+                            this.innerSender = new MessageSender(
                                 this.QueueName,
                                 MessagingEntityType.Queue,
                                 this.ServiceBusConnection,

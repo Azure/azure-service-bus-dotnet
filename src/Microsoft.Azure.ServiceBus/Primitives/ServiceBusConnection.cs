@@ -72,12 +72,12 @@ namespace Microsoft.Azure.ServiceBus
             return this.ConnectionManager.CloseAsync();
         }
 
-        internal MessageSender CreateMessageSender(string entityPath)
+        internal IMessageSender CreateMessageSender(string entityPath)
         {
             MessagingEventSource.Log.MessageSenderCreateStart(this.Endpoint.Host, entityPath);
             TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
             var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
-            AmqpMessageSender messageSender = new AmqpMessageSender(entityPath, null, this, cbsTokenProvider, RetryPolicy.Default);
+            var messageSender = new MessageSender(entityPath, null, this, cbsTokenProvider, RetryPolicy.Default);
             MessagingEventSource.Log.MessageSenderCreateStop(this.Endpoint.Host, entityPath);
             return messageSender;
         }

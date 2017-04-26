@@ -17,7 +17,8 @@ namespace Microsoft.Azure.Messaging.Amqp
         public static class Response
         {
             public const string StatusCode = "statusCode";
-            public const string StatusDescription = "statusDescription";            public const string ErrorCondition = "errorCondition";
+            public const string StatusDescription = "statusDescription";
+            public const string ErrorCondition = "errorCondition";
         }
 
         public static class Operations
