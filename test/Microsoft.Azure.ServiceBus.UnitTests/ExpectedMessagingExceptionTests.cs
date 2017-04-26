@@ -30,7 +30,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await Task.Delay(TimeSpan.FromMinutes(1));
 
                 // Complete should throw
-                await Assert.ThrowsAsync<MessageLockLostException>(
+                await
+                    Assert.ThrowsAsync<MessageLockLostException>(
                         async () => await TestUtility.CompleteMessagesAsync(receiver, receivedMessages));
 
                 receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, messageCount);
@@ -111,7 +112,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await TestUtility.SendMessagesAsync(sender, 1);
                 var message = await receiver.PeekAsync();
                 Assert.NotNull(message);
-                await Assert.ThrowsAsync<MessageLockLostException>(
+                await
+                    Assert.ThrowsAsync<InvalidOperationException>(
                         async () => await receiver.CompleteAsync(message.SystemProperties.LockToken));
 
                 message = await receiver.ReceiveAsync();
