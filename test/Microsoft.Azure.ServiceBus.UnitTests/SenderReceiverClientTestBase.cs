@@ -193,7 +193,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await Task.Delay(TimeSpan.FromSeconds(5));
 
             var message = await messageReceiver.ReceiveAsync();
-            await messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
 
             // Asserting using Math.Ceiling since TotalSeconds usually ends up being around 4.999 due to precision of
             // the scheduleTime in requestMessage and responseMessage.
