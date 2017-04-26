@@ -87,7 +87,7 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageReceiverCreateStart(this.Endpoint.Host, entityPath, mode.ToString());
             TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
             var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
-            AmqpMessageReceiver messageReceiver = new AmqpMessageReceiver(entityPath, null, mode, this.PrefetchCount, this, cbsTokenProvider, RetryPolicy.Default);
+            MessageReceiver messageReceiver = new MessageReceiver(entityPath, null, mode, this.PrefetchCount, this, cbsTokenProvider, RetryPolicy.Default);
             MessagingEventSource.Log.MessageReceiverCreateStop(this.Endpoint.Host, entityPath);
             return messageReceiver;
         }

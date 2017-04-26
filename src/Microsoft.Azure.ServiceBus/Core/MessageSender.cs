@@ -40,11 +40,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ownsConnection = true;
         }
 
-        public MessageSender(string entityName, ServiceBusConnection serviceBusConnection, RetryPolicy retryPolicy)
+        public MessageSender(string entityPath, ServiceBusConnection serviceBusConnection, RetryPolicy retryPolicy)
             : base(nameof(MessageSender) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
             this.OperationTimeout = serviceBusConnection.OperationTimeout;
-            this.Path = entityName;
+            this.Path = entityPath;
             this.ServiceBusConnection = serviceBusConnection;
             this.SendLinkManager = new FaultTolerantAmqpObject<SendingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
             this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
@@ -55,11 +55,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, serviceBusConnection.OperationTimeout);
         }
 
-        internal MessageSender(string entityName, MessagingEntityType? entityType, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider, RetryPolicy retryPolicy)
+        internal MessageSender(string entityPath, MessagingEntityType? entityType, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider, RetryPolicy retryPolicy)
             : base(nameof(MessageSender) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
             this.OperationTimeout = serviceBusConnection.OperationTimeout;
-            this.Path = entityName;
+            this.Path = entityPath;
             this.EntityType = entityType;
             this.ServiceBusConnection = serviceBusConnection;
             this.CbsTokenProvider = cbsTokenProvider;

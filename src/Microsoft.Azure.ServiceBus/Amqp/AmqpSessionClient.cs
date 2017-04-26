@@ -70,7 +70,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 this.PrefetchCount,
                 sessionId);
 
-            AmqpMessageReceiver receiver = new AmqpMessageReceiver(
+            MessageReceiver receiver = new MessageReceiver(
                 this.EntityPath,
                 this.EntityType,
                 this.ReceiveMode,

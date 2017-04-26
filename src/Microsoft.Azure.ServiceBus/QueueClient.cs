@@ -128,7 +128,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.innerReceiver == null)
                         {
-                            this.innerReceiver = new AmqpMessageReceiver(
+                            this.innerReceiver = new MessageReceiver(
                                 this.QueueName,
                                 MessagingEntityType.Queue,
                                 this.ReceiveMode,

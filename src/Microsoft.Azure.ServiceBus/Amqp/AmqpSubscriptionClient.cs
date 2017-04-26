@@ -40,7 +40,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     {
                         if (this.innerReceiver == null)
                         {
-                            this.innerReceiver = new AmqpMessageReceiver(
+                            this.innerReceiver = new MessageReceiver(
                                 this.Path,
                                 MessagingEntityType.Subscriber,
                                 this.ReceiveMode,
@@ -101,10 +101,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 amqpRequestMessage.Map[ManagementConstants.Properties.RuleDescription] =
                     AmqpMessageConverter.GetRuleDescriptionMap(description);
 
-                AmqpResponseMessage response =
-                    await
-                    ((AmqpMessageReceiver)this.InnerReceiver).ExecuteRequestResponseAsync(amqpRequestMessage)
-                    .ConfigureAwait(false);
+                var response = await this.InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode != AmqpResponseStatusCode.OK)
                 {
@@ -128,10 +125,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         null);
                 amqpRequestMessage.Map[ManagementConstants.Properties.RuleName] = ruleName;
 
-                var response =
-                    await
-                    ((AmqpMessageReceiver)this.InnerReceiver).ExecuteRequestResponseAsync(amqpRequestMessage)
-                    .ConfigureAwait(false);
+                var response = await this.InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode != AmqpResponseStatusCode.OK)
                 {
