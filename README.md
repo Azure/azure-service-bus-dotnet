@@ -30,9 +30,7 @@ See our [Contribution Guidelines](./.github/CONTRIBUTING.md).
 
 ### Where can I find examples that use this library?
 
-To get started *sending* messages to Service Bus refer to [Get started sending to Service Bus queues](./samples/SendSample/readme.md).
-
-To get started *receiving* messages with Service Bus refer to [Get started receiving from Service Bus queues](./samples/ReceiveSample/readme.md).  
+[https://github.com/Azure/azure-service-bus/tree/master/samples](https://github.com/Azure/azure-service-bus/tree/master/samples)
 
 ### How do I run the unit tests? 
 
