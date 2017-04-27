@@ -14,7 +14,6 @@ namespace Microsoft.Azure.ServiceBus
     public abstract class ServiceBusConnection
     {
         static readonly Version AmqpVersion = new Version(1, 0, 0, 0);
-        int prefetchCount;
 
         protected ServiceBusConnection(TimeSpan operationTimeout, RetryPolicy retryPolicy)
         {
@@ -45,26 +44,6 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public string SasKeyName { get; set; }
 
-        /// <summary>Gets or sets the number of messages that the message receiver can simultaneously request.</summary>
-        /// <value>The number of messages that the message receiver can simultaneously request.</value>
-        public int PrefetchCount
-        {
-            get
-            {
-                return this.prefetchCount;
-            }
-
-            set
-            {
-                if (value < 0)
-                {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value must be greater than 0");
-                }
-
-                this.prefetchCount = value;
-            }
-        }
-
         internal FaultTolerantAmqpObject<AmqpConnection> ConnectionManager { get; set; }
 
         public Task CloseAsync()
@@ -82,12 +61,12 @@ namespace Microsoft.Azure.ServiceBus
             return messageSender;
         }
 
-        internal IMessageReceiver CreateMessageReceiver(string entityPath, ReceiveMode mode)
+        internal IMessageReceiver CreateMessageReceiver(string entityPath, ReceiveMode mode, int prefetchCount = 0)
         {
             MessagingEventSource.Log.MessageReceiverCreateStart(this.Endpoint.Host, entityPath, mode.ToString());
             TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
             var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
-            MessageReceiver messageReceiver = new MessageReceiver(entityPath, null, mode, this.PrefetchCount, this, cbsTokenProvider, RetryPolicy.Default);
+            MessageReceiver messageReceiver = new MessageReceiver(entityPath, null, mode, prefetchCount, this, cbsTokenProvider, RetryPolicy.Default);
             MessagingEventSource.Log.MessageReceiverCreateStop(this.Endpoint.Host, entityPath);
             return messageReceiver;
         }

@@ -15,6 +15,7 @@ namespace Microsoft.Azure.ServiceBus
     public sealed class SubscriptionClient : ClientEntity, ISubscriptionClient
     {
         public const string DefaultRule = "$Default";
+        int prefetchCount;
         readonly object syncLock;
         readonly bool ownsConnection;
         IInnerSubscriptionClient innerSubscriptionClient;
@@ -89,11 +90,14 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>The number of messages that the subscription client can simultaneously request.</value>
         public int PrefetchCount
         {
-            get => this.ServiceBusConnection.PrefetchCount;
-
+            get => this.prefetchCount;
             set
             {
-                this.ServiceBusConnection.PrefetchCount = value;
+                if (value < 0)
+                {
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value must be greater than 0");
+                }
+                this.prefetchCount = value;
                 if (this.innerSubscriptionClient != null)
                 {
                     this.innerSubscriptionClient.PrefetchCount = value;
@@ -114,6 +118,7 @@ namespace Microsoft.Azure.ServiceBus
                             this.ServiceBusConnection,
                             this.RetryPolicy,
                             this.CbsTokenProvider,
+                            this.PrefetchCount,
                             this.ReceiveMode);
                     }
                 }
@@ -137,7 +142,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.Path,
                                 MessagingEntityType.Subscriber,
                                 this.ReceiveMode,
-                                this.ServiceBusConnection.PrefetchCount,
+                                this.PrefetchCount,
                                 this.ServiceBusConnection,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy);

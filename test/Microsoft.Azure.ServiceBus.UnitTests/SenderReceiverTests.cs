@@ -107,12 +107,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             string queueName = TestConstants.NonPartitionedQueueName;
             var connection1 = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
-            var connection2 = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString)
-            {
-                PrefetchCount = 1
-            };
+            var connection2 = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
             var receiver1 = connection1.CreateMessageReceiver(queueName, ReceiveMode.ReceiveAndDelete);
-            var receiver2 = connection2.CreateMessageReceiver(queueName, ReceiveMode.ReceiveAndDelete);
+            var receiver2 = connection2.CreateMessageReceiver(queueName, ReceiveMode.ReceiveAndDelete, 1);
             var sender = connection1.CreateMessageSender(queueName);
             
             Assert.Equal(0, receiver1.PrefetchCount);

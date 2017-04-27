@@ -19,6 +19,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         readonly bool ownsConnection;
         readonly object syncLock;
+        int prefetchCount;
         MessageSender innerSender;
         MessageReceiver innerReceiver;
         AmqpSessionClient sessionClient;
@@ -82,11 +83,14 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>The number of messages that the queue client can simultaneously request.</value>
         public int PrefetchCount
         {
-            get => this.ServiceBusConnection.PrefetchCount;
-
+            get => this.prefetchCount;
             set
             {
-                this.ServiceBusConnection.PrefetchCount = value;
+                if (value < 0)
+                {
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value must be greater than 0");
+                }
+                this.prefetchCount = value;
                 if (this.innerReceiver != null)
                 {
                     this.innerReceiver.PrefetchCount = value;
@@ -132,7 +136,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.QueueName,
                                 MessagingEntityType.Queue,
                                 this.ReceiveMode,
-                                this.ServiceBusConnection.PrefetchCount,
+                                this.PrefetchCount,
                                 this.ServiceBusConnection,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy);
@@ -159,7 +163,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.Path,
                                 MessagingEntityType.Queue,
                                 this.ReceiveMode,
-                                this.ServiceBusConnection.PrefetchCount,
+                                this.PrefetchCount,
                                 this.ServiceBusConnection,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy);

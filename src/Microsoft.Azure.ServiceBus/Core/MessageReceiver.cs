@@ -17,6 +17,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     public class MessageReceiver : ClientEntity, IMessageReceiver
     {
         public static readonly TimeSpan DefaultBatchFlushInterval = TimeSpan.FromMilliseconds(20);
+        private const int DefaultPrefetchCount = 0;
 
         readonly ConcurrentExpiringSet<Guid> requestResponseLockedMessages;
         readonly bool isSessionReceiver;
@@ -41,7 +42,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             string entityPath,
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null)
-            : this(entityPath, new ServiceBusNamespaceConnection(connectionString), receiveMode, retryPolicy)
+            : this(entityPath, new ServiceBusNamespaceConnection(connectionString), DefaultPrefetchCount, receiveMode, retryPolicy)
         {
             if (string.IsNullOrWhiteSpace(entityPath))
             {
@@ -54,12 +55,24 @@ namespace Microsoft.Azure.ServiceBus.Core
         public MessageReceiver(
             string entityPath,
             ServiceBusConnection serviceBusConnection,
+            int prefetchCount = DefaultPrefetchCount,
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null)
-            : this(entityPath, null, receiveMode, serviceBusConnection.PrefetchCount, serviceBusConnection, null, retryPolicy)
+            : this(entityPath, null, receiveMode, serviceBusConnection, null, retryPolicy)
         {
             var tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(serviceBusConnection.SasKeyName, serviceBusConnection.SasKey);
             this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, serviceBusConnection.OperationTimeout);
+        }
+
+        internal MessageReceiver(
+            string entityPath,
+            MessagingEntityType? entityType,
+            ReceiveMode receiveMode,
+            ServiceBusConnection serviceBusConnection,
+            ICbsTokenProvider cbsTokenProvider,
+            RetryPolicy retryPolicy)
+            : this(entityPath, entityType, receiveMode, 0, serviceBusConnection, cbsTokenProvider, null, retryPolicy)
+        {
         }
 
         internal MessageReceiver(
