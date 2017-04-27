@@ -8,7 +8,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using Azure.Amqp;
     using Core;
     using Filters;
-    using Messaging.Amqp;
 
     internal sealed class AmqpSubscriptionClient : IInnerSubscriptionClient
     {

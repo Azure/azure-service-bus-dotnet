@@ -8,7 +8,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.Threading.Tasks;
     using Azure.Amqp;
     using Core;
-    using Messaging.Amqp;
 
     class AmqpMessageSession : MessageSession
     {

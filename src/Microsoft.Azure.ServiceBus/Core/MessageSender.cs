@@ -11,7 +11,6 @@ namespace Microsoft.Azure.ServiceBus.Core
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.Azure.Messaging.Amqp;
     using Microsoft.Azure.ServiceBus.Amqp;
     using Microsoft.Azure.ServiceBus.Primitives;
 
@@ -40,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ownsConnection = true;
         }
 
-        public MessageSender(string entityPath, ServiceBusConnection serviceBusConnection, RetryPolicy retryPolicy)
+        public MessageSender(string entityPath, ServiceBusConnection serviceBusConnection, RetryPolicy retryPolicy = null)
             : base(nameof(MessageSender) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
             this.OperationTimeout = serviceBusConnection.OperationTimeout;

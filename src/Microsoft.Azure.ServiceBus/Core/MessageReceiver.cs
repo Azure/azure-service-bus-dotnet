@@ -8,12 +8,11 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Amqp;
-    using Azure.Amqp.Encoding;
-    using Azure.Amqp.Framing;
-    using Messaging.Amqp;
+    using Microsoft.Azure.Amqp;
+    using Microsoft.Azure.Amqp.Encoding;
+    using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.ServiceBus.Amqp;
-    using Primitives;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
     public class MessageReceiver : ClientEntity, IMessageReceiver
     {
@@ -34,13 +33,20 @@ namespace Microsoft.Azure.ServiceBus.Core
         MessageReceivePump receivePump;
         CancellationTokenSource receivePumpCancellationTokenSource;
 
-        public MessageReceiver(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = null)
-            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, retryPolicy)
+        public MessageReceiver(
+            ServiceBusConnectionStringBuilder connectionStringBuilder,
+            ReceiveMode receiveMode = ReceiveMode.PeekLock,
+            RetryPolicy retryPolicy = null)
+            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, receiveMode, retryPolicy)
         {
         }
 
-        public MessageReceiver(string connectionString, string entityPath, RetryPolicy retryPolicy = null)
-            : this(entityPath, new ServiceBusNamespaceConnection(connectionString), retryPolicy ?? RetryPolicy.Default)
+        public MessageReceiver(
+            string connectionString,
+            string entityPath,
+            ReceiveMode receiveMode = ReceiveMode.PeekLock,
+            RetryPolicy retryPolicy = null)
+            : this(entityPath, new ServiceBusNamespaceConnection(connectionString), receiveMode, retryPolicy)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
@@ -54,9 +60,14 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ownsConnection = true;
         }
 
-        public MessageReceiver(string entityPath, ServiceBusConnection serviceBusConnection, RetryPolicy retryPolicy)
+        public MessageReceiver(
+            string entityPath,
+            ServiceBusConnection serviceBusConnection,
+            ReceiveMode receiveMode = ReceiveMode.PeekLock,
+            RetryPolicy retryPolicy = null)
             : base(nameof(MessageSender) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
+            this.ReceiveMode = receiveMode;
             this.operationTimeout = serviceBusConnection.OperationTimeout;
             this.messageReceivePumpSyncLock = new object();
             this.entityPath = entityPath;
@@ -72,19 +83,19 @@ namespace Microsoft.Azure.ServiceBus.Core
         internal MessageReceiver(
             string entityPath,
             MessagingEntityType? entityType,
-            ReceiveMode mode,
+            ReceiveMode receiveMode,
             int prefetchCount,
             ServiceBusConnection serviceBusConnection,
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy)
-            : this(entityPath, entityType, mode, prefetchCount, serviceBusConnection, cbsTokenProvider, null, retryPolicy)
+            : this(entityPath, entityType, receiveMode, prefetchCount, serviceBusConnection, cbsTokenProvider, null, retryPolicy)
         {
         }
 
         internal MessageReceiver(
             string entityPath,
             MessagingEntityType? entityType,
-            ReceiveMode mode,
+            ReceiveMode receiveMode,
             int prefetchCount,
             ServiceBusConnection serviceBusConnection,
             ICbsTokenProvider cbsTokenProvider,
@@ -93,6 +104,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             bool isSessionReceiver = false)
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
+            this.ReceiveMode = receiveMode;
             this.operationTimeout = serviceBusConnection.OperationTimeout;
             this.entityPath = entityPath;
             this.EntityType = entityType;
