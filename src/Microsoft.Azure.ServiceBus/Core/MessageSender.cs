@@ -19,12 +19,17 @@ namespace Microsoft.Azure.ServiceBus.Core
         int deliveryCount;
         readonly bool ownsConnection;
 
-        public MessageSender(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = null)
+        public MessageSender(
+            ServiceBusConnectionStringBuilder connectionStringBuilder,
+            RetryPolicy retryPolicy = null)
             : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, retryPolicy)
         {
         }
 
-        public MessageSender(string connectionString, string entityPath, RetryPolicy retryPolicy = null)
+        public MessageSender(
+            string connectionString, 
+            string entityPath, 
+            RetryPolicy retryPolicy = null)
             : this(entityPath, new ServiceBusNamespaceConnection(connectionString), retryPolicy ?? RetryPolicy.Default)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -39,22 +44,24 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ownsConnection = true;
         }
 
-        public MessageSender(string entityPath, ServiceBusConnection serviceBusConnection, RetryPolicy retryPolicy = null)
-            : base(nameof(MessageSender) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
+        public MessageSender(
+            string entityPath,
+            ServiceBusConnection serviceBusConnection,
+            RetryPolicy retryPolicy = null)
+            : this(entityPath, null, serviceBusConnection, null, retryPolicy)
         {
-            this.OperationTimeout = serviceBusConnection.OperationTimeout;
-            this.Path = entityPath;
-            this.ServiceBusConnection = serviceBusConnection;
-            this.SendLinkManager = new FaultTolerantAmqpObject<SendingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
-            this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
-
             var tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(
                 serviceBusConnection.SasKeyName,
                 serviceBusConnection.SasKey);
             this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, serviceBusConnection.OperationTimeout);
         }
 
-        internal MessageSender(string entityPath, MessagingEntityType? entityType, ServiceBusConnection serviceBusConnection, ICbsTokenProvider cbsTokenProvider, RetryPolicy retryPolicy)
+        internal MessageSender(
+            string entityPath,
+            MessagingEntityType? entityType,
+            ServiceBusConnection serviceBusConnection,
+            ICbsTokenProvider cbsTokenProvider,
+            RetryPolicy retryPolicy)
             : base(nameof(MessageSender) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
             this.OperationTimeout = serviceBusConnection.OperationTimeout;

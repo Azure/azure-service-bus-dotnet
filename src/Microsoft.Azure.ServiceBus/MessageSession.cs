@@ -20,8 +20,8 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNull("innerReceiver");
             }
 
-            this.sessionId = sessionId;
-            this.lockedUntilUtc = lockedUntilUtc;
+            this.SessionId = sessionId;
+            this.LockedUntilUtc = lockedUntilUtc;
             this.InnerMessageReceiver = innerReceiver;
         }
 

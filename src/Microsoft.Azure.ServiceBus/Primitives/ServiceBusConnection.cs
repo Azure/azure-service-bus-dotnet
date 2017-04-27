@@ -82,7 +82,7 @@ namespace Microsoft.Azure.ServiceBus
             return messageSender;
         }
 
-        internal MessageReceiver CreateMessageReceiver(string entityPath, ReceiveMode mode)
+        internal IMessageReceiver CreateMessageReceiver(string entityPath, ReceiveMode mode)
         {
             MessagingEventSource.Log.MessageReceiverCreateStart(this.Endpoint.Host, entityPath, mode.ToString());
             TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);

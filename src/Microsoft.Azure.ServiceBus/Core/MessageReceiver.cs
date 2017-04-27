@@ -18,13 +18,8 @@ namespace Microsoft.Azure.ServiceBus.Core
     {
         public static readonly TimeSpan DefaultBatchFlushInterval = TimeSpan.FromMilliseconds(20);
 
-        protected string sessionId;
-        protected DateTime lockedUntilUtc;
-
         readonly ConcurrentExpiringSet<Guid> requestResponseLockedMessages;
-        readonly string entityPath;
         readonly bool isSessionReceiver;
-        readonly TimeSpan operationTimeout;
         readonly object messageReceivePumpSyncLock;
         readonly bool ownsConnection;
 
@@ -48,10 +43,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             RetryPolicy retryPolicy = null)
             : this(entityPath, new ServiceBusNamespaceConnection(connectionString), receiveMode, retryPolicy)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
             if (string.IsNullOrWhiteSpace(entityPath))
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
@@ -65,19 +56,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             ServiceBusConnection serviceBusConnection,
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null)
-            : base(nameof(MessageSender) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
+            : this(entityPath, null, receiveMode, serviceBusConnection.PrefetchCount, serviceBusConnection, null, retryPolicy)
         {
-            this.ReceiveMode = receiveMode;
-            this.operationTimeout = serviceBusConnection.OperationTimeout;
-            this.messageReceivePumpSyncLock = new object();
-            this.entityPath = entityPath;
-            this.ServiceBusConnection = serviceBusConnection;
-            this.PrefetchCount = prefetchCount;
             var tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(serviceBusConnection.SasKeyName, serviceBusConnection.SasKey);
             this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, serviceBusConnection.OperationTimeout);
-            this.ReceiveLinkManager = new FaultTolerantAmqpObject<ReceivingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
-            this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
-            this.requestResponseLockedMessages = new ConcurrentExpiringSet<Guid>();
         }
 
         internal MessageReceiver(
@@ -105,12 +87,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
             this.ReceiveMode = receiveMode;
-            this.operationTimeout = serviceBusConnection.OperationTimeout;
-            this.entityPath = entityPath;
+            this.OperationTimeout = serviceBusConnection.OperationTimeout;
+            this.Path = entityPath;
             this.EntityType = entityType;
             this.ServiceBusConnection = serviceBusConnection;
             this.CbsTokenProvider = cbsTokenProvider;
-            this.sessionId = sessionId;
+            this.SessionId = sessionId;
             this.isSessionReceiver = isSessionReceiver;
             this.ReceiveLinkManager = new FaultTolerantAmqpObject<ReceivingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
             this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
@@ -123,7 +105,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
             this.ReceiveMode = receiveMode;
-            this.operationTimeout = operationTimeout;
+            this.OperationTimeout = operationTimeout;
             this.lastPeekedSequenceNumber = Constants.DefaultLastPeekedSequenceNumber;
             this.messageReceivePumpSyncLock = new object();
         }
@@ -133,7 +115,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         /// Get Prefetch Count configured on the Receiver.
         /// </summary>
-        /// <value>The upper limit of events this receiver will actively receive regardless of whether a receive operation is pending.</value>
+        /// <value>The upper limit of messages this receiver will actively receive regardless of whether a receive operation is pending.</value>
         public int PrefetchCount
         {
             get
@@ -147,7 +129,6 @@ namespace Microsoft.Azure.ServiceBus.Core
                 {
                     throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value must be greater than 0");
                 }
-
                 this.prefetchCount = value;
                 ReceivingAmqpLink link;
                 if (this.ReceiveLinkManager.TryGetOpenedObject(out link))
@@ -175,25 +156,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        public virtual string Path
-        {
-            get { return this.entityPath; }
-        }
+        public virtual string Path { get; private set; }
 
-        public DateTime LockedUntilUtc
-        {
-            get { return this.lockedUntilUtc; }
-        }
+        public DateTime LockedUntilUtc { get; protected set; }
 
-        public string SessionId
-        {
-            get { return this.sessionId; }
-        }
+        public string SessionId { get; protected set; }
 
-        internal TimeSpan OperationTimeout
-        {
-            get { return this.operationTimeout; }
-        }
+        internal TimeSpan OperationTimeout { get; private set; }
 
         internal MessagingEntityType? EntityType { get; set; }
 
@@ -530,14 +499,18 @@ namespace Microsoft.Azure.ServiceBus.Core
             TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);
             ReceivingAmqpLink receivingAmqpLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
             Source source = (Source)receivingAmqpLink.Settings.Source;
-            if (!source.FilterSet.TryGetValue(AmqpClientConstants.SessionFilterName, out this.sessionId))
+            string tempSessionId;
+            if (!source.FilterSet.TryGetValue(AmqpClientConstants.SessionFilterName, out tempSessionId))
             {
                 receivingAmqpLink.Session.SafeClose();
                 throw new ServiceBusException(false, Resources.AmqpFieldSessionId);
             }
-
+            if (!string.IsNullOrWhiteSpace(tempSessionId))
+            {
+                this.SessionId = tempSessionId;
+            }
             long lockedUntilUtcTicks;
-            this.lockedUntilUtc = receivingAmqpLink.Settings.Properties.TryGetValue(AmqpClientConstants.LockedUntilUtc, out lockedUntilUtcTicks) ? new DateTime(lockedUntilUtcTicks, DateTimeKind.Utc) : DateTime.MinValue;
+            this.LockedUntilUtc = receivingAmqpLink.Settings.Properties.TryGetValue(AmqpClientConstants.LockedUntilUtc, out lockedUntilUtcTicks) ? new DateTime(lockedUntilUtcTicks, DateTimeKind.Utc) : DateTime.MinValue;
         }
 
         internal async Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
@@ -617,9 +590,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                 requestMessage.Map[ManagementConstants.Properties.FromSequenceNumber] = fromSequenceNumber;
                 requestMessage.Map[ManagementConstants.Properties.MessageCount] = messageCount;
 
-                if (!string.IsNullOrWhiteSpace(this.sessionId))
+                if (!string.IsNullOrWhiteSpace(this.SessionId))
                 {
-                    requestMessage.Map[ManagementConstants.Properties.SessionId] = this.sessionId;
+                    requestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionId;
                 }
 
                 List<Message> messages = new List<Message>();
@@ -879,7 +852,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             if (this.isSessionReceiver)
             {
-                filterMap = new FilterSet { { AmqpClientConstants.SessionFilterName, this.sessionId } };
+                filterMap = new FilterSet { { AmqpClientConstants.SessionFilterName, this.SessionId } };
             }
 
             AmqpLinkSettings linkSettings = new AmqpLinkSettings
