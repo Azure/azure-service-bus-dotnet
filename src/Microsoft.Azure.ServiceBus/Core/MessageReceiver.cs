@@ -140,7 +140,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 if (value < 0)
                 {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value must be greater than 0");
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
                 }
                 this.prefetchCount = value;
                 ReceivingAmqpLink link;
@@ -177,7 +177,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         internal TimeSpan OperationTimeout { get; private set; }
 
-        internal MessagingEntityType? EntityType { get; set; }
+        internal MessagingEntityType? EntityType { get; private set; }
 
         ServiceBusConnection ServiceBusConnection { get; }
 

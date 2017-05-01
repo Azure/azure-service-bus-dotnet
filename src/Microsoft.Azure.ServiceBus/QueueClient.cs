@@ -15,7 +15,7 @@ namespace Microsoft.Azure.ServiceBus
     /// <summary>
     /// Anchor class - all Queue client operations start here.
     /// </summary>
-    public sealed class QueueClient : ClientEntity, IQueueClient
+    public class QueueClient : ClientEntity, IQueueClient
     {
         readonly bool ownsConnection;
         readonly object syncLock;
@@ -88,7 +88,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (value < 0)
                 {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value must be greater than 0");
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
                 }
                 this.prefetchCount = value;
                 if (this.innerReceiver != null)

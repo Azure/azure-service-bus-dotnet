@@ -12,7 +12,7 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.Amqp;
     using Primitives;
 
-    public sealed class SubscriptionClient : ClientEntity, ISubscriptionClient
+    public class SubscriptionClient : ClientEntity, ISubscriptionClient
     {
         public const string DefaultRule = "$Default";
         int prefetchCount;
@@ -95,7 +95,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (value < 0)
                 {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value must be greater than 0");
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
                 }
                 this.prefetchCount = value;
                 if (this.innerSubscriptionClient != null)

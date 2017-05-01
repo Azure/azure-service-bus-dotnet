@@ -10,7 +10,7 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.ServiceBus.Core;
     using Microsoft.Azure.ServiceBus.Primitives;
 
-    public sealed class TopicClient : ClientEntity, ITopicClient
+    public class TopicClient : ClientEntity, ITopicClient
     {
         readonly bool ownsConnection;
         readonly object syncLock;

@@ -69,7 +69,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 if (value < 0)
                 {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value must be greater than 0");
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
                 }
                 this.prefetchCount = value;
                 if (this.innerReceiver != null)

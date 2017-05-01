@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using Microsoft.Azure.ServiceBus.Amqp;
     using Microsoft.Azure.ServiceBus.Primitives;
 
-    public sealed class MessageSender : ClientEntity, IMessageSender
+    public class MessageSender : ClientEntity, IMessageSender
     {
         int deliveryCount;
         readonly bool ownsConnection;
@@ -30,7 +30,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             string connectionString, 
             string entityPath, 
             RetryPolicy retryPolicy = null)
-            : this(entityPath, new ServiceBusNamespaceConnection(connectionString), retryPolicy ?? RetryPolicy.Default)
+            : this(entityPath, new ServiceBusNamespaceConnection(connectionString), retryPolicy)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
@@ -75,9 +75,9 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         internal TimeSpan OperationTimeout { get; }
 
-        internal MessagingEntityType? EntityType { get; set; }
+        internal MessagingEntityType? EntityType { get; private set; }
 
-        string Path { get; }
+        public virtual string Path { get; private set; }
 
         ServiceBusConnection ServiceBusConnection { get; }
 
