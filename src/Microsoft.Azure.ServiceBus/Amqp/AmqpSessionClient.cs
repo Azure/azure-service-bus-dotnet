@@ -70,16 +70,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 this.PrefetchCount,
                 sessionId);
 
-            MessageReceiver receiver = new MessageReceiver(
+            var receiver = new MessageReceiver(
                 this.EntityPath,
                 this.EntityType,
                 this.ReceiveMode,
-                this.PrefetchCount,
                 this.ServiceBusConnection,
                 this.CbsTokenProvider,
-                sessionId,
                 this.RetryPolicy,
-                true);
+                this.PrefetchCount,
+                sessionId);
             try
             {
                 await this.RetryPolicy.RunOperation(

@@ -70,33 +70,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceiveMode receiveMode,
             ServiceBusConnection serviceBusConnection,
             ICbsTokenProvider cbsTokenProvider,
-            RetryPolicy retryPolicy)
-            : this(entityPath, entityType, receiveMode, 0, serviceBusConnection, cbsTokenProvider, null, retryPolicy)
-        {
-        }
-
-        internal MessageReceiver(
-            string entityPath,
-            MessagingEntityType? entityType,
-            ReceiveMode receiveMode,
-            int prefetchCount,
-            ServiceBusConnection serviceBusConnection,
-            ICbsTokenProvider cbsTokenProvider,
-            RetryPolicy retryPolicy)
-            : this(entityPath, entityType, receiveMode, prefetchCount, serviceBusConnection, cbsTokenProvider, null, retryPolicy)
-        {
-        }
-
-        internal MessageReceiver(
-            string entityPath,
-            MessagingEntityType? entityType,
-            ReceiveMode receiveMode,
-            int prefetchCount,
-            ServiceBusConnection serviceBusConnection,
-            ICbsTokenProvider cbsTokenProvider,
-            string sessionId,
             RetryPolicy retryPolicy,
-            bool isSessionReceiver = false)
+            int prefetchCount = 0,
+            string sessionId = null)
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
             this.ReceiveMode = receiveMode;
@@ -106,7 +82,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ServiceBusConnection = serviceBusConnection;
             this.CbsTokenProvider = cbsTokenProvider;
             this.SessionId = sessionId;
-            this.isSessionReceiver = isSessionReceiver;
+            this.isSessionReceiver = string.IsNullOrWhiteSpace(sessionId);
             this.ReceiveLinkManager = new FaultTolerantAmqpObject<ReceivingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
             this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
             this.requestResponseLockedMessages = new ConcurrentExpiringSet<Guid>();

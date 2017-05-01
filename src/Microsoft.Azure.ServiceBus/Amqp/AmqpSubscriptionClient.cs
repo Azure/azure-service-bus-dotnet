@@ -46,10 +46,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                                 this.Path,
                                 MessagingEntityType.Subscriber,
                                 this.ReceiveMode,
-                                this.PrefetchCount,
                                 this.ServiceBusConnection,
                                 this.CbsTokenProvider,
-                                this.RetryPolicy);
+                                this.RetryPolicy,
+                                this.PrefetchCount);
                         }
                     }
                 }
