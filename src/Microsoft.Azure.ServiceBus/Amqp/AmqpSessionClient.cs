@@ -78,7 +78,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 this.CbsTokenProvider,
                 this.RetryPolicy,
                 this.PrefetchCount,
-                sessionId);
+                sessionId,
+                false);
             try
             {
                 await this.RetryPolicy.RunOperation(

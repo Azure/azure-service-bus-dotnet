@@ -72,7 +72,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
             int prefetchCount = 0,
-            string sessionId = null)
+            string sessionId = null,
+            bool isSessionReceiver = false)
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
         {
             this.ReceiveMode = receiveMode;
@@ -82,7 +83,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ServiceBusConnection = serviceBusConnection;
             this.CbsTokenProvider = cbsTokenProvider;
             this.SessionId = sessionId;
-            this.isSessionReceiver = string.IsNullOrWhiteSpace(sessionId);
+            this.isSessionReceiver = isSessionReceiver;
             this.ReceiveLinkManager = new FaultTolerantAmqpObject<ReceivingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
             this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
             this.requestResponseLockedMessages = new ConcurrentExpiringSet<Guid>();
