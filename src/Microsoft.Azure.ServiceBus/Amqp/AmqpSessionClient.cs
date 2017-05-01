@@ -79,7 +79,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 this.RetryPolicy,
                 this.PrefetchCount,
                 sessionId,
-                false);
+                true);
             try
             {
                 await this.RetryPolicy.RunOperation(
