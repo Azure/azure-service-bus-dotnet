@@ -51,26 +51,6 @@ namespace Microsoft.Azure.ServiceBus
             return this.ConnectionManager.CloseAsync();
         }
 
-        internal IMessageSender CreateMessageSender(string entityPath)
-        {
-            MessagingEventSource.Log.MessageSenderCreateStart(this.Endpoint.Host, entityPath);
-            TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
-            var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
-            var messageSender = new MessageSender(entityPath, null, this, cbsTokenProvider, RetryPolicy.Default);
-            MessagingEventSource.Log.MessageSenderCreateStop(this.Endpoint.Host, entityPath);
-            return messageSender;
-        }
-
-        internal IMessageReceiver CreateMessageReceiver(string entityPath, ReceiveMode mode, int prefetchCount = 0)
-        {
-            MessagingEventSource.Log.MessageReceiverCreateStart(this.Endpoint.Host, entityPath, mode.ToString());
-            TokenProvider tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.SasKeyName, this.SasKey);
-            var cbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.OperationTimeout);
-            MessageReceiver messageReceiver = new MessageReceiver(entityPath, null, mode, prefetchCount, this, cbsTokenProvider, RetryPolicy.Default);
-            MessagingEventSource.Log.MessageReceiverCreateStop(this.Endpoint.Host, entityPath);
-            return messageReceiver;
-        }
-
         protected void InitializeConnection(ServiceBusConnectionStringBuilder builder)
         {
             this.Endpoint = builder.Endpoint;
