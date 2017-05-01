@@ -89,7 +89,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
             var sender = new MessageSender(queueName, connection);
-            var receiver = new MessageReceiver(queueName, connection, receiveMode: ReceiveMode.PeekLock);
+            var receiver = new MessageReceiver(queueName, connection, receiveMode: ReceiveMode.ReceiveAndDelete);
 
             try
             {
@@ -112,8 +112,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             var sender = new MessageSender(queueName, connection1);
 
-            var receiver1 = new MessageReceiver(queueName, connection1, receiveMode: ReceiveMode.PeekLock);
-            var receiver2 = new MessageReceiver(queueName, connection2, receiveMode: ReceiveMode.PeekLock, prefetchCount: 1);
+            var receiver1 = new MessageReceiver(queueName, connection1, receiveMode: ReceiveMode.ReceiveAndDelete);
+            var receiver2 = new MessageReceiver(queueName, connection2, receiveMode: ReceiveMode.ReceiveAndDelete, prefetchCount: 1);
 
             Assert.Equal(0, receiver1.PrefetchCount);
             Assert.Equal(1, receiver2.PrefetchCount);
