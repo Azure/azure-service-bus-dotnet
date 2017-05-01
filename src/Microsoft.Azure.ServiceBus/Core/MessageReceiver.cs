@@ -32,8 +32,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         public MessageReceiver(
             ServiceBusConnectionStringBuilder connectionStringBuilder,
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
-            RetryPolicy retryPolicy = null)
-            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, receiveMode, retryPolicy)
+            RetryPolicy retryPolicy = null,
+            int prefetchCount = DefaultPrefetchCount)
+            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, receiveMode, retryPolicy, prefetchCount)
         {
         }
 
@@ -41,8 +42,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             string connectionString,
             string entityPath,
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
-            RetryPolicy retryPolicy = null)
-            : this(entityPath, new ServiceBusNamespaceConnection(connectionString), DefaultPrefetchCount, receiveMode, retryPolicy)
+            RetryPolicy retryPolicy = null,
+            int prefetchCount = DefaultPrefetchCount)
+            : this(entityPath, new ServiceBusNamespaceConnection(connectionString), receiveMode, retryPolicy, prefetchCount)
         {
             if (string.IsNullOrWhiteSpace(entityPath))
             {
@@ -55,10 +57,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         public MessageReceiver(
             string entityPath,
             ServiceBusConnection serviceBusConnection,
-            int prefetchCount = DefaultPrefetchCount,
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
-            RetryPolicy retryPolicy = null)
-            : this(entityPath, null, receiveMode, serviceBusConnection, null, retryPolicy)
+            RetryPolicy retryPolicy = null,
+            int prefetchCount = DefaultPrefetchCount)
+            : this(entityPath, null, receiveMode, serviceBusConnection, null, retryPolicy, prefetchCount)
         {
             var tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(serviceBusConnection.SasKeyName, serviceBusConnection.SasKey);
             this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, serviceBusConnection.OperationTimeout);
@@ -71,7 +73,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             ServiceBusConnection serviceBusConnection,
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
-            int prefetchCount = 0,
+            int prefetchCount = DefaultPrefetchCount,
             string sessionId = null,
             bool isSessionReceiver = false)
             : base(nameof(MessageReceiver) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
