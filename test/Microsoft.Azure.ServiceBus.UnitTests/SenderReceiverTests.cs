@@ -69,7 +69,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
             var sender = new MessageSender(queueName, connection);
-            var receiver = new MessageReceiver(queueName, connection, receiveMode: ReceiveMode.PeekLock);
+            var receiver = new MessageReceiver(queueName, connection, receiveMode: ReceiveMode.ReceiveAndDelete);
 
             try
             {
