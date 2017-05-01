@@ -466,7 +466,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.OnMessageHandlerAsync(messageHandlerOptions, handler).GetAwaiter().GetResult();
         }
 
-        public override async Task OnClosingAsync()
+        protected override async Task OnClosingAsync()
         {
             lock (this.messageReceivePumpSyncLock)
             {

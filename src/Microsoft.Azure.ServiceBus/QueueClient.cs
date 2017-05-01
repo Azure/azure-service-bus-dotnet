@@ -203,7 +203,7 @@ namespace Microsoft.Azure.ServiceBus
 
         TokenProvider TokenProvider { get; }
 
-        public override async Task OnClosingAsync()
+        protected override async Task OnClosingAsync()
         {
             if (this.innerSender != null)
             {
