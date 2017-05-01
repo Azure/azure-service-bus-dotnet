@@ -100,7 +100,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 throw AmqpExceptionHelper.GetClientException(exception);
             }
 
-            MessageSession session = new AmqpMessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver, this.RetryPolicy);
+            MessageSession session = new MessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver, this.RetryPolicy);
 
             MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionStop(
                 this.ClientId,
