@@ -6,20 +6,44 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Amqp;
-    using Core;
     using Microsoft.Azure.Amqp;
-    using Primitives;
+    using Microsoft.Azure.ServiceBus.Core;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
-    public sealed class TopicClient : ClientEntity, ITopicClient
+    public class TopicClient : ClientEntity, ITopicClient
     {
         readonly bool ownsConnection;
         readonly object syncLock;
         MessageSender innerSender;
 
+        /// <summary>
+        /// Instantiates a new <see cref="TopicClient"/> to perform operations on a topic.
+        /// </summary>
+        /// <param name="connectionStringBuilder"><see cref="ServiceBusConnectionStringBuilder"/> having namespace and topic information.</param>
+        /// <param name="retryPolicy">Retry policy for topic operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        public TopicClient(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = null)
+            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, retryPolicy)
+        {
+        }
+
+        /// <summary>
+        /// Instantiates a new <see cref="TopicClient"/> to perform operations on a topic.
+        /// </summary>
+        /// <param name="connectionString">Namespace connection string. <remarks>Should not contain topic information.</remarks></param>
+        /// <param name="entityPath">Path to the topic</param>
+        /// <param name="retryPolicy">Retry policy for topic operations. Defaults to <see cref="RetryPolicy.Default"/></param>
         public TopicClient(string connectionString, string entityPath, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
+            }
+            if (string.IsNullOrWhiteSpace(entityPath))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
+            }
+
             this.ownsConnection = true;
         }
 
@@ -37,6 +61,8 @@ namespace Microsoft.Azure.ServiceBus
 
         public string TopicName { get; }
 
+        public string Path => this.TopicName;
+
         internal MessageSender InnerSender
         {
             get
@@ -47,7 +73,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.innerSender == null)
                         {
-                            this.innerSender = new AmqpMessageSender(
+                            this.innerSender = new MessageSender(
                                 this.TopicName,
                                 MessagingEntityType.Topic,
                                 this.ServiceBusConnection,
@@ -61,13 +87,13 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        ServiceBusNamespaceConnection ServiceBusConnection { get; set; }
+        internal ServiceBusNamespaceConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
         TokenProvider TokenProvider { get; }
 
-        public override async Task OnClosingAsync()
+        protected override async Task OnClosingAsync()
         {
             if (this.innerSender != null)
             {
