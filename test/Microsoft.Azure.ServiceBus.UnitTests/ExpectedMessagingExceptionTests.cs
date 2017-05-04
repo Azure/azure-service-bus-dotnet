@@ -7,7 +7,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus.Core;
-    using Microsoft.Azure.ServiceBus.Primitives;
     using Xunit;
 
     public class ExpectedMessagingExceptionTests
@@ -16,10 +15,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task MessageLockLostExceptionTest()
         {
             const int messageCount = 2;
-            var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
 
-            var sender = new MessageSender(TestConstants.NonPartitionedQueueName, connection);
-            var receiver = new MessageReceiver(TestConstants.NonPartitionedQueueName, connection, receiveMode: ReceiveMode.PeekLock);
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.PeekLock);
 
             try
             {
@@ -48,66 +46,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        // TODO: Update this when Session is implemented
-        /*
-        [Fact]
-        async Task SessionLockLostExceptionTest()
-        {
-            var messagingFactory = new ServiceBusClientFactory();
-            var queueClient =
-                (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
-                    TestUtility.GetEntityConnectionString(TestConstants.SessionNonPartitionedQueueName));
-
-            try
-            {
-                var messageId = "test-message1";
-                var sessionId = Guid.NewGuid().ToString();
-            await queueClient.SendAsync(new Message
-                { MessageId = messageId, SessionId = sessionId });
-                TestUtility.Log($"Sent Message: {messageId} to Session: {sessionId}");
-
-                MessageSession messageSession = await queueClient.AcceptMessageSessionAsync(sessionId);
-            Assert.NotNull(messageSession);
-
-                var message = await messageSession.ReceiveAsync();
-                Assert.True(message.MessageId == messageId);
-                TestUtility.Log($"Received Message: SessionId: {messageSession.SessionId}");
-
-                // Let the Session expire
-                await Task.Delay(TimeSpan.FromMinutes(1));
-
-                // Complete should throw
-                await Assert.ThrowsAsync<SessionLockLostException>(async () => await message.CompleteAsync());
-                try
-                {
-                    await messageSession.CloseAsync();
-                }
-                catch (Exception e)
-                {
-                    TestUtility.Log($"Got Exception on Session Close(): SessionId: {messageSession.SessionId}, Exception: {e.Message}");
-                }
-
-                messageSession = await queueClient.AcceptMessageSessionAsync(sessionId);
-            Assert.NotNull(messageSession);
-
-                message = await messageSession.ReceiveAsync();
-                TestUtility.Log($"Received Message: SessionId: {messageSession.SessionId}");
-
-                await message.CompleteAsync();
-            }
-            finally
-            {
-                await queueClient.CloseAsync();
-            }
-        }
-        */
-
         [Fact]
         async Task CompleteOnPeekedMessagesShouldThrowTest()
         {
-            var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
-            var sender = new MessageSender(TestConstants.NonPartitionedQueueName, connection);
-            var receiver = new MessageReceiver(TestConstants.NonPartitionedQueueName, connection, receiveMode: ReceiveMode.ReceiveAndDelete);
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
 
             try
             {

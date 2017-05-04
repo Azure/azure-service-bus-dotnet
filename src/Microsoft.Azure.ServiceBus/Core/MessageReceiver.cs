@@ -44,7 +44,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null,
             int prefetchCount = DefaultPrefetchCount)
-            : this(entityPath, new ServiceBusNamespaceConnection(connectionString), receiveMode, retryPolicy, prefetchCount)
+            : this(entityPath, null, receiveMode, new ServiceBusNamespaceConnection(connectionString), null, retryPolicy, prefetchCount)
         {
             if (string.IsNullOrWhiteSpace(entityPath))
             {
@@ -52,18 +52,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             this.ownsConnection = true;
-        }
-
-        public MessageReceiver(
-            string entityPath,
-            ServiceBusConnection serviceBusConnection,
-            ReceiveMode receiveMode = ReceiveMode.PeekLock,
-            RetryPolicy retryPolicy = null,
-            int prefetchCount = DefaultPrefetchCount)
-            : this(entityPath, null, receiveMode, serviceBusConnection, null, retryPolicy, prefetchCount)
-        {
-            var tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(serviceBusConnection.SasKeyName, serviceBusConnection.SasKey);
-            this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, serviceBusConnection.OperationTimeout);
+            var tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.ServiceBusConnection.SasKeyName, this.ServiceBusConnection.SasKey);
+            this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.ServiceBusConnection.OperationTimeout);
         }
 
         internal MessageReceiver(
