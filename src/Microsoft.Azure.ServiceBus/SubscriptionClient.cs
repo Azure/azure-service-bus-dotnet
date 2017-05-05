@@ -308,5 +308,14 @@ namespace Microsoft.Azure.ServiceBus
 
             MessagingEventSource.Log.RemoveRuleStop(this.ClientId);
         }
+
+        public void UsePlugin(ServiceBusPlugin serviceBusPlugin)
+        {
+            if (serviceBusPlugin == null)
+            {
+                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace);
+            }
+            this.InnerSubscriptionClient.InnerReceiver.UsePlugin(serviceBusPlugin);
+        }
     }
 }

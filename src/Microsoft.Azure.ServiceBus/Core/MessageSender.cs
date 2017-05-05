@@ -71,7 +71,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.CbsTokenProvider = cbsTokenProvider;
             this.SendLinkManager = new FaultTolerantAmqpObject<SendingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
             this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
+            this.BeforeEachMessageSendTasks = new List<Func<Message, Task<Message>>>();
         }
+
+        public IList<Func<Message, Task<Message>>> BeforeEachMessageSendTasks { get; set; }
 
         internal TimeSpan OperationTimeout { get; }
 
@@ -110,10 +113,30 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
+                IList<Message> processedMessageList;
+
+                if (this.BeforeEachMessageSendTasks == null)
+                {
+                    processedMessageList = messageList;
+                }
+                else
+                {
+                    processedMessageList = new List<Message>();
+                    foreach (var message in messageList)
+                    {
+                        var processedMessage = message;
+                        foreach (var beforeEachMessageSendTask in this.BeforeEachMessageSendTasks)
+                        {
+                            processedMessage = await beforeEachMessageSendTask(message);
+                        }
+                        processedMessageList.Add(processedMessage);
+                    }
+                }
+
                 await this.RetryPolicy.RunOperation(
                     async () =>
                     {
-                        await this.OnSendAsync(messageList).ConfigureAwait(false);
+                        await this.OnSendAsync(processedMessageList).ConfigureAwait(false);
                     }, this.OperationTimeout)
                     .ConfigureAwait(false);
             }
@@ -148,10 +171,19 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
+                var processedMessage = message;
+                if (this.BeforeEachMessageSendTasks != null)
+                {
+                    foreach (var beforeEachMessageSendTask in this.BeforeEachMessageSendTasks)
+                    {
+                        processedMessage = await beforeEachMessageSendTask(message);
+                    }
+                }
+
                 await this.RetryPolicy.RunOperation(
                     async () =>
                     {
-                        result = await this.OnScheduleMessageAsync(message).ConfigureAwait(false);
+                        result = await this.OnScheduleMessageAsync(processedMessage).ConfigureAwait(false);
                     }, this.OperationTimeout)
                     .ConfigureAwait(false);
             }
@@ -384,6 +416,15 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 throw Fx.Exception.Argument(nameof(message), "Cannot send a message that was already received.");
             }
+        }
+
+        public void UsePlugin(ServiceBusPlugin serviceBusPlugin)
+        {
+            if (serviceBusPlugin == null)
+            {
+                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace);
+            }
+            this.BeforeEachMessageSendTasks.Add(serviceBusPlugin.BeforeMessageSend);
         }
     }
 }

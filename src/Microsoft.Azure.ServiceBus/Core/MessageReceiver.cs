@@ -91,6 +91,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.requestResponseLockedMessages = new ConcurrentExpiringSet<Guid>();
             this.PrefetchCount = prefetchCount;
             this.messageReceivePumpSyncLock = new object();
+            this.AfterEachMessageReceiveTasks = new List<Func<Message, Task<Message>>>();
         }
 
         protected MessageReceiver(ReceiveMode receiveMode, TimeSpan operationTimeout, RetryPolicy retryPolicy)
@@ -101,6 +102,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.lastPeekedSequenceNumber = Constants.DefaultLastPeekedSequenceNumber;
             this.messageReceivePumpSyncLock = new object();
         }
+
+        public IList<Func<Message, Task<Message>>> AfterEachMessageReceiveTasks { get; set; }
 
         public ReceiveMode ReceiveMode { get; protected set; }
 
@@ -211,15 +214,35 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             MessagingEventSource.Log.MessageReceiveStart(this.ClientId, maxMessageCount);
 
-            IList<Message> messages = null;
+            IList<Message> processedMessageList = null;
             try
             {
+                IList<Message> unprocessedMessageList = null;
+
                 await this.RetryPolicy.RunOperation(
                     async () =>
                     {
-                        messages = await this.OnReceiveAsync(maxMessageCount, serverWaitTime).ConfigureAwait(false);
+                        unprocessedMessageList = await this.OnReceiveAsync(maxMessageCount, serverWaitTime).ConfigureAwait(false);
                     }, serverWaitTime)
                     .ConfigureAwait(false);
+
+                if (this.AfterEachMessageReceiveTasks == null)
+                {
+                    processedMessageList = unprocessedMessageList;
+                }
+                else
+                {
+                    processedMessageList = new List<Message>();
+                    foreach (var message in unprocessedMessageList)
+                    {
+                        var processedMessage = message;
+                        foreach (var afterEachMessageReceiveTask in this.AfterEachMessageReceiveTasks)
+                        {
+                            processedMessage = await afterEachMessageReceiveTask(message);
+                        }
+                        processedMessageList.Add(processedMessage);
+                    }
+                }
             }
             catch (Exception exception)
             {
@@ -227,8 +250,8 @@ namespace Microsoft.Azure.ServiceBus.Core
                 throw;
             }
 
-            MessagingEventSource.Log.MessageReceiveStop(this.ClientId, messages?.Count ?? 0);
-            return messages;
+            MessagingEventSource.Log.MessageReceiveStop(this.ClientId, processedMessageList?.Count ?? 0);
+            return processedMessageList;
         }
 
         public async Task<Message> ReceiveBySequenceNumberAsync(long sequenceNumber)
@@ -965,6 +988,15 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             MessagingEventSource.Log.RegisterOnMessageHandlerStop(this.ClientId);
+        }
+
+        public void UsePlugin(ServiceBusPlugin serviceBusPlugin)
+        {
+            if (serviceBusPlugin == null)
+            {
+                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace);
+            }
+            this.AfterEachMessageReceiveTasks.Add(serviceBusPlugin.AfterMessageReceive);
         }
     }
 }

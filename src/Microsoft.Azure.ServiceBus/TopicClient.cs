@@ -142,5 +142,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             return this.InnerSender.CancelScheduledMessageAsync(sequenceNumber);
         }
+
+        public void UsePlugin(ServiceBusPlugin serviceBusPlugin)
+        {
+            if (serviceBusPlugin == null)
+            {
+                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace);
+            }
+            this.InnerSender.UsePlugin(serviceBusPlugin);
+        }
     }
 }
