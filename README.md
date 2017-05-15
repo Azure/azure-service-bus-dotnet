@@ -8,8 +8,8 @@
 
 |Build/Package|Status|
 |------|-------------|
-|master|[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/master)|
-|dev|[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/dev)|
+|master|[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/master) [![codecov](https://codecov.io/gh/Azure/azure-service-bus-dotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/azure-service-bus-dotnet)|
+|dev|[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/jtaubensee/azure-service-bus-dotnet/branch/dev) [![codecov](https://codecov.io/gh/Azure/azure-service-bus-dotnet/branch/dev/graph/badge.svg)](https://codecov.io/gh/Azure/azure-service-bus-dotnet)|
 |Microsoft.Azure.ServiceBus|[![NuGet Version and Downloads count](https://buildstats.info/nuget/Microsoft.Azure.ServiceBus?includePreReleases=true)](https://www.nuget.org/packages/Microsoft.Azure.ServiceBus/)|
 
 This is the next generation Service Bus .NET client library that focuses on queues & topics. If you are looking for Event Hubs and Relay clients, follow the below links:
@@ -36,9 +36,9 @@ See our [Contribution Guidelines](./.github/CONTRIBUTING.md).
 
 In order to run the unit tests, you will need to do the following:
 
-1. Deploy the Azure Resource Manager template located at [/templates/azuredeploy.json](/templates/azuredeploy.json) by clicking the following button:
+1. Deploy the Azure Resource Manager template located at [/build/azuredeploy.json](/templates/azuredeploy.json) by clicking the following button:
 
-    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-service-bus-dotnet%2Fmaster%2Ftemplates%2Fazuredeploy.json" target="_blank">
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-service-bus-dotnet%2Fmaster%2Fbuild%2Fazuredeploy.json" target="_blank">
         <img src="http://azuredeploy.net/deploybutton.png"/>
     </a>
 
