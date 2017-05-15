@@ -34,7 +34,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null,
             int prefetchCount = DefaultPrefetchCount)
-            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, receiveMode, retryPolicy, prefetchCount)
+            : this(connectionStringBuilder?.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, receiveMode, retryPolicy, prefetchCount)
         {
         }
 

@@ -22,7 +22,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         public MessageSender(
             ServiceBusConnectionStringBuilder connectionStringBuilder,
             RetryPolicy retryPolicy = null)
-            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, retryPolicy)
+            : this(connectionStringBuilder?.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, retryPolicy)
         {
         }
 
