@@ -66,7 +66,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.BeforeEachMessageSendTasks = new List<Func<Message, Task<Message>>>();
         }
 
-        public IList<Func<Message, Task<Message>>> BeforeEachMessageSendTasks { get; set; }
+        public IList<Func<Message, Task<Message>>> BeforeEachMessageSendTasks { get; private set; }
 
         internal TimeSpan OperationTimeout { get; }
 
@@ -107,7 +107,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 IList<Message> processedMessageList;
 
-                if (this.BeforeEachMessageSendTasks == null)
+                if (this.BeforeEachMessageSendTasks == null || !this.BeforeEachMessageSendTasks.Any())
                 {
                     processedMessageList = messageList;
                 }
@@ -119,7 +119,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                         var processedMessage = message;
                         foreach (var beforeEachMessageSendTask in this.BeforeEachMessageSendTasks)
                         {
-                            processedMessage = await beforeEachMessageSendTask(message);
+                            processedMessage = await beforeEachMessageSendTask(message).ConfigureAwait(false);
                         }
                         processedMessageList.Add(processedMessage);
                     }

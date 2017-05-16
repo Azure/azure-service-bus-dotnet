@@ -97,7 +97,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.messageReceivePumpSyncLock = new object();
         }
 
-        public IList<Func<Message, Task<Message>>> AfterEachMessageReceiveTasks { get; set; }
+        public IList<Func<Message, Task<Message>>> AfterEachMessageReceiveTasks { get; private set; }
 
         public ReceiveMode ReceiveMode { get; protected set; }
 
@@ -220,21 +220,24 @@ namespace Microsoft.Azure.ServiceBus.Core
                     }, serverWaitTime)
                     .ConfigureAwait(false);
 
-                if (this.AfterEachMessageReceiveTasks == null)
+                if (unprocessedMessageList != null)
                 {
-                    processedMessageList = unprocessedMessageList;
-                }
-                else
-                {
-                    processedMessageList = new List<Message>();
-                    foreach (var message in unprocessedMessageList)
+                    if (this.AfterEachMessageReceiveTasks == null)
                     {
-                        var processedMessage = message;
-                        foreach (var afterEachMessageReceiveTask in this.AfterEachMessageReceiveTasks)
+                        processedMessageList = unprocessedMessageList;
+                    }
+                    else
+                    {
+                        processedMessageList = new List<Message>();
+                        foreach (var message in unprocessedMessageList)
                         {
-                            processedMessage = await afterEachMessageReceiveTask(message);
+                            var processedMessage = message;
+                            foreach (var afterEachMessageReceiveTask in this.AfterEachMessageReceiveTasks)
+                            {
+                                processedMessage = await afterEachMessageReceiveTask(message).ConfigureAwait(false);
+                            }
+                            processedMessageList.Add(processedMessage);
                         }
-                        processedMessageList.Add(processedMessage);
                     }
                 }
             }
