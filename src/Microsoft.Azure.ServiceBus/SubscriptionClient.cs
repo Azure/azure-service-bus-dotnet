@@ -12,18 +12,52 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.Amqp;
     using Primitives;
 
-    public sealed class SubscriptionClient : ClientEntity, ISubscriptionClient
+    public class SubscriptionClient : ClientEntity, ISubscriptionClient
     {
         public const string DefaultRule = "$Default";
+        int prefetchCount;
         readonly object syncLock;
         readonly bool ownsConnection;
         IInnerSubscriptionClient innerSubscriptionClient;
         AmqpSessionClient sessionClient;
         SessionPumpHost sessionPumpHost;
 
+        /// <summary>
+        /// Instantiates a new <see cref="SubscriptionClient"/> to perform operations on a subscription.
+        /// </summary>
+        /// <param name="connectionStringBuilder"><see cref="ServiceBusConnectionStringBuilder"/> having namespace and topic information.</param>
+        /// <param name="subscriptionName">Name of the subscription.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        public SubscriptionClient(ServiceBusConnectionStringBuilder connectionStringBuilder, string subscriptionName, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
+            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, subscriptionName, receiveMode, retryPolicy)
+        {
+        }
+
+        /// <summary>
+        /// Instantiates a new <see cref="SubscriptionClient"/> to perform operations on a subscription.
+        /// </summary>
+        /// <param name="connectionString">Namespace connection string. <remarks>Should not contain topic information.</remarks></param>
+        /// <param name="topicPath">Path to the topic.</param>
+        /// <param name="subscriptionName">Name of the subscription.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
         public SubscriptionClient(string connectionString, string topicPath, string subscriptionName, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), topicPath, subscriptionName, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
+            }
+            if (string.IsNullOrWhiteSpace(topicPath))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(topicPath);
+            }
+            if (string.IsNullOrWhiteSpace(subscriptionName))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(subscriptionName);
+            }
+
             this.ownsConnection = true;
         }
 
@@ -50,6 +84,27 @@ namespace Microsoft.Azure.ServiceBus
 
         public ReceiveMode ReceiveMode { get; }
 
+        /// <summary>
+        /// Gets or sets the number of messages that the subscription client can simultaneously request.
+        /// </summary>
+        /// <value>The number of messages that the subscription client can simultaneously request.</value>
+        public int PrefetchCount
+        {
+            get => this.prefetchCount;
+            set
+            {
+                if (value < 0)
+                {
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
+                }
+                this.prefetchCount = value;
+                if (this.innerSubscriptionClient != null)
+                {
+                    this.innerSubscriptionClient.PrefetchCount = value;
+                }
+            }
+        }
+
         internal IInnerSubscriptionClient InnerSubscriptionClient
         {
             get
@@ -63,6 +118,7 @@ namespace Microsoft.Azure.ServiceBus
                             this.ServiceBusConnection,
                             this.RetryPolicy,
                             this.CbsTokenProvider,
+                            this.PrefetchCount,
                             this.ReceiveMode);
                     }
                 }
@@ -86,7 +142,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.Path,
                                 MessagingEntityType.Subscriber,
                                 this.ReceiveMode,
-                                this.ServiceBusConnection.PrefetchCount,
+                                this.PrefetchCount,
                                 this.ServiceBusConnection,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy);
@@ -120,13 +176,13 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        ServiceBusNamespaceConnection ServiceBusConnection { get; }
+        internal ServiceBusNamespaceConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
         TokenProvider TokenProvider { get; }
 
-        public override async Task OnClosingAsync()
+        protected override async Task OnClosingAsync()
         {
             if (this.innerSubscriptionClient != null)
             {

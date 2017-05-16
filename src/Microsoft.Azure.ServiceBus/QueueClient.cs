@@ -15,18 +15,46 @@ namespace Microsoft.Azure.ServiceBus
     /// <summary>
     /// Anchor class - all Queue client operations start here.
     /// </summary>
-    public sealed class QueueClient : ClientEntity, IQueueClient
+    public class QueueClient : ClientEntity, IQueueClient
     {
         readonly bool ownsConnection;
         readonly object syncLock;
+        int prefetchCount;
         MessageSender innerSender;
         MessageReceiver innerReceiver;
         AmqpSessionClient sessionClient;
         SessionPumpHost sessionPumpHost;
 
+        /// <summary>
+        /// Instantiates a new <see cref="QueueClient"/> to perform operations on a queue.
+        /// </summary>
+        /// <param name="connectionStringBuilder"><see cref="ServiceBusConnectionStringBuilder"/> having namespace and queue information.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        public QueueClient(ServiceBusConnectionStringBuilder connectionStringBuilder, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
+            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, receiveMode, retryPolicy)
+        {
+        }
+
+        /// <summary>
+        /// Instantiates a new <see cref="QueueClient"/> to perform operations on a queue.
+        /// </summary>
+        /// <param name="connectionString">Namespace connection string. <remarks>Should not contain queue information.</remarks></param>
+        /// <param name="entityPath">Path to the queue</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
         public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
+            }
+            if (string.IsNullOrWhiteSpace(entityPath))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
+            }
+
             this.ownsConnection = true;
         }
 
@@ -49,6 +77,27 @@ namespace Microsoft.Azure.ServiceBus
 
         public string Path => this.QueueName;
 
+        /// <summary>
+        /// Gets or sets the number of messages that the queue client can simultaneously request.
+        /// </summary>
+        /// <value>The number of messages that the queue client can simultaneously request.</value>
+        public int PrefetchCount
+        {
+            get => this.prefetchCount;
+            set
+            {
+                if (value < 0)
+                {
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
+                }
+                this.prefetchCount = value;
+                if (this.innerReceiver != null)
+                {
+                    this.innerReceiver.PrefetchCount = value;
+                }
+            }
+        }
+
         internal MessageSender InnerSender
         {
             get
@@ -59,7 +108,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.innerSender == null)
                         {
-                            this.innerSender = new AmqpMessageSender(
+                            this.innerSender = new MessageSender(
                                 this.QueueName,
                                 MessagingEntityType.Queue,
                                 this.ServiceBusConnection,
@@ -83,14 +132,14 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.innerReceiver == null)
                         {
-                            this.innerReceiver = new AmqpMessageReceiver(
+                            this.innerReceiver = new MessageReceiver(
                                 this.QueueName,
                                 MessagingEntityType.Queue,
                                 this.ReceiveMode,
-                                this.ServiceBusConnection.PrefetchCount,
                                 this.ServiceBusConnection,
                                 this.CbsTokenProvider,
-                                this.RetryPolicy);
+                                this.RetryPolicy,
+                                this.PrefetchCount);
                         }
                     }
                 }
@@ -114,7 +163,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.Path,
                                 MessagingEntityType.Queue,
                                 this.ReceiveMode,
-                                this.ServiceBusConnection.PrefetchCount,
+                                this.PrefetchCount,
                                 this.ServiceBusConnection,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy);
@@ -148,13 +197,13 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        ServiceBusConnection ServiceBusConnection { get; set; }
+        internal ServiceBusConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
         TokenProvider TokenProvider { get; }
 
-        public override async Task OnClosingAsync()
+        protected override async Task OnClosingAsync()
         {
             if (this.innerSender != null)
             {

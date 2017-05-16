@@ -6,7 +6,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System;
     using System.Linq;
     using System.Threading.Tasks;
-    using Primitives;
+    using Microsoft.Azure.ServiceBus.Core;
     using Xunit;
 
     public class ExpectedMessagingExceptionTests
@@ -15,9 +15,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task MessageLockLostExceptionTest()
         {
             const int messageCount = 2;
-            var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
-            var receiver = connection.CreateMessageReceiver(TestConstants.NonPartitionedQueueName, ReceiveMode.PeekLock);
-            var sender = connection.CreateMessageSender(TestConstants.NonPartitionedQueueName);
+
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.PeekLock);
 
             try
             {
@@ -38,6 +38,31 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 Assert.True(receivedMessages.Count() == messageCount);
 
                 await TestUtility.CompleteMessagesAsync(receiver, receivedMessages);
+            }
+            finally
+            {
+                await sender.CloseAsync().ConfigureAwait(false);
+                await receiver.CloseAsync().ConfigureAwait(false);
+            }
+        }
+
+        [Fact]
+        async Task CompleteOnPeekedMessagesShouldThrowTest()
+        {
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
+
+            try
+            {
+                await TestUtility.SendMessagesAsync(sender, 1);
+                var message = await receiver.PeekAsync();
+                Assert.NotNull(message);
+                await
+                    Assert.ThrowsAsync<InvalidOperationException>(
+                        async () => await receiver.CompleteAsync(message.SystemProperties.LockToken));
+
+                message = await receiver.ReceiveAsync();
+                Assert.NotNull((object)message);
             }
             finally
             {
@@ -99,31 +124,5 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
         */
-
-        [Fact]
-        async Task CompleteOnPeekedMessagesShouldThrowTest()
-        {
-            var connection = new ServiceBusNamespaceConnection(TestUtility.NamespaceConnectionString);
-            var receiver = connection.CreateMessageReceiver(TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
-            var sender = connection.CreateMessageSender(TestConstants.NonPartitionedQueueName);
-
-            try
-            {
-                await TestUtility.SendMessagesAsync(sender, 1);
-                var message = await receiver.PeekAsync();
-                Assert.NotNull(message);
-                await
-                    Assert.ThrowsAsync<InvalidOperationException>(
-                        async () => await receiver.CompleteAsync(message.SystemProperties.LockToken));
-
-                message = await receiver.ReceiveAsync();
-                Assert.NotNull((object)message);
-            }
-            finally
-            {
-                await sender.CloseAsync().ConfigureAwait(false);
-                await receiver.CloseAsync().ConfigureAwait(false);
-            }
-        }
     }
 }
