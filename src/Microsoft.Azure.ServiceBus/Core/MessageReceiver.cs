@@ -85,7 +85,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.requestResponseLockedMessages = new ConcurrentExpiringSet<Guid>();
             this.PrefetchCount = prefetchCount;
             this.messageReceivePumpSyncLock = new object();
-            this.AfterEachMessageReceiveTasks = new List<Func<Message, Task<Message>>>();
+            this.RegisteredPlugins = new List<ServiceBusPlugin>();
         }
 
         protected MessageReceiver(ReceiveMode receiveMode, TimeSpan operationTimeout, RetryPolicy retryPolicy)
@@ -97,7 +97,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.messageReceivePumpSyncLock = new object();
         }
 
-        public IList<Func<Message, Task<Message>>> AfterEachMessageReceiveTasks { get; private set; }
+        public IList<ServiceBusPlugin> RegisteredPlugins { get; private set; }
 
         public ReceiveMode ReceiveMode { get; protected set; }
 
@@ -163,6 +163,47 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         FaultTolerantAmqpObject<RequestResponseAmqpLink> RequestResponseLinkManager { get; }
 
+        private async Task<Message> ProcessMessages(Message message)
+        {
+            if (this.RegisteredPlugins == null || !this.RegisteredPlugins.Any())
+            {
+                return message;
+            }
+
+            var processedMessage = message;
+            foreach (var plugin in this.RegisteredPlugins)
+            {
+                try
+                {
+                    processedMessage = await plugin.AfterMessageReceive(message).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    if (e is ServiceBusPluginException pluginException)
+                    {
+                        if (pluginException.ShouldCompleteOperation)
+                        {
+                            continue;
+                        }
+                    }
+                    throw;
+                }
+            }
+            return processedMessage;
+        }
+
+        private async Task<IList<Message>> ProcessMessages(IList<Message> messageList)
+        {
+            var processedMessageList = new List<Message>();
+            foreach (var message in messageList)
+            {
+                var processedMessage = await this.ProcessMessages(message).ConfigureAwait(false);
+                processedMessageList.Add(processedMessage);
+            }
+
+            return processedMessageList;
+        }
+
         /// <summary>
         /// Asynchronously receives a message using the <see cref="MessageReceiver" />.
         /// </summary>
@@ -208,38 +249,15 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             MessagingEventSource.Log.MessageReceiveStart(this.ClientId, maxMessageCount);
 
-            IList<Message> processedMessageList = null;
+            IList<Message> unprocessedMessageList = null;
             try
             {
-                IList<Message> unprocessedMessageList = null;
-
                 await this.RetryPolicy.RunOperation(
                     async () =>
                     {
                         unprocessedMessageList = await this.OnReceiveAsync(maxMessageCount, serverWaitTime).ConfigureAwait(false);
                     }, serverWaitTime)
                     .ConfigureAwait(false);
-
-                if (unprocessedMessageList != null)
-                {
-                    if (this.AfterEachMessageReceiveTasks == null)
-                    {
-                        processedMessageList = unprocessedMessageList;
-                    }
-                    else
-                    {
-                        processedMessageList = new List<Message>();
-                        foreach (var message in unprocessedMessageList)
-                        {
-                            var processedMessage = message;
-                            foreach (var afterEachMessageReceiveTask in this.AfterEachMessageReceiveTasks)
-                            {
-                                processedMessage = await afterEachMessageReceiveTask(message).ConfigureAwait(false);
-                            }
-                            processedMessageList.Add(processedMessage);
-                        }
-                    }
-                }
             }
             catch (Exception exception)
             {
@@ -247,8 +265,14 @@ namespace Microsoft.Azure.ServiceBus.Core
                 throw;
             }
 
-            MessagingEventSource.Log.MessageReceiveStop(this.ClientId, processedMessageList?.Count ?? 0);
-            return processedMessageList;
+            MessagingEventSource.Log.MessageReceiveStop(this.ClientId, unprocessedMessageList?.Count ?? 0);
+
+            if (unprocessedMessageList == null)
+            {
+                return unprocessedMessageList;
+            }
+
+            return await this.ProcessMessages(unprocessedMessageList).ConfigureAwait(false);
         }
 
         public async Task<Message> ReceiveBySequenceNumberAsync(long sequenceNumber)
@@ -993,7 +1017,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace);
             }
-            this.AfterEachMessageReceiveTasks.Add(serviceBusPlugin.AfterMessageReceive);
+            this.RegisteredPlugins.Add(serviceBusPlugin);
         }
     }
 }

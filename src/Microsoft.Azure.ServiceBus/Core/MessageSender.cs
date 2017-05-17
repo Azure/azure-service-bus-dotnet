@@ -63,10 +63,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.CbsTokenProvider = cbsTokenProvider;
             this.SendLinkManager = new FaultTolerantAmqpObject<SendingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
             this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
-            this.BeforeEachMessageSendTasks = new List<Func<Message, Task<Message>>>();
+            this.RegisteredPlugins = new List<ServiceBusPlugin>();
         }
 
-        public IList<Func<Message, Task<Message>>> BeforeEachMessageSendTasks { get; private set; }
+        public IList<ServiceBusPlugin> RegisteredPlugins { get; private set; }
 
         internal TimeSpan OperationTimeout { get; }
 
@@ -93,6 +93,47 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
+        private async Task<Message> ProcessMessages(Message message)
+        {
+            if (this.RegisteredPlugins == null || !this.RegisteredPlugins.Any())
+            {
+                return message;
+            }
+
+            var processedMessage = message;
+            foreach (var plugin in this.RegisteredPlugins)
+            {
+                try
+                {
+                    processedMessage = await plugin.BeforeMessageSend(message).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    if (e is ServiceBusPluginException pluginException)
+                    {
+                        if (pluginException.ShouldCompleteOperation)
+                        {
+                            continue;
+                        }
+                    }
+                    throw;
+                }
+            }
+            return processedMessage;
+        }
+
+        private async Task<IList<Message>> ProcessMessages(IList<Message> messageList)
+        {
+            var processedMessageList = new List<Message>();
+            foreach (var message in messageList)
+            {
+                var processedMessage = await this.ProcessMessages(message).ConfigureAwait(false);
+                processedMessageList.Add(processedMessage);
+            }
+
+            return processedMessageList;
+        }
+
         public Task SendAsync(Message message)
         {
             return this.SendAsync(new[] { message });
@@ -103,32 +144,14 @@ namespace Microsoft.Azure.ServiceBus.Core
             int count = MessageSender.ValidateMessages(messageList);
             MessagingEventSource.Log.MessageSendStart(this.ClientId, count);
 
+            var processedMessages = await this.ProcessMessages(messageList).ConfigureAwait(false);
+
             try
             {
-                IList<Message> processedMessageList;
-
-                if (this.BeforeEachMessageSendTasks == null || !this.BeforeEachMessageSendTasks.Any())
-                {
-                    processedMessageList = messageList;
-                }
-                else
-                {
-                    processedMessageList = new List<Message>();
-                    foreach (var message in messageList)
-                    {
-                        var processedMessage = message;
-                        foreach (var beforeEachMessageSendTask in this.BeforeEachMessageSendTasks)
-                        {
-                            processedMessage = await beforeEachMessageSendTask(message).ConfigureAwait(false);
-                        }
-                        processedMessageList.Add(processedMessage);
-                    }
-                }
-
                 await this.RetryPolicy.RunOperation(
                     async () =>
                     {
-                        await this.OnSendAsync(processedMessageList).ConfigureAwait(false);
+                        await this.OnSendAsync(processedMessages).ConfigureAwait(false);
                     }, this.OperationTimeout)
                     .ConfigureAwait(false);
             }
@@ -161,17 +184,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.ScheduleMessageStart(this.ClientId, scheduleEnqueueTimeUtc);
             long result = 0;
 
+            var processedMessage = await this.ProcessMessages(message).ConfigureAwait(false);
+
             try
             {
-                var processedMessage = message;
-                if (this.BeforeEachMessageSendTasks != null)
-                {
-                    foreach (var beforeEachMessageSendTask in this.BeforeEachMessageSendTasks)
-                    {
-                        processedMessage = await beforeEachMessageSendTask(message);
-                    }
-                }
-
                 await this.RetryPolicy.RunOperation(
                     async () =>
                     {
@@ -416,7 +432,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace);
             }
-            this.BeforeEachMessageSendTasks.Add(serviceBusPlugin.BeforeMessageSend);
+            this.RegisteredPlugins.Add(serviceBusPlugin);
         }
     }
 }
