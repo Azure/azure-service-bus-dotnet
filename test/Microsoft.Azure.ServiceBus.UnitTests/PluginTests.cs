@@ -14,7 +14,42 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     public class PluginTests
     {
         [Fact]
-        async Task SendPluginTest()
+        [DisplayTestMethodName]
+        async Task Registering_plugin_multiple_times_should_throw()
+        {
+            var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
+            var firstPlugin = new FirstSendPlugin();
+            var secondPlugin = new FirstSendPlugin();
+
+            messageReceiver.RegisterPlugin(firstPlugin);
+            Assert.Throws<ArgumentException>(() => messageReceiver.RegisterPlugin(secondPlugin));
+            await messageReceiver.CloseAsync();
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        async Task Unregistering_plugin_should_complete_with_plugin_set()
+        {
+            var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
+            var firstPlugin = new FirstSendPlugin();
+
+            messageReceiver.RegisterPlugin(firstPlugin);
+            messageReceiver.UnregisterPlugin(firstPlugin);
+            await messageReceiver.CloseAsync();
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        async Task Unregistering_plugin_should_complete_without_plugin_set()
+        {
+            var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
+            messageReceiver.UnregisterPlugin(typeof(ServiceBusPlugin));
+            await messageReceiver.CloseAsync();
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        async Task Multiple_plugins_should_run_in_order()
         {
             var messageSender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
             var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
@@ -24,8 +59,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 var firstPlugin = new FirstSendPlugin();
                 var secondPlugin = new SecondSendPlugin();
 
-                messageSender.UsePlugin(firstPlugin);
-                messageSender.UsePlugin(secondPlugin);
+                messageSender.RegisterPlugin(firstPlugin);
+                messageSender.RegisterPlugin(secondPlugin);
 
                 var sendMessage = new Message(Encoding.UTF8.GetBytes("Test message"));
                 await messageSender.SendAsync(sendMessage);
@@ -45,7 +80,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        async Task SendReceivePlugin()
+        [DisplayTestMethodName]
+        async Task Multiple_plugins_should_be_able_to_manipulate_message()
         {
             var messageSender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
             var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
@@ -53,7 +89,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             try
             {
                 var sendReceivePlugin = new SendReceivePlugin();
-                messageSender.UsePlugin(sendReceivePlugin);
+                messageSender.RegisterPlugin(sendReceivePlugin);
 
                 var sendMessage = new Message(Encoding.UTF8.GetBytes("Test message"))
                 {
@@ -74,14 +110,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        async Task PluginWithException_ShouldHaltOperation()
+        [DisplayTestMethodName]
+        async Task Plugin_that_throws_generic_exception_should_throw()
         {
             var messageSender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
             try
             {
                 var plugin = new ExceptionPlugin();
                 
-                messageSender.UsePlugin(plugin);
+                messageSender.RegisterPlugin(plugin);
 
                 var sendMessage = new Message(Encoding.UTF8.GetBytes("Test message"));
                 await Assert.ThrowsAsync<NotImplementedException>(() => messageSender.SendAsync(sendMessage));
@@ -93,14 +130,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        async Task PluginWithException_ShouldCompleteAnyway()
+        [DisplayTestMethodName]
+        async Task Plugin_that_throws_ServiceBusPluginException_with_ShouldContinue_should_continue()
         {
             var messageSender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
             try
             {
                 var plugin = new ShouldCompleteAnywayExceptionPlugin();
 
-                messageSender.UsePlugin(plugin);
+                messageSender.RegisterPlugin(plugin);
 
                 var sendMessage = new Message(Encoding.UTF8.GetBytes("Test message"));
                 await messageSender.SendAsync(sendMessage);

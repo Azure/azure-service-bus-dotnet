@@ -3,9 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus.Core
 {
-    using System;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
 
     public abstract class ServiceBusPlugin
     {

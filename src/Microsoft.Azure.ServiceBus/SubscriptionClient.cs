@@ -309,13 +309,19 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.RemoveRuleStop(this.ClientId);
         }
 
-        public void UsePlugin(ServiceBusPlugin serviceBusPlugin)
+        public void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
-            if (serviceBusPlugin == null)
-            {
-                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace);
-            }
-            this.InnerSubscriptionClient.InnerReceiver.UsePlugin(serviceBusPlugin);
+            this.InnerSubscriptionClient.InnerReceiver.RegisterPlugin(serviceBusPlugin);
+        }
+
+        public void UnregisterPlugin(ServiceBusPlugin serviceBusPlugin)
+        {
+            this.InnerSubscriptionClient.InnerReceiver.UnregisterPlugin(serviceBusPlugin);
+        }
+
+        public void UnregisterPlugin(Type serviceBusPluginType)
+        {
+            this.InnerSubscriptionClient.InnerReceiver.UnregisterPlugin(serviceBusPluginType);
         }
     }
 }

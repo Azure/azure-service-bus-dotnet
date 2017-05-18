@@ -85,7 +85,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.requestResponseLockedMessages = new ConcurrentExpiringSet<Guid>();
             this.PrefetchCount = prefetchCount;
             this.messageReceivePumpSyncLock = new object();
-            this.RegisteredPlugins = new List<ServiceBusPlugin>();
         }
 
         protected MessageReceiver(ReceiveMode receiveMode, TimeSpan operationTimeout, RetryPolicy retryPolicy)
@@ -165,7 +164,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         private async Task<Message> ProcessMessages(Message message)
         {
-            if (this.RegisteredPlugins == null || !this.RegisteredPlugins.Any())
+            if (this.RegisteredPlugins == null)
             {
                 return message;
             }
@@ -1011,13 +1010,47 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.RegisterOnMessageHandlerStop(this.ClientId);
         }
 
-        public void UsePlugin(ServiceBusPlugin serviceBusPlugin)
+        public void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             if (serviceBusPlugin == null)
             {
-                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace);
+                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
+            }
+            if (this.RegisteredPlugins == null)
+            {
+                this.RegisteredPlugins = new List<ServiceBusPlugin>();
+            }
+            else if (this.RegisteredPlugins.Any(p => p.GetType() == serviceBusPlugin.GetType()))
+            {
+                throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
             }
             this.RegisteredPlugins.Add(serviceBusPlugin);
+        }
+
+        public void UnregisterPlugin(ServiceBusPlugin serviceBusPlugin)
+        {
+            if (serviceBusPlugin == null)
+            {
+                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
+            }
+            this.UnregisterPlugin(serviceBusPlugin.GetType());
+        }
+
+        public void UnregisterPlugin(Type serviceBusPluginType)
+        {
+            if (this.RegisteredPlugins == null)
+            {
+                return;
+            }
+            if (serviceBusPluginType == null)
+            {
+                throw new ArgumentNullException(nameof(serviceBusPluginType), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginType)));
+            }
+            if (this.RegisteredPlugins.Any(p => p.GetType() == serviceBusPluginType))
+            {
+                var plugin = this.RegisteredPlugins.First(p => p.GetType() == serviceBusPluginType);
+                this.RegisteredPlugins.Remove(plugin);
+            }
         }
     }
 }
