@@ -92,7 +92,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        private async Task<Message> ProcessMessages(Message message)
+        private async Task<Message> ProcessMessage(Message message)
         {
             if (this.RegisteredPlugins == null)
             {
@@ -106,16 +106,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                 {
                     processedMessage = await plugin.BeforeMessageSend(message).ConfigureAwait(false);
                 }
-                catch (Exception e)
+                catch (Exception ex) when (ex is ServiceBusPluginException pluginException && pluginException.ShouldCompleteOperation)
                 {
-                    if (e is ServiceBusPluginException pluginException)
-                    {
-                        if (pluginException.ShouldCompleteOperation)
-                        {
-                            continue;
-                        }
-                    }
-                    throw;
+                    continue;
                 }
             }
             return processedMessage;
@@ -126,7 +119,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             var processedMessageList = new List<Message>();
             foreach (var message in messageList)
             {
-                var processedMessage = await this.ProcessMessages(message).ConfigureAwait(false);
+                var processedMessage = await this.ProcessMessage(message).ConfigureAwait(false);
                 processedMessageList.Add(processedMessage);
             }
 
@@ -183,7 +176,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.ScheduleMessageStart(this.ClientId, scheduleEnqueueTimeUtc);
             long result = 0;
 
-            var processedMessage = await this.ProcessMessages(message).ConfigureAwait(false);
+            var processedMessage = await this.ProcessMessage(message).ConfigureAwait(false);
 
             try
             {
