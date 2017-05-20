@@ -62,13 +62,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         public static AmqpResponseStatusCode GetResponseStatusCode(this AmqpMessage responseMessage)
         {
             AmqpResponseStatusCode responseStatusCode = AmqpResponseStatusCode.Unused;
-            if (responseMessage != null)
+            object statusCodeValue = responseMessage?.ApplicationProperties.Map[ManagementConstants.Response.StatusCode];
+            if (statusCodeValue is int && Enum.IsDefined(typeof(AmqpResponseStatusCode), statusCodeValue))
             {
-                object statusCodeValue = responseMessage.ApplicationProperties.Map[ManagementConstants.Response.StatusCode];
-                if (statusCodeValue is int && Enum.IsDefined(typeof(AmqpResponseStatusCode), statusCodeValue))
-                {
-                    responseStatusCode = (AmqpResponseStatusCode)statusCodeValue;
-                }
+                responseStatusCode = (AmqpResponseStatusCode)statusCodeValue;
             }
 
             return responseStatusCode;

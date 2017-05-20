@@ -836,10 +836,8 @@ namespace Microsoft.Azure.ServiceBus.Core
                     {
                         throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
                     }
-                    else
-                    {
-                        throw new MessageLockLostException(Resources.MessageLockLost);
-                    }
+
+                    throw new MessageLockLostException(Resources.MessageLockLost);
                 }
 
                 throw AmqpExceptionHelper.GetClientException(exception);
