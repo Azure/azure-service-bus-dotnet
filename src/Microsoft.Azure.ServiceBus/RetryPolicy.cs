@@ -94,13 +94,8 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNull("lastException");
             }
 
-            ServiceBusException serviceBusException = exception as ServiceBusException;
-            if (serviceBusException != null)
-            {
-                return serviceBusException.IsTransient;
-            }
-
-            return false;
+            var serviceBusException = exception as ServiceBusException;
+            return serviceBusException?.IsTransient == true;
         }
 
         internal bool ShouldRetry(TimeSpan remainingTime, int currentRetryCount, Exception lastException, out TimeSpan retryInterval)
