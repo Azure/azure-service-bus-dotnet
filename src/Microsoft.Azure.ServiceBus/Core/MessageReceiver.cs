@@ -96,7 +96,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.messageReceivePumpSyncLock = new object();
         }
 
-        public IList<ServiceBusPlugin> RegisteredPlugins { get; private set; }
+        public IList<ServiceBusPlugin> RegisteredPlugins { get; private set; } = new List<ServiceBusPlugin>();
 
         public ReceiveMode ReceiveMode { get; protected set; }
 
@@ -164,11 +164,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         private async Task<Message> ProcessMessage(Message message)
         {
-            if (this.RegisteredPlugins == null)
-            {
-                return message;
-            }
-
             var processedMessage = message;
             foreach (var plugin in this.RegisteredPlugins)
             {
@@ -1009,11 +1004,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
             }
-            if (this.RegisteredPlugins == null)
-            {
-                this.RegisteredPlugins = new List<ServiceBusPlugin>();
-            }
-            else if (this.RegisteredPlugins.Any(p => p.GetType() == serviceBusPlugin.GetType()))
+
+            if (this.RegisteredPlugins.Any(p => p.GetType() == serviceBusPlugin.GetType()))
             {
                 throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
             }
@@ -1031,10 +1023,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         public void UnregisterPlugin(Type serviceBusPluginType)
         {
-            if (this.RegisteredPlugins == null)
-            {
-                return;
-            }
             if (serviceBusPluginType == null)
             {
                 throw new ArgumentNullException(nameof(serviceBusPluginType), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginType)));
