@@ -5,15 +5,9 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Diagnostics.Tracing;
     using Microsoft.Azure.Amqp;
 
-    [SuppressMessage(
-        "Microsoft.StyleCop.CSharp.OrderingRules",
-        "SA1202:ElementsMustBeOrderedByAccess",
-        Justification = "Following this rule here will mix up the EventIds and make it confusing")]
-    [EventSource(Name = "Microsoft-Azure-ServiceBus")]
     internal sealed class MessagingEventSource : EventSource
     {
         public static MessagingEventSource Log { get; } = new MessagingEventSource();
@@ -1152,6 +1146,24 @@ namespace Microsoft.Azure.ServiceBus
         void AmqpSessionCreationException(string entityPath, string connectionInfo, string connectionState, string exception)
         {
             this.WriteEvent(94, entityPath, connectionInfo, connectionState, exception);
+        }
+
+        [Event(95, Level = EventLevel.Verbose, Message = "User plugin {0} called on message {1}")]
+        public void PluginCalled(string pluginName, string messageId)
+        {
+            this.WriteEvent(95, pluginName, messageId);
+        }
+
+        [Event(96, Level = EventLevel.Verbose, Message = "User plugin {0} completed on message {1}")]
+        public void PluginCompleted(string pluginName, string messageId)
+        {
+            this.WriteEvent(96, pluginName, messageId);
+        }
+
+        [Event(97, Level = EventLevel.Error, Message = "Exception during {0} plugin execution. MessageId: {1}, Exception {2}")]
+        public void PluginException(string pluginName, string messageId, string exception)
+        {
+            this.WriteEvent(97, pluginName, messageId, exception);
         }
     }
 }

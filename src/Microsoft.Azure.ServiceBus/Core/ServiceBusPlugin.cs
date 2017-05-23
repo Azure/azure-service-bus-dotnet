@@ -7,6 +7,10 @@ namespace Microsoft.Azure.ServiceBus.Core
 
     public abstract class ServiceBusPlugin
     {
+        public abstract string Name { get; }
+
+        public virtual bool ShouldContinueOnException => false;
+
         public virtual Task<Message> BeforeMessageSend(Message message)
         {
             return Task.FromResult(message);

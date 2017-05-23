@@ -314,14 +314,9 @@ namespace Microsoft.Azure.ServiceBus
             this.InnerSubscriptionClient.InnerReceiver.RegisterPlugin(serviceBusPlugin);
         }
 
-        public void UnregisterPlugin(ServiceBusPlugin serviceBusPlugin)
+        public void UnregisterPlugin(string serviceBusPluginName)
         {
-            this.InnerSubscriptionClient.InnerReceiver.UnregisterPlugin(serviceBusPlugin);
-        }
-
-        public void UnregisterPlugin(Type serviceBusPluginType)
-        {
-            this.InnerSubscriptionClient.InnerReceiver.UnregisterPlugin(serviceBusPluginType);
+            this.InnerSubscriptionClient.InnerReceiver.UnregisterPlugin(serviceBusPluginName);
         }
     }
 }

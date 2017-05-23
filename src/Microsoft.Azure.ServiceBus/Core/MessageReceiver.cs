@@ -174,10 +174,17 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 try
                 {
+                    MessagingEventSource.Log.PluginCalled(nameof(plugin), message.MessageId);
                     processedMessage = await plugin.AfterMessageReceive(message).ConfigureAwait(false);
+                    MessagingEventSource.Log.PluginCompleted(nameof(plugin), message.MessageId);
                 }
-                catch (Exception ex) when (ex is ServiceBusPluginException pluginException && pluginException.ShouldCompleteOperation)
+                catch (Exception ex)
                 {
+                    MessagingEventSource.Log.PluginException(nameof(plugin), message.MessageId, ex.Message);
+                    if (!plugin.ShouldContinueOnException)
+                    {
+                        throw;
+                    }
                 }
             }
             return processedMessage;
@@ -185,6 +192,11 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         private async Task<IList<Message>> ProcessMessages(IList<Message> messageList)
         {
+            if (this.RegisteredPlugins == null || !this.RegisteredPlugins.Any())
+            {
+                return messageList;
+            }
+
             var processedMessageList = new List<Message>();
             foreach (var message in messageList)
             {
@@ -1017,28 +1029,19 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.RegisteredPlugins.Add(serviceBusPlugin);
         }
 
-        public void UnregisterPlugin(ServiceBusPlugin serviceBusPlugin)
-        {
-            if (serviceBusPlugin == null)
-            {
-                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
-            }
-            this.UnregisterPlugin(serviceBusPlugin.GetType());
-        }
-
-        public void UnregisterPlugin(Type serviceBusPluginType)
+        public void UnregisterPlugin(string serviceBusPluginName)
         {
             if (this.RegisteredPlugins == null)
             {
                 return;
             }
-            if (serviceBusPluginType == null)
+            if (serviceBusPluginName == null)
             {
-                throw new ArgumentNullException(nameof(serviceBusPluginType), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginType)));
+                throw new ArgumentNullException(nameof(serviceBusPluginName), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginName)));
             }
-            if (this.RegisteredPlugins.Any(p => p.GetType() == serviceBusPluginType))
+            if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPluginName))
             {
-                var plugin = this.RegisteredPlugins.First(p => p.GetType() == serviceBusPluginType);
+                var plugin = this.RegisteredPlugins.First(p => p.Name == serviceBusPluginName);
                 this.RegisteredPlugins.Remove(plugin);
             }
         }

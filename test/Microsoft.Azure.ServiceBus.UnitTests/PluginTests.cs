@@ -34,7 +34,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var firstPlugin = new FirstSendPlugin();
 
             messageReceiver.RegisterPlugin(firstPlugin);
-            messageReceiver.UnregisterPlugin(firstPlugin);
+            messageReceiver.UnregisterPlugin(firstPlugin.Name);
             await messageReceiver.CloseAsync();
         }
 
@@ -43,7 +43,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task Unregistering_plugin_should_complete_without_plugin_set()
         {
             var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
-            messageReceiver.UnregisterPlugin(typeof(ServiceBusPlugin));
+            messageReceiver.UnregisterPlugin("Non-existant plugin");
             await messageReceiver.CloseAsync();
         }
 
@@ -111,7 +111,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         [Fact]
         [DisplayTestMethodName]
-        async Task Plugin_that_throws_generic_exception_should_throw()
+        async Task Plugin_without_ShouldContinueOnException_should_throw()
         {
             var messageSender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
             try
@@ -131,7 +131,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         [Fact]
         [DisplayTestMethodName]
-        async Task Plugin_that_throws_ServiceBusPluginException_with_ShouldContinue_should_continue()
+        async Task Plugin_with_ShouldContinueOnException_should_continue()
         {
             var messageSender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
             try
@@ -155,6 +155,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     internal class FirstSendPlugin : ServiceBusPlugin
     {
+        public override string Name => nameof(SendReceivePlugin);
+
         public override Task<Message> BeforeMessageSend(Message message)
         {
             message.UserProperties.Add("FirstSendPlugin", true);
@@ -164,6 +166,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     internal class SecondSendPlugin : ServiceBusPlugin
     {
+        public override string Name => nameof(SendReceivePlugin);
+
         public override Task<Message> BeforeMessageSend(Message message)
         {
             // Ensure that the first plugin actually ran first
@@ -177,6 +181,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         // Null the body on send, and replace it when received.
         Dictionary<string, byte[]> MessageBodies = new Dictionary<string, byte[]>();
+
+        public override string Name => nameof(SendReceivePlugin);
 
         public override Task<Message> BeforeMessageSend(Message message)
         {
@@ -195,6 +201,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     internal class ExceptionPlugin : ServiceBusPlugin
     {
+        public override string Name => nameof(ExceptionPlugin);
+
         public override Task<Message> BeforeMessageSend(Message message)
         {
             throw new NotImplementedException();
@@ -203,9 +211,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     internal class ShouldCompleteAnywayExceptionPlugin : ServiceBusPlugin
     {
+        public override bool ShouldContinueOnException => true;
+
+        public override string Name => nameof(ShouldCompleteAnywayExceptionPlugin);
+
         public override Task<Message> BeforeMessageSend(Message message)
         {
-            throw new ServiceBusPluginException(true, new NotImplementedException());
+            throw new NotImplementedException();
         }
     }
 }

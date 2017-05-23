@@ -312,16 +312,10 @@ namespace Microsoft.Azure.ServiceBus
             this.InnerReceiver.RegisterPlugin(serviceBusPlugin);
         }
 
-        public void UnregisterPlugin(ServiceBusPlugin serviceBusPlugin)
+        public void UnregisterPlugin(string serviceBusPluginName)
         {
-            this.InnerSender.UnregisterPlugin(serviceBusPlugin);
-            this.InnerReceiver.UnregisterPlugin(serviceBusPlugin);
-        }
-
-        public void UnregisterPlugin(Type serviceBusPluginType)
-        {
-            this.InnerSender.UnregisterPlugin(serviceBusPluginType);
-            this.InnerReceiver.UnregisterPlugin(serviceBusPluginType);
+            this.InnerSender.UnregisterPlugin(serviceBusPluginName);
+            this.InnerReceiver.UnregisterPlugin(serviceBusPluginName);
         }
     }
 }
