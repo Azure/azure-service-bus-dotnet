@@ -108,7 +108,6 @@ namespace Microsoft.Azure.ServiceBus.Core
                 }
                 catch (Exception ex) when (ex is ServiceBusPluginException pluginException && pluginException.ShouldCompleteOperation)
                 {
-                    continue;
                 }
             }
             return processedMessage;
