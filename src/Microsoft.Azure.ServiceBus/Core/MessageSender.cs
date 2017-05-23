@@ -104,13 +104,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 try
                 {
-                    MessagingEventSource.Log.PluginCalled(plugin.Name, message.MessageId);
+                    MessagingEventSource.Log.PluginCallStarted(plugin.Name, message.MessageId);
                     processedMessage = await plugin.BeforeMessageSend(message).ConfigureAwait(false);
-                    MessagingEventSource.Log.PluginCompleted(plugin.Name, message.MessageId);
+                    MessagingEventSource.Log.PluginCallCompleted(plugin.Name, message.MessageId);
                 }
                 catch (Exception ex)
                 {
-                    MessagingEventSource.Log.PluginException(plugin.Name, message.MessageId, ex.Message);
+                    MessagingEventSource.Log.PluginCallFailed(plugin.Name, message.MessageId, ex.Message);
                     if (!plugin.ShouldContinueOnException)
                     {
                         throw;

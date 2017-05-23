@@ -1149,19 +1149,19 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [Event(95, Level = EventLevel.Verbose, Message = "User plugin {0} called on message {1}")]
-        public void PluginCalled(string pluginName, string messageId)
+        public void PluginCallStarted(string pluginName, string messageId)
         {
             this.WriteEvent(95, pluginName, messageId);
         }
 
         [Event(96, Level = EventLevel.Verbose, Message = "User plugin {0} completed on message {1}")]
-        public void PluginCompleted(string pluginName, string messageId)
+        public void PluginCallCompleted(string pluginName, string messageId)
         {
             this.WriteEvent(96, pluginName, messageId);
         }
 
         [Event(97, Level = EventLevel.Error, Message = "Exception during {0} plugin execution. MessageId: {1}, Exception {2}")]
-        public void PluginException(string pluginName, string messageId, string exception)
+        public void PluginCallFailed(string pluginName, string messageId, string exception)
         {
             this.WriteEvent(97, pluginName, messageId, exception);
         }

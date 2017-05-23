@@ -174,13 +174,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 try
                 {
-                    MessagingEventSource.Log.PluginCalled(plugin.Name, message.MessageId);
+                    MessagingEventSource.Log.PluginCallStarted(plugin.Name, message.MessageId);
                     processedMessage = await plugin.AfterMessageReceive(message).ConfigureAwait(false);
-                    MessagingEventSource.Log.PluginCompleted(plugin.Name, message.MessageId);
+                    MessagingEventSource.Log.PluginCallCompleted(plugin.Name, message.MessageId);
                 }
                 catch (Exception ex)
                 {
-                    MessagingEventSource.Log.PluginException(plugin.Name, message.MessageId, ex.Message);
+                    MessagingEventSource.Log.PluginCallFailed(plugin.Name, message.MessageId, ex.Message);
                     if (!plugin.ShouldContinueOnException)
                     {
                         throw;
@@ -1022,7 +1022,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 this.RegisteredPlugins = new List<ServiceBusPlugin>();
             }
-            else if (this.RegisteredPlugins.Any(p => p.GetType() == serviceBusPlugin.GetType()))
+            else if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
             {
                 throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
             }
