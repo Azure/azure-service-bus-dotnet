@@ -196,6 +196,11 @@ namespace Microsoft.Azure.ServiceBus
         /// <value> Identifies the Publisher Sending the Message. </value>
         public string Publisher { get; set; }
 
+        /// <summary>
+        /// Gets the name of the queue or subscription that this message was enqueued on, before it was deadlettered.
+        /// </summary>
+        public string DeadLetterSource { get; set; }
+
         /// <summary>Gets or sets the date and time in UTC at which the message will be enqueued. This 
         /// property returns the time in UTC; when setting the property, the supplied DateTime value must also be in UTC.</summary> 
         /// <value>The scheduled enqueue time in UTC. This value is for delayed message sending. 
@@ -289,8 +294,6 @@ namespace Microsoft.Azure.ServiceBus
             private DateTime enqueuedTimeUtc;
 
             private Guid lockTokenGuid;
-
-            private string deadLetterSource;
 
             /// <summary>
             /// Specifies whether or not there is a lock token set on the current message.
@@ -413,22 +416,6 @@ namespace Microsoft.Azure.ServiceBus
                 set
                 {
                     this.lockTokenGuid = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets the name of the queue that this message was enqueued on, before it was deadlettered.
-            /// </summary>
-            public string DeadLetterSource
-            {
-                get
-                {
-                    this.ThrowIfNotReceived();
-                    return this.deadLetterSource;
-                }
-                internal set
-                {
-                    this.deadLetterSource = value;
                 }
             }
 

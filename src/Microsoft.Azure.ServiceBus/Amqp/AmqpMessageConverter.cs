@@ -128,9 +128,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 amqpMessage.MessageAnnotations.Map.Add(PublisherName, sbMessage.Publisher);
             }
 
-            if (sbMessage.SystemProperties.DeadLetterSource != null)
+            if (sbMessage.DeadLetterSource != null)
             {
-                amqpMessage.MessageAnnotations.Map.Add(DeadLetterSourceName, sbMessage.SystemProperties.DeadLetterSource);
+                amqpMessage.MessageAnnotations.Map.Add(DeadLetterSourceName, sbMessage.DeadLetterSource);
             }
 
             if (sbMessage.PartitionKey != null)
@@ -334,7 +334,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             sbMessage.SystemProperties.PartitionId = (short)pair.Value;
                             break;
                         case DeadLetterSourceName:
-                            sbMessage.SystemProperties.DeadLetterSource = (string)pair.Value;
+                            sbMessage.DeadLetterSource = (string)pair.Value;
                             break;
                         default:
                             object netObject;
