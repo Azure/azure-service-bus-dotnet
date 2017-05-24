@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyTitle>Microsoft.Azure.ServiceBus.UnitTests</AssemblyTitle>
     <TargetFrameworks>netcoreapp1.0;net46</TargetFrameworks>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <AssemblyName>Microsoft.Azure.ServiceBus.UnitTests</AssemblyName>
     <AssemblyOriginatorKeyFile>../../build/keyfile.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
