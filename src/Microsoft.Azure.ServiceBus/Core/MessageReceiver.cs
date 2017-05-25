@@ -126,7 +126,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.messageReceivePumpSyncLock = new object();
         }
 
-        public IList<ServiceBusPlugin> RegisteredPlugins { get; private set; }
+        /// <summary>
+        /// Gets a list of currently registered plugins.
+        /// </summary>
+        public IList<ServiceBusPlugin> RegisteredPlugins { get; private set; } = new List<ServiceBusPlugin>();
 
         /// <summary>
         /// Gets the <see cref="ReceiveMode.ReceiveMode"/> of the current receiver.
@@ -205,11 +208,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         private async Task<Message> ProcessMessage(Message message)
         {
-            if (this.RegisteredPlugins == null)
-            {
-                return message;
-            }
-
             var processedMessage = message;
             foreach (var plugin in this.RegisteredPlugins)
             {
@@ -233,7 +231,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         private async Task<IList<Message>> ProcessMessages(IList<Message> messageList)
         {
-            if (this.RegisteredPlugins == null || !this.RegisteredPlugins.Any())
+            if (!this.RegisteredPlugins.Any())
             {
                 return messageList;
             }
@@ -1136,15 +1134,15 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.RegisterOnMessageHandlerStop(this.ClientId);
         }
 
+        /// <summary>
+        /// Registers a <see cref="ServiceBusPlugin"/> to be used for receiving messages from Service Bus.
+        /// </summary>
+        /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register</param>
         public void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             if (serviceBusPlugin == null)
             {
                 throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
-            }
-            if (this.RegisteredPlugins == null)
-            {
-                this.RegisteredPlugins = new List<ServiceBusPlugin>();
             }
             else if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
             {
@@ -1153,6 +1151,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.RegisteredPlugins.Add(serviceBusPlugin);
         }
 
+        /// <summary>
+        /// Unregisters a <see cref="ServiceBusPlugin"/>.
+        /// </summary>
+        /// <param name="serviceBusPluginName">The name <see cref="ServiceBusPlugin.Name"/> to be unregistered</param>
         public void UnregisterPlugin(string serviceBusPluginName)
         {
             if (this.RegisteredPlugins == null)

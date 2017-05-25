@@ -79,7 +79,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
         }
 
-        public IList<ServiceBusPlugin> RegisteredPlugins { get; private set; }
+        /// <summary>
+        /// Gets a list of currently registered plugins.
+        /// </summary>
+        public IList<ServiceBusPlugin> RegisteredPlugins { get; private set; } = new List<ServiceBusPlugin>();
 
         internal TimeSpan OperationTimeout { get; }
 
@@ -113,11 +116,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         private async Task<Message> ProcessMessage(Message message)
         {
-            if (this.RegisteredPlugins == null)
-            {
-                return message;
-            }
-
             var processedMessage = message;
             foreach (var plugin in this.RegisteredPlugins)
             {
@@ -141,7 +139,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         private async Task<IList<Message>> ProcessMessages(IList<Message> messageList)
         {
-            if (this.RegisteredPlugins == null || !this.RegisteredPlugins.Any())
+            if (!this.RegisteredPlugins.Any())
             {
                 return messageList;
             }
@@ -469,6 +467,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
+        /// <summary>
+        /// Registers a <see cref="ServiceBusPlugin"/> to be used for sending messages to Service Bus.
+        /// </summary>
+        /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register</param>
         public void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             if (serviceBusPlugin == null)
@@ -486,12 +488,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.RegisteredPlugins.Add(serviceBusPlugin);
         }
 
+        /// <summary>
+        /// Unregisters a <see cref="ServiceBusPlugin"/>.
+        /// </summary>
+        /// <param name="serviceBusPluginName">The name <see cref="ServiceBusPlugin.Name"/> to be unregistered</param>
         public void UnregisterPlugin(string serviceBusPluginName)
         {
-            if (this.RegisteredPlugins == null)
-            {
-                return;
-            }
             if (serviceBusPluginName == null)
             {
                 throw new ArgumentNullException(nameof(serviceBusPluginName), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginName)));
