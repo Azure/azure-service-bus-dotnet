@@ -221,7 +221,7 @@ namespace Microsoft.Azure.ServiceBus
         public IDictionary<string, object> UserProperties { get; internal set; }
 
         /// <summary>
-        /// Gets the <see cref="SystemPropertiesCollection"/>, which is ised to store properties that are set by the system.
+        /// Gets the <see cref="SystemPropertiesCollection"/>, which is used to store properties that are set by the system.
         /// </summary>
         public SystemPropertiesCollection SystemProperties { get; internal set; }
 
@@ -344,7 +344,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
             }
 
-            /// <summary>Gets the unique number assigned to a message by Service Bus.</summary>
+            /// <summary>Gets the unique number assigned to a message by Service Bus, for this entity.</summary>
             public long SequenceNumber
             {
                 get

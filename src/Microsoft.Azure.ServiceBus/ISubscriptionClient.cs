@@ -18,7 +18,7 @@ namespace Microsoft.Azure.ServiceBus
         string TopicPath { get; }
 
         /// <summary>
-        /// Gets the path of subscription.
+        /// Gets the name of subscription.
         /// </summary>
         string SubscriptionName { get; }
 
