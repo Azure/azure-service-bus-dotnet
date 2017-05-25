@@ -6,7 +6,7 @@
     <VersionPrefix>0.0.5-preview</VersionPrefix>
     <Authors>Microsoft</Authors>
     <TargetFrameworks>net451;netstandard1.3;uap10.0</TargetFrameworks>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AssemblyName>Microsoft.Azure.ServiceBus</AssemblyName>
     <AssemblyOriginatorKeyFile>../../build/keyfile.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
