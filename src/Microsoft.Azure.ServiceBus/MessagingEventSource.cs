@@ -8,6 +8,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Diagnostics.Tracing;
     using Microsoft.Azure.Amqp;
 
+    [EventSource(Name = "Microsoft-Azure-ServiceBus")]
     internal sealed class MessagingEventSource : EventSource
     {
         public static MessagingEventSource Log { get; } = new MessagingEventSource();
