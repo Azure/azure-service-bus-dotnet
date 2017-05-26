@@ -8,13 +8,13 @@ namespace Microsoft.Azure.ServiceBus
     /// </summary>
     public static class EntityNameHelper
     {
-        public const string PathDelimiter = @"/";
-        public const string Subscriptions = "Subscriptions";
-        public const string SubQueuePrefix = "$";
-        public const string DeadLetterQueueSuffix = "DeadLetterQueue";
-        public const string DeadLetterQueueName = SubQueuePrefix + DeadLetterQueueSuffix;
-        public const string Transfer = "Transfer";
-        public const string TransferDeadLetterQueueName = SubQueuePrefix + Transfer + PathDelimiter + DeadLetterQueueName;
+        private const string PathDelimiter = @"/";
+        private const string Subscriptions = "Subscriptions";
+        private const string SubQueuePrefix = "$";
+        private const string DeadLetterQueueSuffix = "DeadLetterQueue";
+        private const string DeadLetterQueueName = SubQueuePrefix + DeadLetterQueueSuffix;
+        private const string Transfer = "Transfer";
+        private const string TransferDeadLetterQueueName = SubQueuePrefix + Transfer + PathDelimiter + DeadLetterQueueName;
 
         /// <summary>
         /// Formats the dead letter path for either a queue, or a subscription.
