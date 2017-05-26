@@ -5,7 +5,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Primitives;
+    using Microsoft.Azure.ServiceBus.Primitives;
     using Xunit;
 
     public class SenderReceiverTests : SenderReceiverClientTestBase
