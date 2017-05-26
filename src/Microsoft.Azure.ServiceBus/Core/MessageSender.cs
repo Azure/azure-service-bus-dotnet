@@ -82,7 +82,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         /// Gets a list of currently registered plugins.
         /// </summary>
-        public IList<ServiceBusPlugin> RegisteredPlugins { get; private set; } = new List<ServiceBusPlugin>();
+        public IList<ServiceBusPlugin> RegisteredPlugins { get; } = new List<ServiceBusPlugin>();
 
         internal TimeSpan OperationTimeout { get; }
 
@@ -477,11 +477,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
             }
-            if (this.RegisteredPlugins == null)
-            {
-                this.RegisteredPlugins = new List<ServiceBusPlugin>();
-            }
-            else if (this.RegisteredPlugins.Any(p => p.GetType() == serviceBusPlugin.GetType()))
+
+            if (this.RegisteredPlugins.Any(p => p.GetType() == serviceBusPlugin.GetType()))
             {
                 throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
             }

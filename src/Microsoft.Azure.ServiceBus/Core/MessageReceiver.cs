@@ -129,7 +129,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         /// Gets a list of currently registered plugins.
         /// </summary>
-        public IList<ServiceBusPlugin> RegisteredPlugins { get; private set; } = new List<ServiceBusPlugin>();
+        public IList<ServiceBusPlugin> RegisteredPlugins { get; } = new List<ServiceBusPlugin>();
 
         /// <summary>
         /// Gets the <see cref="ReceiveMode.ReceiveMode"/> of the current receiver.
@@ -141,10 +141,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <remarks> Takes effect on the next receive call to the server. </remarks>
         public int PrefetchCount
         {
-            get
-            {
-                return this.prefetchCount;
-            }
+            get => this.prefetchCount;
 
             set
             {
@@ -153,8 +150,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
                 }
                 this.prefetchCount = value;
-                ReceivingAmqpLink link;
-                if (this.ReceiveLinkManager.TryGetOpenedObject(out link))
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out var link))
                 {
                     link.SetTotalLinkCredit((uint)value, true, true);
                 }
@@ -165,10 +161,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <value>The sequence number of the last peeked message.</value>
         public long LastPeekedSequenceNumber
         {
-            get
-            {
-                return this.lastPeekedSequenceNumber;
-            }
+            get => this.lastPeekedSequenceNumber;
 
             internal set
             {
