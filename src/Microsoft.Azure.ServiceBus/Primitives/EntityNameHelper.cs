@@ -10,6 +10,9 @@ namespace Microsoft.Azure.ServiceBus
         public const string SubQueuePrefix = "$";
         public const string DeadLetterQueueSuffix = "DeadLetterQueue";
         public const string DeadLetterQueueName = SubQueuePrefix + DeadLetterQueueSuffix;
+        public const string Transfer = "Transfer";
+
+        public const string TransferDeadLetterQueueName = SubQueuePrefix + Transfer + PathDelimiter + DeadLetterQueueName;
 
         public static string FormatDeadLetterPath(string entityPath)
         {
@@ -24,6 +27,14 @@ namespace Microsoft.Azure.ServiceBus
         public static string FormatSubscriptionPath(string topicPath, string subscriptionName)
         {
             return string.Concat(topicPath, PathDelimiter, Subscriptions, PathDelimiter, subscriptionName);
+        }
+
+        /// <summary>
+        /// Utility method that creates the name for the transfer dead letter receiver, specified by <paramref name="entityPath"/>
+        /// </summary>
+        public static string Format​Transfer​Dead​Letter​Path(string entityPath)
+        {
+            return string.Concat(entityPath, PathDelimiter, TransferDeadLetterQueueName);
         }
     }
 }
