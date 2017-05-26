@@ -14,12 +14,54 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         [Fact]
         [DisplayTestMethodName]
-        void Convert_Amqp_message_with_data_value_to_SB_message()
+        void Convert_Amqp_message_with_Amqp_value_array_segment_to_SB_message()
+        {
+            var messageBody = Encoding.UTF8.GetBytes("message1");
+
+            var amqpValue = new AmqpValue();
+            amqpValue.Value = new ArraySegment<byte>(messageBody);
+            var amqpMessage = AmqpMessage.Create(amqpValue);
+
+            var sbMessage = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
+            Assert.Equal(messageBody, sbMessage.Body);
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        void Convert_Amqp_message_with_Amqp_value_byte_array_to_SB_message()
+        {
+            var messageBody = Encoding.UTF8.GetBytes("message1");
+
+            var amqpValue = new AmqpValue();
+            amqpValue.Value = messageBody;
+            var amqpMessage = AmqpMessage.Create(amqpValue);
+
+            var sbMessage = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
+            Assert.Equal(messageBody, sbMessage.Body);
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        void Convert_Amqp_message_with_data_value_array_segment_to_SB_message()
         {
             var messageBody = Encoding.UTF8.GetBytes("message1");
 
             var data = new Data();
             data.Value = new ArraySegment<byte>(messageBody);
+            var amqpMessage = AmqpMessage.Create(data);
+
+            var sbMessage = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
+            Assert.Equal(messageBody, sbMessage.Body);
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        void Convert_Amqp_message_with_data_value_byte_array_to_SB_message()
+        {
+            var messageBody = Encoding.UTF8.GetBytes("message1");
+
+            var data = new Data();
+            data.Value = messageBody;
             var amqpMessage = AmqpMessage.Create(data);
 
             var sbMessage = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
@@ -41,7 +83,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var replyTo = Guid.NewGuid().ToString();
             var replyToSessionId = Guid.NewGuid().ToString();
             var publisher = Guid.NewGuid().ToString();
-            var deadLetterSource = Guid.NewGuid().ToString();
 
             var sbMessage = new Message(messageBody)
             {
@@ -55,7 +96,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 ReplyTo = replyTo,
                 ReplyToSessionId = replyToSessionId,
                 Publisher = publisher,
-                DeadLetterSource = deadLetterSource,
             };
             sbMessage.UserProperties.Add("UserProperty", "SomeUserProperty");
 
@@ -74,7 +114,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.Equal(replyTo, convertedSbMessage.ReplyTo);
             Assert.Equal(replyToSessionId, convertedSbMessage.ReplyToSessionId);
             Assert.Equal(publisher, convertedSbMessage.Publisher);
-            Assert.Equal(deadLetterSource, convertedSbMessage.DeadLetterSource);
         }
     }
 }

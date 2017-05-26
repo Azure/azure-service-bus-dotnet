@@ -13,20 +13,48 @@ namespace Microsoft.Azure.ServiceBus
     using Primitives;
 
     /// <summary>
-    /// Anchor class - all Queue client operations start here.
+    /// Used for all basic interactions with a Service Bus queue.
     /// </summary>
-    public sealed class QueueClient : ClientEntity, IQueueClient
+    public class QueueClient : ClientEntity, IQueueClient
     {
         readonly bool ownsConnection;
         readonly object syncLock;
+        int prefetchCount;
         MessageSender innerSender;
         MessageReceiver innerReceiver;
         AmqpSessionClient sessionClient;
         SessionPumpHost sessionPumpHost;
 
+        /// <summary>
+        /// Instantiates a new <see cref="QueueClient"/> to perform operations on a queue.
+        /// </summary>
+        /// <param name="connectionStringBuilder"><see cref="ServiceBusConnectionStringBuilder"/> having namespace and queue information.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        public QueueClient(ServiceBusConnectionStringBuilder connectionStringBuilder, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
+            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, receiveMode, retryPolicy)
+        {
+        }
+
+        /// <summary>
+        /// Instantiates a new <see cref="QueueClient"/> to perform operations on a queue.
+        /// </summary>
+        /// <param name="connectionString">Namespace connection string. <remarks>Should not contain queue information.</remarks></param>
+        /// <param name="entityPath">Path to the queue</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
         public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
+            }
+            if (string.IsNullOrWhiteSpace(entityPath))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
+            }
+
             this.ownsConnection = true;
         }
 
@@ -43,11 +71,41 @@ namespace Microsoft.Azure.ServiceBus
             this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
         }
 
+        /// <summary>
+        /// Gets the name of the queue.
+        /// </summary>
         public string QueueName { get; }
 
+        /// <summary>
+        /// Gets the <see cref="ReceiveMode.ReceiveMode"/> for the QueueClient.
+        /// </summary>
         public ReceiveMode ReceiveMode { get; }
 
+        /// <summary>
+        /// Gets the name of the queue.
+        /// </summary>
         public string Path => this.QueueName;
+
+        /// <summary>
+        /// Gets or sets the number of messages that the queue client can simultaneously request.
+        /// </summary>
+        /// <value>The number of messages that the queue client can simultaneously request.</value>
+        public int PrefetchCount
+        {
+            get => this.prefetchCount;
+            set
+            {
+                if (value < 0)
+                {
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
+                }
+                this.prefetchCount = value;
+                if (this.innerReceiver != null)
+                {
+                    this.innerReceiver.PrefetchCount = value;
+                }
+            }
+        }
 
         internal MessageSender InnerSender
         {
@@ -59,7 +117,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.innerSender == null)
                         {
-                            this.innerSender = new AmqpMessageSender(
+                            this.innerSender = new MessageSender(
                                 this.QueueName,
                                 MessagingEntityType.Queue,
                                 this.ServiceBusConnection,
@@ -83,14 +141,14 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.innerReceiver == null)
                         {
-                            this.innerReceiver = new AmqpMessageReceiver(
+                            this.innerReceiver = new MessageReceiver(
                                 this.QueueName,
                                 MessagingEntityType.Queue,
                                 this.ReceiveMode,
-                                this.ServiceBusConnection.PrefetchCount,
                                 this.ServiceBusConnection,
                                 this.CbsTokenProvider,
-                                this.RetryPolicy);
+                                this.RetryPolicy,
+                                this.PrefetchCount);
                         }
                     }
                 }
@@ -114,7 +172,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.Path,
                                 MessagingEntityType.Queue,
                                 this.ReceiveMode,
-                                this.ServiceBusConnection.PrefetchCount,
+                                this.PrefetchCount,
                                 this.ServiceBusConnection,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy);
@@ -148,13 +206,15 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        ServiceBusConnection ServiceBusConnection { get; set; }
+        internal ServiceBusConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
         TokenProvider TokenProvider { get; }
 
-        public override async Task OnClosingAsync()
+        /// <summary></summary>
+        /// <returns></returns>
+        protected override async Task OnClosingAsync()
         {
             if (this.innerSender != null)
             {
@@ -175,31 +235,54 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Send <see cref="Message"/> to Queue.
-        /// <see cref="SendAsync(Message)"/> sends the <see cref="Message"/> to a Service Gateway, which in-turn will forward the Message to the queue.
+        /// Sends a message to Service Bus.
         /// </summary>
-        /// <param name="message">the <see cref="Message"/> to be sent.</param>
-        /// <returns>A Task that completes when the send operations is done.</returns>
+        /// <param name="message">The <see cref="Message"/></param>
+        /// <returns>An asynchronous operation</returns>
         public Task SendAsync(Message message)
         {
             return this.SendAsync(new[] { message });
         }
 
+        /// <summary>
+        /// Sends a list of messages to Service Bus.
+        /// </summary>
+        /// <param name="messageList">The list of messages</param>
+        /// <returns>An asynchronous operation</returns>
         public Task SendAsync(IList<Message> messageList)
         {
             return this.InnerSender.SendAsync(messageList);
         }
 
+        /// <summary>
+        /// Completes a <see cref="Message"/> using a lock token.
+        /// </summary>
+        /// <param name="lockToken">The lock token of the corresponding message to complete.</param>
+        /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, only when <see cref="ReceiveMode"/> is set to <see cref="ReceiveMode.PeekLock"/>.</remarks>
+        /// <returns>The asynchronous operation.</returns>
         public Task CompleteAsync(string lockToken)
         {
             return this.InnerReceiver.CompleteAsync(lockToken);
         }
 
+        /// <summary>
+        /// Abandons a <see cref="Message"/> using a lock token. This will make the message available again for processing.
+        /// </summary>
+        /// <param name="lockToken">The lock token of the corresponding message to abandon.</param>
+        /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, only when <see cref="ReceiveMode"/> is set to <see cref="ReceiveMode.PeekLock"/>.</remarks>
+        /// <returns>The asynchronous operation.</returns>
         public Task AbandonAsync(string lockToken)
         {
             return this.InnerReceiver.AbandonAsync(lockToken);
         }
 
+        /// <summary>
+        /// Moves a message to the deadletter queue.
+        /// </summary>
+        /// <param name="lockToken">The lock token of the corresponding message to deadletter.</param>
+        /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, only when <see cref="ReceiveMode"/> is set to <see cref="ReceiveMode.PeekLock"/>. 
+        /// In order to receive a message from the deadletter queue, you will need a new <see cref="IMessageReceiver"/>, with the corresponding path. You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.</remarks>
+        /// <returns>The asynchronous operation.</returns>
         public Task DeadLetterAsync(string lockToken)
         {
             return this.InnerReceiver.DeadLetterAsync(lockToken);

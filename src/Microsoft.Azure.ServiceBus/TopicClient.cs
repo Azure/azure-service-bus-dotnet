@@ -6,20 +6,47 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Amqp;
-    using Core;
     using Microsoft.Azure.Amqp;
-    using Primitives;
+    using Microsoft.Azure.ServiceBus.Core;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
-    public sealed class TopicClient : ClientEntity, ITopicClient
+    /// <summary>
+    /// Used for all basic interactions with a Service Bus topic.
+    /// </summary>
+    public class TopicClient : ClientEntity, ITopicClient
     {
         readonly bool ownsConnection;
         readonly object syncLock;
         MessageSender innerSender;
 
+        /// <summary>
+        /// Instantiates a new <see cref="TopicClient"/> to perform operations on a topic.
+        /// </summary>
+        /// <param name="connectionStringBuilder"><see cref="ServiceBusConnectionStringBuilder"/> having namespace and topic information.</param>
+        /// <param name="retryPolicy">Retry policy for topic operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        public TopicClient(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = null)
+            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, retryPolicy)
+        {
+        }
+
+        /// <summary>
+        /// Instantiates a new <see cref="TopicClient"/> to perform operations on a topic.
+        /// </summary>
+        /// <param name="connectionString">Namespace connection string. <remarks>Should not contain topic information.</remarks></param>
+        /// <param name="entityPath">Path to the topic</param>
+        /// <param name="retryPolicy">Retry policy for topic operations. Defaults to <see cref="RetryPolicy.Default"/></param>
         public TopicClient(string connectionString, string entityPath, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
+            }
+            if (string.IsNullOrWhiteSpace(entityPath))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
+            }
+
             this.ownsConnection = true;
         }
 
@@ -35,7 +62,15 @@ namespace Microsoft.Azure.ServiceBus
             this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
         }
 
+        /// <summary>
+        /// Gets the name of the topic.
+        /// </summary>
         public string TopicName { get; }
+
+        /// <summary>
+        /// Gets the name of the topic.
+        /// </summary>
+        public string Path => this.TopicName;
 
         internal MessageSender InnerSender
         {
@@ -47,7 +82,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.innerSender == null)
                         {
-                            this.innerSender = new AmqpMessageSender(
+                            this.innerSender = new MessageSender(
                                 this.TopicName,
                                 MessagingEntityType.Topic,
                                 this.ServiceBusConnection,
@@ -61,13 +96,15 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        ServiceBusNamespaceConnection ServiceBusConnection { get; set; }
+        internal ServiceBusNamespaceConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
         TokenProvider TokenProvider { get; }
 
-        public override async Task OnClosingAsync()
+        /// <summary></summary>
+        /// <returns></returns>
+        protected override async Task OnClosingAsync()
         {
             if (this.innerSender != null)
             {
@@ -81,16 +118,20 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Send <see cref="Message"/> to Queue.
-        /// <see cref="SendAsync(Message)"/> sends the <see cref="Message"/> to a Service Gateway, which in-turn will forward the Message to the queue.
+        /// Sends a message to Service Bus.
         /// </summary>
-        /// <param name="message">the <see cref="Message"/> to be sent.</param>
-        /// <returns>A Task that completes when the send operations is done.</returns>
+        /// <param name="message">The <see cref="Message"/></param>
+        /// <returns>An asynchronous operation</returns>
         public Task SendAsync(Message message)
         {
             return this.SendAsync(new[] { message });
         }
 
+        /// <summary>
+        /// Sends a list of messages to Service Bus.
+        /// </summary>
+        /// <param name="messageList">The list of messages</param>
+        /// <returns>An asynchronous operation</returns>
         public Task SendAsync(IList<Message> messageList)
         {
             return this.InnerSender.SendAsync(messageList);

@@ -3,9 +3,9 @@
   <PropertyGroup>
     <Description>This is the next generation Azure Service Bus .NET Standard client library that focuses on queues &amp; topics. For more information about Service Bus, see https://azure.microsoft.com/en-us/services/service-bus/</Description>
     <AssemblyTitle>Microsoft.Azure.ServiceBus</AssemblyTitle>
-    <VersionPrefix>0.0.3-preview</VersionPrefix>
+    <VersionPrefix>0.0.5-preview</VersionPrefix>
     <Authors>Microsoft</Authors>
-    <TargetFrameworks>net451;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>net451;netstandard1.3;uap10.0</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AssemblyName>Microsoft.Azure.ServiceBus</AssemblyName>
     <AssemblyOriginatorKeyFile>../../build/keyfile.snk</AssemblyOriginatorKeyFile>
@@ -23,31 +23,27 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Microsoft.Azure.ServiceBus.xml</DocumentationFile>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">
+    <DefineConstants>$(DefineConstants);UAP10_0</DefineConstants>
+    <NugetTargetMoniker>UAP,Version=v10.0</NugetTargetMoniker>
+    <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+    <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
+    <TargetFrameworkIdentifier>.NETCore</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Amqp" Version="2.0.4" />
-    <PackageReference Include="System.Private.DataContractSerialization" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Xml" Version="4.3.0" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net451' ">
-    <Reference Include="System.Xml.Serialization" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <PackageReference Include="System.Net.Security" Version="4.3.0" />
-    <PackageReference Include="System.Reflection" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
-    <PackageReference Include="System.Xml.ReaderWriter" Version="4.3.0" />
-    <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
-    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.0" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'uap10.0' ">
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform " Version="5.2.3" />
   </ItemGroup>
 
 </Project>
