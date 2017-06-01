@@ -224,7 +224,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         private async Task<IList<Message>> ProcessMessages(IList<Message> messageList)
         {
-            if (!this.RegisteredPlugins.Any())
+            if (this.RegisteredPlugins.Count < 1)
             {
                 return messageList;
             }
