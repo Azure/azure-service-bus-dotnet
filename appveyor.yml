@@ -8,6 +8,7 @@ matrix:
   fast_finish: true 
 image: Visual Studio 2017
 environment:
+  APPVEYOR_RDP_PASSWORD: APPVEYOR_RDP_PASSWORD_ServiceBus1!
   azure-service-bus-dotnet/ClientSecret:
     secure: yO+qgkyY5FO/4a7rMRl60F5eMTrz03L6r3oD/VCzgKhtuYW5APmgvd9Wu+AHM8T7
   azure-service-bus-dotnet/TenantId:
@@ -27,6 +28,10 @@ skip_commits:
     - '**/*.md'
 artifacts:
 - path: .\build\artifacts\*
+init:
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 build_script:
 - ps: .\build\build.ps1
 test: off
+on_finish:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
