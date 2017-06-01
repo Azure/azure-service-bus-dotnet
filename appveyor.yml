@@ -8,7 +8,7 @@ matrix:
   fast_finish: true 
 image: Visual Studio 2017
 environment:
-  APPVEYOR_RDP_PASSWORD: APPVEYOR_RDP_PASSWORD_ServiceBus1!
+  APPVEYOR_RDP_PASSWORD: ^m3ys|#GTXpERSD
   azure-service-bus-dotnet/ClientSecret:
     secure: yO+qgkyY5FO/4a7rMRl60F5eMTrz03L6r3oD/VCzgKhtuYW5APmgvd9Wu+AHM8T7
   azure-service-bus-dotnet/TenantId:
