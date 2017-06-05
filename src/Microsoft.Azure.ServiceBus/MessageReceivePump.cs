@@ -23,12 +23,7 @@ namespace Microsoft.Azure.ServiceBus
             Func<Message, CancellationToken, Task> callback,
             CancellationToken pumpCancellationToken)
         {
-            if (messageReceiver == null)
-            {
-                throw new ArgumentNullException(nameof(messageReceiver));
-            }
-
-            this.messageReceiver = messageReceiver;
+            this.messageReceiver = messageReceiver ?? throw new ArgumentNullException(nameof(messageReceiver));
             this.registerHandlerOptions = registerHandlerOptions;
             this.onMessageCallback = callback;
             this.pumpCancellationToken = pumpCancellationToken;
@@ -37,8 +32,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public async Task StartPumpAsync()
         {
-            Message initialMessage = null;
-            initialMessage = await this.messageReceiver.ReceiveAsync().ConfigureAwait(false);
+            var initialMessage = await this.messageReceiver.ReceiveAsync().ConfigureAwait(false);
             if (initialMessage != null)
             {
                 MessagingEventSource.Log.MessageReceiverPumpInitialMessageReceived(this.messageReceiver.ClientId, initialMessage);
