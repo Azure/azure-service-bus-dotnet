@@ -5,16 +5,16 @@
     /// <summary>Action taking place when <see cref="ExceptionReceivedEventArgs"/> is raised for a processed message.</summary>
     public static class ExceptionReceivedEventArgsAction
     {
-        /// <summary>Completion operation</summary>
+        /// <summary>Message completion operation</summary>
         public const string Complete = "Complete";
         
-        /// <summary>Abandon operation</summary>
+        /// <summary>Message abandon operation</summary>
         public const string Abandon = "Abandon";
         
         /// <summary>User message handler invocation</summary>
         public const string UserCallback = "UserCallback";
         
-        /// <summary>Receive operation</summary>
+        /// <summary>Message receive operation</summary>
         public const string Receive = "Receive";
 
         /// <summary>Message lock renewal operation</summary>
