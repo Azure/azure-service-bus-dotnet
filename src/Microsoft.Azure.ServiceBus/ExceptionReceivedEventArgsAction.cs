@@ -2,7 +2,7 @@
 {
     using Microsoft.Azure.ServiceBus.Primitives;
 
-    /// <summary>Action taking place when <see cref="ExceptionReceivedEventArgs"/> is raised for a processed message.</summary>
+    /// <summary>Action taking place when <see cref="ExceptionReceivedEventArgs"/> is raised.</summary>
     public static class ExceptionReceivedEventArgsAction
     {
         /// <summary>Message completion operation</summary>
