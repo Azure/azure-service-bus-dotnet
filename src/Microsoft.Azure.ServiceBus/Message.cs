@@ -23,7 +23,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Creates a new Message
         /// </summary>
         public Message()
-            : this(default(byte[]))
+            : this(default(ArraySegment<byte>))
         {
         }
 
