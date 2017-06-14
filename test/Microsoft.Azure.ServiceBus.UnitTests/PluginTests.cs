@@ -180,20 +180,20 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     internal class SendReceivePlugin : ServiceBusPlugin
     {
         // Null the body on send, and replace it when received.
-        Dictionary<string, byte[]> MessageBodies = new Dictionary<string, byte[]>();
+        Dictionary<string, ArraySegment<byte>> MessageBodies = new Dictionary<string, ArraySegment<byte>>();
 
         public override string Name => nameof(SendReceivePlugin);
 
         public override Task<Message> BeforeMessageSend(Message message)
         {
             MessageBodies.Add(message.MessageId, message.Body);
-            message.Body = null;
+            message.Body = default(ArraySegment<byte>);
             return Task.FromResult(message);
         }
 
         public override Task<Message> AfterMessageReceive(Message message)
         {
-            Assert.Null(message.Body);
+            Assert.Null(message.Body.Array);
             message.Body = MessageBodies[message.MessageId];
             return Task.FromResult(message);
         }

@@ -43,10 +43,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             brokeredMessage.UserProperties.Add("UserProperty", "SomeUserProperty");
 
             var clone = brokeredMessage.Clone();
-            brokeredMessage.Body = null;
+            brokeredMessage.Body = default(ArraySegment<byte>);
 
-            Assert.Null(brokeredMessage.Body);
-            Assert.NotNull(clone.Body);
+            Assert.Null(brokeredMessage.Body.Array);
+            Assert.NotNull(clone.Body.Array);
             Assert.Equal("SomeUserProperty", clone.UserProperties["UserProperty"]);
             Assert.Equal(messageId, clone.MessageId);
             Assert.Equal(partitionKey, clone.PartitionKey);

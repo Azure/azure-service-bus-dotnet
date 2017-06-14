@@ -30,10 +30,18 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Creates a new message from the specified payload.
         /// </summary>
-        /// <param name="array"></param>
-        public Message(byte[] array)
+        /// <param name="body"></param>
+        public Message(byte[] body) : this(new ArraySegment<byte>(body))
         {
-            this.Body = array;
+        }
+
+        /// <summary>
+        /// Creates a new message from the specified payload.
+        /// </summary>
+        /// <param name="body"></param>  
+        public Message(ArraySegment<byte> body)
+        {
+            this.Body = body;
             this.SystemProperties = new SystemPropertiesCollection();
             this.UserProperties = new Dictionary<string, object>();
         }
@@ -44,10 +52,10 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>
         /// The easiest way to create a new message from a string is the following:
         /// <code>
-        /// message.Body = System.Text.Encoding.UTF8.GetBytes("Message1");
+        /// message.Body = new ArrySegment&lt;byte&gt;(System.Text.Encoding.UTF8.GetBytes("Message1"));
         /// </code>
         /// </remarks>
-        public byte[] Body { get; set; }
+        public ArraySegment<byte> Body { get; set; }
 
         /// <summary>
         /// Gets or sets the MessageId.
@@ -239,11 +247,11 @@ namespace Microsoft.Azure.ServiceBus
             var clone = (Message)this.MemberwiseClone();
             clone.SystemProperties = new SystemPropertiesCollection();
 
-            if (this.Body != null)
+            if (this.Body.Array != null)
             {
-                var clonedBody = new byte[this.Body.Length];
-                Array.Copy(this.Body, clonedBody, this.Body.Length);
-                clone.Body = clonedBody;
+                var clonedBody = new byte[this.Body.Count];
+                Array.Copy(this.Body.Array, clonedBody, this.Body.Count);
+                clone.Body = new ArraySegment<byte>(clonedBody);
             }
             return clone;
         }
