@@ -90,6 +90,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 var sendReceivePlugin = new SendReceivePlugin();
                 messageSender.RegisterPlugin(sendReceivePlugin);
+                messageReceiver.RegisterPlugin(sendReceivePlugin);
 
                 var sendMessage = new Message(Encoding.UTF8.GetBytes("Test message"))
                 {
@@ -186,15 +187,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         public override Task<Message> BeforeMessageSend(Message message)
         {
-            MessageBodies.Add(message.MessageId, message.Body);
-            message.Body = default(ArraySegment<byte>);
-            return Task.FromResult(message);
+            this.MessageBodies.Add(message.MessageId, message.Body);
+            var clonedMessage = message.Clone();
+            clonedMessage.Body = default(ArraySegment<byte>);
+            return Task.FromResult(clonedMessage);
         }
 
         public override Task<Message> AfterMessageReceive(Message message)
         {
             Assert.Null(message.Body.Array);
-            message.Body = MessageBodies[message.MessageId];
+            message.Body = this.MessageBodies[message.MessageId];
             return Task.FromResult(message);
         }
     }
