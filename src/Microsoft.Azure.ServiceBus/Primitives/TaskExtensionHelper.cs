@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Azure.ServiceBus.Primitives
 {
-    internal class TaskExtensionHelper
+    internal static class TaskExtensionHelper
     {
         public static void Schedule(Func<Task> func)
         {
