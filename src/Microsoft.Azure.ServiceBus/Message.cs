@@ -23,7 +23,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Creates a new Message
         /// </summary>
         public Message()
-            : this(default(ArraySegment<byte>))
+            : this(null)
         {
         }
 
@@ -31,15 +31,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Creates a new message from the specified payload.
         /// </summary>
         /// <param name="body"></param>
-        public Message(byte[] body) : this(new ArraySegment<byte>(body))
-        {
-        }
-
-        /// <summary>
-        /// Creates a new message from the specified payload.
-        /// </summary>
-        /// <param name="body"></param>  
-        public Message(ArraySegment<byte> body)
+        public Message(byte[] body)
         {
             this.Body = body;
             this.SystemProperties = new SystemPropertiesCollection();
@@ -52,10 +44,10 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>
         /// The easiest way to create a new message from a string is the following:
         /// <code>
-        /// message.Body = new ArrySegment&lt;byte&gt;(System.Text.Encoding.UTF8.GetBytes("Message1"));
+        /// message.Body = System.Text.Encoding.UTF8.GetBytes("Message1");
         /// </code>
         /// </remarks>
-        public ArraySegment<byte> Body { get; set; }
+        public byte[] Body { get; set; }
 
         /// <summary>
         /// Gets or sets the MessageId.
@@ -247,11 +239,11 @@ namespace Microsoft.Azure.ServiceBus
             var clone = (Message)this.MemberwiseClone();
             clone.SystemProperties = new SystemPropertiesCollection();
 
-            if (this.Body.Array != null)
+            if (this.Body != null)
             {
-                var clonedBody = new byte[this.Body.Count];
-                Array.Copy(this.Body.Array, clonedBody, this.Body.Count);
-                clone.Body = new ArraySegment<byte>(clonedBody);
+                var clonedBody = new byte[this.Body.Length];
+                Array.Copy(this.Body, clonedBody, this.Body.Length);
+                clone.Body = clonedBody;
             }
             return clone;
         }

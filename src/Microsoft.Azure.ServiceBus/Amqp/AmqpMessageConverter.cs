@@ -92,7 +92,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static AmqpMessage SBMessageToAmqpMessage(SBMessage sbMessage)
         {
-            var amqpMessage = sbMessage.Body.Array == null ? AmqpMessage.Create() : AmqpMessage.Create(new Data () { Value = sbMessage.Body });
+            var amqpMessage = sbMessage.Body == null ? AmqpMessage.Create() : AmqpMessage.Create(new Data () { Value = new ArraySegment<byte>(sbMessage.Body) });
 
             amqpMessage.Properties.MessageId = sbMessage.MessageId;
             amqpMessage.Properties.CorrelationId = sbMessage.CorrelationId;
