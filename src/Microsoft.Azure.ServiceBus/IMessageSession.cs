@@ -1,43 +1,43 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.Azure.ServiceBus.Core;
+
 namespace Microsoft.Azure.ServiceBus
 {
-    using System;
-    using System.IO;
-    using System.Threading.Tasks;
-    using Core;
-
     /// <summary>
-    /// Interface used to describe a MessageSession.
+    ///     Interface used to describe a MessageSession.
     /// </summary>
     public interface IMessageSession : IMessageReceiver
     {
         /// <summary>
-        /// Gets the SessionId.
+        ///     Gets the SessionId.
         /// </summary>
         string SessionId { get; }
 
         /// <summary>
-        /// Gets the time that the session is locked until as UTC.
+        ///     Gets the time that the session is locked until as UTC.
         /// </summary>
         DateTime LockedUntilUtc { get; }
 
         /// <summary>
-        /// Gets the session state.
+        ///     Gets the session state.
         /// </summary>
         /// <returns>The asynchronous operation</returns>
         Task<Stream> GetStateAsync();
 
         /// <summary>
-        /// Sets the session state.
+        ///     Sets the session state.
         /// </summary>
-        /// <param name="sessionState">A <see cref="Stream"/> of session state</param>
+        /// <param name="sessionState">A <see cref="Stream" /> of session state</param>
         /// <returns>The asynchronous operation</returns>
         Task SetStateAsync(Stream sessionState);
 
         /// <summary>
-        /// Renews the session lock.
+        ///     Renews the session lock.
         /// </summary>
         /// <returns>The asynchronous operation</returns>
         Task RenewSessionLockAsync();

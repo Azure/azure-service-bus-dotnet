@@ -1,18 +1,18 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Xunit;
+
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using Xunit;
-
     public class OnMessageTopicSubscriptionTests : SenderReceiverClientTestBase
     {
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { TestConstants.NonPartitionedTopicName, 5 },
-            new object[] { TestConstants.PartitionedTopicName, 5 },
+            new object[] {TestConstants.NonPartitionedTopicName, 5},
+            new object[] {TestConstants.PartitionedTopicName, 5}
         };
 
         string SubscriptionName => TestConstants.SubscriptionName;
@@ -22,7 +22,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task OnMessagePeekLockWithAutoCompleteTrue(string topicName, int maxConcurrentCalls)
         {
-            await this.OnMessageTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
+            await OnMessageTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
         }
 
         [Theory]
@@ -30,7 +30,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task OnMessageReceiveDelete(string topicName, int maxConcurrentCalls)
         {
-            await this.OnMessageTestAsync(topicName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
+            await OnMessageTestAsync(topicName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
         }
 
         async Task OnMessageTestAsync(string topicName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
@@ -41,12 +41,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName,
+                SubscriptionName,
                 mode);
 
             try
             {
-                await this.OnMessageAsyncTestCase(
+                await OnMessageAsyncTestCase(
                     topicClient.InnerSender,
                     subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                     maxConcurrentCalls,

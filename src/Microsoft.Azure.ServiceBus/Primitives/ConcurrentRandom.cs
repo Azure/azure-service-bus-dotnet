@@ -1,18 +1,16 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus
-{
-    using System;
+using System;
 
+namespace Microsoft.Azure.ServiceBus.Primitives
+{
     internal static class ConcurrentRandom
     {
         // We lock on this when generating a seed for a threadLocalRandom
-        [Fx.Tag.SynchronizationObject]
-        static readonly Random SeedGenerator = new Random();
+        [Fx.Tag.SynchronizationObjectAttribute] static readonly Random SeedGenerator = new Random();
 
-        [ThreadStatic]
-        static Random threadLocalRandom;
+        [ThreadStatic] static Random threadLocalRandom;
 
         public static int Next(int minValue, int maxValue)
         {
@@ -24,10 +22,10 @@ namespace Microsoft.Azure.ServiceBus
         // This only makes use of 63 bits - because it always returns positives
         public static long NextPositiveLong()
         {
-            byte[] buffer = new byte[8];
+            var buffer = new byte[8];
             GetThreadLocalRandom().NextBytes(buffer);
-            long ulongValue = (long)BitConverter.ToUInt64(buffer, 0);
-            return Math.Abs((long)ulongValue);
+            var ulongValue = (long) BitConverter.ToUInt64(buffer, 0);
+            return Math.Abs(ulongValue);
         }
 
         static Random GetThreadLocalRandom()

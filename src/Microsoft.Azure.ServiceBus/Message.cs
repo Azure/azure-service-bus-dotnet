@@ -1,26 +1,27 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using Microsoft.Azure.ServiceBus.Primitives;
+
 namespace Microsoft.Azure.ServiceBus
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Globalization;
-
     /// <summary>
-    /// The object used to communicate and transfer data with Service Bus.
+    ///     The object used to communicate and transfer data with Service Bus.
     /// </summary>
     public class Message
     {
-        private string messageId;
-        private string sessionId;
-        private string replyToSessionId;
-        private string partitionKey;
-        private string viaPartitionKey;
-        private TimeSpan timeToLive;
+        string messageId;
+        string partitionKey;
+        string replyToSessionId;
+        string sessionId;
+        TimeSpan timeToLive;
+        string viaPartitionKey;
 
         /// <summary>
-        /// Creates a new Message
+        ///     Creates a new Message
         /// </summary>
         public Message()
             : this(null)
@@ -28,59 +29,56 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Creates a new message from the specified payload.
+        ///     Creates a new message from the specified payload.
         /// </summary>
         /// <param name="body"></param>
         public Message(byte[] body)
         {
-            this.Body = body;
-            this.SystemProperties = new SystemPropertiesCollection();
-            this.UserProperties = new Dictionary<string, object>();
+            Body = body;
+            SystemProperties = new SystemPropertiesCollection();
+            UserProperties = new Dictionary<string, object>();
         }
 
         /// <summary>
-        /// Gets or sets the body of the message.
+        ///     Gets or sets the body of the message.
         /// </summary>
         /// <remarks>
-        /// The easiest way to create a new message from a string is the following:
-        /// <code>
+        ///     The easiest way to create a new message from a string is the following:
+        ///     <code>
         /// message.Body = System.Text.Encoding.UTF8.GetBytes("Message1");
         /// </code>
         /// </remarks>
         public byte[] Body { get; set; }
 
         /// <summary>
-        /// Gets or sets the MessageId.
+        ///     Gets or sets the MessageId.
         /// </summary>
         /// <remarks>A value set by the user to uniquely identify the message. This value will be used for message deduplication.</remarks>
         public string MessageId
         {
-            get
-            {
-                return this.messageId;
-            }
+            get => messageId;
 
             set
             {
-                Message.ValidateMessageId(value);
-                this.messageId = value;
+                ValidateMessageId(value);
+                messageId = value;
             }
         }
 
-        /// <summary>Gets or sets a partition key for sending a transactional message to a queue or topic that is not session-aware.</summary>
+        /// <summary>
+        ///     Gets or sets a partition key for sending a transactional message to a queue or topic that is not
+        ///     session-aware.
+        /// </summary>
         /// <value>The partition key for sending a transactional message.</value>
         /// <remarks>Transactions are not currently supported with this library.</remarks>
         public string PartitionKey
         {
-            get
-            {
-                return this.partitionKey;
-            }
+            get => partitionKey;
 
             set
             {
-                Message.ValidatePartitionKey(nameof(this.PartitionKey), value);
-                this.partitionKey = value;
+                ValidatePartitionKey(nameof(PartitionKey), value);
+                partitionKey = value;
             }
         }
 
@@ -88,15 +86,12 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>The partition key value when a transaction is to be used to send messages via a transfer queue.</value>
         public string ViaPartitionKey
         {
-            get
-            {
-                return this.viaPartitionKey;
-            }
+            get => viaPartitionKey;
 
             set
             {
-                Message.ValidatePartitionKey(nameof(this.ViaPartitionKey), value);
-                this.viaPartitionKey = value;
+                ValidatePartitionKey(nameof(ViaPartitionKey), value);
+                viaPartitionKey = value;
             }
         }
 
@@ -104,15 +99,12 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>The identifier of the session.</value>
         public string SessionId
         {
-            get
-            {
-                return this.sessionId;
-            }
+            get => sessionId;
 
             set
             {
-                Message.ValidateSessionId(nameof(this.SessionId), value);
-                this.sessionId = value;
+                ValidateSessionId(nameof(SessionId), value);
+                sessionId = value;
             }
         }
 
@@ -120,54 +112,60 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>The session identifier to reply to.</value>
         public string ReplyToSessionId
         {
-            get
-            {
-                return this.replyToSessionId;
-            }
+            get => replyToSessionId;
 
             set
             {
-                Message.ValidateSessionId(nameof(this.ReplyToSessionId), value);
-                this.replyToSessionId = value;
+                ValidateSessionId(nameof(ReplyToSessionId), value);
+                replyToSessionId = value;
             }
         }
 
         /// <summary>Gets the date and time in UTC at which the message is set to expire.</summary>
         /// <value>The message expiration time in UTC.</value>
-        /// <exception cref="System.InvalidOperationException">If the message has not been received. For example if a new message was created but not yet sent and received.</exception>
+        /// <exception cref="System.InvalidOperationException">
+        ///     If the message has not been received. For example if a new message
+        ///     was created but not yet sent and received.
+        /// </exception>
         public DateTime ExpiresAtUtc
         {
             get
             {
-                if (this.TimeToLive >= DateTime.MaxValue.Subtract(this.SystemProperties.EnqueuedTimeUtc))
-                {
+                if (TimeToLive >= DateTime.MaxValue.Subtract(SystemProperties.EnqueuedTimeUtc))
                     return DateTime.MaxValue;
-                }
 
-                return this.SystemProperties.EnqueuedTimeUtc.Add(this.TimeToLive);
+                return SystemProperties.EnqueuedTimeUtc.Add(TimeToLive);
             }
         }
 
-        /// <summary>Gets or sets the message’s time to live value. This is the duration after which the message expires, starting from when the message is sent to the Service Bus. Messages older than their TimeToLive value will expire and no longer be retained in the message store. Subscribers will be unable to receive expired messages. TimeToLive is the maximum lifetime that a message can be received, but its value cannot exceed the entity specified 
-        /// value on the destination queue or subscription. If a lower TimeToLive value is specified, it will be applied to the individual message. However, a larger value specified on the message will be overridden by the entity’s DefaultMessageTimeToLive value.</summary> 
+        /// <summary>
+        ///     Gets or sets the message’s time to live value. This is the duration after which the message expires, starting from
+        ///     when the message is sent to the Service Bus. Messages older than their TimeToLive value will expire and no longer
+        ///     be retained in the message store. Subscribers will be unable to receive expired messages. TimeToLive is the maximum
+        ///     lifetime that a message can be received, but its value cannot exceed the entity specified
+        ///     value on the destination queue or subscription. If a lower TimeToLive value is specified, it will be applied to the
+        ///     individual message. However, a larger value specified on the message will be overridden by the entity’s
+        ///     DefaultMessageTimeToLive value.
+        /// </summary>
         /// <value>The message’s time to live value.</value>
-        /// <remarks>If the TTL set on a message by the sender exceeds the destination's TTL, then the message's TTL will be overwritten by the later one.</remarks>
+        /// <remarks>
+        ///     If the TTL set on a message by the sender exceeds the destination's TTL, then the message's TTL will be
+        ///     overwritten by the later one.
+        /// </remarks>
         public TimeSpan TimeToLive
         {
             get
             {
-                if (this.timeToLive == TimeSpan.Zero)
-                {
+                if (timeToLive == TimeSpan.Zero)
                     return TimeSpan.MaxValue;
-                }
 
-                return this.timeToLive;
+                return timeToLive;
             }
 
             set
             {
                 TimeoutHelper.ThrowIfNonPositiveArgument(value);
-                this.timeToLive = value;
+                timeToLive = value;
             }
         }
 
@@ -184,8 +182,10 @@ namespace Microsoft.Azure.ServiceBus
         public string To { get; set; }
 
         /// <summary>Gets or sets the type of the content.</summary>
-        /// <value>The type of the content of the message body. This is a 
-        /// content type identifier utilized by the sender and receiver for application specific logic.</value> 
+        /// <value>
+        ///     The type of the content of the message body. This is a
+        ///     content type identifier utilized by the sender and receiver for application specific logic.
+        /// </value>
         public string ContentType { get; set; }
 
         /// <summary>Gets or sets the address of the queue to reply to.</summary>
@@ -197,31 +197,38 @@ namespace Microsoft.Azure.ServiceBus
         public string Publisher { get; set; }
 
         /// <summary>
-        /// Gets the name of the queue or subscription that this message was enqueued on, before it was deadlettered.
+        ///     Gets the name of the queue or subscription that this message was enqueued on, before it was deadlettered.
         /// </summary>
         public string DeadLetterSource { get; set; }
 
-        /// <summary>Gets or sets the date and time in UTC at which the message will be enqueued. This 
-        /// property returns the time in UTC; when setting the property, the supplied DateTime value must also be in UTC.</summary> 
-        /// <value>The scheduled enqueue time in UTC. This value is for delayed message sending. 
-        /// It is utilized to delay messages sending to a specific time in the future.</value> 
-        /// <remarks> Message enquing time does not mean that the message will be sent at the same time. It will get enqueued, but the actual sending time
-        /// depends on the queue's workload and its state.</remarks>
+        /// <summary>
+        ///     Gets or sets the date and time in UTC at which the message will be enqueued. This
+        ///     property returns the time in UTC; when setting the property, the supplied DateTime value must also be in UTC.
+        /// </summary>
+        /// <value>
+        ///     The scheduled enqueue time in UTC. This value is for delayed message sending.
+        ///     It is utilized to delay messages sending to a specific time in the future.
+        /// </value>
+        /// <remarks>
+        ///     Message enquing time does not mean that the message will be sent at the same time. It will get enqueued, but the
+        ///     actual sending time
+        ///     depends on the queue's workload and its state.
+        /// </remarks>
         public DateTime ScheduledEnqueueTimeUtc { get; set; }
 
         // TODO: Calculate the size of the properties and body
         /// <summary>
-        /// Gets the total size of the message in bytes.
+        ///     Gets the total size of the message in bytes.
         /// </summary>
         public long Size { get; internal set; }
 
         /// <summary>
-        /// Gets the user property bag, which can be used for custom message properties.
+        ///     Gets the user property bag, which can be used for custom message properties.
         /// </summary>
         public IDictionary<string, object> UserProperties { get; internal set; }
 
         /// <summary>
-        /// Gets the <see cref="SystemPropertiesCollection"/>, which is used to store properties that are set by the system.
+        ///     Gets the <see cref="SystemPropertiesCollection" />, which is used to store properties that are set by the system.
         /// </summary>
         public SystemPropertiesCollection SystemProperties { get; internal set; }
 
@@ -229,103 +236,95 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The string representation of the current message.</returns>
         public override string ToString()
         {
-            return string.Format(CultureInfo.CurrentCulture, $"{{MessageId:{this.MessageId}}}");
+            return string.Format(CultureInfo.CurrentCulture, $"{{MessageId:{MessageId}}}");
         }
 
         /// <summary>Clones a message, so that it is possible to send a clone of a message as a new message.</summary>
         /// <returns>The <see cref="Message" /> that contains the cloned message.</returns>
         public Message Clone()
         {
-            var clone = (Message)this.MemberwiseClone();
+            var clone = (Message) MemberwiseClone();
             clone.SystemProperties = new SystemPropertiesCollection();
 
-            if (this.Body != null)
+            if (Body != null)
             {
-                var clonedBody = new byte[this.Body.Length];
-                Array.Copy(this.Body, clonedBody, this.Body.Length);
+                var clonedBody = new byte[Body.Length];
+                Array.Copy(Body, clonedBody, Body.Length);
                 clone.Body = clonedBody;
             }
             return clone;
         }
 
-        private static void ValidateMessageId(string messageId)
+        static void ValidateMessageId(string messageId)
         {
             if (string.IsNullOrEmpty(messageId) ||
                 messageId.Length > Constants.MaxMessageIdLength)
-            {
-                // TODO: throw FxTrace.Exception.Argument("messageId", SRClient.MessageIdIsNullOrEmptyOrOverMaxValue(Constants.MaxMessageIdLength));
                 throw new ArgumentException("MessageIdIsNullOrEmptyOrOverMaxValue");
-            }
         }
 
-        private static void ValidateSessionId(string sessionIdPropertyName, string sessionId)
+        static void ValidateSessionId(string sessionIdPropertyName, string sessionId)
         {
             if (sessionId != null && sessionId.Length > Constants.MaxSessionIdLength)
-            {
-                // TODO: throw FxTrace.Exception.Argument("sessionId", SRClient.SessionIdIsOverMaxValue(Constants.MaxSessionIdLength));
                 throw new ArgumentException("SessionIdIsOverMaxValue");
-            }
         }
 
-        private static void ValidatePartitionKey(string partitionKeyPropertyName, string partitionKey)
+        static void ValidatePartitionKey(string partitionKeyPropertyName, string partitionKey)
         {
             if (partitionKey != null && partitionKey.Length > Constants.MaxPartitionKeyLength)
-            {
-                // TODO: throw FxTrace.Exception.Argument(partitionKeyPropertyName, SRClient.PropertyOverMaxValue(partitionKeyPropertyName, Constants.MaxPartitionKeyLength));
                 throw new ArgumentException("PropertyValueOverMaxValue");
-            }
         }
 
         /// <summary>
-        /// A collection used to store properties which are set by the Service Bus service.
+        ///     A collection used to store properties which are set by the Service Bus service.
         /// </summary>
         public sealed class SystemPropertiesCollection
         {
-            private int deliveryCount;
+            int deliveryCount;
 
-            private DateTime lockedUntilUtc;
+            long enqueuedSequenceNumber;
 
-            private long sequenceNumber = -1;
+            DateTime enqueuedTimeUtc;
 
-            private short partitionId;
+            DateTime lockedUntilUtc;
 
-            private long enqueuedSequenceNumber;
+            Guid lockTokenGuid;
 
-            private DateTime enqueuedTimeUtc;
+            short partitionId;
 
-            private Guid lockTokenGuid;
-
-            /// <summary>
-            /// Specifies whether or not there is a lock token set on the current message.
-            /// </summary>
-            /// <remarks>A lock token will only be specified if the message was received using <see cref="ReceiveMode.PeekLock"/></remarks>
-            public bool IsLockTokenSet => this.lockTokenGuid != default(Guid);
+            long sequenceNumber = -1;
 
             /// <summary>
-            /// Gets the lock token for the current message.
+            ///     Specifies whether or not there is a lock token set on the current message.
             /// </summary>
-            /// <remarks>A lock token will only be specified if the message was received using <see cref="ReceiveMode.PeekLock"/></remarks>
-            public string LockToken => this.LockTokenGuid.ToString();
+            /// <remarks>
+            ///     A lock token will only be specified if the message was received using <see cref="ReceiveMode.PeekLock" />
+            /// </remarks>
+            public bool IsLockTokenSet => lockTokenGuid != default(Guid);
+
+            /// <summary>
+            ///     Gets the lock token for the current message.
+            /// </summary>
+            /// <remarks>
+            ///     A lock token will only be specified if the message was received using <see cref="ReceiveMode.PeekLock" />
+            /// </remarks>
+            public string LockToken => LockTokenGuid.ToString();
 
             /// <summary>Specifies if message is a received message or not.</summary>
-            public bool IsReceived => this.sequenceNumber > -1;
+            public bool IsReceived => sequenceNumber > -1;
 
             /// <summary>
-            /// Get the current delivery count.
+            ///     Get the current delivery count.
             /// </summary>
             /// <value>This value starts at 1.</value>
             public int DeliveryCount
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.deliveryCount;
+                    ThrowIfNotReceived();
+                    return deliveryCount;
                 }
 
-                internal set
-                {
-                    this.deliveryCount = value;
-                }
+                internal set => deliveryCount = value;
             }
 
             /// <summary>Gets the date and time in UTC until which the message will be locked in the queue/subscription.</summary>
@@ -334,14 +333,11 @@ namespace Microsoft.Azure.ServiceBus
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.lockedUntilUtc;
+                    ThrowIfNotReceived();
+                    return lockedUntilUtc;
                 }
 
-                internal set
-                {
-                    this.lockedUntilUtc = value;
-                }
+                internal set => lockedUntilUtc = value;
             }
 
             /// <summary>Gets the unique number assigned to a message by Service Bus, for this entity.</summary>
@@ -349,28 +345,22 @@ namespace Microsoft.Azure.ServiceBus
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.sequenceNumber;
+                    ThrowIfNotReceived();
+                    return sequenceNumber;
                 }
 
-                internal set
-                {
-                    this.sequenceNumber = value;
-                }
+                internal set => sequenceNumber = value;
             }
 
             internal short PartitionId
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.partitionId;
+                    ThrowIfNotReceived();
+                    return partitionId;
                 }
 
-                set
-                {
-                    this.partitionId = value;
-                }
+                set => partitionId = value;
             }
 
             /// <summary>Gets or sets the enqueued sequence number of the message.</summary>
@@ -379,14 +369,11 @@ namespace Microsoft.Azure.ServiceBus
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.enqueuedSequenceNumber;
+                    ThrowIfNotReceived();
+                    return enqueuedSequenceNumber;
                 }
 
-                internal set
-                {
-                    this.enqueuedSequenceNumber = value;
-                }
+                internal set => enqueuedSequenceNumber = value;
             }
 
             /// <summary>Gets or sets the date and time of the sent time in UTC.</summary>
@@ -395,36 +382,28 @@ namespace Microsoft.Azure.ServiceBus
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.enqueuedTimeUtc;
+                    ThrowIfNotReceived();
+                    return enqueuedTimeUtc;
                 }
 
-                internal set
-                {
-                    this.enqueuedTimeUtc = value;
-                }
+                internal set => enqueuedTimeUtc = value;
             }
 
             internal Guid LockTokenGuid
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.lockTokenGuid;
+                    ThrowIfNotReceived();
+                    return lockTokenGuid;
                 }
 
-                set
-                {
-                    this.lockTokenGuid = value;
-                }
+                set => lockTokenGuid = value;
             }
 
-            private void ThrowIfNotReceived()
+            void ThrowIfNotReceived()
             {
-                if (!this.IsReceived)
-                {
+                if (!IsReceived)
                     throw Fx.Exception.AsError(new InvalidOperationException());
-                }
             }
         }
     }

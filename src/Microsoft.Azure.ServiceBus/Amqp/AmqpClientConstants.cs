@@ -1,16 +1,17 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using Microsoft.Azure.Amqp;
+using Microsoft.Azure.Amqp.Encoding;
+
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
-    using System;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Encoding;
-
-    class AmqpClientConstants
+    internal class AmqpClientConstants
     {
         // AMQP Management Operation
         public const string ManagementAddress = "$management";
+
         public const string EntityTypeManagement = "entity-mgmt";
         public const string EntityNameKey = "name";
         public const string PartitionNameKey = "partition";
@@ -21,6 +22,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         // Filters
         public const string FilterOffsetPartName = "amqp.annotation.x-opt-offset";
+
         public const string FilterOffset = FilterOffsetPartName + " > ";
         public const string FilterInclusiveOffset = FilterOffsetPartName + " >= ";
         public const string FilterOffsetFormatString = FilterOffset + "'{0}'";
@@ -36,6 +38,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         // Properties
         public static readonly AmqpSymbol AttachEpoch = AmqpConstants.Vendor + ":epoch";
+
         public static readonly AmqpSymbol BatchFlushIntervalName = AmqpConstants.Vendor + ":batch-flush-interval";
         public static readonly AmqpSymbol EntityTypeName = AmqpConstants.Vendor + ":entity-type";
         public static readonly AmqpSymbol TimeoutName = AmqpConstants.Vendor + ":timeout";
@@ -43,6 +46,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         // Error codes
         public static readonly AmqpSymbol DeadLetterName = AmqpConstants.Vendor + ":dead-letter";
+
         public static readonly AmqpSymbol TimeoutError = AmqpConstants.Vendor + ":timeout";
         public static readonly AmqpSymbol AddressAlreadyInUseError = AmqpConstants.Vendor + ":address-already-in-use";
         public static readonly AmqpSymbol AuthorizationFailedError = AmqpConstants.Vendor + ":auth-failed";

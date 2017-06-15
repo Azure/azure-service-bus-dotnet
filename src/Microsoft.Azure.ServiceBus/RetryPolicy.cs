@@ -1,85 +1,84 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Azure.ServiceBus.Primitives;
+
 namespace Microsoft.Azure.ServiceBus
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
-
     /// <summary>
-    /// Represents an abstraction for retrying messaging operations. Users should not 
-    /// implement this class, and instead should use one of the provided implementations.
+    ///     Represents an abstraction for retrying messaging operations. Users should not
+    ///     implement this class, and instead should use one of the provided implementations.
     /// </summary>
     public abstract class RetryPolicy
     {
-        internal static readonly TimeSpan ServerBusyBaseSleepTime = TimeSpan.FromSeconds(10);
-
         const int DefaultRetryMaxCount = 5;
+        internal static readonly TimeSpan ServerBusyBaseSleepTime = TimeSpan.FromSeconds(10);
         static readonly TimeSpan DefaultRetryMinBackoff = TimeSpan.Zero;
         static readonly TimeSpan DefaultRetryMaxBackoff = TimeSpan.FromSeconds(30);
 
         readonly object serverBusyLock = new object();
-        Timer serverBusyResetTimer;
 
         // This is a volatile copy of IsServerBusy. IsServerBusy is synchronized with a lock, whereas encounteredServerBusy is kept volatile for performance reasons.
         volatile bool encounteredServerBusy;
 
+        readonly Timer serverBusyResetTimer;
+
         /// <summary></summary>
         protected RetryPolicy()
         {
-            this.serverBusyResetTimer = new Timer(OnTimerCallback, this, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
+            serverBusyResetTimer = new Timer(OnTimerCallback, this, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
         }
 
         /// <summary>
-        /// Returns the default retry policy, <see cref="RetryExponential"/>.
+        ///     Returns the default retry policy, <see cref="RetryExponential" />.
         /// </summary>
         public static RetryPolicy Default => new RetryExponential(DefaultRetryMinBackoff, DefaultRetryMaxBackoff, DefaultRetryMaxCount);
 
         /// <summary>
-        /// Determines whether or not the server returned a busy error.
+        ///     Determines whether or not the server returned a busy error.
         /// </summary>
         public bool IsServerBusy { get; protected set; }
 
         /// <summary>
-        /// Gets the exception message when a server busy error is returned.
+        ///     Gets the exception message when a server busy error is returned.
         /// </summary>
         public string ServerBusyExceptionMessage { get; protected set; }
 
         /// <summary>
-        /// Runs a <see cref="Func{T, TResult}"/>, using the current RetryPolicy.
+        ///     Runs a <see cref="Func{T, TResult}" />, using the current RetryPolicy.
         /// </summary>
-        /// <param name="operation">A <see cref="Func{T, TResult}"/> to be executed.</param>
+        /// <param name="operation">A <see cref="Func{T, TResult}" /> to be executed.</param>
         /// <param name="operationTimeout">The timeout for the entire operation.</param>
         /// <returns></returns>
         public async Task RunOperation(Func<Task> operation, TimeSpan operationTimeout)
         {
-            int currentRetryCount = 0;
+            var currentRetryCount = 0;
             List<Exception> exceptions = null;
-            TimeoutHelper timeoutHelper = new TimeoutHelper(operationTimeout);
+            var timeoutHelper = new TimeoutHelper(operationTimeout);
 
-            if (this.IsServerBusy && timeoutHelper.RemainingTime() < RetryPolicy.ServerBusyBaseSleepTime)
+            if (IsServerBusy && timeoutHelper.RemainingTime() < ServerBusyBaseSleepTime)
             {
                 // We are in a server busy state before we start processing.
                 // Since ServerBusyBaseSleepTime > remaining time for the operation, we don't wait for the entire Sleep time.
                 await Task.Delay(timeoutHelper.RemainingTime()).ConfigureAwait(false);
-                throw new ServerBusyException(this.ServerBusyExceptionMessage);
+                throw new ServerBusyException(ServerBusyExceptionMessage);
             }
 
             while (true)
             {
-                if (this.IsServerBusy)
-                {
-                    await Task.Delay(RetryPolicy.ServerBusyBaseSleepTime).ConfigureAwait(false);
-                }
+                if (IsServerBusy)
+                    await Task.Delay(ServerBusyBaseSleepTime).ConfigureAwait(false);
 
                 try
                 {
                     await operation();
 
                     // Its a successful operation. Preemptively reset ServerBusy status.
-                    this.ResetServerBusy();
+                    ResetServerBusy();
                     break;
                 }
                 catch (Exception exception)
@@ -87,13 +86,11 @@ namespace Microsoft.Azure.ServiceBus
                     TimeSpan retryInterval;
                     currentRetryCount++;
                     if (exceptions == null)
-                    {
                         exceptions = new List<Exception>();
-                    }
                     exceptions.Add(exception);
 
-                    if (this.ShouldRetry(
-                        timeoutHelper.RemainingTime(), currentRetryCount, exception, out retryInterval)
+                    if (ShouldRetry(
+                            timeoutHelper.RemainingTime(), currentRetryCount, exception, out retryInterval)
                         && retryInterval < timeoutHelper.RemainingTime())
                     {
                         // Log intermediate exceptions.
@@ -108,16 +105,14 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Determines whether or not the exception can be retried.
+        ///     Determines whether or not the exception can be retried.
         /// </summary>
         /// <param name="exception"></param>
         /// <returns>A bool indicating whether or not the operation can be retried.</returns>
         public virtual bool IsRetryableException(Exception exception)
         {
             if (exception == null)
-            {
                 throw Fx.Exception.ArgumentNull(nameof(exception));
-            }
 
             var serviceBusException = exception as ServiceBusException;
             return serviceBusException?.IsTransient == true;
@@ -133,14 +128,10 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             if (lastException is ServerBusyException)
-            {
-                this.SetServerBusy(lastException.Message);
-            }
+                SetServerBusy(lastException.Message);
 
-            if (this.IsRetryableException(lastException))
-            {
-                return this.OnShouldRetry(remainingTime, currentRetryCount, out retryInterval);
-            }
+            if (IsRetryableException(lastException))
+                return OnShouldRetry(remainingTime, currentRetryCount, out retryInterval);
 
             retryInterval = TimeSpan.Zero;
             return false;
@@ -149,39 +140,34 @@ namespace Microsoft.Azure.ServiceBus
         internal void SetServerBusy(string exceptionMessage)
         {
             // multiple call to this method will not prolong the timer.
-            if (this.encounteredServerBusy)
-            {
+            if (encounteredServerBusy)
                 return;
-            }
 
-            lock (this.serverBusyLock)
+            lock (serverBusyLock)
             {
-                if (!this.encounteredServerBusy)
+                if (!encounteredServerBusy)
                 {
-                    this.encounteredServerBusy = true;
-                    this.ServerBusyExceptionMessage = string.IsNullOrWhiteSpace(exceptionMessage) ?
-                        Resources.DefaultServerBusyException : exceptionMessage;
-                    this.IsServerBusy = true;
-                    this.serverBusyResetTimer.Change(RetryPolicy.ServerBusyBaseSleepTime, TimeSpan.FromMilliseconds(-1));
+                    encounteredServerBusy = true;
+                    ServerBusyExceptionMessage = string.IsNullOrWhiteSpace(exceptionMessage) ? Resources.DefaultServerBusyException : exceptionMessage;
+                    IsServerBusy = true;
+                    serverBusyResetTimer.Change(ServerBusyBaseSleepTime, TimeSpan.FromMilliseconds(-1));
                 }
             }
         }
 
         internal void ResetServerBusy()
         {
-            if (!this.encounteredServerBusy)
-            {
+            if (!encounteredServerBusy)
                 return;
-            }
 
-            lock (this.serverBusyLock)
+            lock (serverBusyLock)
             {
-                if (this.encounteredServerBusy)
+                if (encounteredServerBusy)
                 {
-                    this.encounteredServerBusy = false;
-                    this.ServerBusyExceptionMessage = Resources.DefaultServerBusyException;
-                    this.IsServerBusy = false;
-                    this.serverBusyResetTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
+                    encounteredServerBusy = false;
+                    ServerBusyExceptionMessage = Resources.DefaultServerBusyException;
+                    IsServerBusy = false;
+                    serverBusyResetTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
                 }
             }
         }
@@ -195,7 +181,7 @@ namespace Microsoft.Azure.ServiceBus
 
         static void OnTimerCallback(object state)
         {
-            var thisPtr = (RetryPolicy)state;
+            var thisPtr = (RetryPolicy) state;
             thisPtr.ResetServerBusy();
         }
     }

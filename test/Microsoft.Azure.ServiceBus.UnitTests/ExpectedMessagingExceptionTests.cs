@@ -1,57 +1,22 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Azure.ServiceBus.Core;
+using Microsoft.Azure.ServiceBus.Primitives;
+using Xunit;
+
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
-    using System;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
-    using Microsoft.Azure.ServiceBus.Core;
-    using Xunit;
-
     public class ExpectedMessagingExceptionTests
     {
-        [Fact]
-        async Task MessageLockLostExceptionTest()
-        {
-            const int messageCount = 2;
-
-            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
-            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.PeekLock);
-
-            try
-            {
-                await TestUtility.SendMessagesAsync(sender, messageCount);
-                var receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, messageCount);
-
-                Assert.True(receivedMessages.Count() == messageCount);
-
-                // Let the messages expire
-                await Task.Delay(TimeSpan.FromMinutes(1));
-
-                // Complete should throw
-                await
-                    Assert.ThrowsAsync<MessageLockLostException>(
-                        async () => await TestUtility.CompleteMessagesAsync(receiver, receivedMessages));
-
-                receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, messageCount);
-                Assert.True(receivedMessages.Count() == messageCount);
-
-                await TestUtility.CompleteMessagesAsync(receiver, receivedMessages);
-            }
-            finally
-            {
-                await sender.CloseAsync().ConfigureAwait(false);
-                await receiver.CloseAsync().ConfigureAwait(false);
-            }
-        }
-
         [Fact]
         async Task CompleteOnPeekedMessagesShouldThrowTest()
         {
             var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
-            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
 
             try
             {
@@ -63,7 +28,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                         async () => await receiver.CompleteAsync(message.SystemProperties.LockToken));
 
                 message = await receiver.ReceiveAsync();
-                Assert.NotNull((object)message);
+                Assert.NotNull(message);
             }
             finally
             {
@@ -72,7 +37,40 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        // TODO: Update this when Session is implemented
+        [Fact]
+        async Task MessageLockLostExceptionTest()
+        {
+            const int messageCount = 2;
+
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.PeekLock);
+
+            try
+            {
+                await TestUtility.SendMessagesAsync(sender, messageCount);
+                var receivedMessages = (await TestUtility.ReceiveMessagesAsync(receiver, messageCount)).ToList();
+
+                Assert.True(receivedMessages.Count == messageCount);
+
+                // Let the messages expire
+                await Task.Delay(TimeSpan.FromMinutes(1));
+
+                // Complete should throw
+                await
+                    Assert.ThrowsAsync<MessageLockLostException>(
+                        async () => await TestUtility.CompleteMessagesAsync(receiver, receivedMessages));
+
+                receivedMessages = (await TestUtility.ReceiveMessagesAsync(receiver, messageCount)).ToList();
+                Assert.True(receivedMessages.Count == messageCount);
+
+                await TestUtility.CompleteMessagesAsync(receiver, receivedMessages);
+            }
+            finally
+            {
+                await sender.CloseAsync().ConfigureAwait(false);
+                await receiver.CloseAsync().ConfigureAwait(false);
+            }
+        }
         /*
         [Fact]
         async Task SessionLockLostExceptionTest()
@@ -125,5 +123,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
         */
+
+        // TODO: Update this when Session is implemented
     }
 }

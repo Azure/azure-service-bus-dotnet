@@ -1,14 +1,15 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Threading.Tasks;
+using Microsoft.Azure.Amqp;
+using Microsoft.Azure.ServiceBus.Core;
+using Microsoft.Azure.ServiceBus.Primitives;
+
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
-    using System;
-    using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.ServiceBus.Core;
-
-    sealed class AmqpSessionClient : IMessageSessionEntity
+    internal sealed class AmqpSessionClient : IMessageSessionEntity
     {
         public AmqpSessionClient(
             string clientId,
@@ -20,14 +21,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy)
         {
-            this.ClientId = clientId;
-            this.EntityPath = entityPath;
-            this.EntityType = entityType;
-            this.ReceiveMode = receiveMode;
-            this.PrefetchCount = prefetchCount;
-            this.ServiceBusConnection = serviceBusConnection;
-            this.CbsTokenProvider = cbsTokenProvider;
-            this.RetryPolicy = retryPolicy;
+            ClientId = clientId;
+            EntityPath = entityPath;
+            EntityType = entityType;
+            ReceiveMode = receiveMode;
+            PrefetchCount = prefetchCount;
+            ServiceBusConnection = serviceBusConnection;
+            CbsTokenProvider = cbsTokenProvider;
+            RetryPolicy = retryPolicy;
         }
 
         ReceiveMode ReceiveMode { get; }
@@ -48,63 +49,60 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public Task<IMessageSession> AcceptMessageSessionAsync()
         {
-            return this.AcceptMessageSessionAsync(this.ServiceBusConnection.OperationTimeout);
+            return AcceptMessageSessionAsync(ServiceBusConnection.OperationTimeout);
         }
 
         public Task<IMessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime)
         {
-            return this.AcceptMessageSessionAsync(null, serverWaitTime);
+            return AcceptMessageSessionAsync(null, serverWaitTime);
         }
 
         public Task<IMessageSession> AcceptMessageSessionAsync(string sessionId)
         {
-            return this.AcceptMessageSessionAsync(sessionId, this.ServiceBusConnection.OperationTimeout);
+            return AcceptMessageSessionAsync(sessionId, ServiceBusConnection.OperationTimeout);
         }
 
         public async Task<IMessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
             MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionStart(
-                this.ClientId,
-                this.EntityPath,
-                this.ReceiveMode,
-                this.PrefetchCount,
+                ClientId,
+                EntityPath,
+                ReceiveMode,
+                PrefetchCount,
                 sessionId);
 
             var receiver = new MessageReceiver(
-                this.EntityPath,
-                this.EntityType,
-                this.ReceiveMode,
-                this.ServiceBusConnection,
-                this.CbsTokenProvider,
-                this.RetryPolicy,
-                this.PrefetchCount,
+                EntityPath,
+                EntityType,
+                ReceiveMode,
+                ServiceBusConnection,
+                CbsTokenProvider,
+                RetryPolicy,
+                PrefetchCount,
                 sessionId,
                 true);
             try
             {
-                await this.RetryPolicy.RunOperation(
-                    async () =>
-                    {
-                        await receiver.GetSessionReceiverLinkAsync(serverWaitTime).ConfigureAwait(false);
-                    }, serverWaitTime)
+                await RetryPolicy.RunOperation(
+                        async () => { await receiver.GetSessionReceiverLinkAsync(serverWaitTime).ConfigureAwait(false); }, serverWaitTime)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionException(
-                    this.ClientId,
-                    this.EntityPath,
+                    ClientId,
+                    EntityPath,
                     exception);
 
                 await receiver.CloseAsync().ConfigureAwait(false);
                 throw AmqpExceptionHelper.GetClientException(exception);
             }
 
-            MessageSession session = new MessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver, this.RetryPolicy);
+            var session = new MessageSession(receiver.SessionId, receiver.LockedUntilUtc, receiver, RetryPolicy);
 
             MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionStop(
-                this.ClientId,
-                this.EntityPath,
+                ClientId,
+                EntityPath,
                 session.SessionId);
 
             return session;

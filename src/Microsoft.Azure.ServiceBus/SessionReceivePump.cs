@@ -1,23 +1,23 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Azure.ServiceBus.Core;
+using Microsoft.Azure.ServiceBus.Primitives;
+
 namespace Microsoft.Azure.ServiceBus
 {
-    using System;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Core;
-    using Microsoft.Azure.ServiceBus.Primitives;
-
-    sealed class SessionReceivePump
+    internal sealed class SessionReceivePump
     {
-        readonly string clientId;
         readonly IMessageSessionEntity client;
-        readonly Func<IMessageSession, Message, CancellationToken, Task> userOnSessionCallback;
-        readonly SessionHandlerOptions sessionHandlerOptions;
-        readonly CancellationToken pumpCancellationToken;
+        readonly string clientId;
         readonly SemaphoreSlim maxConcurrentSessionsSemaphoreSlim;
         readonly SemaphoreSlim maxPendingAcceptSessionsSemaphoreSlim;
+        readonly CancellationToken pumpCancellationToken;
+        readonly SessionHandlerOptions sessionHandlerOptions;
+        readonly Func<IMessageSession, Message, CancellationToken, Task> userOnSessionCallback;
 
         public SessionReceivePump(
             string clientId,
@@ -28,18 +28,16 @@ namespace Microsoft.Azure.ServiceBus
             CancellationToken token)
         {
             if (client == null)
-            {
                 throw new ArgumentException(nameof(client));
-            }
 
             this.client = client;
             this.clientId = clientId;
-            this.ReceiveMode = receiveMode;
+            ReceiveMode = receiveMode;
             this.sessionHandlerOptions = sessionHandlerOptions;
-            this.userOnSessionCallback = callback;
-            this.pumpCancellationToken = token;
-            this.maxConcurrentSessionsSemaphoreSlim = new SemaphoreSlim(this.sessionHandlerOptions.MaxConcurrentSessions);
-            this.maxPendingAcceptSessionsSemaphoreSlim = new SemaphoreSlim(this.sessionHandlerOptions.MaxConcurrentAcceptSessionCalls);
+            userOnSessionCallback = callback;
+            pumpCancellationToken = token;
+            maxConcurrentSessionsSemaphoreSlim = new SemaphoreSlim(this.sessionHandlerOptions.MaxConcurrentSessions);
+            maxPendingAcceptSessionsSemaphoreSlim = new SemaphoreSlim(this.sessionHandlerOptions.MaxConcurrentAcceptSessionCalls);
         }
 
         ReceiveMode ReceiveMode { get; }
@@ -52,7 +50,7 @@ namespace Microsoft.Azure.ServiceBus
             // Timeout is a valid exception.
             try
             {
-                initialSession = await this.client.AcceptMessageSessionAsync().ConfigureAwait(false);
+                initialSession = await client.AcceptMessageSessionAsync().ConfigureAwait(false);
 
                 // MessagingEventSource.Log.SessionReceiverPumpInitialSessionReceived(this.client.ClientId, initialSession);
             }
@@ -61,17 +59,11 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             // Schedule Tasks for doing PendingAcceptSession calls
-            for (int i = 0; i < this.sessionHandlerOptions.MaxConcurrentAcceptSessionCalls; i++)
-            {
+            for (var i = 0; i < sessionHandlerOptions.MaxConcurrentAcceptSessionCalls; i++)
                 if (i == 0)
-                {
-                    TaskExtensionHelper.Schedule(() => this.SessionPumpTaskAsync(initialSession));
-                }
+                    TaskExtensionHelper.Schedule(() => SessionPumpTaskAsync(initialSession));
                 else
-                {
-                    TaskExtensionHelper.Schedule(() => this.SessionPumpTaskAsync(null));
-                }
-            }
+                    TaskExtensionHelper.Schedule(() => SessionPumpTaskAsync(null));
         }
 
         static void CancelAndDisposeCancellationTokenSource(CancellationTokenSource renewLockCancellationTokenSource)
@@ -82,7 +74,7 @@ namespace Microsoft.Azure.ServiceBus
 
         static void OnUserCallBackTimeout(object state)
         {
-            CancellationTokenSource renewCancellationTokenSource = (CancellationTokenSource)state;
+            var renewCancellationTokenSource = (CancellationTokenSource) state;
             renewCancellationTokenSource?.Cancel();
             renewCancellationTokenSource?.Dispose();
         }
@@ -90,29 +82,27 @@ namespace Microsoft.Azure.ServiceBus
         bool ShouldRenewSessionLock()
         {
             return
-                this.ReceiveMode == ReceiveMode.PeekLock &&
-                this.sessionHandlerOptions.AutoRenewLock;
+                ReceiveMode == ReceiveMode.PeekLock &&
+                sessionHandlerOptions.AutoRenewLock;
         }
 
         void RaiseExceptionRecieved(Exception e, string action)
         {
             var eventArgs = new ExceptionReceivedEventArgs(e, action);
-            this.sessionHandlerOptions.RaiseExceptionReceived(eventArgs);
+            sessionHandlerOptions.RaiseExceptionReceived(eventArgs);
         }
 
         async Task CompleteMessageIfNeededAsync(IMessageSession session, Message message)
         {
             try
             {
-                if (this.ReceiveMode == ReceiveMode.PeekLock &&
-                    this.sessionHandlerOptions.AutoComplete)
-                {
-                    await session.CompleteAsync(new[] { message.SystemProperties.LockToken }).ConfigureAwait(false);
-                }
+                if (ReceiveMode == ReceiveMode.PeekLock &&
+                    sessionHandlerOptions.AutoComplete)
+                    await session.CompleteAsync(new[] {message.SystemProperties.LockToken}).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Complete));
+                sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Complete));
             }
         }
 
@@ -121,70 +111,64 @@ namespace Microsoft.Azure.ServiceBus
             try
             {
                 if (session.ReceiveMode == ReceiveMode.PeekLock)
-                {
                     await session.AbandonAsync(message.SystemProperties.LockToken).ConfigureAwait(false);
-                }
             }
             catch (Exception exception)
             {
-                this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Abandon));
+                sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Abandon));
             }
         }
 
         async Task SessionPumpTaskAsync(IMessageSession initialSession)
         {
             IMessageSession session;
-            while (!this.pumpCancellationToken.IsCancellationRequested)
+            while (!pumpCancellationToken.IsCancellationRequested)
             {
-                bool concurrentSessionSemaphoreAquired = false;
+                var concurrentSessionSemaphoreAquired = false;
                 try
                 {
-                    await this.maxConcurrentSessionsSemaphoreSlim.WaitAsync(this.pumpCancellationToken).ConfigureAwait(false);
+                    await maxConcurrentSessionsSemaphoreSlim.WaitAsync(pumpCancellationToken).ConfigureAwait(false);
                     concurrentSessionSemaphoreAquired = true;
 
                     if (initialSession != null)
                     {
                         session = initialSession;
-                        TaskExtensionHelper.Schedule(() => this.MessagePumpTaskAsync(session));
+                        TaskExtensionHelper.Schedule(() => MessagePumpTaskAsync(session));
                         initialSession = null;
                     }
                     else
                     {
-                        await this.maxPendingAcceptSessionsSemaphoreSlim.WaitAsync(this.pumpCancellationToken).ConfigureAwait(false);
-                        session = await this.client.AcceptMessageSessionAsync().ConfigureAwait(false);
+                        await maxPendingAcceptSessionsSemaphoreSlim.WaitAsync(pumpCancellationToken).ConfigureAwait(false);
+                        session = await client.AcceptMessageSessionAsync().ConfigureAwait(false);
                         if (session == null)
                         {
-                            await Task.Delay(Constants.NoMessageBackoffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
+                            await Task.Delay(Constants.NoMessageBackoffTimeSpan, pumpCancellationToken).ConfigureAwait(false);
                             continue;
                         }
-                        TaskExtensionHelper.Schedule(() => this.MessagePumpTaskAsync(session));
+                        TaskExtensionHelper.Schedule(() => MessagePumpTaskAsync(session));
                     }
                 }
                 catch (Exception exception)
                 {
-                    MessagingEventSource.Log.SessionReceivePumpSessionReceiveException(this.clientId, exception);
+                    MessagingEventSource.Log.SessionReceivePumpSessionReceiveException(clientId, exception);
 
                     if (concurrentSessionSemaphoreAquired)
-                    {
-                        this.maxConcurrentSessionsSemaphoreSlim.Release();
-                    }
+                        maxConcurrentSessionsSemaphoreSlim.Release();
 
                     if (!(exception is TimeoutException))
                     {
-                        this.RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.AcceptMessageSession);
+                        RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.AcceptMessageSession);
                         if (!MessagingUtilities.ShouldRetry(exception))
-                        {
                             break;
-                        }
                     }
                     else
                     {
-                        await Task.Delay(Constants.NoMessageBackoffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
+                        await Task.Delay(Constants.NoMessageBackoffTimeSpan, pumpCancellationToken).ConfigureAwait(false);
                     }
                 }
                 finally
                 {
-                    this.maxPendingAcceptSessionsSemaphoreSlim.Release();
+                    maxPendingAcceptSessionsSemaphoreSlim.Release();
                 }
             }
         }
@@ -192,17 +176,13 @@ namespace Microsoft.Azure.ServiceBus
         async Task MessagePumpTaskAsync(IMessageSession session)
         {
             if (session == null)
-            {
                 return;
-            }
 
-            CancellationTokenSource renewLockCancellationTokenSource = new CancellationTokenSource();
-            if (this.ShouldRenewSessionLock())
-            {
-                TaskExtensionHelper.Schedule(() => this.RenewSessionLockTaskAsync(session, renewLockCancellationTokenSource.Token));
-            }
+            var renewLockCancellationTokenSource = new CancellationTokenSource();
+            if (ShouldRenewSessionLock())
+                TaskExtensionHelper.Schedule(() => RenewSessionLockTaskAsync(session, renewLockCancellationTokenSource.Token));
 
-            Timer userCallbackTimer = new Timer(
+            var userCallbackTimer = new Timer(
                 OnUserCallBackTimeout,
                 renewLockCancellationTokenSource,
                 Timeout.Infinite,
@@ -210,46 +190,43 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
-                while (!this.pumpCancellationToken.IsCancellationRequested &&
+                while (!pumpCancellationToken.IsCancellationRequested &&
                        !session.IsClosedOrClosing)
                 {
                     Message message;
                     try
                     {
-                        message = await session.ReceiveAsync(this.sessionHandlerOptions.MessageWaitTimeout).ConfigureAwait(false);
+                        message = await session.ReceiveAsync(sessionHandlerOptions.MessageWaitTimeout).ConfigureAwait(false);
                     }
                     catch (Exception exception)
                     {
-                        MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
+                        MessagingEventSource.Log.MessageReceivePumpTaskException(clientId, session.SessionId, exception);
                         if (exception is TimeoutException)
-                        {
-                            // Timeout Exceptions are pretty common. Not alerting the User on this.
                             continue;
-                        }
 
-                        this.RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.Receive);
+                        RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.Receive);
                         break;
                     }
 
                     if (message == null)
                     {
-                        MessagingEventSource.Log.SessionReceivePumpSessionEmpty(this.clientId, session.SessionId);
+                        MessagingEventSource.Log.SessionReceivePumpSessionEmpty(clientId, session.SessionId);
                         break;
                     }
 
                     // Set the timer
-                    userCallbackTimer.Change(this.sessionHandlerOptions.MaxAutoRenewDuration, TimeSpan.FromMilliseconds(-1));
-                    bool callbackExceptionOccured = false;
+                    userCallbackTimer.Change(sessionHandlerOptions.MaxAutoRenewDuration, TimeSpan.FromMilliseconds(-1));
+                    var callbackExceptionOccured = false;
                     try
                     {
-                        await this.userOnSessionCallback(session, message, this.pumpCancellationToken).ConfigureAwait(false);
+                        await userOnSessionCallback(session, message, pumpCancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception exception)
                     {
-                        MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
-                        this.RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.UserCallback);
+                        MessagingEventSource.Log.MessageReceivePumpTaskException(clientId, session.SessionId, exception);
+                        RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.UserCallback);
                         callbackExceptionOccured = true;
-                        await this.AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
+                        await AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -257,59 +234,51 @@ namespace Microsoft.Azure.ServiceBus
                     }
 
                     if (!callbackExceptionOccured)
-                    {
-                        await this.CompleteMessageIfNeededAsync(session, message).ConfigureAwait(false);
-                    }
+                        await CompleteMessageIfNeededAsync(session, message).ConfigureAwait(false);
                     else if (session.IsClosedOrClosing)
-                    {
-                        // If User closed the session as part of the callback, break out of the loop
                         break;
-                    }
                 }
             }
             finally
             {
                 userCallbackTimer.Dispose();
-                await this.CloseSessionIfNeededAsync(session).ConfigureAwait(false);
+                await CloseSessionIfNeededAsync(session).ConfigureAwait(false);
                 CancelAndDisposeCancellationTokenSource(renewLockCancellationTokenSource);
-                this.maxConcurrentSessionsSemaphoreSlim.Release();
+                maxConcurrentSessionsSemaphoreSlim.Release();
             }
         }
 
         async Task CloseSessionIfNeededAsync(IMessageSession session)
         {
             if (!session.IsClosedOrClosing)
-            {
                 try
                 {
                     await session.CloseAsync().ConfigureAwait(false);
-                    MessagingEventSource.Log.SessionReceivePumpSessionClosed(this.clientId, session.SessionId);
+                    MessagingEventSource.Log.SessionReceivePumpSessionClosed(clientId, session.SessionId);
                 }
                 catch (Exception exception)
                 {
-                    MessagingEventSource.Log.SessionReceivePumpSessionCloseException(this.clientId, session.SessionId, exception);
-                    this.RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.CloseMessageSession);
+                    MessagingEventSource.Log.SessionReceivePumpSessionCloseException(clientId, session.SessionId, exception);
+                    RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.CloseMessageSession);
                 }
-            }
         }
 
         async Task RenewSessionLockTaskAsync(IMessageSession session, CancellationToken renewLockCancellationToken)
         {
-            while (!this.pumpCancellationToken.IsCancellationRequested &&
+            while (!pumpCancellationToken.IsCancellationRequested &&
                    !renewLockCancellationToken.IsCancellationRequested)
-            {
                 try
                 {
-                    TimeSpan amount = MessagingUtilities.CalculateRenewAfterDuration(session.LockedUntilUtc);
+                    var amount = MessagingUtilities.CalculateRenewAfterDuration(session.LockedUntilUtc);
 
-                    MessagingEventSource.Log.SessionReceivePumpSessionRenewLockStart(this.clientId, session.SessionId, amount);
+                    MessagingEventSource.Log.SessionReceivePumpSessionRenewLockStart(clientId, session.SessionId, amount);
                     await Task.Delay(amount, renewLockCancellationToken).ConfigureAwait(false);
 
-                    if (!this.pumpCancellationToken.IsCancellationRequested &&
+                    if (!pumpCancellationToken.IsCancellationRequested &&
                         !renewLockCancellationToken.IsCancellationRequested)
                     {
                         await session.RenewSessionLockAsync().ConfigureAwait(false);
-                        MessagingEventSource.Log.SessionReceivePumpSessionRenewLockStop(this.clientId, session.SessionId);
+                        MessagingEventSource.Log.SessionReceivePumpSessionRenewLockStop(clientId, session.SessionId);
                     }
                     else
                     {
@@ -318,20 +287,15 @@ namespace Microsoft.Azure.ServiceBus
                 }
                 catch (Exception exception)
                 {
-                    MessagingEventSource.Log.SessionReceivePumpSessionRenewLockExeption(this.clientId, session.SessionId, exception);
+                    MessagingEventSource.Log.SessionReceivePumpSessionRenewLockExeption(clientId, session.SessionId, exception);
 
                     // TaskCancelled is expected here as renewTasks will be cancelled after the Complete call is made.
                     // Lets not bother user with this exception.
                     if (!(exception is TaskCanceledException))
-                    {
-                        this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.RenewLock));
-                    }
+                        sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.RenewLock));
                     if (!MessagingUtilities.ShouldRetry(exception))
-                    {
                         break;
-                    }
                 }
-            }
         }
     }
 }

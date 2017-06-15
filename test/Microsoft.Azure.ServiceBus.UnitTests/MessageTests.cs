@@ -1,76 +1,18 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Xunit;
+
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
-    using System;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    using Xunit;
-
     public class MessageTests
     {
-        [Fact]
-        void TestClone()
-        {
-            var messageBody = Encoding.UTF8.GetBytes("test");
-            var messageId = Guid.NewGuid().ToString();
-            var partitionKey = Guid.NewGuid().ToString();
-            var sessionId = Guid.NewGuid().ToString();
-            var correlationId = Guid.NewGuid().ToString();
-            var label = Guid.NewGuid().ToString();
-            var to = Guid.NewGuid().ToString();
-            var contentType = Guid.NewGuid().ToString();
-            var replyTo = Guid.NewGuid().ToString();
-            var replyToSessionId = Guid.NewGuid().ToString();
-            var publisher = Guid.NewGuid().ToString();
-            var properties = Guid.NewGuid().ToString();
-
-            var brokeredMessage = new Message(messageBody)
-            {
-                MessageId = messageId,
-                PartitionKey = partitionKey,
-                SessionId = sessionId,
-                CorrelationId = correlationId,
-                Label = label,
-                To = to,
-                ContentType = contentType,
-                ReplyTo = replyTo,
-                ReplyToSessionId = replyToSessionId,
-                Publisher = publisher,
-            };
-            brokeredMessage.UserProperties.Add("UserProperty", "SomeUserProperty");
-
-            var clone = brokeredMessage.Clone();
-            brokeredMessage.Body = null;
-
-            Assert.Null(brokeredMessage.Body);
-            Assert.NotNull(clone.Body);
-            Assert.Equal("SomeUserProperty", clone.UserProperties["UserProperty"]);
-            Assert.Equal(messageId, clone.MessageId);
-            Assert.Equal(partitionKey, clone.PartitionKey);
-            Assert.Equal(sessionId, clone.SessionId);
-            Assert.Equal(correlationId, clone.CorrelationId);
-            Assert.Equal(label, clone.Label);
-            Assert.Equal(to, clone.To);
-            Assert.Equal(contentType, clone.ContentType);
-            Assert.Equal(replyTo, clone.ReplyTo);
-            Assert.Equal(replyToSessionId, clone.ReplyToSessionId);
-            Assert.Equal(publisher, clone.Publisher);
-        }
-
         public class WhenQueryingIsReceivedProperty
         {
-            [Fact]
-            [DisplayTestMethodName]
-            void Should_return_false_for_message_that_was_not_sent()
-            {
-                var message = new Message();
-                message.UserProperties["dummy"] = "dummy";
-                Assert.False(message.SystemProperties.IsReceived);
-            }
-
             [Theory]
             [DisplayTestMethodName]
             [InlineData(ReceiveMode.ReceiveAndDelete)]
@@ -82,19 +24,26 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 try
                 {
                     await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
-                    var receivedMessages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerReceiver, 1);
-                    Assert.True(receivedMessages.First().SystemProperties.IsReceived);
+                    var firstReceivedMessage = (await TestUtility.ReceiveMessagesAsync(queueClient.InnerReceiver, 1)).First();
+                    Assert.True(firstReceivedMessage.SystemProperties.IsReceived);
 
                     // TODO: remove when per test cleanup is possible
                     if (receiveMode == ReceiveMode.PeekLock)
-                    {
-                        await queueClient.CompleteAsync(receivedMessages.First().SystemProperties.LockToken);
-                    }
+                        await queueClient.CompleteAsync(firstReceivedMessage.SystemProperties.LockToken);
                 }
                 finally
                 {
                     await queueClient.CloseAsync();
                 }
+            }
+
+            [Fact]
+            [DisplayTestMethodName]
+            void Should_return_false_for_message_that_was_not_sent()
+            {
+                var message = new Message();
+                message.UserProperties["dummy"] = "dummy";
+                Assert.False(message.SystemProperties.IsReceived);
             }
 
             [Fact]
@@ -117,6 +66,54 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     await queueClient.CloseAsync();
                 }
             }
+        }
+
+        [Fact]
+        void TestClone()
+        {
+            var messageBody = Encoding.UTF8.GetBytes("test");
+            var messageId = Guid.NewGuid().ToString();
+            var partitionKey = Guid.NewGuid().ToString();
+            var sessionId = Guid.NewGuid().ToString();
+            var correlationId = Guid.NewGuid().ToString();
+            var label = Guid.NewGuid().ToString();
+            var to = Guid.NewGuid().ToString();
+            var contentType = Guid.NewGuid().ToString();
+            var replyTo = Guid.NewGuid().ToString();
+            var replyToSessionId = Guid.NewGuid().ToString();
+            var publisher = Guid.NewGuid().ToString();
+
+            var brokeredMessage = new Message(messageBody)
+            {
+                MessageId = messageId,
+                PartitionKey = partitionKey,
+                SessionId = sessionId,
+                CorrelationId = correlationId,
+                Label = label,
+                To = to,
+                ContentType = contentType,
+                ReplyTo = replyTo,
+                ReplyToSessionId = replyToSessionId,
+                Publisher = publisher
+            };
+            brokeredMessage.UserProperties.Add("UserProperty", "SomeUserProperty");
+
+            var clone = brokeredMessage.Clone();
+            brokeredMessage.Body = null;
+
+            Assert.Null(brokeredMessage.Body);
+            Assert.NotNull(clone.Body);
+            Assert.Equal("SomeUserProperty", clone.UserProperties["UserProperty"]);
+            Assert.Equal(messageId, clone.MessageId);
+            Assert.Equal(partitionKey, clone.PartitionKey);
+            Assert.Equal(sessionId, clone.SessionId);
+            Assert.Equal(correlationId, clone.CorrelationId);
+            Assert.Equal(label, clone.Label);
+            Assert.Equal(to, clone.To);
+            Assert.Equal(contentType, clone.ContentType);
+            Assert.Equal(replyTo, clone.ReplyTo);
+            Assert.Equal(replyToSessionId, clone.ReplyToSessionId);
+            Assert.Equal(publisher, clone.Publisher);
         }
     }
 }

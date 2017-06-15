@@ -1,30 +1,28 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using Microsoft.Azure.Amqp;
+using Microsoft.Azure.Amqp.Encoding;
+using Microsoft.Azure.Amqp.Framing;
+
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
-    using System;
-    using Azure.Amqp;
-    using Azure.Amqp.Encoding;
-    using Azure.Amqp.Framing;
-
     internal sealed class AmqpRequestMessage
     {
-        readonly AmqpMessage requestMessage;
-
         AmqpRequestMessage(string operation, TimeSpan timeout, string trackingId)
         {
-            this.Map = new AmqpMap();
-            this.requestMessage = AmqpMessage.Create(new AmqpValue() { Value = this.Map });
-            this.requestMessage.ApplicationProperties.Map[ManagementConstants.Request.Operation] = operation;
-            this.requestMessage.ApplicationProperties.Map[ManagementConstants.Properties.ServerTimeout] = (uint)timeout.TotalMilliseconds;
-            this.requestMessage.ApplicationProperties.Map[ManagementConstants.Properties.TrackingId] = trackingId ?? Guid.NewGuid().ToString();
+            Map = new AmqpMap();
+            AmqpMessage = AmqpMessage.Create(new AmqpValue
+            {
+                Value = Map
+            });
+            AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.Operation] = operation;
+            AmqpMessage.ApplicationProperties.Map[ManagementConstants.Properties.ServerTimeout] = (uint) timeout.TotalMilliseconds;
+            AmqpMessage.ApplicationProperties.Map[ManagementConstants.Properties.TrackingId] = trackingId ?? Guid.NewGuid().ToString();
         }
 
-        public AmqpMessage AmqpMessage
-        {
-            get { return this.requestMessage; }
-        }
+        public AmqpMessage AmqpMessage { get; }
 
         public AmqpMap Map { get; }
 

@@ -1,16 +1,12 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus
+using System;
+
+namespace Microsoft.Azure.ServiceBus.Primitives
 {
-    using System;
-
-    class ExceptionUtility
+    internal class ExceptionUtility
     {
-        internal ExceptionUtility()
-        {
-        }
-
         public ArgumentException Argument(string paramName, string message)
         {
             return new ArgumentException(message, paramName);
@@ -23,7 +19,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public ArgumentException ArgumentNullOrWhiteSpace(string paramName)
         {
-            return this.Argument(paramName, Resources.ArgumentNullOrWhiteSpace.FormatForUser(paramName));
+            return Argument(paramName, Resources.ArgumentNullOrWhiteSpace.FormatForUser(paramName));
         }
 
         public ArgumentOutOfRangeException ArgumentOutOfRange(string paramName, object actualValue, string message)

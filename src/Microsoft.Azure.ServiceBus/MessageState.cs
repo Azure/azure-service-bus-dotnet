@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
-    enum MessageState
+    internal enum MessageState
     {
         /// <summary> Message in the queue and ready to be sent to its receiver(s).  </summary>
         Active = 0,

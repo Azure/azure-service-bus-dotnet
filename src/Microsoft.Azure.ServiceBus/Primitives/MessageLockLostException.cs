@@ -1,12 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus
-{
-    using System;
+using System;
 
+namespace Microsoft.Azure.ServiceBus.Primitives
+{
     /// <summary>
-    /// The exception that is thrown when the lock on the message is lost.  Callers should call Receive and process the message again.
+    ///     The exception that is thrown when the lock on the message is lost.  Callers should call Receive and process the
+    ///     message again.
     /// </summary>
     public sealed class MessageLockLostException : ServiceBusException
     {

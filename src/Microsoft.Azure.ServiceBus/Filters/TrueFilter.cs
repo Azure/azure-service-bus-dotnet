@@ -4,14 +4,14 @@
 namespace Microsoft.Azure.ServiceBus.Filters
 {
     /// <summary>
-    /// Matches a filter expression.
+    ///     Matches a filter expression.
     /// </summary>
     public sealed class TrueFilter : SqlFilter
     {
         internal static readonly TrueFilter Default = new TrueFilter();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TrueFilter" /> class.
+        ///     Initializes a new instance of the <see cref="TrueFilter" /> class.
         /// </summary>
         public TrueFilter()
             : base("1=1")
@@ -19,7 +19,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Converts the value of the current instance to its equivalent string representation.
+        ///     Converts the value of the current instance to its equivalent string representation.
         /// </summary>
         /// <returns>A string representation of the current instance.</returns>
         public override string ToString()

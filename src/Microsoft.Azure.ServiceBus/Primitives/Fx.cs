@@ -1,12 +1,12 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus
-{
-    using System;
-    using System.Diagnostics;
+using System;
+using System.Diagnostics;
 
-    static class Fx
+namespace Microsoft.Azure.ServiceBus.Primitives
+{
+    internal static class Fx
     {
         static ExceptionUtility exceptionUtility;
 
@@ -15,9 +15,7 @@ namespace Microsoft.Azure.ServiceBus
             get
             {
                 if (exceptionUtility == null)
-                {
                     exceptionUtility = new ExceptionUtility();
-                }
 
                 return exceptionUtility;
             }
@@ -31,47 +29,6 @@ namespace Microsoft.Azure.ServiceBus
 
         public static class Tag
         {
-            public enum CacheAttrition
-            {
-                None,
-                ElementOnTimer,
-
-                // A finalizer/WeakReference based cache, where the elements are held by WeakReferences (or hold an
-                // inner object by a WeakReference), and the weakly-referenced object has a finalizer which cleans the
-                // item from the cache.
-                ElementOnGC,
-
-                // A cache that provides a per-element token, delegate, interface, or other piece of context that can
-                // be used to remove the element (such as IDisposable).
-                ElementOnCallback,
-
-                FullPurgeOnTimer,
-                FullPurgeOnEachAccess,
-                PartialPurgeOnTimer,
-                PartialPurgeOnEachAccess,
-            }
-
-            public enum Location
-            {
-                InProcess,
-                OutOfProcess,
-                LocalSystem,
-                LocalOrRemoteSystem, // as in a file that might live on a share
-                RemoteSystem,
-            }
-
-            public enum SynchronizationKind
-            {
-                LockStatement,
-                MonitorWait,
-                MonitorExplicit,
-                InterlockedNoSpin,
-                InterlockedWithSpin,
-
-                // Same as LockStatement if the field type is object.
-                FromFieldType,
-            }
-
             [Flags]
             public enum BlocksUsing
             {
@@ -90,7 +47,48 @@ namespace Microsoft.Azure.ServiceBus
                 OtherInterop,
                 Other,
 
-                NonBlocking, // For use by non-blocking SynchronizationPrimitives such as IOThreadScheduler
+                NonBlocking // For use by non-blocking SynchronizationPrimitives such as IOThreadScheduler
+            }
+
+            public enum CacheAttrition
+            {
+                None,
+                ElementOnTimer,
+
+                // A finalizer/WeakReference based cache, where the elements are held by WeakReferences (or hold an
+                // inner object by a WeakReference), and the weakly-referenced object has a finalizer which cleans the
+                // item from the cache.
+                ElementOnGC,
+
+                // A cache that provides a per-element token, delegate, interface, or other piece of context that can
+                // be used to remove the element (such as IDisposable).
+                ElementOnCallback,
+
+                FullPurgeOnTimer,
+                FullPurgeOnEachAccess,
+                PartialPurgeOnTimer,
+                PartialPurgeOnEachAccess
+            }
+
+            public enum Location
+            {
+                InProcess,
+                OutOfProcess,
+                LocalSystem,
+                LocalOrRemoteSystem, // as in a file that might live on a share
+                RemoteSystem
+            }
+
+            public enum SynchronizationKind
+            {
+                LockStatement,
+                MonitorWait,
+                MonitorExplicit,
+                InterlockedNoSpin,
+                InterlockedWithSpin,
+
+                // Same as LockStatement if the field type is object.
+                FromFieldType
             }
 
             public static class Strings
@@ -109,69 +107,37 @@ namespace Microsoft.Azure.ServiceBus
             [Conditional("CODE_ANALYSIS")]
             public sealed class ExternalResourceAttribute : Attribute
             {
-                readonly Location location;
-                readonly string description;
-
                 public ExternalResourceAttribute(Location location, string description)
                 {
-                    this.location = location;
-                    this.description = description;
+                    Location = location;
+                    Description = description;
                 }
 
-                public Location Location
-                {
-                    get
-                    {
-                        return this.location;
-                    }
-                }
+                public Location Location { get; }
 
-                public string Description
-                {
-                    get
-                    {
-                        return this.description;
-                    }
-                }
+                public string Description { get; }
             }
 
             [AttributeUsage(AttributeTargets.Field)]
             [Conditional("CODE_ANALYSIS")]
             public sealed class CacheAttribute : Attribute
             {
-                readonly Type elementType;
-                readonly CacheAttrition cacheAttrition;
-
                 public CacheAttribute(Type elementType, CacheAttrition cacheAttrition)
                 {
-                    this.Scope = Strings.DeclaringInstance;
-                    this.SizeLimit = Strings.Unbounded;
-                    this.Timeout = Strings.Infinite;
+                    Scope = Strings.DeclaringInstance;
+                    SizeLimit = Strings.Unbounded;
+                    Timeout = Strings.Infinite;
 
                     if (elementType == null)
-                    {
-                        throw Fx.Exception.ArgumentNull(nameof(elementType));
-                    }
+                        throw Exception.ArgumentNull(nameof(elementType));
 
-                    this.elementType = elementType;
-                    this.cacheAttrition = cacheAttrition;
+                    ElementType = elementType;
+                    CacheAttrition = cacheAttrition;
                 }
 
-                public Type ElementType
-                {
-                    get
-                    {
-                        return this.elementType;
-                    }
-                }
+                public Type ElementType { get; }
 
-                public CacheAttrition CacheAttrition
-                {
-                    get
-                    {
-                        return this.cacheAttrition;
-                    }
-                }
+                public CacheAttrition CacheAttrition { get; }
 
                 public string Scope { get; set; }
 
@@ -184,28 +150,18 @@ namespace Microsoft.Azure.ServiceBus
             [Conditional("CODE_ANALYSIS")]
             public sealed class QueueAttribute : Attribute
             {
-                readonly Type elementType;
-
                 public QueueAttribute(Type elementType)
                 {
-                    this.Scope = Strings.DeclaringInstance;
-                    this.SizeLimit = Strings.Unbounded;
+                    Scope = Strings.DeclaringInstance;
+                    SizeLimit = Strings.Unbounded;
 
                     if (elementType == null)
-                    {
-                        throw Fx.Exception.ArgumentNull(nameof(elementType));
-                    }
+                        throw Exception.ArgumentNull(nameof(elementType));
 
-                    this.elementType = elementType;
+                    ElementType = elementType;
                 }
 
-                public Type ElementType
-                {
-                    get
-                    {
-                        return this.elementType;
-                    }
-                }
+                public Type ElementType { get; }
 
                 public string Scope { get; set; }
 
@@ -224,9 +180,9 @@ namespace Microsoft.Azure.ServiceBus
             {
                 public SynchronizationObjectAttribute()
                 {
-                    this.Blocking = true;
-                    this.Scope = Strings.DeclaringInstance;
-                    this.Kind = SynchronizationKind.FromFieldType;
+                    Blocking = true;
+                    Scope = Strings.DeclaringInstance;
+                    Kind = SynchronizationKind.FromFieldType;
                 }
 
                 public bool Blocking { get; set; }
@@ -236,24 +192,16 @@ namespace Microsoft.Azure.ServiceBus
                 public SynchronizationKind Kind { get; set; }
             }
 
-            [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = true)]
+            [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
             [Conditional("CODE_ANALYSIS")]
             public sealed class SynchronizationPrimitiveAttribute : Attribute
             {
-                readonly BlocksUsing blocksUsing;
-
                 public SynchronizationPrimitiveAttribute(BlocksUsing blocksUsing)
                 {
-                    this.blocksUsing = blocksUsing;
+                    BlocksUsing = blocksUsing;
                 }
 
-                public BlocksUsing BlocksUsing
-                {
-                    get
-                    {
-                        return this.blocksUsing;
-                    }
-                }
+                public BlocksUsing BlocksUsing { get; }
 
                 public bool SupportsAsync { get; set; }
 
@@ -282,68 +230,38 @@ namespace Microsoft.Azure.ServiceBus
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class GuaranteeNonBlockingAttribute : Attribute
                 {
-                    public GuaranteeNonBlockingAttribute()
-                    {
-                    }
                 }
 
                 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = false)]
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class NonThrowingAttribute : Attribute
                 {
-                    public NonThrowingAttribute()
-                    {
-                    }
                 }
 
                 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, AllowMultiple = true, Inherited = false)]
                 [Conditional("CODE_ANALYSIS")]
                 public class ThrowsAttribute : Attribute
                 {
-                    readonly Type exceptionType;
-                    readonly string diagnosis;
-
                     public ThrowsAttribute(Type exceptionType, string diagnosis)
                     {
                         if (exceptionType == null)
-                        {
-                            throw Fx.Exception.ArgumentNull(nameof(exceptionType));
-                        }
+                            throw Exception.ArgumentNull(nameof(exceptionType));
                         if (string.IsNullOrEmpty(diagnosis))
-                        {
-                            ////throw Fx.Exception.ArgumentNullOrEmpty("diagnosis");
                             throw new ArgumentNullException(nameof(diagnosis));
-                        }
 
-                        this.exceptionType = exceptionType;
-                        this.diagnosis = diagnosis;
+                        ExceptionType = exceptionType;
+                        Diagnosis = diagnosis;
                     }
 
-                    public Type ExceptionType
-                    {
-                        get
-                        {
-                            return this.exceptionType;
-                        }
-                    }
+                    public Type ExceptionType { get; }
 
-                    public string Diagnosis
-                    {
-                        get
-                        {
-                            return this.diagnosis;
-                        }
-                    }
+                    public string Diagnosis { get; }
                 }
 
                 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = false)]
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class InheritThrowsAttribute : Attribute
                 {
-                    public InheritThrowsAttribute()
-                    {
-                    }
-
                     public Type FromDeclaringType { get; set; }
 
                     public string From { get; set; }
@@ -353,15 +271,11 @@ namespace Microsoft.Azure.ServiceBus
                     AttributeTargets.Assembly | AttributeTargets.Module | AttributeTargets.Class |
                     AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Constructor | AttributeTargets.Method |
                     AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Event | AttributeTargets.Interface |
-                    AttributeTargets.Delegate, AllowMultiple = false,
+                    AttributeTargets.Delegate,
                     Inherited = false)]
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class SecurityNoteAttribute : Attribute
                 {
-                    public SecurityNoteAttribute()
-                    {
-                    }
-
                     public string Critical { get; set; }
 
                     public string Safe { get; set; }
