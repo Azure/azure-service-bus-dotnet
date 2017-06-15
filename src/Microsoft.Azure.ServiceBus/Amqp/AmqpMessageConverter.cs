@@ -209,8 +209,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 sbMessage = new SBMessage();
             }
 
-            var sections = amqpMessage.Sections;
-            if ((sections & SectionFlag.Header) != 0)
+            var sectionFlags = amqpMessage.Sections;
+            if ((sectionFlags & SectionFlag.Header) != 0)
             {
                 if (amqpMessage.Header.Ttl != null)
                     sbMessage.TimeToLive = TimeSpan.FromMilliseconds(amqpMessage.Header.Ttl.Value);
@@ -219,7 +219,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     sbMessage.SystemProperties.DeliveryCount = (int) (amqpMessage.Header.DeliveryCount.Value + 1);
             }
 
-            if ((sections & SectionFlag.Properties) != 0)
+            if ((sectionFlags & SectionFlag.Properties) != 0)
             {
                 if (amqpMessage.Properties.MessageId != null)
                     sbMessage.MessageId = amqpMessage.Properties.MessageId.ToString();
@@ -248,7 +248,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             // Do applicaiton properties before message annotations, because the application properties
             // can be updated by entries from message annotation.
-            if ((sections & SectionFlag.ApplicationProperties) != 0)
+            if ((sectionFlags & SectionFlag.ApplicationProperties) != 0)
                 foreach (var pair in amqpMessage.ApplicationProperties.Map)
                 {
                     object netObject;
@@ -256,7 +256,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         sbMessage.UserProperties[pair.Key.ToString()] = netObject;
                 }
 
-            if ((sections & SectionFlag.MessageAnnotations) != 0)
+            if ((sectionFlags & SectionFlag.MessageAnnotations) != 0)
                 foreach (var pair in amqpMessage.MessageAnnotations.Map)
                 {
                     var key = pair.Key.ToString();

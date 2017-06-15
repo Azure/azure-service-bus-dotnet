@@ -45,7 +45,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         ///     The <see cref="ServiceBusConnectionStringBuilder" /> used for the connection
         ///     details.
         /// </param>
-        /// <param name="receiveMode">The <see cref="ReceiveMode.ReceiveMode" /> used to specify how messages are received.</param>
+        /// <param name="receiveMode">The <see cref="ServiceBus.ReceiveMode" /> used to specify how messages are received.</param>
         /// <param name="retryPolicy">The <see cref="RetryPolicy" /> that will be used when communicating with Service Bus</param>
         /// <param name="prefetchCount">
         ///     The <see cref="PrefetchCount" /> that specifies the upper limit of messages this receiver
@@ -69,7 +69,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         ///     Subscriptions this will be the path. You can use
         ///     <see cref="EntityNameHelper.FormatSubscriptionPath(string, string)" />, to help create this path.
         /// </param>
-        /// <param name="receiveMode">The <see cref="ReceiveMode.ReceiveMode" /> used to specify how messages are received.</param>
+        /// <param name="receiveMode">The <see cref="ServiceBus.ReceiveMode" /> used to specify how messages are received.</param>
         /// <param name="retryPolicy">The <see cref="RetryPolicy" /> that will be used when communicating with Service Bus</param>
         /// <param name="prefetchCount">
         ///     The <see cref="PrefetchCount" /> that specifies the upper limit of messages this receiver
@@ -123,7 +123,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         ///     This constructor should only be used by inherited members, such as the <see cref="IMessageSession" />.
         /// </summary>
-        /// <param name="receiveMode">The <see cref="ReceiveMode.ReceiveMode" /> used to specify how messages are received.</param>
+        /// <param name="receiveMode">The <see cref="ServiceBus.ReceiveMode" /> used to specify how messages are received.</param>
         /// <param name="operationTimeout">The default operation timeout to be used.</param>
         /// <param name="retryPolicy">The <see cref="RetryPolicy" /> to be used.</param>
         protected MessageReceiver(ReceiveMode receiveMode, TimeSpan operationTimeout, RetryPolicy retryPolicy)
@@ -163,7 +163,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         FaultTolerantAmqpObject<RequestResponseAmqpLink> RequestResponseLinkManager { get; }
 
         /// <summary>
-        ///     Gets the <see cref="ReceiveMode.ReceiveMode" /> of the current receiver.
+        ///     Gets the <see cref="ServiceBus.ReceiveMode" /> of the current receiver.
         /// </summary>
         public ReceiveMode ReceiveMode { get; protected set; }
 
