@@ -41,6 +41,6 @@ namespace Microsoft.Azure.ServiceBus
 
         public static readonly TimeSpan NoMessageBackoffTimeSpan = TimeSpan.FromSeconds(5);
 
-        public static readonly TimeSpan MessageReceiverStartPumpInitialReceiveTimeout = TimeSpan.Zero;
+        public static readonly TimeSpan MessageReceiverStartPumpInitialReceiveTimeout = TimeSpan.FromSeconds(1);
     }
 }
