@@ -28,7 +28,9 @@ namespace Microsoft.Azure.ServiceBus
         public ServiceBusConnectionStringBuilder(string connectionString)
         {
             if (!string.IsNullOrWhiteSpace(connectionString))
+            {
                 ParseConnectionString(connectionString);
+            }
         }
 
         /// <summary>
@@ -41,14 +43,22 @@ namespace Microsoft.Azure.ServiceBus
         public ServiceBusConnectionStringBuilder(string namespaceName, string entityPath, string sharedAccessKeyName, string sharedAccessKey)
         {
             if (string.IsNullOrWhiteSpace(namespaceName))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(namespaceName));
+            }
             if (string.IsNullOrWhiteSpace(sharedAccessKeyName) || string.IsNullOrWhiteSpace(sharedAccessKey))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(string.IsNullOrWhiteSpace(sharedAccessKeyName) ? nameof(sharedAccessKeyName) : nameof(sharedAccessKey));
+            }
 
             if (namespaceName.Contains("."))
+            {
                 Endpoint = new Uri(EndpointScheme + "://" + namespaceName);
+            }
             else
+            {
                 Endpoint = new Uri(EndpointFormat.FormatInvariant(namespaceName));
+            }
 
             EntityPath = entityPath;
             SasKeyName = sharedAccessKeyName;
@@ -84,13 +94,19 @@ namespace Microsoft.Azure.ServiceBus
         {
             var connectionStringBuilder = new StringBuilder();
             if (Endpoint != null)
+            {
                 connectionStringBuilder.Append($"{EndpointConfigName}{KeyValueSeparator}{Endpoint}{KeyValuePairDelimiter}");
+            }
 
             if (!string.IsNullOrWhiteSpace(SasKeyName))
+            {
                 connectionStringBuilder.Append($"{SharedAccessKeyNameConfigName}{KeyValueSeparator}{SasKeyName}{KeyValuePairDelimiter}");
+            }
 
             if (!string.IsNullOrWhiteSpace(SasKey))
+            {
                 connectionStringBuilder.Append($"{SharedAccessKeyConfigName}{KeyValueSeparator}{SasKey}");
+            }
 
             return connectionStringBuilder.ToString();
         }
@@ -102,7 +118,9 @@ namespace Microsoft.Azure.ServiceBus
         public string GetEntityConnectionString()
         {
             if (string.IsNullOrWhiteSpace(EntityPath))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(EntityPath));
+            }
 
             return $"{GetNamespaceConnectionString()}{KeyValuePairDelimiter}{EntityPathConfigName}{KeyValueSeparator}{EntityPath}{KeyValuePairDelimiter}";
         }
@@ -114,7 +132,9 @@ namespace Microsoft.Azure.ServiceBus
         public override string ToString()
         {
             if (string.IsNullOrWhiteSpace(EntityPath))
+            {
                 return GetNamespaceConnectionString();
+            }
 
             return GetEntityConnectionString();
         }
@@ -129,19 +149,31 @@ namespace Microsoft.Azure.ServiceBus
                 var keyAndValue = keyValuePair.Split(new[] {KeyValueSeparator}, 2);
                 var key = keyAndValue[0];
                 if (keyAndValue.Length != 2)
+                {
                     throw Fx.Exception.Argument(nameof(connectionString), $"Value for the connection string parameter name '{key}' was not found.");
+                }
 
                 var value = keyAndValue[1];
                 if (key.Equals(EndpointConfigName, StringComparison.OrdinalIgnoreCase))
+                {
                     Endpoint = new Uri(value);
+                }
                 else if (key.Equals(SharedAccessKeyNameConfigName, StringComparison.OrdinalIgnoreCase))
+                {
                     SasKeyName = value;
+                }
                 else if (key.Equals(EntityPathConfigName, StringComparison.OrdinalIgnoreCase))
+                {
                     EntityPath = value;
+                }
                 else if (key.Equals(SharedAccessKeyConfigName, StringComparison.OrdinalIgnoreCase))
+                {
                     SasKey = value;
+                }
                 else
+                {
                     throw Fx.Exception.Argument(nameof(connectionString), $"Illegal connection string parameter name '{key}'");
+                }
             }
         }
     }

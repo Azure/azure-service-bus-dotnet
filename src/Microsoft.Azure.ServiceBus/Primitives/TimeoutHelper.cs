@@ -28,7 +28,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             deadlineSet = timeout == TimeSpan.MaxValue;
 
             if (startTimeout && !deadlineSet)
+            {
                 SetDeadline();
+            }
         }
 
         public TimeSpan OriginalTimeout { get; }
@@ -41,7 +43,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public static TimeSpan FromMilliseconds(int milliseconds)
         {
             if (milliseconds == Timeout.Infinite)
+            {
                 return TimeSpan.MaxValue;
+            }
 
             return TimeSpan.FromMilliseconds(milliseconds);
         }
@@ -49,18 +53,24 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public static int ToMilliseconds(TimeSpan timeout)
         {
             if (timeout == TimeSpan.MaxValue)
+            {
                 return Timeout.Infinite;
+            }
 
             var ticks = Ticks.FromTimeSpan(timeout);
             if (ticks / TimeSpan.TicksPerMillisecond > int.MaxValue)
+            {
                 return int.MaxValue;
+            }
             return Ticks.ToMilliseconds(ticks);
         }
 
         public static TimeSpan Min(TimeSpan val1, TimeSpan val2)
         {
             if (val1 > val2)
+            {
                 return val2;
+            }
 
             return val1;
         }
@@ -68,7 +78,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public static DateTime Min(DateTime val1, DateTime val2)
         {
             if (val1 > val2)
+            {
                 return val2;
+            }
 
             return val1;
         }
@@ -81,9 +93,13 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public static DateTime Add(DateTime time, TimeSpan timeout)
         {
             if (timeout >= TimeSpan.Zero && DateTime.MaxValue - time <= timeout)
+            {
                 return DateTime.MaxValue;
+            }
             if (timeout <= TimeSpan.Zero && DateTime.MinValue - time >= timeout)
+            {
                 return DateTime.MinValue;
+            }
             return time + timeout;
         }
 
@@ -95,7 +111,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public static TimeSpan Divide(TimeSpan timeout, int factor)
         {
             if (timeout == TimeSpan.MaxValue)
+            {
                 return TimeSpan.MaxValue;
+            }
 
             return Ticks.ToTimeSpan(Ticks.FromTimeSpan(timeout) / factor + 1);
         }
@@ -108,7 +126,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public static void ThrowIfNegativeArgument(TimeSpan timeout, string argumentName)
         {
             if (timeout < TimeSpan.Zero)
+            {
                 throw Fx.Exception.ArgumentOutOfRange(argumentName, timeout, Resources.TimeoutMustBeNonNegative.FormatForUser(argumentName, timeout));
+            }
         }
 
         public static void ThrowIfNonPositiveArgument(TimeSpan timeout)
@@ -119,7 +139,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public static void ThrowIfNonPositiveArgument(TimeSpan timeout, string argumentName)
         {
             if (timeout <= TimeSpan.Zero)
+            {
                 throw Fx.Exception.ArgumentOutOfRange(argumentName, timeout, Resources.TimeoutMustBePositive.FormatForUser(argumentName, timeout));
+            }
         }
 
         public static bool WaitOne(WaitHandle waitHandle, TimeSpan timeout)
@@ -143,11 +165,15 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             }
 
             if (deadline == DateTime.MaxValue)
+            {
                 return TimeSpan.MaxValue;
+            }
 
             var remaining = deadline - DateTime.UtcNow;
             if (remaining <= TimeSpan.Zero)
+            {
                 return TimeSpan.Zero;
+            }
 
             return remaining;
         }

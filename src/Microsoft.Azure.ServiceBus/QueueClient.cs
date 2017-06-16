@@ -42,7 +42,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         ///     Instantiates a new <see cref="QueueClient" /> to perform operations on a queue.
         /// </summary>
-        /// <param name="connectionString">Namespace connection string.
+        /// <param name="connectionString">
+        ///     Namespace connection string.
         ///     <remarks>Should not contain queue information.</remarks>
         /// </param>
         /// <param name="entityPath">Path to the queue</param>
@@ -52,9 +53,13 @@ namespace Microsoft.Azure.ServiceBus
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
+            }
             if (string.IsNullOrWhiteSpace(entityPath))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
+            }
 
             ownsConnection = true;
         }
@@ -82,10 +87,14 @@ namespace Microsoft.Azure.ServiceBus
             set
             {
                 if (value < 0)
+                {
                     throw Fx.Exception.ArgumentOutOfRange(nameof(PrefetchCount), value, "Value cannot be less than 0.");
+                }
                 prefetchCount = value;
                 if (innerReceiver != null)
+                {
                     innerReceiver.PrefetchCount = value;
+                }
             }
         }
 
@@ -94,16 +103,20 @@ namespace Microsoft.Azure.ServiceBus
             get
             {
                 if (innerSender == null)
+                {
                     lock (syncLock)
                     {
                         if (innerSender == null)
+                        {
                             innerSender = new MessageSender(
                                 QueueName,
                                 MessagingEntityType.Queue,
                                 ServiceBusConnection,
                                 CbsTokenProvider,
                                 RetryPolicy);
+                        }
                     }
+                }
 
                 return innerSender;
             }
@@ -114,9 +127,11 @@ namespace Microsoft.Azure.ServiceBus
             get
             {
                 if (innerReceiver == null)
+                {
                     lock (syncLock)
                     {
                         if (innerReceiver == null)
+                        {
                             innerReceiver = new MessageReceiver(
                                 QueueName,
                                 MessagingEntityType.Queue,
@@ -125,7 +140,9 @@ namespace Microsoft.Azure.ServiceBus
                                 CbsTokenProvider,
                                 RetryPolicy,
                                 PrefetchCount);
+                        }
                     }
+                }
 
                 return innerReceiver;
             }
@@ -136,9 +153,11 @@ namespace Microsoft.Azure.ServiceBus
             get
             {
                 if (sessionClient == null)
+                {
                     lock (syncLock)
                     {
                         if (sessionClient == null)
+                        {
                             sessionClient = new AmqpSessionClient(
                                 ClientId,
                                 Path,
@@ -148,7 +167,9 @@ namespace Microsoft.Azure.ServiceBus
                                 ServiceBusConnection,
                                 CbsTokenProvider,
                                 RetryPolicy);
+                        }
                     }
+                }
 
                 return sessionClient;
             }
@@ -159,14 +180,18 @@ namespace Microsoft.Azure.ServiceBus
             get
             {
                 if (sessionPumpHost == null)
+                {
                     lock (syncLock)
                     {
                         if (sessionPumpHost == null)
+                        {
                             sessionPumpHost = new SessionPumpHost(
                                 ClientId,
                                 ReceiveMode,
                                 SessionClient);
+                        }
                     }
+                }
 
                 return sessionPumpHost;
             }
@@ -298,15 +323,21 @@ namespace Microsoft.Azure.ServiceBus
         protected override async Task OnClosingAsync()
         {
             if (innerSender != null)
+            {
                 await innerSender.CloseAsync().ConfigureAwait(false);
+            }
 
             if (innerReceiver != null)
+            {
                 await innerReceiver.CloseAsync().ConfigureAwait(false);
+            }
 
             sessionPumpHost?.Close();
 
             if (ownsConnection)
+            {
                 await ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+            }
         }
 
         /// <summary>Register a session handler.</summary>

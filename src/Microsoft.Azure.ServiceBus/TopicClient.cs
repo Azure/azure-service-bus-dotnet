@@ -35,7 +35,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         ///     Instantiates a new <see cref="TopicClient" /> to perform operations on a topic.
         /// </summary>
-        /// <param name="connectionString">Namespace connection string.
+        /// <param name="connectionString">
+        ///     Namespace connection string.
         ///     <remarks>Should not contain topic information.</remarks>
         /// </param>
         /// <param name="entityPath">Path to the topic</param>
@@ -44,9 +45,13 @@ namespace Microsoft.Azure.ServiceBus
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
+            }
             if (string.IsNullOrWhiteSpace(entityPath))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
+            }
 
             ownsConnection = true;
         }
@@ -73,16 +78,20 @@ namespace Microsoft.Azure.ServiceBus
             get
             {
                 if (innerSender == null)
+                {
                     lock (syncLock)
                     {
                         if (innerSender == null)
+                        {
                             innerSender = new MessageSender(
                                 TopicName,
                                 MessagingEntityType.Topic,
                                 ServiceBusConnection,
                                 CbsTokenProvider,
                                 RetryPolicy);
+                        }
                     }
+                }
 
                 return innerSender;
             }
@@ -145,10 +154,14 @@ namespace Microsoft.Azure.ServiceBus
         protected override async Task OnClosingAsync()
         {
             if (innerSender != null)
+            {
                 await innerSender.CloseAsync().ConfigureAwait(false);
+            }
 
             if (ownsConnection)
+            {
                 await ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+            }
         }
 
         /// <summary>

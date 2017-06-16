@@ -71,6 +71,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await receiver.CloseAsync().ConfigureAwait(false);
             }
         }
+
+        // TODO: Update this when Session is implemented
         /*
         [Fact]
         async Task SessionLockLostExceptionTest()
@@ -123,7 +125,5 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
         */
-
-        // TODO: Update this when Session is implemented
     }
 }

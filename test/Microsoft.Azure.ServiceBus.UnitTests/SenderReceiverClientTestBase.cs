@@ -234,7 +234,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             IList<Message> messages = null;
             var retryCount = 5;
             while (messages == null && --retryCount > 0)
+            {
                 messages = await messageReceiver.ReceiveAsync(2);
+            }
 
             Assert.NotNull(messages);
             Assert.True(messages.Count == 1);
@@ -256,7 +258,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     TestUtility.Log($"Received message: SequenceNumber: {message.SystemProperties.SequenceNumber}");
                     count++;
                     if (messageReceiver.ReceiveMode == ReceiveMode.PeekLock && !autoComplete)
+                    {
                         await messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
+                    }
                 },
                 new MessageHandlerOptions
                 {
@@ -267,15 +271,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             // Wait for the OnMessage Tasks to finish
             var stopwatch = Stopwatch.StartNew();
             while (stopwatch.Elapsed.TotalSeconds <= 60)
+            {
                 if (count == messageCount)
                 {
                     TestUtility.Log($"All '{messageCount}' messages Received.");
                     break;
                 }
-                else
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(5));
-                }
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
             Assert.True(count == messageCount);
         }
 
@@ -288,7 +291,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             messageReceiver.RegisterMessageHandler(
                 (message, token) => throw new Exception("Was not supposed to receive any messages"),
-                new MessageHandlerOptions { MaxConcurrentCalls = maxConcurrentCalls, AutoComplete = autoComplete });
+                new MessageHandlerOptions
+                {
+                    MaxConcurrentCalls = maxConcurrentCalls,
+                    AutoComplete = autoComplete
+                });
 
             stopwatch.Stop();
             Assert.True(stopwatch.Elapsed.TotalSeconds < 10, "OnMessage handler registration took longer than 10 seconds.");

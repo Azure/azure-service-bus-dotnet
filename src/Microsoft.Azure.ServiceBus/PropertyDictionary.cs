@@ -38,14 +38,18 @@ namespace Microsoft.Azure.ServiceBus
             set
             {
                 if (IsSupportedObject(value))
+                {
                     inner[key] = value;
+                }
             }
         }
 
         public void Add(string key, object value)
         {
             if (IsSupportedObject(value))
+            {
                 inner.Add(key, value);
+            }
         }
 
         public bool ContainsKey(string key)
@@ -105,7 +109,9 @@ namespace Microsoft.Azure.ServiceBus
                 var type = value.GetType();
 
                 if (!SerializationUtilities.IsSupportedPropertyType(type))
+                {
                     throw new ArgumentException(Resources.NotSupportedPropertyType.FormatForUser(type), nameof(value));
+                }
             }
 
             return true;

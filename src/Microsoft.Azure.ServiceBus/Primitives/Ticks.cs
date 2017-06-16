@@ -39,16 +39,24 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public static long Add(long firstTicks, long secondTicks)
         {
             if (firstTicks == long.MaxValue || firstTicks == long.MinValue)
+            {
                 return firstTicks;
+            }
 
             if (secondTicks == long.MaxValue || secondTicks == long.MinValue)
+            {
                 return secondTicks;
+            }
 
             if (firstTicks >= 0 && long.MaxValue - firstTicks <= secondTicks)
+            {
                 return long.MaxValue - 1;
+            }
 
             if (firstTicks <= 0 && long.MinValue - firstTicks >= secondTicks)
+            {
                 return long.MinValue + 1;
+            }
 
             return checked(firstTicks + secondTicks);
         }

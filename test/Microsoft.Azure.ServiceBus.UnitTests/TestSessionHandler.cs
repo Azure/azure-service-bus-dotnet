@@ -55,12 +55,18 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             TestUtility.Log($"Received Session: {session.SessionId} message: SequenceNumber: {message.SystemProperties.SequenceNumber}");
 
             if (receiveMode == ReceiveMode.PeekLock && !sessionHandlerOptions.AutoComplete)
+            {
                 await session.CompleteAsync(message.SystemProperties.LockToken);
+            }
 
             if (!sessionMessageMap.ContainsKey(session.SessionId))
+            {
                 sessionMessageMap[session.SessionId] = 1;
+            }
             else
+            {
                 sessionMessageMap[session.SessionId]++;
+            }
         }
 
         public async Task VerifyRun()
@@ -68,18 +74,19 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             // Wait for the OnMessage Tasks to finish
             var stopwatch = Stopwatch.StartNew();
             while (stopwatch.Elapsed.TotalSeconds <= 180)
+            {
                 if (totalMessageCount == MessagesPerSession * NumberOfSessions)
                 {
                     TestUtility.Log($"All '{totalMessageCount}' messages Received.");
                     break;
                 }
-                else
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(5));
-                }
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
 
             foreach (var keyValuePair in sessionMessageMap)
+            {
                 TestUtility.Log($"Session: {keyValuePair.Key}, Messages Received in this Session: {keyValuePair.Value}");
+            }
 
             Assert.True(sessionMessageMap.Keys.Count == NumberOfSessions);
             Assert.True(totalMessageCount == MessagesPerSession * NumberOfSessions);

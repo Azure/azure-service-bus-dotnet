@@ -21,14 +21,18 @@ namespace Microsoft.Azure.ServiceBus.Filters
         public SqlRuleAction(string sqlExpression)
         {
             if (string.IsNullOrEmpty(sqlExpression))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(sqlExpression));
+            }
 
             if (sqlExpression.Length > Constants.MaximumSqlRuleActionStatementLength)
+            {
                 throw Fx.Exception.Argument(
                     nameof(sqlExpression),
                     Resources.SqlFilterActionStatmentTooLong.FormatForUser(
                         sqlExpression.Length,
                         Constants.MaximumSqlRuleActionStatementLength));
+            }
 
             SqlExpression = sqlExpression;
         }

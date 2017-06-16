@@ -32,9 +32,11 @@ namespace Microsoft.Azure.ServiceBus
 
         public async Task StartPumpAsync()
         {
-            var initialMessage = await this.messageReceiver.ReceiveAsync(Constants.MessageReceiverStartPumpInitialReceiveTimeout).ConfigureAwait(false);
+            var initialMessage = await messageReceiver.ReceiveAsync(Constants.MessageReceiverStartPumpInitialReceiveTimeout).ConfigureAwait(false);
             if (initialMessage != null)
+            {
                 MessagingEventSource.Log.MessageReceiverPumpInitialMessageReceived(messageReceiver.ClientId, initialMessage);
+            }
 
             TaskExtensionHelper.Schedule(() => MessagePumpTask(initialMessage));
         }
@@ -152,7 +154,9 @@ namespace Microsoft.Azure.ServiceBus
             try
             {
                 if (messageReceiver.ReceiveMode == ReceiveMode.PeekLock)
+                {
                     await messageReceiver.AbandonAsync(message.SystemProperties.LockToken).ConfigureAwait(false);
+                }
             }
             catch (Exception exception)
             {
@@ -166,7 +170,9 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (messageReceiver.ReceiveMode == ReceiveMode.PeekLock &&
                     registerHandlerOptions.AutoComplete)
+                {
                     await messageReceiver.CompleteAsync(new[] {message.SystemProperties.LockToken}).ConfigureAwait(false);
+                }
             }
             catch (Exception exception)
             {
@@ -178,6 +184,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             while (!pumpCancellationToken.IsCancellationRequested &&
                    !renewLockCancellationToken.IsCancellationRequested)
+            {
                 try
                 {
                     var amount = MessagingUtilities.CalculateRenewAfterDuration(message.SystemProperties.LockedUntilUtc);
@@ -202,11 +209,16 @@ namespace Microsoft.Azure.ServiceBus
                     // TaskCancelled is expected here as renewTasks will be cancelled after the Complete call is made.
                     // Lets not bother user with this exception.
                     if (!(exception is TaskCanceledException))
+                    {
                         registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.RenewLock));
+                    }
 
                     if (!MessagingUtilities.ShouldRetry(exception))
+                    {
                         break;
+                    }
                 }
+            }
         }
     }
 }

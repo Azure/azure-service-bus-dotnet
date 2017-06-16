@@ -18,7 +18,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var envConnectionString = Environment.GetEnvironmentVariable(TestConstants.ConnectionStringEnvironmentVariable);
 
             if (string.IsNullOrWhiteSpace(envConnectionString))
+            {
                 throw new InvalidOperationException($"'{TestConstants.ConnectionStringEnvironmentVariable}' environment variable was not found!");
+            }
 
             // Validate the connection string
             NamespaceConnectionString = new ServiceBusConnectionStringBuilder(envConnectionString).ToString();
@@ -46,7 +48,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         internal static async Task SendMessagesAsync(IMessageSender messageSender, int messageCount)
         {
             if (messageCount == 0)
+            {
                 await Task.FromResult(false);
+            }
 
             var messagesToSend = new List<Message>();
             for (var i = 0; i < messageCount; i++)
@@ -69,7 +73,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 var messages = await messageReceiver.ReceiveAsync(messageCount - messagesToReturn.Count);
                 if (messages != null)
+                {
                     messagesToReturn.AddRange(messages);
+                }
             }
 
             VerifyUniqueMessages(messagesToReturn);
@@ -93,7 +99,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 var message = await messageReceiver.PeekAsync(messageCount - peekedMessages.Count);
                 if (message != null)
+                {
                     peekedMessages.AddRange(message);
+                }
             }
 
             VerifyUniqueMessages(peekedMessages);
@@ -143,7 +151,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         internal static async Task SendSessionMessagesAsync(IMessageSender messageSender, int numberOfSessions, int messagesPerSession)
         {
             if (numberOfSessions == 0 || messagesPerSession == 0)
+            {
                 await Task.FromResult(false);
+            }
 
             for (var i = 0; i < numberOfSessions; i++)
             {
@@ -169,8 +179,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 var sequenceNumbers = new HashSet<long>();
                 foreach (var message in messages)
+                {
                     if (!sequenceNumbers.Add(message.SystemProperties.SequenceNumber))
+                    {
                         throw new Exception($"Sequence Number '{message.SystemProperties.SequenceNumber}' was repeated");
+                    }
+                }
             }
         }
     }

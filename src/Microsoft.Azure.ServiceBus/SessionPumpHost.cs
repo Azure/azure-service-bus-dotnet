@@ -47,7 +47,9 @@ namespace Microsoft.Azure.ServiceBus
             lock (syncLock)
             {
                 if (sessionReceivePump != null)
+                {
                     throw new InvalidOperationException(Resources.SessionHandlerAlreadyRegistered);
+                }
 
                 sessionPumpCancellationTokenSource = new CancellationTokenSource();
                 sessionReceivePump = new SessionReceivePump(

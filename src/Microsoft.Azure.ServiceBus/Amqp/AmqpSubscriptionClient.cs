@@ -48,9 +48,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             get
             {
                 if (innerReceiver == null)
+                {
                     lock (syncLock)
                     {
                         if (innerReceiver == null)
+                        {
                             innerReceiver = new MessageReceiver(
                                 Path,
                                 MessagingEntityType.Subscriber,
@@ -59,7 +61,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                                 CbsTokenProvider,
                                 RetryPolicy,
                                 PrefetchCount);
+                        }
                     }
+                }
 
                 return innerReceiver;
             }
@@ -75,10 +79,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             set
             {
                 if (value < 0)
+                {
                     throw Fx.Exception.ArgumentOutOfRange(nameof(PrefetchCount), value, "Value cannot be less than 0.");
+                }
                 prefetchCount = value;
                 if (innerReceiver != null)
+                {
                     innerReceiver.PrefetchCount = value;
+                }
             }
         }
 
@@ -102,7 +110,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 var response = await InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode != AmqpResponseStatusCode.OK)
+                {
                     throw response.ToMessagingContractException();
+                }
             }
             catch (Exception exception)
             {
@@ -124,7 +134,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 var response = await InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode != AmqpResponseStatusCode.OK)
+                {
                     throw response.ToMessagingContractException();
+                }
             }
             catch (Exception exception)
             {

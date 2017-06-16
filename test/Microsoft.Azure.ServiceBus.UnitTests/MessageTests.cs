@@ -29,7 +29,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
                     // TODO: remove when per test cleanup is possible
                     if (receiveMode == ReceiveMode.PeekLock)
+                    {
                         await queueClient.CompleteAsync(firstReceivedMessage.SystemProperties.LockToken);
+                    }
                 }
                 finally
                 {

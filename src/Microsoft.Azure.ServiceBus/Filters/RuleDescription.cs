@@ -37,7 +37,9 @@ namespace Microsoft.Azure.ServiceBus.Filters
         public RuleDescription(Filter filter)
         {
             if (filter == null)
+            {
                 throw Fx.Exception.ArgumentNull(nameof(filter));
+            }
 
             Filter = filter;
         }
@@ -51,7 +53,9 @@ namespace Microsoft.Azure.ServiceBus.Filters
         public RuleDescription(string name, Filter filter)
         {
             if (filter == null)
+            {
                 throw Fx.Exception.ArgumentNull(nameof(filter));
+            }
 
             Filter = filter;
             Name = name;
@@ -69,7 +73,9 @@ namespace Microsoft.Azure.ServiceBus.Filters
             set
             {
                 if (value == null)
+                {
                     throw Fx.Exception.ArgumentNull(nameof(Filter));
+                }
 
                 filter = value;
             }
@@ -92,7 +98,9 @@ namespace Microsoft.Azure.ServiceBus.Filters
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
+                {
                     throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(Name));
+                }
 
                 name = value;
             }
@@ -101,25 +109,35 @@ namespace Microsoft.Azure.ServiceBus.Filters
         internal void ValidateDescriptionName()
         {
             if (string.IsNullOrWhiteSpace(name))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(name));
+            }
 
             if (name.Length > Constants.RuleNameMaximumLength)
+            {
                 throw Fx.Exception.ArgumentOutOfRange(
                     nameof(name),
                     name,
                     Resources.EntityNameLengthExceedsLimit.FormatForUser(name, Constants.RuleNameMaximumLength));
+            }
 
             if (name.Contains(Constants.PathDelimiter) || name.Contains(@"\"))
+            {
                 throw Fx.Exception.Argument(
                     nameof(name),
                     Resources.InvalidCharacterInEntityName.FormatForUser(Constants.PathDelimiter, name));
+            }
 
             string[] uriSchemeKeys = {"@", "?", "#"};
             foreach (var uriSchemeKey in uriSchemeKeys)
+            {
                 if (name.Contains(uriSchemeKey))
+                {
                     throw Fx.Exception.Argument(
                         nameof(name),
                         Resources.CharacterReservedForUriScheme.FormatForUser(nameof(name), uriSchemeKey));
+                }
+            }
         }
     }
 }

@@ -19,14 +19,22 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             };
 
             if (stripPath)
+            {
                 uriBuilder.Path = string.Empty;
+            }
 
             if (stripQueryParameters)
+            {
                 uriBuilder.Query = string.Empty;
+            }
 
             if (ensureTrailingSlash)
+            {
                 if (!uriBuilder.Path.EndsWith("/", StringComparison.Ordinal))
+                {
                     uriBuilder.Path += "/";
+                }
+            }
 
             return uriBuilder.Uri.AbsoluteUri;
         }

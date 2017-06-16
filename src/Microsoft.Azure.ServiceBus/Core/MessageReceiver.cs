@@ -84,9 +84,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             : this(entityPath, null, receiveMode, new ServiceBusNamespaceConnection(connectionString), null, retryPolicy, prefetchCount)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
+            }
             if (string.IsNullOrWhiteSpace(entityPath))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
+            }
 
             ownsConnection = true;
             var tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(ServiceBusConnection.SasKeyName, ServiceBusConnection.SasKey);
@@ -177,10 +181,14 @@ namespace Microsoft.Azure.ServiceBus.Core
             set
             {
                 if (value < 0)
+                {
                     throw Fx.Exception.ArgumentOutOfRange(nameof(PrefetchCount), value, "Value cannot be less than 0.");
+                }
                 prefetchCount = value;
                 if (ReceiveLinkManager.TryGetOpenedObject(out var link))
+                {
                     link.SetTotalLinkCredit((uint) value, true, true);
+                }
             }
         }
 
@@ -193,7 +201,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             internal set
             {
                 if (value < 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(LastPeekedSequenceNumber), value.ToString());
+                }
 
                 lastPeekedSequenceNumber = value;
             }
@@ -223,7 +233,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             var messages = await ReceiveAsync(1, serverWaitTime).ConfigureAwait(false);
             if (messages != null && messages.Count > 0)
+            {
                 return messages[0];
+            }
 
             return null;
         }
@@ -264,7 +276,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessageReceiveStop(ClientId, unprocessedMessageList?.Count ?? 0);
 
             if (unprocessedMessageList == null)
+            {
                 return unprocessedMessageList;
+            }
 
             return await ProcessMessages(unprocessedMessageList).ConfigureAwait(false);
         }
@@ -278,7 +292,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             var messages = await ReceiveBySequenceNumberAsync(new[] {sequenceNumber});
             if (messages != null && messages.Count > 0)
+            {
                 return messages[0];
+            }
 
             return null;
         }
@@ -573,6 +589,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             var processedMessage = message;
             foreach (var plugin in RegisteredPlugins)
+            {
                 try
                 {
                     MessagingEventSource.Log.PluginCallStarted(plugin.Name, message.MessageId);
@@ -583,15 +600,20 @@ namespace Microsoft.Azure.ServiceBus.Core
                 {
                     MessagingEventSource.Log.PluginCallFailed(plugin.Name, message.MessageId, ex.Message);
                     if (!plugin.ShouldContinueOnException)
+                    {
                         throw;
+                    }
                 }
+            }
             return processedMessage;
         }
 
         async Task<IList<Message>> ProcessMessages(IList<Message> messageList)
         {
             if (RegisteredPlugins.Count < 1)
+            {
                 return messageList;
+            }
 
             var processedMessageList = new List<Message>();
             foreach (var message in messageList)
@@ -620,7 +642,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             await RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
 
             if (ownsConnection)
+            {
                 await ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+            }
         }
 
         internal async Task GetSessionReceiverLinkAsync(TimeSpan serverWaitTime)
@@ -635,7 +659,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                 throw new ServiceBusException(false, Resources.AmqpFieldSessionId);
             }
             if (!string.IsNullOrWhiteSpace(tempSessionId))
+            {
                 SessionId = tempSessionId;
+            }
             long lockedUntilUtcTicks;
             LockedUntilUtc = receivingAmqpLink.Settings.Properties.TryGetValue(AmqpClientConstants.LockedUntilUtc, out lockedUntilUtcTicks) ? new DateTime(lockedUntilUtcTicks, DateTimeKind.Utc) : DateTime.MinValue;
         }
@@ -674,7 +700,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                     this).ConfigureAwait(false);
 
                 if (receiveLink.TerminalException != null)
+                {
                     throw receiveLink.TerminalException;
+                }
 
                 if (hasMessages && amqpMessages != null)
                 {
@@ -682,10 +710,14 @@ namespace Microsoft.Azure.ServiceBus.Core
                     foreach (var amqpMessage in amqpMessages)
                     {
                         if (brokeredMessages == null)
+                        {
                             brokeredMessages = new List<Message>();
+                        }
 
                         if (ReceiveMode == ReceiveMode.ReceiveAndDelete)
+                        {
                             receiveLink.DisposeDelivery(amqpMessage, true, AmqpConstants.AcceptedOutcome);
+                        }
 
                         var message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
                         brokeredMessages.Add(message);
@@ -720,7 +752,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                 requestMessage.Map[ManagementConstants.Properties.MessageCount] = messageCount;
 
                 if (!string.IsNullOrWhiteSpace(SessionId))
+                {
                     requestMessage.Map[ManagementConstants.Properties.SessionId] = SessionId;
+                }
 
                 var messages = new List<Message>();
 
@@ -739,13 +773,17 @@ namespace Microsoft.Azure.ServiceBus.Core
                     }
 
                     if (message != null)
+                    {
                         LastPeekedSequenceNumber = message.SystemProperties.SequenceNumber;
+                    }
 
                     return messages;
                 }
                 if (response.StatusCode == AmqpResponseStatusCode.NoContent ||
                     response.StatusCode == AmqpResponseStatusCode.NotFound && Equals(AmqpClientConstants.MessageNotFoundError, response.GetResponseErrorCondition()))
+                {
                     return messages;
+                }
                 throw response.ToMessagingContractException();
             }
             catch (Exception exception)
@@ -806,9 +844,13 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             var lockTokenGuids = lockTokens.Select(lt => new Guid(lt));
             if (lockTokenGuids.Any(lt => requestResponseLockedMessages.Contains(lt)))
+            {
                 await DisposeMessageRequestResponseAsync(lockTokenGuids, DispositionStatus.Completed).ConfigureAwait(false);
+            }
             else
+            {
                 await DisposeMessagesAsync(lockTokenGuids, AmqpConstants.AcceptedOutcome).ConfigureAwait(false);
+            }
         }
 
         /// <summary></summary>
@@ -818,9 +860,13 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             IEnumerable<Guid> lockTokens = new[] {new Guid(lockToken)};
             if (lockTokens.Any(lt => requestResponseLockedMessages.Contains(lt)))
+            {
                 await DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Abandoned).ConfigureAwait(false);
+            }
             else
+            {
                 await DisposeMessagesAsync(lockTokens, new Modified()).ConfigureAwait(false);
+            }
         }
 
         /// <summary></summary>
@@ -830,12 +876,16 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             IEnumerable<Guid> lockTokens = new[] {new Guid(lockToken)};
             if (lockTokens.Any(lt => requestResponseLockedMessages.Contains(lt)))
+            {
                 await DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Defered).ConfigureAwait(false);
+            }
             else
+            {
                 await DisposeMessagesAsync(lockTokens, new Modified
                 {
                     UndeliverableHere = true
                 }).ConfigureAwait(false);
+            }
         }
 
         /// <summary></summary>
@@ -845,9 +895,13 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             IEnumerable<Guid> lockTokens = new[] {new Guid(lockToken)};
             if (lockTokens.Any(lt => requestResponseLockedMessages.Contains(lt)))
+            {
                 await DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended).ConfigureAwait(false);
+            }
             else
+            {
                 await DisposeMessagesAsync(lockTokens, AmqpConstants.RejectedOutcome).ConfigureAwait(false);
+            }
         }
 
         /// <summary></summary>
@@ -894,10 +948,12 @@ namespace Microsoft.Azure.ServiceBus.Core
                 var disposeMessageTasks = new Task<Outcome>[deliveryTags.Count];
                 var i = 0;
                 foreach (var deliveryTag in deliveryTags)
+                {
                     disposeMessageTasks[i++] = Task.Factory.FromAsync(
                         (c, s) => receiveLink.BeginDisposeMessage(deliveryTag, outcome, true, timeoutHelper.RemainingTime(), c, s),
                         a => receiveLink.EndDisposeMessage(a),
                         this);
+                }
 
                 var outcomes = await Task.WhenAll(disposeMessageTasks).ConfigureAwait(false);
                 Error error = null;
@@ -907,10 +963,13 @@ namespace Microsoft.Azure.ServiceBus.Core
                     if (disposedOutcome != null)
                     {
                         if (error.Condition.Equals(AmqpErrorCode.NotFound))
+                        {
                             if (isSessionReceiver)
+                            {
                                 throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
-                            else
-                                throw new MessageLockLostException(Resources.MessageLockLost);
+                            }
+                            throw new MessageLockLostException(Resources.MessageLockLost);
+                        }
 
                         throw AmqpExceptionHelper.ToMessagingContractException(error);
                     }
@@ -922,7 +981,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                     receiveLink != null && receiveLink.State != AmqpObjectState.Opened)
                 {
                     if (isSessionReceiver)
+                    {
                         throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
+                    }
 
                     throw new MessageLockLostException(Resources.MessageLockLost);
                 }
@@ -942,7 +1003,9 @@ namespace Microsoft.Azure.ServiceBus.Core
 
                 var amqpResponseMessage = await ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
                 if (amqpResponseMessage.StatusCode != AmqpResponseStatusCode.OK)
+                {
                     throw amqpResponseMessage.ToMessagingContractException();
+                }
             }
             catch (Exception exception)
             {
@@ -962,10 +1025,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.AmqpReceiveLinkCreateStart(ClientId, false, EntityType, Path);
 
             if (isSessionReceiver)
+            {
                 filterMap = new FilterSet
                 {
                     {AmqpClientConstants.SessionFilterName, SessionId}
                 };
+            }
 
             var linkSettings = new AmqpLinkSettings
             {
@@ -981,7 +1046,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             };
 
             if (EntityType != null)
+            {
                 linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int) EntityType);
+            }
 
             linkSettings.AddProperty(AmqpClientConstants.TimeoutName, (uint) timeout.TotalMilliseconds);
 
@@ -1023,7 +1090,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             int count;
             if (lockTokens == null || (count = lockTokens.Count()) == 0)
+            {
                 throw Fx.Exception.ArgumentNull(nameof(lockTokens));
+            }
 
             return count;
         }
@@ -1032,7 +1101,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             int count;
             if (sequenceNumbers == null || (count = sequenceNumbers.Count()) == 0)
+            {
                 throw Fx.Exception.ArgumentNull(nameof(sequenceNumbers));
+            }
 
             return count;
         }
@@ -1040,7 +1111,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         void ThrowIfNotPeekLockMode()
         {
             if (ReceiveMode != ReceiveMode.PeekLock)
+            {
                 throw Fx.Exception.AsError(new InvalidOperationException("The operation is only supported in 'PeekLock' receive mode."));
+            }
         }
 
         async Task OnMessageHandlerAsync(
@@ -1052,7 +1125,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             lock (messageReceivePumpSyncLock)
             {
                 if (receivePump != null)
+                {
                     throw new InvalidOperationException(Resources.MessageHandlerAlreadyRegistered);
+                }
 
                 receivePumpCancellationTokenSource = new CancellationTokenSource();
                 receivePump = new MessageReceivePump(this, registerHandlerOptions, callback, receivePumpCancellationTokenSource.Token);
@@ -1088,9 +1163,13 @@ namespace Microsoft.Azure.ServiceBus.Core
         public void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             if (serviceBusPlugin == null)
+            {
                 throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
+            }
             if (RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
+            {
                 throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
+            }
             RegisteredPlugins.Add(serviceBusPlugin);
         }
 
@@ -1101,9 +1180,13 @@ namespace Microsoft.Azure.ServiceBus.Core
         public void UnregisterPlugin(string serviceBusPluginName)
         {
             if (RegisteredPlugins == null)
+            {
                 return;
+            }
             if (serviceBusPluginName == null)
+            {
                 throw new ArgumentNullException(nameof(serviceBusPluginName), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginName)));
+            }
             if (RegisteredPlugins.Any(p => p.Name == serviceBusPluginName))
             {
                 var plugin = RegisteredPlugins.First(p => p.Name == serviceBusPluginName);

@@ -45,7 +45,9 @@ namespace Microsoft.Azure.ServiceBus
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(Resources.MaxConcurrentCallsMustBeGreaterThanZero.FormatForUser(value));
+                }
 
                 maxConcurrentCalls = value;
             }

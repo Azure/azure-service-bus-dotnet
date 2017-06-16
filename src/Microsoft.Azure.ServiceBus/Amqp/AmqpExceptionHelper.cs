@@ -44,12 +44,18 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         {
             var condition = response.ApplicationProperties.Map[ManagementConstants.Response.ErrorCondition];
             if (condition != null)
+            {
                 return (AmqpSymbol) condition;
+            }
 
             // Most of the time we should have an error condition
             foreach (var kvp in ConditionToStatusMap)
+            {
                 if (kvp.Value == statusCode)
+                {
                     return kvp.Key;
+                }
+            }
 
             return AmqpErrorCode.InternalError;
         }
@@ -59,7 +65,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             var responseStatusCode = AmqpResponseStatusCode.Unused;
             var statusCodeValue = responseMessage?.ApplicationProperties.Map[ManagementConstants.Response.StatusCode];
             if (statusCodeValue is int && Enum.IsDefined(typeof(AmqpResponseStatusCode), statusCodeValue))
+            {
                 responseStatusCode = (AmqpResponseStatusCode) statusCodeValue;
+            }
 
             return responseStatusCode;
         }
@@ -76,7 +84,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         public static Exception ToMessagingContractException(Error error, bool connectionError = false)
         {
             if (error == null)
+            {
                 return new ServiceBusException(true, "Unknown error.");
+            }
 
             return ToMessagingContractException(error.Condition.Value, error.Description, connectionError);
         }
@@ -84,45 +94,69 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         public static Exception ToMessagingContractException(string condition, string message, bool connectionError = false)
         {
             if (string.Equals(condition, AmqpClientConstants.TimeoutError.Value))
+            {
                 return new TimeoutException(message);
+            }
 
             if (string.Equals(condition, AmqpErrorCode.NotFound.Value))
             {
                 if (connectionError)
+                {
                     return new ServiceBusCommunicationException(message, null);
+                }
 
                 return new MessagingEntityNotFoundException(message, null);
             }
 
             if (string.Equals(condition, AmqpErrorCode.NotImplemented.Value))
+            {
                 return new NotSupportedException(message);
+            }
 
             if (string.Equals(condition, AmqpErrorCode.NotAllowed.Value))
+            {
                 return new InvalidOperationException(message);
+            }
 
             if (string.Equals(condition, AmqpErrorCode.UnauthorizedAccess.Value))
+            {
                 return new UnauthorizedAccessException(message);
+            }
 
             if (string.Equals(condition, AmqpClientConstants.ServerBusyError.Value))
+            {
                 return new ServerBusyException(message);
+            }
 
             if (string.Equals(condition, AmqpClientConstants.ArgumentError.Value))
+            {
                 return new ArgumentException(message);
+            }
 
             if (string.Equals(condition, AmqpClientConstants.ArgumentOutOfRangeError.Value))
+            {
                 return new ArgumentOutOfRangeException(message);
+            }
 
             if (string.Equals(condition, AmqpClientConstants.EntityDisabledError.Value))
+            {
                 return new MessagingEntityDisabledException(message, null);
+            }
 
             if (string.Equals(condition, AmqpClientConstants.MessageLockLostError.Value))
+            {
                 return new MessageLockLostException(message);
+            }
 
             if (string.Equals(condition, AmqpClientConstants.SessionLockLostError.Value))
+            {
                 return new SessionLockLostException(message);
+            }
 
             if (string.Equals(condition, AmqpErrorCode.ResourceLimitExceeded.Value))
+            {
                 return new QuotaExceededException(message);
+            }
 
             return new ServiceBusException(true, message);
         }
@@ -137,7 +171,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             var builder = new StringBuilder();
             builder.AppendFormat(CultureInfo.InvariantCulture, exception.Message);
             if (referenceId != null)
+            {
                 builder.AppendFormat(CultureInfo.InvariantCulture, $"Reference: {referenceId}, {DateTime.UtcNow}");
+            }
 
             var message = builder.ToString();
 
@@ -168,7 +204,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             string trackingContext = null;
             if (link.Settings.Properties != null &&
                 link.Settings.Properties.TryGetValue(AmqpClientConstants.TrackingIdName, out trackingContext))
+            {
                 return trackingContext;
+            }
 
             return null;
         }

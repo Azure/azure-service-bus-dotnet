@@ -19,7 +19,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         {
             var lockTokenBuilder = new StringBuilder();
             foreach (var lockToken in lockTokens)
+            {
                 lockTokenBuilder.AppendFormat(CultureInfo.InvariantCulture, "<LockToken>{0}</LockToken>", lockToken);
+            }
 
             return lockTokenBuilder.ToString();
         }
@@ -28,7 +30,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         {
             var sequenceNumberBuilder = new StringBuilder();
             foreach (var sequenceNumber in sequenceNumbers)
+            {
                 sequenceNumberBuilder.AppendFormat(CultureInfo.InvariantCulture, "<SequenceNumber>{0}</SequenceNumber>", sequenceNumber);
+            }
 
             return sequenceNumberBuilder.ToString();
         }

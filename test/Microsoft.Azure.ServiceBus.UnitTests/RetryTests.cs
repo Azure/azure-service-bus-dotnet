@@ -64,7 +64,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TimeSpan retryInterval2;
                 policy2.ShouldRetry(Constants.DefaultOperationTimeout, retryCount, exception, out retryInterval2);
                 if (retryInterval1 == retryInterval2)
+                {
                     retryMatchingInstances++;
+                }
             }
 
             Assert.True(retryMatchingInstances <= 3, "Out of 10 times we have 3 or more matching instances, which is alarming.");
@@ -173,7 +175,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 }, TimeSpan.FromMinutes(3));
 
             foreach (var task in tasks)
+            {
                 Assert.True(task.Status == TaskStatus.RanToCompletion);
+            }
             Assert.True(watch.Elapsed.TotalSeconds > 9);
             Assert.False(policy.IsServerBusy);
         }

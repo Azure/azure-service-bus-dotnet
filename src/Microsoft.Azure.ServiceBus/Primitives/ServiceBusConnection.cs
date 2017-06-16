@@ -93,7 +93,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             // Always create the CBS Link + Session
             var cbsLink = new AmqpCbsLink(connection);
             if (connection.Extensions.Find<AmqpCbsLink>() == null)
+            {
                 connection.Extensions.Add(cbsLink);
+            }
 
             MessagingEventSource.Log.AmqpConnectionCreated(hostName, connection);
 

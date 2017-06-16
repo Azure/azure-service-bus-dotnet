@@ -62,7 +62,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             {
                 var baseMessage = base.Message;
                 if (string.IsNullOrEmpty(ServiceBusNamespace))
+                {
                     return baseMessage;
+                }
 
                 return "{0}, ({1})".FormatInvariant(ServiceBusNamespace);
             }

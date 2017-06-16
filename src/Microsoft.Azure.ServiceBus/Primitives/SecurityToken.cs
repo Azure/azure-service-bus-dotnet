@@ -39,7 +39,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public SecurityToken(string tokenString, DateTime expiresAtUtc, string audience)
         {
             if (tokenString == null || audience == null)
+            {
                 throw Fx.Exception.ArgumentNull(tokenString == null ? nameof(tokenString) : nameof(audience));
+            }
 
             token = tokenString;
             this.expiresAtUtc = expiresAtUtc;
@@ -54,7 +56,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public SecurityToken(string tokenString, DateTime expiresAtUtc)
         {
             if (tokenString == null)
+            {
                 throw Fx.Exception.ArgumentNull(nameof(tokenString));
+            }
 
             token = tokenString;
             this.expiresAtUtc = expiresAtUtc;
@@ -68,7 +72,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public SecurityToken(string tokenString)
         {
             if (tokenString == null)
+            {
                 throw Fx.Exception.ArgumentNull(nameof(tokenString));
+            }
 
             token = tokenString;
             GetExpirationDateAndAudienceFromToken(tokenString, out expiresAtUtc, out audience);
@@ -109,7 +115,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             {
                 var pair = valueEncodedPair.Split(new[] {keyValueSeparator}, StringSplitOptions.None);
                 if (pair.Length != 2)
+                {
                     throw new FormatException(Resources.InvalidEncoding);
+                }
 
                 dictionary.Add(keyDecoder(pair[0]), valueDecoder(pair[1]));
             }
@@ -122,7 +130,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             string audience;
             var decodedToken = Decode(token, Decoder, Decoder, KeyValueSeparator, PairSeparator);
             if (!decodedToken.TryGetValue(AudienceFieldName, out audience))
+            {
                 throw new FormatException(Resources.TokenMissingAudience);
+            }
 
             return audience;
         }
@@ -132,10 +142,14 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             string expiresIn;
             var decodedToken = Decode(token, Decoder, Decoder, KeyValueSeparator, PairSeparator);
             if (!decodedToken.TryGetValue(ExpiresOnFieldName, out expiresIn))
+            {
                 throw new FormatException(Resources.TokenMissingExpiresOn);
+            }
 
             if (!decodedToken.TryGetValue(AudienceFieldName, out audience))
+            {
                 throw new FormatException(Resources.TokenMissingAudience);
+            }
 
             expiresOn = EpochTime + TimeSpan.FromSeconds(double.Parse(expiresIn, CultureInfo.InvariantCulture));
         }

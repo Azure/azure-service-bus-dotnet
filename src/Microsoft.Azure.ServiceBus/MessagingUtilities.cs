@@ -12,7 +12,9 @@ namespace Microsoft.Azure.ServiceBus
         {
             var remaining = lockedUntilUtc - DateTime.UtcNow;
             if (remaining < TimeSpan.Zero)
+            {
                 remaining = TimeSpan.FromTicks(Constants.MinimumLockDuration.Ticks / 2);
+            }
 
             var buffer = TimeSpan.FromTicks(Math.Min(remaining.Ticks / 2, Constants.MaximumRenewBufferDuration.Ticks));
             var renewAfter = remaining - buffer;

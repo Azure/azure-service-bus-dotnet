@@ -22,10 +22,10 @@ namespace Microsoft.Azure.ServiceBus
 
         readonly object serverBusyLock = new object();
 
+        readonly Timer serverBusyResetTimer;
+
         // This is a volatile copy of IsServerBusy. IsServerBusy is synchronized with a lock, whereas encounteredServerBusy is kept volatile for performance reasons.
         volatile bool encounteredServerBusy;
-
-        readonly Timer serverBusyResetTimer;
 
         /// <summary></summary>
         protected RetryPolicy()
@@ -71,7 +71,9 @@ namespace Microsoft.Azure.ServiceBus
             while (true)
             {
                 if (IsServerBusy)
+                {
                     await Task.Delay(ServerBusyBaseSleepTime).ConfigureAwait(false);
+                }
 
                 try
                 {
@@ -86,7 +88,9 @@ namespace Microsoft.Azure.ServiceBus
                     TimeSpan retryInterval;
                     currentRetryCount++;
                     if (exceptions == null)
+                    {
                         exceptions = new List<Exception>();
+                    }
                     exceptions.Add(exception);
 
                     if (ShouldRetry(
@@ -112,7 +116,9 @@ namespace Microsoft.Azure.ServiceBus
         public virtual bool IsRetryableException(Exception exception)
         {
             if (exception == null)
+            {
                 throw Fx.Exception.ArgumentNull(nameof(exception));
+            }
 
             var serviceBusException = exception as ServiceBusException;
             return serviceBusException?.IsTransient == true;
@@ -128,10 +134,14 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             if (lastException is ServerBusyException)
+            {
                 SetServerBusy(lastException.Message);
+            }
 
             if (IsRetryableException(lastException))
+            {
                 return OnShouldRetry(remainingTime, currentRetryCount, out retryInterval);
+            }
 
             retryInterval = TimeSpan.Zero;
             return false;
@@ -141,7 +151,9 @@ namespace Microsoft.Azure.ServiceBus
         {
             // multiple call to this method will not prolong the timer.
             if (encounteredServerBusy)
+            {
                 return;
+            }
 
             lock (serverBusyLock)
             {
@@ -158,7 +170,9 @@ namespace Microsoft.Azure.ServiceBus
         internal void ResetServerBusy()
         {
             if (!encounteredServerBusy)
+            {
                 return;
+            }
 
             lock (serverBusyLock)
             {

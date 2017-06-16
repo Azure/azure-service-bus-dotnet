@@ -38,7 +38,9 @@ namespace Microsoft.Azure.ServiceBus.Filters
             : this()
         {
             if (string.IsNullOrWhiteSpace(correlationId))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(correlationId));
+            }
 
             CorrelationId = correlationId;
         }
@@ -134,9 +136,13 @@ namespace Microsoft.Azure.ServiceBus.Filters
             if (value != null)
             {
                 if (firstExpression)
+                {
                     firstExpression = false;
+                }
                 else
+                {
                     builder.Append(" AND ");
+                }
 
                 builder.AppendFormat("{0} = '{1}'", propertyName, value);
             }

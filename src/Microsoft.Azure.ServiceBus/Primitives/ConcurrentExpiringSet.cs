@@ -28,7 +28,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         {
             DateTime expiration;
             if (dictionary.TryGetValue(key, out expiration))
+            {
                 return true;
+            }
 
             return false;
         }
@@ -38,7 +40,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             lock (cleanupSynObject)
             {
                 if (cleanupScheduled)
+                {
                     return;
+                }
 
                 cleanupScheduled = true;
                 Task.Run(() => CollectExpiredEntries());
@@ -53,11 +57,13 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             }
 
             foreach (var key in dictionary.Keys)
+            {
                 if (DateTime.UtcNow > dictionary[key])
                 {
                     DateTime entry;
                     dictionary.TryRemove(key, out entry);
                 }
+            }
 
             ScheduleCleanup();
         }

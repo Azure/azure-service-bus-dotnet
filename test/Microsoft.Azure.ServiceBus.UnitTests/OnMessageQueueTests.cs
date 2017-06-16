@@ -47,7 +47,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         void OnMessageRegistrationWithoutPendingMessagesReceiveAndDelete(string queueName, int maxConcurrentCalls)
         {
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
-            this.OnMessageRegistrationWithoutPendingMessagesTestCase(queueClient.InnerReceiver, maxConcurrentCalls, true);
+            OnMessageRegistrationWithoutPendingMessagesTestCase(queueClient.InnerReceiver, maxConcurrentCalls, true);
         }
 
         async Task OnMessageTestAsync(string queueName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)

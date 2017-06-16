@@ -15,7 +15,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             get
             {
                 if (exceptionUtility == null)
+                {
                     exceptionUtility = new ExceptionUtility();
+                }
 
                 return exceptionUtility;
             }
@@ -129,7 +131,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     Timeout = Strings.Infinite;
 
                     if (elementType == null)
+                    {
                         throw Exception.ArgumentNull(nameof(elementType));
+                    }
 
                     ElementType = elementType;
                     CacheAttrition = cacheAttrition;
@@ -156,7 +160,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     SizeLimit = Strings.Unbounded;
 
                     if (elementType == null)
+                    {
                         throw Exception.ArgumentNull(nameof(elementType));
+                    }
 
                     ElementType = elementType;
                 }
@@ -245,9 +251,13 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     public ThrowsAttribute(Type exceptionType, string diagnosis)
                     {
                         if (exceptionType == null)
+                        {
                             throw Exception.ArgumentNull(nameof(exceptionType));
+                        }
                         if (string.IsNullOrEmpty(diagnosis))
+                        {
                             throw new ArgumentNullException(nameof(diagnosis));
+                        }
 
                         ExceptionType = exceptionType;
                         Diagnosis = diagnosis;

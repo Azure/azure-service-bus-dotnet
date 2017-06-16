@@ -50,9 +50,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             : this(entityPath, null, new ServiceBusNamespaceConnection(connectionString), null, retryPolicy)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
+            }
             if (string.IsNullOrWhiteSpace(entityPath))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
+            }
 
             ownsConnection = true;
             var tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(
@@ -146,13 +150,17 @@ namespace Microsoft.Azure.ServiceBus.Core
         public async Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
             if (message == null)
+            {
                 throw Fx.Exception.ArgumentNull(nameof(message));
+            }
 
             if (scheduleEnqueueTimeUtc.CompareTo(DateTimeOffset.UtcNow) < 0)
+            {
                 throw Fx.Exception.ArgumentOutOfRange(
                     nameof(scheduleEnqueueTimeUtc),
                     scheduleEnqueueTimeUtc.ToString(),
                     "Cannot schedule messages in the past");
+            }
 
             message.ScheduledEnqueueTimeUtc = scheduleEnqueueTimeUtc.UtcDateTime;
             ValidateMessage(message);
@@ -212,13 +220,16 @@ namespace Microsoft.Azure.ServiceBus.Core
             await RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
 
             if (ownsConnection)
+            {
                 await ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+            }
         }
 
         async Task<Message> ProcessMessage(Message message)
         {
             var processedMessage = message;
             foreach (var plugin in RegisteredPlugins)
+            {
                 try
                 {
                     MessagingEventSource.Log.PluginCallStarted(plugin.Name, message.MessageId);
@@ -229,15 +240,20 @@ namespace Microsoft.Azure.ServiceBus.Core
                 {
                     MessagingEventSource.Log.PluginCallFailed(plugin.Name, message.MessageId, ex.Message);
                     if (!plugin.ShouldContinueOnException)
+                    {
                         throw;
+                    }
                 }
+            }
             return processedMessage;
         }
 
         async Task<IList<Message>> ProcessMessages(IList<Message> messageList)
         {
             if (RegisteredPlugins.Count < 1)
+            {
                 return messageList;
+            }
 
             var processedMessageList = new List<Message>();
             foreach (var message in messageList)
@@ -277,7 +293,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                     {
                         var size = (ulong) amqpMessage.SerializedMessageSize;
                         if (size > amqpLink.Settings.MaxMessageSize.Value)
+                        {
                             throw new NotImplementedException("MessageSizeExceededException: " + Resources.AmqpMessageSizeExceeded.FormatForUser(amqpMessage.DeliveryId.Value, size, amqpLink.Settings.MaxMessageSize.Value));
+                        }
                     }
 
                     var outcome = await amqpLink.SendMessageAsync(amqpMessage, GetNextDeliveryTag(), AmqpConstants.NullBinary, timeoutHelper.RemainingTime()).ConfigureAwait(false);
@@ -314,10 +332,14 @@ namespace Microsoft.Azure.ServiceBus.Core
                     entry[ManagementConstants.Properties.MessageId] = message.MessageId;
 
                     if (!string.IsNullOrWhiteSpace(message.SessionId))
+                    {
                         entry[ManagementConstants.Properties.SessionId] = message.SessionId;
+                    }
 
                     if (!string.IsNullOrWhiteSpace(message.PartitionKey))
+                    {
                         entry[ManagementConstants.Properties.PartitionKey] = message.PartitionKey;
+                    }
                 }
 
                 request.Map[ManagementConstants.Properties.Messages] = new List<AmqpMap>
@@ -328,9 +350,13 @@ namespace Microsoft.Azure.ServiceBus.Core
                 IEnumerable<long> sequenceNumbers = null;
                 var response = await ExecuteRequestResponseAsync(request);
                 if (response.StatusCode == AmqpResponseStatusCode.OK)
+                {
                     sequenceNumbers = response.GetValue<long[]>(ManagementConstants.Properties.SequenceNumbers);
+                }
                 else
+                {
                     response.ToMessagingContractException();
+                }
 
                 return sequenceNumbers?.FirstOrDefault() ?? 0;
             }
@@ -349,7 +375,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             var response = await ExecuteRequestResponseAsync(request).ConfigureAwait(false);
 
             if (response.StatusCode != AmqpResponseStatusCode.OK)
+            {
                 throw response.ToMessagingContractException();
+            }
         }
 
         ArraySegment<byte> GetNextDeliveryTag()
@@ -376,7 +404,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                 }
             };
             if (EntityType != null)
+            {
                 linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int) EntityType);
+            }
 
             var sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(Path, ServiceBusConnection, new[] {ClaimConstants.Send}, CbsTokenProvider, linkSettings);
             var sendingAmqpLink = (SendingAmqpLink) await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
@@ -419,7 +449,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             var count = 0;
             if (messageList == null)
+            {
                 throw Fx.Exception.ArgumentNull(nameof(messageList));
+            }
 
             foreach (var message in messageList)
             {
@@ -433,7 +465,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         static void ValidateMessage(Message message)
         {
             if (message.SystemProperties.IsLockTokenSet)
+            {
                 throw Fx.Exception.Argument(nameof(message), "Cannot send a message that was already received.");
+            }
         }
 
         /// <summary>
@@ -443,10 +477,14 @@ namespace Microsoft.Azure.ServiceBus.Core
         public void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             if (serviceBusPlugin == null)
+            {
                 throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
+            }
 
             if (RegisteredPlugins.Any(p => p.GetType() == serviceBusPlugin.GetType()))
+            {
                 throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
+            }
             RegisteredPlugins.Add(serviceBusPlugin);
         }
 
@@ -457,7 +495,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         public void UnregisterPlugin(string serviceBusPluginName)
         {
             if (serviceBusPluginName == null)
+            {
                 throw new ArgumentNullException(nameof(serviceBusPluginName), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginName)));
+            }
             if (RegisteredPlugins.Any(p => p.Name == serviceBusPluginName))
             {
                 var plugin = RegisteredPlugins.First(p => p.Name == serviceBusPluginName);

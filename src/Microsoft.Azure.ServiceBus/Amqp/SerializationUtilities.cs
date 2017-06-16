@@ -64,11 +64,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         public static PropertyValueType GetTypeId(object value)
         {
             if (value == null)
+            {
                 return PropertyValueType.Null;
+            }
 
             PropertyValueType typeId;
             if (TypeToIntMap.TryGetValue(value.GetType(), out typeId))
+            {
                 return typeId;
+            }
 
             return PropertyValueType.Unknown;
         }

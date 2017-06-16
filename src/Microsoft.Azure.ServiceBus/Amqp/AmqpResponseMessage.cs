@@ -14,14 +14,18 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     {
         AmqpResponseMessage(AmqpMessage responseMessage)
         {
-            this.AmqpMessage = responseMessage;
-            StatusCode = this.AmqpMessage.GetResponseStatusCode();
+            AmqpMessage = responseMessage;
+            StatusCode = AmqpMessage.GetResponseStatusCode();
             string trackingId;
-            if (this.AmqpMessage.ApplicationProperties.Map.TryGetValue(ManagementConstants.Properties.TrackingId, out trackingId))
+            if (AmqpMessage.ApplicationProperties.Map.TryGetValue(ManagementConstants.Properties.TrackingId, out trackingId))
+            {
                 TrackingId = trackingId;
+            }
 
             if (responseMessage.ValueBody != null)
+            {
                 Map = responseMessage.ValueBody.Value as AmqpMap;
+            }
         }
 
         public AmqpMessage AmqpMessage { get; }
@@ -40,14 +44,20 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         public TValue GetValue<TValue>(MapKey key)
         {
             if (Map == null)
+            {
                 throw new ArgumentException(AmqpValue.Name);
+            }
 
             var valueObject = Map[key];
             if (valueObject == null)
+            {
                 throw new ArgumentException(key.ToString());
+            }
 
             if (!(valueObject is TValue))
+            {
                 throw new ArgumentException(key.ToString());
+            }
 
             return (TValue) Map[key];
         }
@@ -55,7 +65,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         public IEnumerable<TValue> GetListValue<TValue>(MapKey key)
         {
             if (Map == null)
+            {
                 throw new ArgumentException(AmqpValue.Name);
+            }
 
             var list = (List<object>) Map[key];
 

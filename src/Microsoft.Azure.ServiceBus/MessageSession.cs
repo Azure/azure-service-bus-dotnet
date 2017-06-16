@@ -45,7 +45,9 @@ namespace Microsoft.Azure.ServiceBus
         protected override async Task OnClosingAsync()
         {
             if (InnerMessageReceiver != null)
+            {
                 await InnerMessageReceiver.CloseAsync().ConfigureAwait(false);
+            }
         }
 
         protected override Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
@@ -101,7 +103,9 @@ namespace Microsoft.Azure.ServiceBus
                 if (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.OK)
                 {
                     if (amqpResponseMessage.Map[ManagementConstants.Properties.SessionState] != null)
+                    {
                         sessionState = new BufferListStream(new[] {amqpResponseMessage.GetValue<ArraySegment<byte>>(ManagementConstants.Properties.SessionState)});
+                    }
                 }
                 else
                 {
@@ -121,7 +125,9 @@ namespace Microsoft.Azure.ServiceBus
             try
             {
                 if (sessionState != null && sessionState.CanSeek && sessionState.Position != 0)
+                {
                     throw new InvalidOperationException(Resources.CannotSerializeSessionStateWithPartiallyConsumedStream);
+                }
 
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.SetSessionStateOperation, OperationTimeout, null);
                 amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = SessionId;
@@ -139,7 +145,9 @@ namespace Microsoft.Azure.ServiceBus
 
                 var amqpResponseMessage = await InnerMessageReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
                 if (amqpResponseMessage.StatusCode != AmqpResponseStatusCode.OK)
+                {
                     throw amqpResponseMessage.ToMessagingContractException();
+                }
             }
             catch (Exception exception)
             {
@@ -157,9 +165,13 @@ namespace Microsoft.Azure.ServiceBus
                 var amqpResponseMessage = await InnerMessageReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 if (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.OK)
+                {
                     LockedUntilUtc = amqpResponseMessage.GetValue<DateTime>(ManagementConstants.Properties.Expiration);
+                }
                 else
+                {
                     throw amqpResponseMessage.ToMessagingContractException();
+                }
             }
             catch (Exception exception)
             {

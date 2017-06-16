@@ -54,20 +54,28 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             : base(tokenScope)
         {
             if (string.IsNullOrEmpty(keyName))
+            {
                 throw new ArgumentNullException(nameof(keyName));
+            }
 
             if (keyName.Length > SharedAccessSignatureToken.MaxKeyNameLength)
+            {
                 throw new ArgumentOutOfRangeException(
                     nameof(keyName),
                     Resources.ArgumentStringTooBig.FormatForUser(nameof(keyName), SharedAccessSignatureToken.MaxKeyNameLength));
+            }
 
             if (string.IsNullOrEmpty(sharedAccessKey))
+            {
                 throw new ArgumentNullException(nameof(sharedAccessKey));
+            }
 
             if (sharedAccessKey.Length > SharedAccessSignatureToken.MaxKeyLength)
+            {
                 throw new ArgumentOutOfRangeException(
                     nameof(sharedAccessKey),
                     Resources.ArgumentStringTooBig.FormatForUser(nameof(sharedAccessKey), SharedAccessSignatureToken.MaxKeyLength));
+            }
 
             this.keyName = keyName;
             this.tokenTimeToLive = tokenTimeToLive;
@@ -190,25 +198,35 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             internal static void Validate(string sharedAccessSignature)
             {
                 if (string.IsNullOrEmpty(sharedAccessSignature))
+                {
                     throw new ArgumentNullException(nameof(sharedAccessSignature));
+                }
 
                 var parsedFields = ExtractFieldValues(sharedAccessSignature);
 
                 string signature;
                 if (!parsedFields.TryGetValue(Signature, out signature))
+                {
                     throw new ArgumentNullException(Signature);
+                }
 
                 string expiry;
                 if (!parsedFields.TryGetValue(SignedExpiry, out expiry))
+                {
                     throw new ArgumentNullException(SignedExpiry);
+                }
 
                 string keyName;
                 if (!parsedFields.TryGetValue(SignedKeyName, out keyName))
+                {
                     throw new ArgumentNullException(SignedKeyName);
+                }
 
                 string encodedAudience;
                 if (!parsedFields.TryGetValue(SignedResource, out encodedAudience))
+                {
                     throw new ArgumentNullException(SignedResource);
+                }
             }
 
             static IDictionary<string, string> ExtractFieldValues(string sharedAccessSignature)
@@ -216,20 +234,28 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 var tokenLines = sharedAccessSignature.Split();
 
                 if (!string.Equals(tokenLines[0].Trim(), SharedAccessSignature, StringComparison.OrdinalIgnoreCase) || tokenLines.Length != 2)
+                {
                     throw new ArgumentNullException(nameof(sharedAccessSignature));
+                }
 
                 IDictionary<string, string> parsedFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 var tokenFields = tokenLines[1].Trim().Split(new[] {SasPairSeparator}, StringSplitOptions.None);
 
                 foreach (var tokenField in tokenFields)
+                {
                     if (tokenField != string.Empty)
                     {
                         var fieldParts = tokenField.Split(new[] {SasKeyValueSeparator}, StringSplitOptions.None);
                         if (string.Equals(fieldParts[0], SignedResource, StringComparison.OrdinalIgnoreCase))
+                        {
                             parsedFields.Add(fieldParts[0], fieldParts[1]);
+                        }
                         else
+                        {
                             parsedFields.Add(fieldParts[0], WebUtility.UrlDecode(fieldParts[1]));
+                        }
                     }
+                }
 
                 return parsedFields;
             }

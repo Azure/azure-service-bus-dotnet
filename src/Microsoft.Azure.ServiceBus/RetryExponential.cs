@@ -31,12 +31,16 @@ namespace Microsoft.Azure.ServiceBus
             TimeoutHelper.ThrowIfNonPositiveArgument(maxBackoff, nameof(maxBackoff));
 
             if (maxRetryCount <= 0)
+            {
                 throw new ArgumentOutOfRangeException(
                     nameof(maxRetryCount),
                     Resources.ArgumentMustBePositive.FormatForUser(nameof(maxRetryCount)));
+            }
 
             if (minBackoff >= maxBackoff)
+            {
                 throw new ArgumentException(Resources.ExponentialRetryBackoffRange.FormatForUser(minBackoff, maxBackoff));
+            }
 
             MinimalBackoff = minBackoff;
             MaximumBackoff = maxBackoff;

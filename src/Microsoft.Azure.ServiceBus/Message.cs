@@ -132,7 +132,9 @@ namespace Microsoft.Azure.ServiceBus
             get
             {
                 if (TimeToLive >= DateTime.MaxValue.Subtract(SystemProperties.EnqueuedTimeUtc))
+                {
                     return DateTime.MaxValue;
+                }
 
                 return SystemProperties.EnqueuedTimeUtc.Add(TimeToLive);
             }
@@ -157,7 +159,9 @@ namespace Microsoft.Azure.ServiceBus
             get
             {
                 if (timeToLive == TimeSpan.Zero)
+                {
                     return TimeSpan.MaxValue;
+                }
 
                 return timeToLive;
             }
@@ -259,19 +263,25 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (string.IsNullOrEmpty(messageId) ||
                 messageId.Length > Constants.MaxMessageIdLength)
+            {
                 throw new ArgumentException("MessageIdIsNullOrEmptyOrOverMaxValue");
+            }
         }
 
         static void ValidateSessionId(string sessionIdPropertyName, string sessionId)
         {
             if (sessionId != null && sessionId.Length > Constants.MaxSessionIdLength)
+            {
                 throw new ArgumentException("SessionIdIsOverMaxValue");
+            }
         }
 
         static void ValidatePartitionKey(string partitionKeyPropertyName, string partitionKey)
         {
             if (partitionKey != null && partitionKey.Length > Constants.MaxPartitionKeyLength)
+            {
                 throw new ArgumentException("PropertyValueOverMaxValue");
+            }
         }
 
         /// <summary>
@@ -403,7 +413,9 @@ namespace Microsoft.Azure.ServiceBus
             void ThrowIfNotReceived()
             {
                 if (!IsReceived)
+                {
                     throw Fx.Exception.AsError(new InvalidOperationException());
+                }
             }
         }
     }

@@ -63,11 +63,17 @@ namespace Microsoft.Azure.ServiceBus
             : this(new ServiceBusNamespaceConnection(connectionString), topicPath, subscriptionName, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
+            }
             if (string.IsNullOrWhiteSpace(topicPath))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(topicPath);
+            }
             if (string.IsNullOrWhiteSpace(subscriptionName))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(subscriptionName);
+            }
 
             ownsConnection = true;
         }
@@ -97,10 +103,14 @@ namespace Microsoft.Azure.ServiceBus
             set
             {
                 if (value < 0)
+                {
                     throw Fx.Exception.ArgumentOutOfRange(nameof(PrefetchCount), value, "Value cannot be less than 0.");
+                }
                 prefetchCount = value;
                 if (innerSubscriptionClient != null)
+                {
                     innerSubscriptionClient.PrefetchCount = value;
+                }
             }
         }
 
@@ -109,6 +119,7 @@ namespace Microsoft.Azure.ServiceBus
             get
             {
                 if (innerSubscriptionClient == null)
+                {
                     lock (syncLock)
                     {
                         innerSubscriptionClient = new AmqpSubscriptionClient(
@@ -119,6 +130,7 @@ namespace Microsoft.Azure.ServiceBus
                             PrefetchCount,
                             ReceiveMode);
                     }
+                }
 
                 return innerSubscriptionClient;
             }
@@ -129,9 +141,11 @@ namespace Microsoft.Azure.ServiceBus
             get
             {
                 if (sessionClient == null)
+                {
                     lock (syncLock)
                     {
                         if (sessionClient == null)
+                        {
                             sessionClient = new AmqpSessionClient(
                                 ClientId,
                                 Path,
@@ -141,7 +155,9 @@ namespace Microsoft.Azure.ServiceBus
                                 ServiceBusConnection,
                                 CbsTokenProvider,
                                 RetryPolicy);
+                        }
                     }
+                }
 
                 return sessionClient;
             }
@@ -152,14 +168,18 @@ namespace Microsoft.Azure.ServiceBus
             get
             {
                 if (sessionPumpHost == null)
+                {
                     lock (syncLock)
                     {
                         if (sessionPumpHost == null)
+                        {
                             sessionPumpHost = new SessionPumpHost(
                                 ClientId,
                                 ReceiveMode,
                                 SessionClient);
+                        }
                     }
+                }
 
                 return sessionPumpHost;
             }
@@ -269,7 +289,9 @@ namespace Microsoft.Azure.ServiceBus
         public async Task AddRuleAsync(RuleDescription description)
         {
             if (description == null)
+            {
                 throw Fx.Exception.ArgumentNull(nameof(description));
+            }
 
             description.ValidateDescriptionName();
             MessagingEventSource.Log.AddRuleStart(ClientId, description.Name);
@@ -295,7 +317,9 @@ namespace Microsoft.Azure.ServiceBus
         public async Task RemoveRuleAsync(string ruleName)
         {
             if (string.IsNullOrWhiteSpace(ruleName))
+            {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(ruleName));
+            }
 
             MessagingEventSource.Log.RemoveRuleStart(ClientId, ruleName);
 
@@ -317,12 +341,16 @@ namespace Microsoft.Azure.ServiceBus
         protected override async Task OnClosingAsync()
         {
             if (innerSubscriptionClient != null)
+            {
                 await innerSubscriptionClient.CloseAsync().ConfigureAwait(false);
+            }
 
             sessionPumpHost?.Close();
 
             if (ownsConnection)
+            {
                 await ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+            }
         }
 
         /// <summary>Register a session handler.</summary>

@@ -22,7 +22,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         protected ClientEntity(string clientId, RetryPolicy retryPolicy)
         {
             if (retryPolicy == null)
+            {
                 throw new ArgumentNullException(nameof(retryPolicy));
+            }
 
             ClientId = clientId;
             RetryPolicy = retryPolicy;
@@ -61,7 +63,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             }
 
             if (callClose)
+            {
                 await OnClosingAsync().ConfigureAwait(false);
+            }
         }
 
         /// <summary></summary>
