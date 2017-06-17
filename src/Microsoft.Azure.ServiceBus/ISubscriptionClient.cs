@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Core;
     using Filters;
@@ -43,5 +44,11 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="ruleName">The name of the rule.</param>
         /// <returns>A task instance that represents the asynchronous remove rule operation.</returns>
         Task RemoveRuleAsync(string ruleName);
+
+        /// <summary>
+        /// Get rules for the subscription.
+        /// </summary>
+        /// <returns>IEnumerable of rules</returns>
+        Task<IEnumerable<RuleDescription>> GetRulesAsync();
     }
 }

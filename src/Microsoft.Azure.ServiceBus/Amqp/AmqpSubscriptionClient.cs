@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
@@ -136,6 +138,30 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 {
                     throw response.ToMessagingContractException();
                 }
+            }
+            catch (Exception exception)
+            {
+                throw AmqpExceptionHelper.GetClientException(exception);
+            }
+        }
+
+        public async Task<IEnumerable<RuleDescription>> OnGetRulesAsync()
+        {
+            try
+            {
+                //var amqpRequestMessage =
+                //    AmqpRequestMessage.CreateRequest(
+                //        ManagementConstants.Operations.RemoveRuleOperation,
+                //        this.ServiceBusConnection.OperationTimeout,
+                //        null);
+                //amqpRequestMessage.Map[ManagementConstants.Properties.RuleName] = ruleName;
+
+                //var response = await this.InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+
+                //if (response.StatusCode != AmqpResponseStatusCode.OK)
+                //{
+                //    throw response.ToMessagingContractException();
+                //}
             }
             catch (Exception exception)
             {

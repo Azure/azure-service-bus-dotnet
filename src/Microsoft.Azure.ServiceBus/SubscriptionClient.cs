@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
@@ -346,6 +348,28 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             MessagingEventSource.Log.RemoveRuleStop(this.ClientId);
+        }
+
+        /// <summary>
+        /// Get rules for the subscription.
+        /// </summary>
+        /// <returns>IEnumerable of rules</returns>
+        public Task<IEnumerable<RuleDescription>> GetRulesAsync()
+        {
+            //MessagingEventSource.Log.RemoveRuleStart(this.ClientId, ruleName);
+
+            try
+            {
+                return this.InnerSubscriptionClient.OnGetRulesAsync();
+            }
+            catch (Exception exception)
+            {
+                // TODO next line
+                MessagingEventSource.Log.RemoveRuleException(this.ClientId, exception);
+                throw;
+            }
+
+            //MessagingEventSource.Log.RemoveRuleStop(this.ClientId);
         }
 
         /// <summary>
