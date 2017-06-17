@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-using System.Threading.Tasks;
-
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.Tracing;
+    using System.Reflection;
+    using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
 
     [EventSource(Name = "Microsoft-Azure-ServiceBus")]
