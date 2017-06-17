@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus.Primitives
 {
     using System;
+    using System.Reflection;
     using System.Threading.Tasks;
 
     static class TaskExtensionHelper
@@ -16,9 +17,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 {
                     await func().ConfigureAwait(false);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // TODO: Log any unexpected exception here.
+                    MessagingEventSource.Log.ScheduleTaskFailed(func.Target.GetType().FullName, func.GetMethodInfo().Name, ex.ToString());
                 }
             });
         }
