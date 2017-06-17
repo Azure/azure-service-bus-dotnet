@@ -1166,13 +1166,19 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(97, Level = EventLevel.Error, Message = "Exception during {0} plugin execution. MessageId: {1}, Exception {2}")]
-        public void PluginCallFailed(string pluginName, string messageId, string exception)
+        [NonEvent]
+        public void PluginCallFailed(string pluginName, string messageId, Exception exception)
         {
             if (this.IsEnabled())
             {
-                this.WriteEvent(97, pluginName, messageId, exception); 
+                this.PluginCallFailed(pluginName, messageId, exception.ToString());
             }
+        }
+
+        [Event(97, Level = EventLevel.Error, Message = "Exception during {0} plugin execution. MessageId: {1}, Exception {2}")]
+        void PluginCallFailed(string pluginName, string messageId, string exception)
+        {
+            this.WriteEvent(97, pluginName, messageId, exception); 
         }
 
         [NonEvent]
