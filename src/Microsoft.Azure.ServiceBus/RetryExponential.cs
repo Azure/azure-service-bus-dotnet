@@ -1,18 +1,20 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using Microsoft.Azure.ServiceBus.Primitives;
+
 namespace Microsoft.Azure.ServiceBus
 {
-    using System;
-
     /// <summary>
-    /// RetryPolicy implementation where the delay between retries will grow in a staggered exponential manner.
-    /// RetryIntervals will be computed using a retryFactor which is a function of deltaBackOff (MaximumBackoff - MinimumBackoff) and MaximumRetryCount
+    ///     RetryPolicy implementation where the delay between retries will grow in a staggered exponential manner.
+    ///     RetryIntervals will be computed using a retryFactor which is a function of deltaBackOff (MaximumBackoff -
+    ///     MinimumBackoff) and MaximumRetryCount
     /// </summary>
     public sealed class RetryExponential : RetryPolicy
     {
         /// <summary>
-        /// Returns a new RetryExponential retry policy object.
+        ///     Returns a new RetryExponential retry policy object.
         /// </summary>
         /// <param name="minimumBackoff">Minimum backoff interval.</param>
         /// <param name="maximumBackoff">Maximum backoff interval.</param>
@@ -40,38 +42,38 @@ namespace Microsoft.Azure.ServiceBus
                 throw new ArgumentException(Resources.ExponentialRetryBackoffRange.FormatForUser(minBackoff, maxBackoff));
             }
 
-            this.MinimalBackoff = minBackoff;
-            this.MaximumBackoff = maxBackoff;
-            this.DeltaBackoff = deltaBackoff;
-            this.MaxRetryCount = maxRetryCount;
+            MinimalBackoff = minBackoff;
+            MaximumBackoff = maxBackoff;
+            DeltaBackoff = deltaBackoff;
+            MaxRetryCount = maxRetryCount;
         }
 
         /// <summary>
-        /// Minimum backoff interval.
+        ///     Minimum backoff interval.
         /// </summary>
         /// <value>The minimum backoff interval.</value>
         public TimeSpan MinimalBackoff { get; }
 
         /// <summary>
-        /// Gets or sets the maximum backoff interval.
+        ///     Gets or sets the maximum backoff interval.
         /// </summary>
         /// <value>The maximum backoff interval.</value>
         public TimeSpan MaximumBackoff { get; }
 
         /// <summary>
-        /// Gets or sets the backoff interval associated with the retry.
+        ///     Gets or sets the backoff interval associated with the retry.
         /// </summary>
         /// <value>The backoff interval associated with the retry.</value>
         public TimeSpan DeltaBackoff { get; }
 
         /// <summary>
-        /// Gets or sets the maximum number of allowed retries.
+        ///     Gets or sets the maximum number of allowed retries.
         /// </summary>
         /// <value>The maximum number of allowed retries.</value>
         public int MaxRetryCount { get; }
 
         /// <summary>
-        /// Called to see if a retry should be performed.
+        ///     Called to see if a retry should be performed.
         /// </summary>
         /// <param name="remainingTime">The remaining time before the timeout expires.</param>
         /// <param name="currentRetryCount">The number of attempts that have been processed.</param>
@@ -79,7 +81,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns></returns>
         protected override bool OnShouldRetry(TimeSpan remainingTime, int currentRetryCount, out TimeSpan retryInterval)
         {
-            if (currentRetryCount > this.MaxRetryCount)
+            if (currentRetryCount > MaxRetryCount)
             {
                 retryInterval = TimeSpan.Zero;
                 return false;
@@ -88,9 +90,9 @@ namespace Microsoft.Azure.ServiceBus
             // Logic: - first use currentRetryCount to calculate the size of the interval.
             //        - then get the interval in terms of sleep time (between min and max sleep time)
             //        - if interval to large to fit inside ReminaingTime, we quit.
-            int randomizedInterval = ConcurrentRandom.Next((int)(this.DeltaBackoff.TotalMilliseconds * 0.8), (int)(this.DeltaBackoff.TotalMilliseconds * 1.2));
-            double increment = (Math.Pow(2, currentRetryCount) - 1) * randomizedInterval;
-            double timeToSleepMsec = Math.Min(this.MinimalBackoff.TotalMilliseconds + increment, this.MaximumBackoff.TotalMilliseconds);
+            var randomizedInterval = ConcurrentRandom.Next((int) (DeltaBackoff.TotalMilliseconds * 0.8), (int) (DeltaBackoff.TotalMilliseconds * 1.2));
+            var increment = (Math.Pow(2, currentRetryCount) - 1) * randomizedInterval;
+            var timeToSleepMsec = Math.Min(MinimalBackoff.TotalMilliseconds + increment, MaximumBackoff.TotalMilliseconds);
             retryInterval = TimeSpan.FromMilliseconds(timeToSleepMsec);
 
             return true;

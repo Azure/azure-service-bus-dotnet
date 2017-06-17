@@ -1,19 +1,22 @@
-﻿namespace Microsoft.Azure.ServiceBus
-{
-    using Microsoft.Azure.ServiceBus.Primitives;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-    /// <summary>Action taking place when <see cref="ExceptionReceivedEventArgs"/> is raised.</summary>
+using Microsoft.Azure.ServiceBus.Primitives;
+
+namespace Microsoft.Azure.ServiceBus
+{
+    /// <summary>Action taking place when <see cref="ExceptionReceivedEventArgs" /> is raised.</summary>
     public static class ExceptionReceivedEventArgsAction
     {
         /// <summary>Message completion operation</summary>
         public const string Complete = "Complete";
-        
+
         /// <summary>Message abandon operation</summary>
         public const string Abandon = "Abandon";
-        
+
         /// <summary>User message handler invocation</summary>
         public const string UserCallback = "UserCallback";
-        
+
         /// <summary>Message receive operation</summary>
         public const string Receive = "Receive";
 

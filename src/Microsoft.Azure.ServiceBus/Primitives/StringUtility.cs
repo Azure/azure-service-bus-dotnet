@@ -1,14 +1,14 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Globalization;
-    using System.Text;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 
-    static class StringUtility
+namespace Microsoft.Azure.ServiceBus.Primitives
+{
+    internal static class StringUtility
     {
         public static string GetRandomString()
         {
@@ -17,7 +17,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public static string GetFormattedLockTokens(IEnumerable<string> lockTokens)
         {
-            StringBuilder lockTokenBuilder = new StringBuilder();
+            var lockTokenBuilder = new StringBuilder();
             foreach (var lockToken in lockTokens)
             {
                 lockTokenBuilder.AppendFormat(CultureInfo.InvariantCulture, "<LockToken>{0}</LockToken>", lockToken);
@@ -28,8 +28,8 @@ namespace Microsoft.Azure.ServiceBus
 
         public static string GetFormattedSequenceNumbers(IEnumerable<long> sequenceNumbers)
         {
-            StringBuilder sequenceNumberBuilder = new StringBuilder();
-            foreach (long sequenceNumber in sequenceNumbers)
+            var sequenceNumberBuilder = new StringBuilder();
+            foreach (var sequenceNumber in sequenceNumbers)
             {
                 sequenceNumberBuilder.AppendFormat(CultureInfo.InvariantCulture, "<SequenceNumber>{0}</SequenceNumber>", sequenceNumber);
             }
@@ -38,7 +38,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Formats a string+parameters using CurrentCulture.
+        ///     Formats a string+parameters using CurrentCulture.
         /// </summary>
         public static string FormatForUser(this string format, params object[] args)
         {
@@ -46,7 +46,8 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Formats a string+parameter using InvariantCulture.  This overload avoids allocating an array when there's only one replacement parameter
+        ///     Formats a string+parameter using InvariantCulture.  This overload avoids allocating an array when there's only one
+        ///     replacement parameter
         /// </summary>
         public static string FormatInvariant(this string format, object arg0)
         {
@@ -54,7 +55,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Formats a string+parameters using InvariantCulture.
+        ///     Formats a string+parameters using InvariantCulture.
         /// </summary>
         public static string FormatInvariant(this string format, params object[] args)
         {

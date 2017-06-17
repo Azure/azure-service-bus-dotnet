@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
-    static class TestConstants
+    internal static class TestConstants
     {
         internal const int MaxAttemptsCount = 5;
 

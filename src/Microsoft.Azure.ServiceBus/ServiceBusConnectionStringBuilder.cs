@@ -1,13 +1,14 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Text;
+using Microsoft.Azure.ServiceBus.Primitives;
+
 namespace Microsoft.Azure.ServiceBus
 {
-    using System;
-    using System.Text;
-
     /// <summary>
-    /// Used to generate Service Bus connection strings.
+    ///     Used to generate Service Bus connection strings.
     /// </summary>
     public class ServiceBusConnectionStringBuilder
     {
@@ -21,19 +22,19 @@ namespace Microsoft.Azure.ServiceBus
         static readonly string EntityPathConfigName = "EntityPath";
 
         /// <summary>
-        /// Instatiates a new <see cref="ServiceBusConnectionStringBuilder"/>.
+        ///     Instatiates a new <see cref="ServiceBusConnectionStringBuilder" />.
         /// </summary>
         /// <param name="connectionString">Connection string for namespace or the entity.</param>
         public ServiceBusConnectionStringBuilder(string connectionString)
         {
             if (!string.IsNullOrWhiteSpace(connectionString))
             {
-                this.ParseConnectionString(connectionString);
+                ParseConnectionString(connectionString);
             }
         }
 
         /// <summary>
-        /// Instantiates a new <see cref="ServiceBusConnectionStringBuilder"/>.
+        ///     Instantiates a new <see cref="ServiceBusConnectionStringBuilder" />.
         /// </summary>
         /// <param name="namespaceName">Namespace name.</param>
         /// <param name="entityPath">Path to the entity.</param>
@@ -52,123 +53,122 @@ namespace Microsoft.Azure.ServiceBus
 
             if (namespaceName.Contains("."))
             {
-                // It appears to be a fully qualified host name, use it.
-                this.Endpoint = new Uri(EndpointScheme + "://" + namespaceName);
+                Endpoint = new Uri(EndpointScheme + "://" + namespaceName);
             }
             else
             {
-                this.Endpoint = new Uri(EndpointFormat.FormatInvariant(namespaceName));
+                Endpoint = new Uri(EndpointFormat.FormatInvariant(namespaceName));
             }
 
-            this.EntityPath = entityPath;
-            this.SasKeyName = sharedAccessKeyName;
-            this.SasKey = sharedAccessKey;
+            EntityPath = entityPath;
+            SasKeyName = sharedAccessKeyName;
+            SasKey = sharedAccessKey;
         }
 
         /// <summary>
-        /// Gets or sets the Service Bus endpoint.
+        ///     Gets or sets the Service Bus endpoint.
         /// </summary>
         public Uri Endpoint { get; set; }
 
         /// <summary>
-        /// Get the entity path value from the connection string
+        ///     Get the entity path value from the connection string
         /// </summary>
         public string EntityPath { get; set; }
 
         /// <summary>
-        /// Get the shared access policy owner name from the connection string
+        ///     Get the shared access policy owner name from the connection string
         /// </summary>
         public string SasKeyName { get; set; }
 
         /// <summary>
-        /// Get the shared access policy key value from the connection string
+        ///     Get the shared access policy key value from the connection string
         /// </summary>
         /// <value>Shared Access Signature key</value>
         public string SasKey { get; set; }
 
         /// <summary>
-        /// Returns an interoperable connection string that can be used to connect to ServiceBus Namespace
+        ///     Returns an interoperable connection string that can be used to connect to ServiceBus Namespace
         /// </summary>
         /// <returns>Namespace connection string</returns>
         public string GetNamespaceConnectionString()
         {
-            StringBuilder connectionStringBuilder = new StringBuilder();
-            if (this.Endpoint != null)
+            var connectionStringBuilder = new StringBuilder();
+            if (Endpoint != null)
             {
-                connectionStringBuilder.Append($"{EndpointConfigName}{KeyValueSeparator}{this.Endpoint}{KeyValuePairDelimiter}");
+                connectionStringBuilder.Append($"{EndpointConfigName}{KeyValueSeparator}{Endpoint}{KeyValuePairDelimiter}");
             }
 
-            if (!string.IsNullOrWhiteSpace(this.SasKeyName))
+            if (!string.IsNullOrWhiteSpace(SasKeyName))
             {
-                connectionStringBuilder.Append($"{SharedAccessKeyNameConfigName}{KeyValueSeparator}{this.SasKeyName}{KeyValuePairDelimiter}");
+                connectionStringBuilder.Append($"{SharedAccessKeyNameConfigName}{KeyValueSeparator}{SasKeyName}{KeyValuePairDelimiter}");
             }
 
-            if (!string.IsNullOrWhiteSpace(this.SasKey))
+            if (!string.IsNullOrWhiteSpace(SasKey))
             {
-                connectionStringBuilder.Append($"{SharedAccessKeyConfigName}{KeyValueSeparator}{this.SasKey}");
+                connectionStringBuilder.Append($"{SharedAccessKeyConfigName}{KeyValueSeparator}{SasKey}");
             }
 
             return connectionStringBuilder.ToString();
         }
 
         /// <summary>
-        /// Returns an interoperable connection string that can be used to connect to the given ServiceBus Entity
+        ///     Returns an interoperable connection string that can be used to connect to the given ServiceBus Entity
         /// </summary>
         /// <returns>Entity connection string</returns>
         public string GetEntityConnectionString()
         {
-            if (string.IsNullOrWhiteSpace(this.EntityPath))
+            if (string.IsNullOrWhiteSpace(EntityPath))
             {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.EntityPath));
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(EntityPath));
             }
 
-            return $"{this.GetNamespaceConnectionString()}{KeyValuePairDelimiter}{EntityPathConfigName}{KeyValueSeparator}{this.EntityPath}{KeyValuePairDelimiter}";
+            return $"{GetNamespaceConnectionString()}{KeyValuePairDelimiter}{EntityPathConfigName}{KeyValueSeparator}{EntityPath}{KeyValuePairDelimiter}";
         }
 
         /// <summary>
-        /// Returns an interoperable connection string that can be used to connect to ServiceBus Namespace
+        ///     Returns an interoperable connection string that can be used to connect to ServiceBus Namespace
         /// </summary>
         /// <returns>The connection string</returns>
         public override string ToString()
         {
-            if (string.IsNullOrWhiteSpace(this.EntityPath))
+            if (string.IsNullOrWhiteSpace(EntityPath))
             {
-                return this.GetNamespaceConnectionString();
+                return GetNamespaceConnectionString();
             }
 
-            return this.GetEntityConnectionString();
+            return GetEntityConnectionString();
         }
 
         void ParseConnectionString(string connectionString)
         {
             // First split based on ';'
-            string[] keyValuePairs = connectionString.Split(new[] { KeyValuePairDelimiter }, StringSplitOptions.RemoveEmptyEntries);
+            var keyValuePairs = connectionString.Split(new[] {KeyValuePairDelimiter}, StringSplitOptions.RemoveEmptyEntries);
             foreach (var keyValuePair in keyValuePairs)
             {
                 // Now split based on the _first_ '='
-                string[] keyAndValue = keyValuePair.Split(new[] { KeyValueSeparator }, 2);
-                string key = keyAndValue[0];
+                var keyAndValue = keyValuePair.Split(new[] {KeyValueSeparator}, 2);
+                var key = keyAndValue[0];
                 if (keyAndValue.Length != 2)
                 {
                     throw Fx.Exception.Argument(nameof(connectionString), $"Value for the connection string parameter name '{key}' was not found.");
                 }
 
-                string value = keyAndValue[1];
+                var value = keyAndValue[1];
                 if (key.Equals(EndpointConfigName, StringComparison.OrdinalIgnoreCase))
                 {
-                    this.Endpoint = new Uri(value);
+                    Endpoint = new Uri(value);
                 }
                 else if (key.Equals(SharedAccessKeyNameConfigName, StringComparison.OrdinalIgnoreCase))
                 {
-                    this.SasKeyName = value;
+                    SasKeyName = value;
                 }
                 else if (key.Equals(EntityPathConfigName, StringComparison.OrdinalIgnoreCase))
                 {
-                    this.EntityPath = value;
+                    EntityPath = value;
                 }
                 else if (key.Equals(SharedAccessKeyConfigName, StringComparison.OrdinalIgnoreCase))
                 {
-                    this.SasKey = value;
+                    SasKey = value;
                 }
                 else
                 {

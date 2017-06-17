@@ -1,15 +1,15 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Text;
+using Microsoft.Azure.Amqp;
+using Microsoft.Azure.Amqp.Framing;
+using Microsoft.Azure.ServiceBus.Amqp;
+using Xunit;
+
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
-    using System;
-    using System.Text;
-    using Azure.Amqp.Framing;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.ServiceBus.Amqp;
-    using Xunit;
-
     public class AmqpConverterTests
     {
         [Fact]
@@ -95,7 +95,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 ContentType = contentType,
                 ReplyTo = replyTo,
                 ReplyToSessionId = replyToSessionId,
-                Publisher = publisher,
+                Publisher = publisher
             };
             sbMessage.UserProperties.Add("UserProperty", "SomeUserProperty");
 

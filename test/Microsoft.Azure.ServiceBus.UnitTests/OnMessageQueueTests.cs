@@ -1,20 +1,20 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Xunit;
+
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using Xunit;
-
     public class OnMessageQueueTests : SenderReceiverClientTestBase
     {
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { TestConstants.NonPartitionedQueueName, 1 },
-            new object[] { TestConstants.NonPartitionedQueueName, 10 },
-            new object[] { TestConstants.PartitionedQueueName, 1 },
-            new object[] { TestConstants.PartitionedQueueName, 10 },
+            new object[] {TestConstants.NonPartitionedQueueName, 1},
+            new object[] {TestConstants.NonPartitionedQueueName, 10},
+            new object[] {TestConstants.PartitionedQueueName, 1},
+            new object[] {TestConstants.PartitionedQueueName, 10}
         };
 
         [Theory]
@@ -22,7 +22,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task OnMessagePeekLockWithAutoCompleteTrue(string queueName, int maxConcurrentCalls)
         {
-            await this.OnMessageTestAsync(queueName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
+            await OnMessageTestAsync(queueName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
         }
 
         [Theory]
@@ -30,7 +30,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task OnMessagePeekLockWithAutoCompleteFalse(string queueName, int maxConcurrentCalls)
         {
-            await this.OnMessageTestAsync(queueName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
+            await OnMessageTestAsync(queueName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
         }
 
         [Theory]
@@ -38,16 +38,23 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task OnMessageReceiveDelete(string queueName, int maxConcurrentCalls)
         {
-            await this.OnMessageTestAsync(queueName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
+            await OnMessageTestAsync(queueName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
         }
 
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        void OnMessageRegistrationWithoutPendingMessagesReceiveAndDelete(string queueName, int maxConcurrentCalls)
+        async Task OnMessageRegistrationWithoutPendingMessagesReceiveAndDelete(string queueName, int maxConcurrentCalls)
         {
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
-            this.OnMessageRegistrationWithoutPendingMessagesTestCase(queueClient.InnerReceiver, maxConcurrentCalls, true);
+            try
+            {
+                OnMessageRegistrationWithoutPendingMessagesTestCase(queueClient.InnerReceiver, maxConcurrentCalls, true);
+            }
+            finally
+            {
+                await queueClient.CloseAsync();
+            }
         }
 
         async Task OnMessageTestAsync(string queueName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
@@ -57,7 +64,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, mode);
             try
             {
-                await this.OnMessageAsyncTestCase(
+                await OnMessageAsyncTestCase(
                     queueClient.InnerSender,
                     queueClient.InnerReceiver,
                     maxConcurrentCalls,

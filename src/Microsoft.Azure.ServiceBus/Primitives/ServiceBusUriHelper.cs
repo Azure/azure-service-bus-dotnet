@@ -1,21 +1,21 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus
-{
-    using System;
+using System;
 
-    static class ServiceBusUriHelper
+namespace Microsoft.Azure.ServiceBus.Primitives
+{
+    internal static class ServiceBusUriHelper
     {
         internal static string NormalizeUri(string uri, string scheme, bool stripQueryParameters = true, bool stripPath = false, bool ensureTrailingSlash = false)
         {
-            UriBuilder uriBuilder = new UriBuilder(uri)
+            var uriBuilder = new UriBuilder(uri)
             {
                 Scheme = scheme,
                 Port = -1,
                 Fragment = string.Empty,
                 Password = string.Empty,
-                UserName = string.Empty,
+                UserName = string.Empty
             };
 
             if (stripPath)

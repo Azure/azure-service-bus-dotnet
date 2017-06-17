@@ -1,19 +1,18 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus
-{
-    using System;
-    using System.Diagnostics;
-    using System.Threading;
+using System;
+using System.Diagnostics;
+using System.Threading;
 
+namespace Microsoft.Azure.ServiceBus.Primitives
+{
     [DebuggerStepThrough]
-    struct TimeoutHelper
+    internal struct TimeoutHelper
     {
         public static readonly TimeSpan MaxWait = TimeSpan.FromMilliseconds(int.MaxValue);
         DateTime deadline;
         bool deadlineSet;
-        TimeSpan originalTimeout;
 
         public TimeoutHelper(TimeSpan timeout)
             : this(timeout, false)
@@ -24,24 +23,21 @@ namespace Microsoft.Azure.ServiceBus
         {
             Fx.Assert(timeout >= TimeSpan.Zero, "timeout must be non-negative");
 
-            this.originalTimeout = timeout;
-            this.deadline = DateTime.MaxValue;
-            this.deadlineSet = (timeout == TimeSpan.MaxValue);
+            OriginalTimeout = timeout;
+            deadline = DateTime.MaxValue;
+            deadlineSet = timeout == TimeSpan.MaxValue;
 
-            if (startTimeout && !this.deadlineSet)
+            if (startTimeout && !deadlineSet)
             {
-                this.SetDeadline();
+                SetDeadline();
             }
         }
 
-        public TimeSpan OriginalTimeout
-        {
-            get { return this.originalTimeout; }
-        }
+        public TimeSpan OriginalTimeout { get; }
 
         public static bool IsTooLarge(TimeSpan timeout)
         {
-            return (timeout > TimeoutHelper.MaxWait) && (timeout != TimeSpan.MaxValue);
+            return timeout > MaxWait && timeout != TimeSpan.MaxValue;
         }
 
         public static TimeSpan FromMilliseconds(int milliseconds)
@@ -61,7 +57,7 @@ namespace Microsoft.Azure.ServiceBus
                 return Timeout.Infinite;
             }
 
-            long ticks = Ticks.FromTimeSpan(timeout);
+            var ticks = Ticks.FromTimeSpan(timeout);
             if (ticks / TimeSpan.TicksPerMillisecond > int.MaxValue)
             {
                 return int.MaxValue;
@@ -119,7 +115,7 @@ namespace Microsoft.Azure.ServiceBus
                 return TimeSpan.MaxValue;
             }
 
-            return Ticks.ToTimeSpan((Ticks.FromTimeSpan(timeout) / factor) + 1);
+            return Ticks.ToTimeSpan(Ticks.FromTimeSpan(timeout) / factor + 1);
         }
 
         public static void ThrowIfNegativeArgument(TimeSpan timeout)
@@ -162,18 +158,18 @@ namespace Microsoft.Azure.ServiceBus
 
         public TimeSpan RemainingTime()
         {
-            if (!this.deadlineSet)
+            if (!deadlineSet)
             {
-                this.SetDeadline();
-                return this.originalTimeout;
+                SetDeadline();
+                return OriginalTimeout;
             }
 
-            if (this.deadline == DateTime.MaxValue)
+            if (deadline == DateTime.MaxValue)
             {
                 return TimeSpan.MaxValue;
             }
 
-            TimeSpan remaining = this.deadline - DateTime.UtcNow;
+            var remaining = deadline - DateTime.UtcNow;
             if (remaining <= TimeSpan.Zero)
             {
                 return TimeSpan.Zero;
@@ -184,14 +180,14 @@ namespace Microsoft.Azure.ServiceBus
 
         public TimeSpan ElapsedTime()
         {
-            return this.originalTimeout - this.RemainingTime();
+            return OriginalTimeout - RemainingTime();
         }
 
         void SetDeadline()
         {
-            Fx.Assert(!this.deadlineSet, "TimeoutHelper deadline set twice.");
-            this.deadline = DateTime.UtcNow + this.originalTimeout;
-            this.deadlineSet = true;
+            Fx.Assert(!deadlineSet, "TimeoutHelper deadline set twice.");
+            deadline = DateTime.UtcNow + OriginalTimeout;
+            deadlineSet = true;
         }
     }
 }

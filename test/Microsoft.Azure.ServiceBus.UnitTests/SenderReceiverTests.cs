@@ -1,24 +1,23 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Azure.ServiceBus.Core;
+using Xunit;
+
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
-    using System;
-    using System.Text;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
-    using Microsoft.Azure.ServiceBus.Core;
-    using Xunit;
-
     public class SenderReceiverTests : SenderReceiverClientTestBase
     {
-        private static TimeSpan TwoSeconds = TimeSpan.FromSeconds(2);
+        static readonly TimeSpan TwoSeconds = TimeSpan.FromSeconds(2);
 
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { TestConstants.NonPartitionedQueueName },
-            new object[] { TestConstants.PartitionedQueueName }
+            new object[] {TestConstants.NonPartitionedQueueName},
+            new object[] {TestConstants.PartitionedQueueName}
         };
 
         [Theory]
@@ -27,11 +26,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task MessageReceiverAndMessageSenderCreationWorksAsExpected(string queueName, int messageCount = 10)
         {
             var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
-            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, receiveMode: ReceiveMode.PeekLock);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.PeekLock);
 
             try
             {
-                await this.PeekLockTestCase(sender, receiver, messageCount);
+                await PeekLockTestCase(sender, receiver, messageCount);
             }
             finally
             {
@@ -46,12 +45,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task TopicClientPeekLockDeferTestCase(string queueName, int messageCount = 10)
         {
             var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
-            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, receiveMode: ReceiveMode.PeekLock);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.PeekLock);
 
             try
             {
                 await
-                    this.PeekLockDeferTestCase(sender, receiver, messageCount);
+                    PeekLockDeferTestCase(sender, receiver, messageCount);
             }
             finally
             {
@@ -66,11 +65,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task PeekAsyncTest(string queueName, int messageCount = 10)
         {
             var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
-            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, receiveMode: ReceiveMode.ReceiveAndDelete);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
 
             try
             {
-                await this.PeekAsyncTestCase(sender, receiver, messageCount);
+                await PeekAsyncTestCase(sender, receiver, messageCount);
             }
             finally
             {
@@ -85,11 +84,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTest(string queueName, int messageCount = 1)
         {
             var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
-            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, receiveMode: ReceiveMode.ReceiveAndDelete);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
 
             try
             {
-                await this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(sender, receiver, messageCount);
+                await ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(sender, receiver, messageCount);
             }
             finally
             {
@@ -106,15 +105,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
 
-            var receiver1 = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, receiveMode: ReceiveMode.ReceiveAndDelete);
-            var receiver2 = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, receiveMode: ReceiveMode.ReceiveAndDelete, prefetchCount: 1);
+            var receiver1 = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
+            var receiver2 = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete, prefetchCount: 1);
 
             Assert.Equal(0, receiver1.PrefetchCount);
             Assert.Equal(1, receiver2.PrefetchCount);
 
             try
             {
-                for (int i = 0; i < 9; i++)
+                for (var i = 0; i < 9; i++)
                 {
                     var message = new Message(Encoding.UTF8.GetBytes("test" + i))
                     {

@@ -1,50 +1,51 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Net.Sockets;
+using System.Text;
+using Microsoft.Azure.Amqp;
+using Microsoft.Azure.Amqp.Encoding;
+using Microsoft.Azure.Amqp.Framing;
+using Microsoft.Azure.ServiceBus.Primitives;
+
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Globalization;
-    using System.IO;
-    using System.Net.Sockets;
-    using System.Text;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Encoding;
-    using Microsoft.Azure.Amqp.Framing;
-
-    static class AmqpExceptionHelper
+    internal static class AmqpExceptionHelper
     {
-        static readonly Dictionary<string, AmqpResponseStatusCode> ConditionToStatusMap = new Dictionary<string, AmqpResponseStatusCode>()
+        static readonly Dictionary<string, AmqpResponseStatusCode> ConditionToStatusMap = new Dictionary<string, AmqpResponseStatusCode>
         {
-            { AmqpClientConstants.TimeoutError.Value, AmqpResponseStatusCode.RequestTimeout },
-            { AmqpErrorCode.NotFound.Value, AmqpResponseStatusCode.NotFound },
-            { AmqpErrorCode.NotImplemented.Value, AmqpResponseStatusCode.NotImplemented },
-            { AmqpClientConstants.EntityAlreadyExistsError.Value, AmqpResponseStatusCode.Conflict },
-            { AmqpClientConstants.MessageLockLostError.Value, AmqpResponseStatusCode.Gone },
-            { AmqpClientConstants.SessionLockLostError.Value, AmqpResponseStatusCode.Gone },
-            { AmqpErrorCode.ResourceLimitExceeded.Value, AmqpResponseStatusCode.Forbidden },
-            { AmqpClientConstants.NoMatchingSubscriptionError.Value, AmqpResponseStatusCode.InternalServerError },
-            { AmqpErrorCode.NotAllowed.Value, AmqpResponseStatusCode.BadRequest },
-            { AmqpErrorCode.UnauthorizedAccess.Value, AmqpResponseStatusCode.Unauthorized },
-            { AmqpErrorCode.MessageSizeExceeded.Value, AmqpResponseStatusCode.Forbidden },
-            { AmqpClientConstants.ServerBusyError.Value, AmqpResponseStatusCode.ServiceUnavailable },
-            { AmqpClientConstants.ArgumentError.Value, AmqpResponseStatusCode.BadRequest },
-            { AmqpClientConstants.ArgumentOutOfRangeError.Value, AmqpResponseStatusCode.BadRequest },
-            { AmqpClientConstants.StoreLockLostError.Value, AmqpResponseStatusCode.Gone },
-            { AmqpClientConstants.SessionCannotBeLockedError.Value, AmqpResponseStatusCode.Gone },
-            { AmqpClientConstants.PartitionNotOwnedError.Value, AmqpResponseStatusCode.Gone },
-            { AmqpClientConstants.EntityDisabledError.Value, AmqpResponseStatusCode.BadRequest },
-            { AmqpClientConstants.PublisherRevokedError.Value, AmqpResponseStatusCode.Unauthorized },
-            { AmqpErrorCode.Stolen.Value, AmqpResponseStatusCode.Gone }
+            {AmqpClientConstants.TimeoutError.Value, AmqpResponseStatusCode.RequestTimeout},
+            {AmqpErrorCode.NotFound.Value, AmqpResponseStatusCode.NotFound},
+            {AmqpErrorCode.NotImplemented.Value, AmqpResponseStatusCode.NotImplemented},
+            {AmqpClientConstants.EntityAlreadyExistsError.Value, AmqpResponseStatusCode.Conflict},
+            {AmqpClientConstants.MessageLockLostError.Value, AmqpResponseStatusCode.Gone},
+            {AmqpClientConstants.SessionLockLostError.Value, AmqpResponseStatusCode.Gone},
+            {AmqpErrorCode.ResourceLimitExceeded.Value, AmqpResponseStatusCode.Forbidden},
+            {AmqpClientConstants.NoMatchingSubscriptionError.Value, AmqpResponseStatusCode.InternalServerError},
+            {AmqpErrorCode.NotAllowed.Value, AmqpResponseStatusCode.BadRequest},
+            {AmqpErrorCode.UnauthorizedAccess.Value, AmqpResponseStatusCode.Unauthorized},
+            {AmqpErrorCode.MessageSizeExceeded.Value, AmqpResponseStatusCode.Forbidden},
+            {AmqpClientConstants.ServerBusyError.Value, AmqpResponseStatusCode.ServiceUnavailable},
+            {AmqpClientConstants.ArgumentError.Value, AmqpResponseStatusCode.BadRequest},
+            {AmqpClientConstants.ArgumentOutOfRangeError.Value, AmqpResponseStatusCode.BadRequest},
+            {AmqpClientConstants.StoreLockLostError.Value, AmqpResponseStatusCode.Gone},
+            {AmqpClientConstants.SessionCannotBeLockedError.Value, AmqpResponseStatusCode.Gone},
+            {AmqpClientConstants.PartitionNotOwnedError.Value, AmqpResponseStatusCode.Gone},
+            {AmqpClientConstants.EntityDisabledError.Value, AmqpResponseStatusCode.BadRequest},
+            {AmqpClientConstants.PublisherRevokedError.Value, AmqpResponseStatusCode.Unauthorized},
+            {AmqpErrorCode.Stolen.Value, AmqpResponseStatusCode.Gone}
         };
 
         public static AmqpSymbol GetResponseErrorCondition(AmqpMessage response, AmqpResponseStatusCode statusCode)
         {
-            object condition = response.ApplicationProperties.Map[ManagementConstants.Response.ErrorCondition];
+            var condition = response.ApplicationProperties.Map[ManagementConstants.Response.ErrorCondition];
             if (condition != null)
             {
-                return (AmqpSymbol)condition;
+                return (AmqpSymbol) condition;
             }
 
             // Most of the time we should have an error condition
@@ -61,11 +62,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static AmqpResponseStatusCode GetResponseStatusCode(this AmqpMessage responseMessage)
         {
-            AmqpResponseStatusCode responseStatusCode = AmqpResponseStatusCode.Unused;
-            object statusCodeValue = responseMessage?.ApplicationProperties.Map[ManagementConstants.Response.StatusCode];
+            var responseStatusCode = AmqpResponseStatusCode.Unused;
+            var statusCodeValue = responseMessage?.ApplicationProperties.Map[ManagementConstants.Response.StatusCode];
             if (statusCodeValue is int && Enum.IsDefined(typeof(AmqpResponseStatusCode), statusCodeValue))
             {
-                responseStatusCode = (AmqpResponseStatusCode)statusCodeValue;
+                responseStatusCode = (AmqpResponseStatusCode) statusCodeValue;
             }
 
             return responseStatusCode;
@@ -73,9 +74,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static Exception ToMessagingContractException(this AmqpMessage responseMessage, AmqpResponseStatusCode statusCode)
         {
-            AmqpSymbol errorCondition = AmqpExceptionHelper.GetResponseErrorCondition(responseMessage, statusCode);
+            var errorCondition = GetResponseErrorCondition(responseMessage, statusCode);
             var statusDescription = responseMessage.ApplicationProperties.Map[ManagementConstants.Response.StatusDescription] as string ?? errorCondition.Value;
-            Exception exception = AmqpExceptionHelper.ToMessagingContractException(errorCondition.Value, statusDescription);
+            var exception = ToMessagingContractException(errorCondition.Value, statusDescription);
 
             return exception;
         }
@@ -167,14 +168,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static Exception GetClientException(Exception exception, string referenceId)
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             builder.AppendFormat(CultureInfo.InvariantCulture, exception.Message);
             if (referenceId != null)
             {
                 builder.AppendFormat(CultureInfo.InvariantCulture, $"Reference: {referenceId}, {DateTime.UtcNow}");
             }
 
-            string message = builder.ToString();
+            var message = builder.ToString();
 
             switch (exception)
             {
@@ -202,7 +203,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         {
             string trackingContext = null;
             if (link.Settings.Properties != null &&
-                link.Settings.Properties.TryGetValue<string>(AmqpClientConstants.TrackingIdName, out trackingContext))
+                link.Settings.Properties.TryGetValue(AmqpClientConstants.TrackingIdName, out trackingContext))
             {
                 return trackingContext;
             }

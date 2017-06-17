@@ -1,17 +1,17 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus
-{
-    using System;
+using System;
 
-    static class Ticks
+namespace Microsoft.Azure.ServiceBus.Primitives
+{
+    internal static class Ticks
     {
         public static long Now
         {
             get
             {
-                long time = DateTime.UtcNow.ToFileTimeUtc();
+                var time = DateTime.UtcNow.ToFileTimeUtc();
                 return time;
             }
         }
@@ -23,7 +23,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public static int ToMilliseconds(long ticks)
         {
-            return checked((int)(ticks / TimeSpan.TicksPerMillisecond));
+            return checked((int) (ticks / TimeSpan.TicksPerMillisecond));
         }
 
         public static long FromTimeSpan(TimeSpan duration)

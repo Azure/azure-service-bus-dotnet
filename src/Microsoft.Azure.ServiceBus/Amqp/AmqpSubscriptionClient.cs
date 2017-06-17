@@ -1,19 +1,20 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Threading.Tasks;
+using Microsoft.Azure.Amqp;
+using Microsoft.Azure.ServiceBus.Core;
+using Microsoft.Azure.ServiceBus.Filters;
+using Microsoft.Azure.ServiceBus.Primitives;
+
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
-    using System;
-    using System.Threading.Tasks;
-    using Azure.Amqp;
-    using Core;
-    using Filters;
-
     internal sealed class AmqpSubscriptionClient : IInnerSubscriptionClient
     {
-        int prefetchCount;
         readonly object syncLock;
         MessageReceiver innerReceiver;
+        int prefetchCount;
 
         public AmqpSubscriptionClient(
             string path,
@@ -23,75 +24,75 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             int prefetchCount = 0,
             ReceiveMode mode = ReceiveMode.ReceiveAndDelete)
         {
-            this.syncLock = new object();
-            this.Path = path;
-            this.ServiceBusConnection = servicebusConnection;
-            this.RetryPolicy = retryPolicy;
-            this.CbsTokenProvider = cbsTokenProvider;
-            this.PrefetchCount = prefetchCount;
-            this.ReceiveMode = mode;
+            syncLock = new object();
+            Path = path;
+            ServiceBusConnection = servicebusConnection;
+            RetryPolicy = retryPolicy;
+            CbsTokenProvider = cbsTokenProvider;
+            PrefetchCount = prefetchCount;
+            ReceiveMode = mode;
         }
+
+        ServiceBusConnection ServiceBusConnection { get; }
+
+        RetryPolicy RetryPolicy { get; }
+
+        ICbsTokenProvider CbsTokenProvider { get; }
+
+        ReceiveMode ReceiveMode { get; }
+
+        string Path { get; }
 
         public MessageReceiver InnerReceiver
         {
             get
             {
-                if (this.innerReceiver == null)
+                if (innerReceiver == null)
                 {
-                    lock (this.syncLock)
+                    lock (syncLock)
                     {
-                        if (this.innerReceiver == null)
+                        if (innerReceiver == null)
                         {
-                            this.innerReceiver = new MessageReceiver(
-                                this.Path,
+                            innerReceiver = new MessageReceiver(
+                                Path,
                                 MessagingEntityType.Subscriber,
-                                this.ReceiveMode,
-                                this.ServiceBusConnection,
-                                this.CbsTokenProvider,
-                                this.RetryPolicy,
-                                this.PrefetchCount);
+                                ReceiveMode,
+                                ServiceBusConnection,
+                                CbsTokenProvider,
+                                RetryPolicy,
+                                PrefetchCount);
                         }
                     }
                 }
 
-                return this.innerReceiver;
+                return innerReceiver;
             }
         }
 
         /// <summary>
-        /// Gets or sets the number of messages that the subscription client can simultaneously request.
+        ///     Gets or sets the number of messages that the subscription client can simultaneously request.
         /// </summary>
         /// <value>The number of messages that the subscription client can simultaneously request.</value>
         public int PrefetchCount
         {
-            get => this.prefetchCount;
+            get => prefetchCount;
             set
             {
                 if (value < 0)
                 {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(PrefetchCount), value, "Value cannot be less than 0.");
                 }
-                this.prefetchCount = value;
-                if (this.innerReceiver != null)
+                prefetchCount = value;
+                if (innerReceiver != null)
                 {
-                    this.innerReceiver.PrefetchCount = value;
+                    innerReceiver.PrefetchCount = value;
                 }
             }
         }
 
-        ServiceBusConnection ServiceBusConnection { get; set; }
-
-        RetryPolicy RetryPolicy { get; set; }
-
-        ICbsTokenProvider CbsTokenProvider { get; set; }
-
-        ReceiveMode ReceiveMode { get; set; }
-
-        string Path { get; }
-
         public Task CloseAsync()
         {
-            return this.innerReceiver?.CloseAsync();
+            return innerReceiver?.CloseAsync();
         }
 
         public async Task OnAddRuleAsync(RuleDescription description)
@@ -100,13 +101,13 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(
                     ManagementConstants.Operations.AddRuleOperation,
-                    this.ServiceBusConnection.OperationTimeout,
+                    ServiceBusConnection.OperationTimeout,
                     null);
                 amqpRequestMessage.Map[ManagementConstants.Properties.RuleName] = description.Name;
                 amqpRequestMessage.Map[ManagementConstants.Properties.RuleDescription] =
                     AmqpMessageConverter.GetRuleDescriptionMap(description);
 
-                var response = await this.InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                var response = await InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode != AmqpResponseStatusCode.OK)
                 {
@@ -126,11 +127,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 var amqpRequestMessage =
                     AmqpRequestMessage.CreateRequest(
                         ManagementConstants.Operations.RemoveRuleOperation,
-                        this.ServiceBusConnection.OperationTimeout,
+                        ServiceBusConnection.OperationTimeout,
                         null);
                 amqpRequestMessage.Map[ManagementConstants.Properties.RuleName] = ruleName;
 
-                var response = await this.InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                var response = await InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode != AmqpResponseStatusCode.OK)
                 {

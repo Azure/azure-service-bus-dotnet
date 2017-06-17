@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+
 namespace Microsoft.Azure.ServiceBus.Primitives
 {
-    using System;
-
     internal class ServiceBusNamespaceConnection : ServiceBusConnection
     {
         public ServiceBusNamespaceConnection(string namespaceConnectionString)
@@ -20,13 +20,13 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(namespaceConnectionString));
             }
 
-            ServiceBusConnectionStringBuilder builder = new ServiceBusConnectionStringBuilder(namespaceConnectionString);
+            var builder = new ServiceBusConnectionStringBuilder(namespaceConnectionString);
             if (!string.IsNullOrWhiteSpace(builder.EntityPath))
             {
                 throw Fx.Exception.Argument(nameof(namespaceConnectionString), "NamespaceConnectionString should not contain EntityPath.");
             }
 
-            this.InitializeConnection(builder);
+            InitializeConnection(builder);
         }
     }
 }

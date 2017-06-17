@@ -1,20 +1,20 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus
+namespace Microsoft.Azure.ServiceBus.Primitives
 {
     /// <summary>
-    /// A enum representing the scope of the <see cref="SecurityToken"/>.
+    ///     A enum representing the scope of the <see cref="SecurityToken" />.
     /// </summary>
     public enum TokenScope
     {
         /// <summary>
-        /// The namespace.
+        ///     The namespace.
         /// </summary>
         Namespace = 0,
 
         /// <summary>
-        /// The entity.
+        ///     The entity.
         /// </summary>
         Entity = 1
     }

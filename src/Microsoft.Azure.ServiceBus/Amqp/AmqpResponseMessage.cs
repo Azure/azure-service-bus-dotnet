@@ -1,43 +1,38 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Azure.Amqp;
+using Microsoft.Azure.Amqp.Encoding;
+using Microsoft.Azure.Amqp.Framing;
+
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Azure.Amqp;
-    using Azure.Amqp.Encoding;
-    using Azure.Amqp.Framing;
-
     internal sealed class AmqpResponseMessage
     {
-        readonly AmqpMessage responseMessage;
-
         AmqpResponseMessage(AmqpMessage responseMessage)
         {
-            this.responseMessage = responseMessage;
-            this.StatusCode = this.responseMessage.GetResponseStatusCode();
+            AmqpMessage = responseMessage;
+            StatusCode = AmqpMessage.GetResponseStatusCode();
             string trackingId;
-            if (this.responseMessage.ApplicationProperties.Map.TryGetValue(ManagementConstants.Properties.TrackingId, out trackingId))
+            if (AmqpMessage.ApplicationProperties.Map.TryGetValue(ManagementConstants.Properties.TrackingId, out trackingId))
             {
-                this.TrackingId = trackingId;
+                TrackingId = trackingId;
             }
 
             if (responseMessage.ValueBody != null)
             {
-                this.Map = responseMessage.ValueBody.Value as AmqpMap;
+                Map = responseMessage.ValueBody.Value as AmqpMap;
             }
         }
 
-        public AmqpMessage AmqpMessage
-        {
-            get { return this.responseMessage; }
-        }
+        public AmqpMessage AmqpMessage { get; }
 
         public AmqpResponseStatusCode StatusCode { get; }
 
-        public string TrackingId { get; private set; }
+        public string TrackingId { get; }
 
         public AmqpMap Map { get; }
 
@@ -48,12 +43,12 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public TValue GetValue<TValue>(MapKey key)
         {
-            if (this.Map == null)
+            if (Map == null)
             {
                 throw new ArgumentException(AmqpValue.Name);
             }
 
-            var valueObject = this.Map[key];
+            var valueObject = Map[key];
             if (valueObject == null)
             {
                 throw new ArgumentException(key.ToString());
@@ -64,31 +59,31 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 throw new ArgumentException(key.ToString());
             }
 
-            return (TValue)this.Map[key];
+            return (TValue) Map[key];
         }
 
         public IEnumerable<TValue> GetListValue<TValue>(MapKey key)
         {
-            if (this.Map == null)
+            if (Map == null)
             {
                 throw new ArgumentException(AmqpValue.Name);
             }
 
-            List<object> list = (List<object>)this.Map[key];
+            var list = (List<object>) Map[key];
 
             return list.Cast<TValue>();
         }
 
         public AmqpSymbol GetResponseErrorCondition()
         {
-            object condition = this.responseMessage.ApplicationProperties.Map[ManagementConstants.Response.ErrorCondition];
+            var condition = AmqpMessage.ApplicationProperties.Map[ManagementConstants.Response.ErrorCondition];
 
             return condition is AmqpSymbol amqpSymbol ? amqpSymbol : null;
         }
 
         public Exception ToMessagingContractException()
         {
-            return this.responseMessage.ToMessagingContractException(this.StatusCode);
+            return AmqpMessage.ToMessagingContractException(StatusCode);
         }
     }
 }

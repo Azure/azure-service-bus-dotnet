@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.ServiceBus.Primitives;
+
 namespace Microsoft.Azure.ServiceBus.Filters
 {
     /// <summary>
-    /// Represents a description of a rule.
+    ///     Represents a description of a rule.
     /// </summary>
     public sealed class RuleDescription
     {
@@ -12,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         string name;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RuleDescription" /> class with default values.
+        ///     Initializes a new instance of the <see cref="RuleDescription" /> class with default values.
         /// </summary>
         public RuleDescription()
             : this(TrueFilter.Default)
@@ -20,7 +22,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RuleDescription" /> class with the specified name.
+        ///     Initializes a new instance of the <see cref="RuleDescription" /> class with the specified name.
         /// </summary>
         /// <param name="name">The name of the rule.</param>
         public RuleDescription(string name)
@@ -29,7 +31,7 @@ namespace Microsoft.Azure.ServiceBus.Filters
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RuleDescription" /> class with the specified filter expression.
+        ///     Initializes a new instance of the <see cref="RuleDescription" /> class with the specified filter expression.
         /// </summary>
         /// <param name="filter">The filter expression used to match messages.</param>
         public RuleDescription(Filter filter)
@@ -39,11 +41,12 @@ namespace Microsoft.Azure.ServiceBus.Filters
                 throw Fx.Exception.ArgumentNull(nameof(filter));
             }
 
-            this.Filter = filter;
+            Filter = filter;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RuleDescription" /> class with the specified name and filter expression.
+        ///     Initializes a new instance of the <see cref="RuleDescription" /> class with the specified name and filter
+        ///     expression.
         /// </summary>
         /// <param name="name">The name of the rule.</param>
         /// <param name="filter">The filter expression used to match messages.</param>
@@ -54,91 +57,85 @@ namespace Microsoft.Azure.ServiceBus.Filters
                 throw Fx.Exception.ArgumentNull(nameof(filter));
             }
 
-            this.Filter = filter;
-            this.Name = name;
+            Filter = filter;
+            Name = name;
         }
 
         /// <summary>
-        /// Gets or sets the filter expression used to match messages.
+        ///     Gets or sets the filter expression used to match messages.
         /// </summary>
         /// <value>The filter expression used to match messages.</value>
         /// <exception cref="System.ArgumentNullException">null (Nothing in Visual Basic) is assigned.</exception>
         public Filter Filter
         {
-            get
-            {
-                return this.filter;
-            }
+            get => filter;
 
             set
             {
                 if (value == null)
                 {
-                    throw Fx.Exception.ArgumentNull(nameof(this.Filter));
+                    throw Fx.Exception.ArgumentNull(nameof(Filter));
                 }
 
-                this.filter = value;
+                filter = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the action to perform if the message satisfies the filtering expression.
+        ///     Gets or sets the action to perform if the message satisfies the filtering expression.
         /// </summary>
         /// <value>The action to perform if the message satisfies the filtering expression.</value>
         public RuleAction Action { get; set; }
 
         /// <summary>
-        /// Gets or sets the name of the rule.
+        ///     Gets or sets the name of the rule.
         /// </summary>
         /// <value>Returns a <see cref="System.String" /> Representing the name of the rule.</value>
         public string Name
         {
-            get
-            {
-                return this.name;
-            }
+            get => name;
 
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.Name));
+                    throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(Name));
                 }
 
-                this.name = value;
+                name = value;
             }
         }
 
         internal void ValidateDescriptionName()
         {
-            if (string.IsNullOrWhiteSpace(this.name))
+            if (string.IsNullOrWhiteSpace(name))
             {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.name));
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(name));
             }
 
-            if (this.name.Length > Constants.RuleNameMaximumLength)
+            if (name.Length > Constants.RuleNameMaximumLength)
             {
                 throw Fx.Exception.ArgumentOutOfRange(
-                    nameof(this.name),
-                    this.name,
-                    Resources.EntityNameLengthExceedsLimit.FormatForUser(this.name, Constants.RuleNameMaximumLength));
+                    nameof(name),
+                    name,
+                    Resources.EntityNameLengthExceedsLimit.FormatForUser(name, Constants.RuleNameMaximumLength));
             }
 
-            if (this.name.Contains(Constants.PathDelimiter) || this.name.Contains(@"\"))
+            if (name.Contains(Constants.PathDelimiter) || name.Contains(@"\"))
             {
                 throw Fx.Exception.Argument(
-                    nameof(this.name),
-                    Resources.InvalidCharacterInEntityName.FormatForUser(Constants.PathDelimiter, this.name));
+                    nameof(name),
+                    Resources.InvalidCharacterInEntityName.FormatForUser(Constants.PathDelimiter, name));
             }
 
-            string[] uriSchemeKeys = { "@", "?", "#" };
+            string[] uriSchemeKeys = {"@", "?", "#"};
             foreach (var uriSchemeKey in uriSchemeKeys)
             {
-                if (this.name.Contains(uriSchemeKey))
+                if (name.Contains(uriSchemeKey))
                 {
                     throw Fx.Exception.Argument(
-                        nameof(this.name),
-                        Resources.CharacterReservedForUriScheme.FormatForUser(nameof(this.name), uriSchemeKey));
+                        nameof(name),
+                        Resources.CharacterReservedForUriScheme.FormatForUser(nameof(name), uriSchemeKey));
                 }
             }
         }

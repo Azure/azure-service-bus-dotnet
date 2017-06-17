@@ -4,19 +4,19 @@
 namespace Microsoft.Azure.ServiceBus.Filters
 {
     /// <summary>
-    /// Describes a filter expression that is evaluated against a Message.
+    ///     Describes a filter expression that is evaluated against a Message.
     /// </summary>
     /// <remarks>
-    /// Filter is an abstract class with the following concrete implementations:
-    /// <list type="bullet">
-    /// <item><b>SqlFilter</b> that represents a filter using SQL syntax. </item>
-    /// <item><b>CorrelationFilter</b> that provides an optimization for correlation equality expressions.</item>
-    /// </list>
+    ///     Filter is an abstract class with the following concrete implementations:
+    ///     <list type="bullet">
+    ///         <item><b>SqlFilter</b> that represents a filter using SQL syntax. </item>
+    ///         <item><b>CorrelationFilter</b> that provides an optimization for correlation equality expressions.</item>
+    ///     </list>
     /// </remarks>
-    /// <seealso cref="SqlFilter"/>
-    /// <seealso cref="TrueFilter"/>
-    /// <seealso cref="CorrelationFilter "/>
-    /// <seealso cref="FalseFilter"/>
+    /// <seealso cref="SqlFilter" />
+    /// <seealso cref="TrueFilter" />
+    /// <seealso cref="CorrelationFilter " />
+    /// <seealso cref="FalseFilter" />
     public abstract class Filter
     {
         internal Filter()

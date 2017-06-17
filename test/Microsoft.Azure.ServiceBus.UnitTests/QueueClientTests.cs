@@ -1,18 +1,19 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Azure.ServiceBus.Primitives;
+using Xunit;
+
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using Xunit;
-
     public sealed class QueueClientTests : SenderReceiverClientTestBase
     {
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { TestConstants.NonPartitionedQueueName },
-            new object[] { TestConstants.PartitionedQueueName }
+            new object[] {TestConstants.NonPartitionedQueueName},
+            new object[] {TestConstants.PartitionedQueueName}
         };
 
         [Theory]
@@ -23,7 +24,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName);
             try
             {
-                await this.PeekLockTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await PeekLockTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
             }
             finally
             {
@@ -39,7 +40,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.ReceiveDeleteTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await ReceiveDeleteTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
             }
             finally
             {
@@ -55,7 +56,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName);
             try
             {
-                await this.PeekLockWithAbandonTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await PeekLockWithAbandonTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
             }
             finally
             {
@@ -76,7 +77,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             try
             {
                 await
-                    this.PeekLockWithDeadLetterTestCase(
+                    PeekLockWithDeadLetterTestCase(
                         queueClient.InnerSender,
                         queueClient.InnerReceiver,
                         deadLetterQueueClient.InnerReceiver,
@@ -97,7 +98,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName);
             try
             {
-                await this.RenewLockTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await RenewLockTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
             }
             finally
             {
@@ -113,7 +114,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
             }
             finally
             {
@@ -129,7 +130,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
             try
             {
-                await this.CancelScheduledMessagesAsyncTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
+                await CancelScheduledMessagesAsyncTestCase(queueClient.InnerSender, queueClient.InnerReceiver, messageCount);
             }
             finally
             {
@@ -141,7 +142,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         async Task UpdatingPrefetchCountOnQueueClientUpdatesTheReceiverPrefetchCount()
         {
-            string queueName = TestConstants.NonPartitionedQueueName;
+            var queueName = TestConstants.NonPartitionedQueueName;
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
 
             try
