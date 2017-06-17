@@ -1167,5 +1167,11 @@ namespace Microsoft.Azure.ServiceBus
         {
             WriteEvent(97, pluginName, messageId, exception);
         }
+
+        [Event(98, Level = EventLevel.Error, Message = "Exception during Schedule Task. FunctionTargetName: {0}, MethodInfoName: {1}, Exception:{2}")]
+        public void ScheduleTaskFailed(string funcTargetName, string methodInfoName, string exception)
+        {
+            WriteEvent(98, funcTargetName, methodInfoName, exception);
+        }
     }
 }

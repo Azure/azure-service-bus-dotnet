@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Microsoft.Azure.ServiceBus.Primitives
@@ -16,9 +17,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 {
                     await func().ConfigureAwait(false);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // TODO: Log any unexpected exception here.
+                    MessagingEventSource.Log.ScheduleTaskFailed(func.Target.GetType().FullName, func.GetMethodInfo().Name, ex.ToString());
                 }
             });
         }
