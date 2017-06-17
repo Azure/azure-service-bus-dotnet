@@ -357,10 +357,12 @@ namespace Microsoft.Azure.ServiceBus
         public Task<IEnumerable<RuleDescription>> GetRulesAsync()
         {
             //MessagingEventSource.Log.RemoveRuleStart(this.ClientId, ruleName);
+            int skip = 0;
+            int top = int.MaxValue;
 
             try
             {
-                return this.InnerSubscriptionClient.OnGetRulesAsync();
+                return this.InnerSubscriptionClient.OnGetRulesAsync(top, skip);
             }
             catch (Exception exception)
             {

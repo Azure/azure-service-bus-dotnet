@@ -145,23 +145,24 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        public async Task<IEnumerable<RuleDescription>> OnGetRulesAsync()
+        public async Task<IEnumerable<RuleDescription>> OnGetRulesAsync(int top, int skip)
         {
             try
             {
-                //var amqpRequestMessage =
-                //    AmqpRequestMessage.CreateRequest(
-                //        ManagementConstants.Operations.RemoveRuleOperation,
-                //        this.ServiceBusConnection.OperationTimeout,
-                //        null);
-                //amqpRequestMessage.Map[ManagementConstants.Properties.RuleName] = ruleName;
+                var amqpRequestMessage =
+                    AmqpRequestMessage.CreateRequest(
+                        ManagementConstants.Operations.EnumerateRulesOperation,
+                        this.ServiceBusConnection.OperationTimeout,
+                        null);
+                amqpRequestMessage.Map[ManagementConstants.Properties.Top] = top;
+                amqpRequestMessage.Map[ManagementConstants.Properties.Skip] = skip;
 
-                //var response = await this.InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                var response = await this.InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
-                //if (response.StatusCode != AmqpResponseStatusCode.OK)
-                //{
-                //    throw response.ToMessagingContractException();
-                //}
+                if (response.StatusCode != AmqpResponseStatusCode.OK)
+                {
+                    throw response.ToMessagingContractException();
+                }
             }
             catch (Exception exception)
             {
