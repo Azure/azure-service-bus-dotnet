@@ -193,7 +193,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 case OperationCanceledException _:
                     return new ServiceBusException(true, message, exception);
 
-                case TimeoutException _ when referenceId != null:
+                case TimeoutException _:
                     return new ServiceBusTimeoutException(message, exception);
             }
 
