@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using Microsoft.Azure.Amqp.Encoding;
 
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
@@ -158,11 +159,27 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 amqpRequestMessage.Map[ManagementConstants.Properties.Skip] = skip;
 
                 var response = await this.InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
-
-                if (response.StatusCode != AmqpResponseStatusCode.OK)
+                var rules = new List<RuleDescription>();
+                if (response.StatusCode == AmqpResponseStatusCode.OK)
+                {
+                    var ruleList = response.GetListValue<AmqpMap>(ManagementConstants.Properties.Rules);
+                    foreach (var entry in ruleList)
+                    {
+                        var amqpRule = (AmqpMap)entry[ManagementConstants.Properties.RuleDescription];
+                        var ruleDescription = AmqpMessageConverter.GetRuleDescription(amqpRule);
+                        rules.Add(ruleDescription);
+                    }
+                }
+                else if (response.StatusCode == AmqpResponseStatusCode.NoContent)
+                {
+                    rules = new List<RuleDescription>();
+                }
+                else
                 {
                     throw response.ToMessagingContractException();
                 }
+
+                return rules;
             }
             catch (Exception exception)
             {

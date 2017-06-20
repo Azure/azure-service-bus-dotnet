@@ -1166,5 +1166,38 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.WriteEvent(97, pluginName, messageId, exception);
         }
+
+        [Event(99, Level = EventLevel.Informational, Message = "{0}: GetRulesException start.")]
+        public void GetRulesStart(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(99, clientId);
+            }
+        }
+
+        [Event(100, Level = EventLevel.Informational, Message = "{0}: GetRulesException done.")]
+        public void GetRulesStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(100, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void GetRulesException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.GetRulesException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(101, Level = EventLevel.Error, Message = "{0}: GetRulesException Exception: {1}.")]
+        void GetRulesException(string clientId, string exception)
+        {
+            this.WriteEvent(101, clientId, exception);
+        }
     }
 }

@@ -387,6 +387,37 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return ruleDescriptionMap;
         }
 
+        public static RuleDescription GetRuleDescription(AmqpMap amqpDescriptionMap)
+        {
+            Filter filter = null;
+            var sqlFilterMap = amqpDescriptionMap[ManagementConstants.Properties.SqlFilter] as AmqpMap;
+            if (sqlFilterMap != null)
+            {
+                filter = GetSqlFilter(sqlFilterMap);
+            }
+            else
+            {
+                var correlationFilterMap = amqpDescriptionMap[ManagementConstants.Properties.CorrelationFilter] as AmqpMap;
+                if (correlationFilterMap != null)
+                {
+                    filter = GetCorrelationFilter(correlationFilterMap);
+                }
+            }
+
+            RuleAction action = GetRuleAction(amqpDescriptionMap[ManagementConstants.Properties.SqlRuleAction] as AmqpMap);
+            string ruleName;
+            amqpDescriptionMap.TryGetValue(ManagementConstants.Properties.RuleName, out ruleName);
+
+            RuleDescription description = new RuleDescription
+            {
+                Name = ruleName,
+                Filter = filter,
+                Action = action
+            };
+
+            return description;
+        }
+
         static bool TryGetAmqpObjectFromNetObject(object netObject, MappingType mappingType, out object amqpObject)
         {
             amqpObject = null;
@@ -587,6 +618,17 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return amqpFilterMap;
         }
 
+        static SqlFilter GetSqlFilter(AmqpMap map)
+        {
+            string sqlExpression;
+            if (map.TryGetValue(ManagementConstants.Properties.Expression, out sqlExpression))
+            {
+                return new SqlFilter(sqlExpression);
+            }
+
+            return null;
+        }
+
         static AmqpMap GetCorrelationFilterMap(CorrelationFilter correlationFilter)
         {
             AmqpMap correlationFilterMap = new AmqpMap
@@ -612,6 +654,32 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return correlationFilterMap;
         }
 
+        static CorrelationFilter GetCorrelationFilter(AmqpMap amqpCorrelationFilterMap)
+        {
+            var correlationFilter = new CorrelationFilter()
+            {
+                CorrelationId = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.CorrelationId],
+                MessageId = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.MessageId],
+                To = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.To],
+                ReplyTo = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.ReplyTo],
+                Label = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.Label],
+                SessionId = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.SessionId],
+                ReplyToSessionId = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.ReplyToSessionId],
+                ContentType = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.ContentType]
+            };
+
+            var propertiesMap = amqpCorrelationFilterMap[ManagementConstants.Properties.CorrelationFilterProperties] as AmqpMap;
+            if (propertiesMap != null)
+            {
+                foreach (var property in propertiesMap)
+                {
+                    correlationFilter.Properties.Add(property.Key.Key.ToString(), property.Value);
+                }
+            }
+
+            return correlationFilter;
+        }
+
         static AmqpMap GetRuleActionMap(SqlRuleAction sqlRuleAction)
         {
             AmqpMap ruleActionMap = null;
@@ -621,6 +689,17 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
 
             return ruleActionMap;
+        }
+
+        static RuleAction GetRuleAction(AmqpMap amqpRuleActionMap)
+        {
+            string expression = (string) amqpRuleActionMap?[ManagementConstants.Properties.Expression];
+            if (expression != null)
+            {
+                return new SqlRuleAction(expression);
+            }
+
+            return null;
         }
     }
 }

@@ -62,8 +62,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             public static readonly MapKey Skip = new MapKey("skip");
             public static readonly MapKey Top = new MapKey("top");
+            public static readonly MapKey Rules = new MapKey("rules");
             public static readonly MapKey RuleName = new MapKey("rule-name");
             public static readonly MapKey RuleDescription = new MapKey("rule-description");
+            public static readonly MapKey RuleCreatedAt = new MapKey("rule-created-at");
             public static readonly MapKey SqlFilter = new MapKey("sql-filter");
             public static readonly MapKey SqlRuleAction = new MapKey("sql-rule-action");
             public static readonly MapKey CorrelationFilter = new MapKey("correlation-filter");

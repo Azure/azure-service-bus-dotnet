@@ -351,27 +351,28 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Get rules for the subscription.
+        /// Get all rules associated with the subscription.
         /// </summary>
         /// <returns>IEnumerable of rules</returns>
-        public Task<IEnumerable<RuleDescription>> GetRulesAsync()
+        public async Task<IEnumerable<RuleDescription>> GetRulesAsync()
         {
-            //MessagingEventSource.Log.RemoveRuleStart(this.ClientId, ruleName);
+            MessagingEventSource.Log.GetRulesStart(this.ClientId);
             int skip = 0;
             int top = int.MaxValue;
+            IEnumerable<RuleDescription> rules;
 
             try
             {
-                return this.InnerSubscriptionClient.OnGetRulesAsync(top, skip);
+                rules = await this.InnerSubscriptionClient.OnGetRulesAsync(top, skip);
             }
             catch (Exception exception)
             {
-                // TODO next line
-                MessagingEventSource.Log.RemoveRuleException(this.ClientId, exception);
+                MessagingEventSource.Log.GetRulesException(this.ClientId, exception);
                 throw;
             }
 
-            //MessagingEventSource.Log.RemoveRuleStop(this.ClientId);
+            MessagingEventSource.Log.GetRulesStop(this.ClientId);
+            return rules;
         }
 
         /// <summary>
