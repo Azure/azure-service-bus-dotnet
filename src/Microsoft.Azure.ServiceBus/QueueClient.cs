@@ -197,7 +197,8 @@ namespace Microsoft.Azure.ServiceBus
                             this.sessionPumpHost = new SessionPumpHost(
                                 this.ClientId,
                                 this.ReceiveMode,
-                                this.SessionClient);
+                                this.SessionClient,
+                                this.ServiceBusConnection.NamespaceName);
                         }
                     }
                 }

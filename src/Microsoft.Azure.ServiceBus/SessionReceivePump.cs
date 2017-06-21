@@ -15,28 +15,19 @@ namespace Microsoft.Azure.ServiceBus
         readonly IMessageSessionEntity client;
         readonly Func<IMessageSession, Message, CancellationToken, Task> userOnSessionCallback;
         readonly SessionHandlerOptions sessionHandlerOptions;
+        readonly string namespaceName;
         readonly CancellationToken pumpCancellationToken;
         readonly SemaphoreSlim maxConcurrentSessionsSemaphoreSlim;
         readonly SemaphoreSlim maxPendingAcceptSessionsSemaphoreSlim;
 
-        public SessionReceivePump(
-            string clientId,
-            IMessageSessionEntity client,
-            ReceiveMode receiveMode,
-            SessionHandlerOptions sessionHandlerOptions,
-            Func<IMessageSession, Message, CancellationToken, Task> callback,
-            CancellationToken token)
+        public SessionReceivePump(string clientId, IMessageSessionEntity client, ReceiveMode receiveMode, SessionHandlerOptions sessionHandlerOptions, Func<IMessageSession, Message, CancellationToken, Task> callback, string namespaceName, CancellationToken token)
         {
-            if (client == null)
-            {
-                throw new ArgumentException(nameof(client));
-            }
-
-            this.client = client;
+            this.client = client ?? throw new ArgumentException(nameof(client));
             this.clientId = clientId;
             this.ReceiveMode = receiveMode;
             this.sessionHandlerOptions = sessionHandlerOptions;
             this.userOnSessionCallback = callback;
+            this.namespaceName = namespaceName;
             this.pumpCancellationToken = token;
             this.maxConcurrentSessionsSemaphoreSlim = new SemaphoreSlim(this.sessionHandlerOptions.MaxConcurrentSessions);
             this.maxPendingAcceptSessionsSemaphoreSlim = new SemaphoreSlim(this.sessionHandlerOptions.MaxConcurrentAcceptSessionCalls);
@@ -96,7 +87,7 @@ namespace Microsoft.Azure.ServiceBus
 
         void RaiseExceptionRecieved(Exception e, string action)
         {
-            var eventArgs = new ExceptionReceivedEventArgs(e, action);
+            var eventArgs = new ExceptionReceivedEventArgs(e, action, namespaceName);
             this.sessionHandlerOptions.RaiseExceptionReceived(eventArgs);
         }
 
@@ -112,7 +103,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Complete));
+                this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Complete, namespaceName));
             }
         }
 
@@ -127,7 +118,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Abandon));
+                this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Abandon, namespaceName));
             }
         }
 
@@ -323,7 +314,7 @@ namespace Microsoft.Azure.ServiceBus
                     // Lets not bother user with this exception.
                     if (!(exception is TaskCanceledException))
                     {
-                        this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.RenewLock));
+                        this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.RenewLock, namespaceName));
                     }
                     if (!MessagingUtilities.ShouldRetry(exception))
                     {
