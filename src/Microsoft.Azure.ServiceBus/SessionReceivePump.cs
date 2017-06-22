@@ -92,7 +92,7 @@ namespace Microsoft.Azure.ServiceBus
                 this.sessionHandlerOptions.AutoRenewLock;
         }
 
-        void RaiseExceptionRecieved(Exception e, string action)
+        void RaiseExceptionReceived(Exception e, string action)
         {
             var eventArgs = new ExceptionReceivedEventArgs(e, action, this.namespaceName);
             this.sessionHandlerOptions.RaiseExceptionReceived(eventArgs);
@@ -173,7 +173,7 @@ namespace Microsoft.Azure.ServiceBus
                     }
                     else
                     {
-                        this.RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.AcceptMessageSession);
+                        this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.AcceptMessageSession);
                         if (!MessagingUtilities.ShouldRetry(exception))
                         {
                             break;
@@ -224,7 +224,7 @@ namespace Microsoft.Azure.ServiceBus
                             continue;
                         }
 
-                        this.RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.Receive);
+                        this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Receive);
                         break;
                     }
 
@@ -244,7 +244,7 @@ namespace Microsoft.Azure.ServiceBus
                     catch (Exception exception)
                     {
                         MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
-                        this.RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.UserCallback);
+                        this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.UserCallback);
                         callbackExceptionOccured = true;
                         await this.AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
                     }
@@ -285,7 +285,7 @@ namespace Microsoft.Azure.ServiceBus
                 catch (Exception exception)
                 {
                     MessagingEventSource.Log.SessionReceivePumpSessionCloseException(this.clientId, session.SessionId, exception);
-                    this.RaiseExceptionRecieved(exception, ExceptionReceivedEventArgsAction.CloseMessageSession);
+                    this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.CloseMessageSession);
                 }
             }
         }
