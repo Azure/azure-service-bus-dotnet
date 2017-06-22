@@ -87,7 +87,7 @@ namespace Microsoft.Azure.ServiceBus
 
         void RaiseExceptionRecieved(Exception e, string action)
         {
-            var eventArgs = new ExceptionReceivedEventArgs(e, action, namespaceName);
+            var eventArgs = new ExceptionReceivedEventArgs(e, action, this.namespaceName);
             this.sessionHandlerOptions.RaiseExceptionReceived(eventArgs);
         }
 
@@ -103,7 +103,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Complete, namespaceName));
+                this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Complete, this.namespaceName));
             }
         }
 
@@ -118,7 +118,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Abandon, namespaceName));
+                this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Abandon, this.namespaceName));
             }
         }
 
@@ -314,7 +314,7 @@ namespace Microsoft.Azure.ServiceBus
                     // Lets not bother user with this exception.
                     if (!(exception is TaskCanceledException))
                     {
-                        this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.RenewLock, namespaceName));
+                        this.sessionHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.RenewLock, this.namespaceName));
                     }
                     if (!MessagingUtilities.ShouldRetry(exception))
                     {
