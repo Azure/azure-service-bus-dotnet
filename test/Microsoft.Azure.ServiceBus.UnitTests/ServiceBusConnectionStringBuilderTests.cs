@@ -1,11 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
+    using System.Collections.Generic;
     using Xunit;
 
     public class ServiceBusConnectionStringBuilderTests
@@ -24,7 +23,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.Equal("Endpoint=amqps://contoso.servicebus.windows.net;SharedAccessKeyName=keyname;SharedAccessKey=key;EntityPath=myQ", csBuilder.ToString());
         }
 
-        static IEnumerable<object[]> TestData_ConnectionStringBuilderEndpointShouldFormatUri
+        public static IEnumerable<object[]> TestData_ConnectionStringBuilderEndpointShouldFormatUri
             => new [] {
                 new object[] { "ns1.servicebus.windows.net", "amqps://ns1.servicebus.windows.net" },
                 new object[] { " ns2.servicebus.windows.net ", "amqps://ns2.servicebus.windows.net" },
