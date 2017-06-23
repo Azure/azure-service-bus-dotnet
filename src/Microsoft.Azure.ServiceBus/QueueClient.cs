@@ -198,8 +198,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.ClientId,
                                 this.ReceiveMode,
                                 this.SessionClient,
-                                this.ServiceBusConnection.NamespaceName,
-                                this.Path);
+                                this.ServiceBusConnection.NamespaceName);
                         }
                     }
                 }
