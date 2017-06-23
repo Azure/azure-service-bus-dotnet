@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
@@ -22,25 +24,25 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.Equal("Endpoint=amqps://contoso.servicebus.windows.net;SharedAccessKeyName=keyname;SharedAccessKey=key;EntityPath=myQ", csBuilder.ToString());
         }
 
-        [Fact]
-        void ConnectionStringBuilderEndpointShouldFormatUri()
+        static IEnumerable<object[]> TestData_ConnectionStringBuilderEndpointShouldFormatUri
+            => new [] {
+                new object[] { "ns1.servicebus.windows.net", "amqps://ns1.servicebus.windows.net" },
+                new object[] { " ns2.servicebus.windows.net ", "amqps://ns2.servicebus.windows.net" },
+                new object[] { "amqps://ns3.servicebus.windows.net", "amqps://ns3.servicebus.windows.net" },
+                new object[] { "https://ns4.servicebus.windows.net:3990", "amqps://ns4.servicebus.windows.net" },
+                new object[] { "ns5.servicebus.windows.net/", "amqps://ns5.servicebus.windows.net" }
+            };
+
+
+        [Theory]
+        [MemberData(nameof(TestData_ConnectionStringBuilderEndpointShouldFormatUri))]
+        void ConnectionStringBuilderEndpointShouldFormatUri(string endpoint, string expectedFormattedEndpoint)
         {
-            var csBuilder = new ServiceBusConnectionStringBuilder();
-
-            csBuilder.Endpoint = "ns1.servicebus.windows.net";
-            Assert.Equal("amqps://ns1.servicebus.windows.net", csBuilder.Endpoint);
-
-            csBuilder.Endpoint = " ns2.servicebus.windows.net ";
-            Assert.Equal("amqps://ns2.servicebus.windows.net", csBuilder.Endpoint);
-
-            csBuilder.Endpoint = "amqps://ns3.servicebus.windows.net";
-            Assert.Equal("amqps://ns3.servicebus.windows.net", csBuilder.Endpoint);
-
-            csBuilder.Endpoint = "https://ns4.servicebus.windows.net:3990";
-            Assert.Equal("amqps://ns4.servicebus.windows.net", csBuilder.Endpoint);
-
-            csBuilder.Endpoint = "ns5.servicebus.windows.net/";
-            Assert.Equal("amqps://ns5.servicebus.windows.net", csBuilder.Endpoint);
+            var csBuilder = new ServiceBusConnectionStringBuilder
+            {
+                Endpoint = endpoint
+            };
+            Assert.Equal(expectedFormattedEndpoint, csBuilder.Endpoint);
         }
 
         [Fact]
