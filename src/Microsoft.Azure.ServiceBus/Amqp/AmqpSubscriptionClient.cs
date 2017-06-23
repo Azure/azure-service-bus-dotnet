@@ -1,17 +1,16 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using Microsoft.Azure.Amqp.Encoding;
-
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Azure.Amqp;
+    using Azure.Amqp.Encoding;
     using Core;
     using Filters;
-
+    
     internal sealed class AmqpSubscriptionClient : IInnerSubscriptionClient
     {
         int prefetchCount;
@@ -159,9 +158,10 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 amqpRequestMessage.Map[ManagementConstants.Properties.Skip] = skip;
 
                 var response = await this.InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
-                var rules = new List<RuleDescription>();
+                List<RuleDescription> rules;
                 if (response.StatusCode == AmqpResponseStatusCode.OK)
                 {
+                    rules = new List<RuleDescription>();
                     var ruleList = response.GetListValue<AmqpMap>(ManagementConstants.Properties.Rules);
                     foreach (var entry in ruleList)
                     {
