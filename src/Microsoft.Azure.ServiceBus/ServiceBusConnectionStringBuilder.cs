@@ -68,10 +68,6 @@ namespace Microsoft.Azure.ServiceBus
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(string.IsNullOrWhiteSpace(sharedAccessKeyName) ? nameof(sharedAccessKeyName) : nameof(sharedAccessKey));
             }
-            if (!endpoint.Contains("."))
-            {
-                throw Fx.Exception.Argument(nameof(endpoint), "Endpoint should be fully qualified name.");    
-            }
 
             this.Endpoint = endpoint;
             this.EntityPath = entityPath;
