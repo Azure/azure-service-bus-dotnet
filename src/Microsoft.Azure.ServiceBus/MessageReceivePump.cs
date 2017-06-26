@@ -12,7 +12,7 @@ namespace Microsoft.Azure.ServiceBus
     sealed class MessageReceivePump
     {
         readonly Func<Message, CancellationToken, Task> onMessageCallback;
-        readonly string namespaceName;
+        readonly string endpoint;
         readonly MessageHandlerOptions registerHandlerOptions;
         readonly IMessageReceiver messageReceiver;
         readonly CancellationToken pumpCancellationToken;
@@ -21,13 +21,13 @@ namespace Microsoft.Azure.ServiceBus
         public MessageReceivePump(IMessageReceiver messageReceiver, 
             MessageHandlerOptions registerHandlerOptions, 
             Func<Message, CancellationToken, Task> callback, 
-            string namespaceName, 
+            string endpoint, 
             CancellationToken pumpCancellationToken)
         {
             this.messageReceiver = messageReceiver ?? throw new ArgumentNullException(nameof(messageReceiver));
             this.registerHandlerOptions = registerHandlerOptions;
             this.onMessageCallback = callback;
-            this.namespaceName = namespaceName;
+            this.endpoint = endpoint;
             this.pumpCancellationToken = pumpCancellationToken;
             this.maxConcurrentCallsSemaphoreSlim = new SemaphoreSlim(this.registerHandlerOptions.MaxConcurrentCalls);
         }
@@ -78,7 +78,7 @@ namespace Microsoft.Azure.ServiceBus
                 catch (Exception exception)
                 {
                     MessagingEventSource.Log.MessageReceivePumpTaskException(this.messageReceiver.ClientId, string.Empty, exception);
-                    this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Receive, this.namespaceName, this.messageReceiver.Path));
+                    this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Receive, this.endpoint, this.messageReceiver.Path));
                 }
                 finally
                 {
@@ -117,7 +117,7 @@ namespace Microsoft.Azure.ServiceBus
             catch (Exception exception)
             {
                 MessagingEventSource.Log.MessageReceiverPumpUserCallbackException(this.messageReceiver.ClientId, message, exception);
-                this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.UserCallback, this.namespaceName, this.messageReceiver.Path));
+                this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.UserCallback, this.endpoint, this.messageReceiver.Path));
 
                 // Nothing much to do if UserCallback throws, Abandon message and Release semaphore.
                 await this.AbandonMessageIfNeededAsync(message).ConfigureAwait(false);
@@ -162,7 +162,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Abandon, this.namespaceName, this.messageReceiver.Path));
+                this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Abandon, this.endpoint, this.messageReceiver.Path));
             }
         }
 
@@ -178,7 +178,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Complete, this.namespaceName, this.messageReceiver.Path));
+                this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Complete, this.endpoint, this.messageReceiver.Path));
             }
         }
 
@@ -212,7 +212,7 @@ namespace Microsoft.Azure.ServiceBus
                     // Lets not bother user with this exception.
                     if (!(exception is TaskCanceledException))
                     {
-                        this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.RenewLock, this.namespaceName, this.messageReceiver.Path));
+                        this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.RenewLock, this.endpoint, this.messageReceiver.Path));
                     }
 
                     if (!MessagingUtilities.ShouldRetry(exception))

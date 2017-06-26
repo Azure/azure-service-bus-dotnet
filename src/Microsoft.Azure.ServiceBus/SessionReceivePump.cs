@@ -21,8 +21,13 @@ namespace Microsoft.Azure.ServiceBus
         readonly SemaphoreSlim maxConcurrentSessionsSemaphoreSlim;
         readonly SemaphoreSlim maxPendingAcceptSessionsSemaphoreSlim;
 
-        public SessionReceivePump(string clientId, IMessageSessionEntity client, ReceiveMode receiveMode, SessionHandlerOptions sessionHandlerOptions, 
-            Func<IMessageSession, Message, CancellationToken, Task> callback, string endpoint, CancellationToken token)
+        public SessionReceivePump(string clientId, 
+            IMessageSessionEntity client, 
+            ReceiveMode receiveMode, 
+            SessionHandlerOptions sessionHandlerOptions, 
+            Func<IMessageSession, Message, CancellationToken, Task> callback, 
+            string endpoint, 
+            CancellationToken token)
         {
             this.client = client ?? throw new ArgumentException(nameof(client));
             this.clientId = clientId;
