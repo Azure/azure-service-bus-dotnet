@@ -7,12 +7,12 @@ namespace Microsoft.Azure.ServiceBus.Primitives
     {
         /// <summary>Initializes a new instance of the <see cref="ExceptionReceivedContext" /> class.</summary>
         /// <param name="action">The action associated with the exception.</param>
-        /// <param name="namespaceName">The namespace associated with the exception.</param>
+        /// <param name="endpoint">The endpoint associated with the exception.</param>
         /// <param name="entityPath">The entity path associated with the exception.</param>
-        public ExceptionReceivedContext(string action, string namespaceName, string entityPath)
+        public ExceptionReceivedContext(string action, string endpoint, string entityPath)
         {
             Action = action ?? throw new ArgumentNullException(nameof(action));
-            NamespaceName = namespaceName ?? throw new ArgumentNullException(nameof(namespaceName));
+            Endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
             EntityPath = entityPath ?? throw new ArgumentNullException(nameof(entityPath));
         }
 
@@ -21,7 +21,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public string Action { get; private set; }
 
         /// <summary>The namespace name used when this exception occured.</summary>
-        public string NamespaceName { get; private set; }
+        public string Endpoint { get; private set; }
 
         /// <summary>The entity path used when this exception occured.</summary>
         public string EntityPath { get; private set; }

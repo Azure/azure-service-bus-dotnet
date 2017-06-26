@@ -11,12 +11,12 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <summary>Initializes a new instance of the <see cref="ExceptionReceivedEventArgs" /> class.</summary>
         /// <param name="exception">The exception that this event data belongs to.</param>
         /// <param name="action">The action associated with the event.</param>
-        /// <param name="namespaceName">The namespace name used when this exception occurred.</param>
+        /// <param name="endpoint">The endpoint used when this exception occurred.</param>
         /// <param name="entityName">The entity path used when this exception occurred.</param>
-        public ExceptionReceivedEventArgs(Exception exception, string action, string namespaceName, string entityName)
+        public ExceptionReceivedEventArgs(Exception exception, string action, string endpoint, string entityName)
         {
             this.Exception = exception;
-            this.ExceptionReceivedContext = new ExceptionReceivedContext(action, namespaceName, entityName);
+            this.ExceptionReceivedContext = new ExceptionReceivedContext(action, endpoint, entityName);
         }
 
         /// <summary>Gets the parent class exception to which this event data belongs.</summary>

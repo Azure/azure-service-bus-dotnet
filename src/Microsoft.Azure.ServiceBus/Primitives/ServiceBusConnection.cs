@@ -100,9 +100,5 @@ namespace Microsoft.Azure.ServiceBus
 
             return connection;
         }
-
-        /// <summary>Namespace name used for <see cref="ServiceBusConnection"/>.</summary>
-        /// <value>Namespace name.</value>
-        internal string NamespaceName => this.Endpoint.Host.Split(new[] {'.'}, StringSplitOptions.RemoveEmptyEntries)[0];
     }
 }

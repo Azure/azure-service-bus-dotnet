@@ -77,7 +77,7 @@ namespace Microsoft.Azure.ServiceBus
         public string QueueName { get; }
 
         /// <summary>
-        /// Gets the <see cref="ReceiveMode.ReceiveMode"/> for the QueueClient.
+        /// Gets the <see cref="ServiceBus.ReceiveMode"/> for the QueueClient.
         /// </summary>
         public ReceiveMode ReceiveMode { get; }
 
@@ -198,7 +198,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.ClientId,
                                 this.ReceiveMode,
                                 this.SessionClient,
-                                this.ServiceBusConnection.NamespaceName);
+                                this.ServiceBusConnection.Endpoint.ToString());
                         }
                     }
                 }

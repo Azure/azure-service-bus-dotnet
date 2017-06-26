@@ -13,15 +13,15 @@ namespace Microsoft.Azure.ServiceBus
         readonly object syncLock;
         SessionReceivePump sessionReceivePump;
         CancellationTokenSource sessionPumpCancellationTokenSource;
-        readonly string namespaceName;
+        readonly string endpoint;
 
-        public SessionPumpHost(string clientId, ReceiveMode receiveMode, IMessageSessionEntity sessionClient, string namespaceName)
+        public SessionPumpHost(string clientId, ReceiveMode receiveMode, IMessageSessionEntity sessionClient, string endpoint)
         {
             this.syncLock = new object();
             this.ClientId = clientId;
             this.ReceiveMode = receiveMode;
             this.SessionClient = sessionClient;
-            this.namespaceName = namespaceName;
+            this.endpoint = endpoint;
         }
 
         ReceiveMode ReceiveMode { get; }
@@ -60,7 +60,7 @@ namespace Microsoft.Azure.ServiceBus
                     this.ReceiveMode,
                     sessionHandlerOptions,
                     callback,
-                    this.namespaceName,
+                    this.endpoint,
                     this.sessionPumpCancellationTokenSource.Token);
             }
 
