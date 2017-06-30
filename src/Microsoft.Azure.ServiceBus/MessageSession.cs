@@ -21,6 +21,24 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             this.ReceiveMode = innerMessageReceiver.ReceiveMode;
         }
 
+        /// <summary>
+        /// Gets the DateTime that the current receiver is locked until. This is only applicable when Sessions are used.
+        /// </summary>
+        public new DateTime LockedUntilUtc
+        {
+            get => this.InnerMessageReceiver.LockedUntilUtc;
+            set => this.InnerMessageReceiver.LockedUntilUtc = value;
+        }
+
+        /// <summary>
+        /// Gets the SessionId of the current receiver. This is only applicable when Sessions are used.
+        /// </summary>
+        public new string SessionId
+        {
+            get => this.InnerMessageReceiver.SessionId;
+            set => this.InnerMessageReceiver.SessionId = value;
+        }
+
         public override string Path
         {
             get { return this.InnerMessageReceiver.Path; }
@@ -48,7 +66,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public Task RenewSessionLockAsync()
         {
-            return this.OnRenewLockAsync();
+            return this.OnRenewSessionLockAsync();
         }
 
         protected override Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
@@ -83,6 +101,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         protected override Task<DateTime> OnRenewLockAsync(string lockToken)
         {
+            // TODO:  Should throw invalid operation exception?
             return this.InnerMessageReceiver.RenewLockAsync(lockToken);
         }
 
@@ -156,7 +175,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected async Task OnRenewLockAsync()
+        protected async Task OnRenewSessionLockAsync()
         {
             try
             {
