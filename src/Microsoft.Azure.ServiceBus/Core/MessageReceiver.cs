@@ -584,9 +584,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Registers a message handler and begins a new thread to receive messages.
         /// </summary>
         /// <param name="handler">A <see cref="Func{T1, T2, TResult}"/> that processes messages.</param>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is used to notify exceptions.</param>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            this.RegisterMessageHandler(handler, new MessageHandlerOptions());
+            this.RegisterMessageHandler(handler, new MessageHandlerOptions(exceptionReceivedHandler));
         }
 
         /// <summary>
@@ -596,8 +597,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to register a message handler.</param>
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
         {
-            messageHandlerOptions.MessageClientEntity = this;
-            this.OnMessageHandlerAsync(messageHandlerOptions, handler).GetAwaiter().GetResult();
+            this.OnMessageHandler(messageHandlerOptions, handler);
         }
 
         /// <summary></summary>
@@ -669,39 +669,56 @@ namespace Microsoft.Azure.ServiceBus.Core
                 receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
                 IEnumerable<AmqpMessage> amqpMessages = null;
-                bool hasMessages = await Task.Factory.FromAsync(
+                IList<Message> brokeredMessages = null;
+
+                while (timeoutHelper.RemainingTime() > TimeSpan.Zero)
+                {
+                    bool hasMessages = await Task.Factory.FromAsync(
                     (c, s) => receiveLink.BeginReceiveRemoteMessages(maxMessageCount, DefaultBatchFlushInterval, timeoutHelper.RemainingTime(), c, s),
                     a => receiveLink.EndReceiveMessages(a, out amqpMessages),
                     this).ConfigureAwait(false);
 
-                if (receiveLink.TerminalException != null)
-                {
-                    throw receiveLink.TerminalException;
-                }
-
-                if (hasMessages && amqpMessages != null)
-                {
-                    IList<Message> brokeredMessages = null;
-                    foreach (var amqpMessage in amqpMessages)
+                    if (receiveLink.TerminalException != null)
                     {
-                        if (brokeredMessages == null)
-                        {
-                            brokeredMessages = new List<Message>();
-                        }
-
-                        if (this.ReceiveMode == ReceiveMode.ReceiveAndDelete)
-                        {
-                            receiveLink.DisposeDelivery(amqpMessage, true, AmqpConstants.AcceptedOutcome);
-                        }
-
-                        Message message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
-                        brokeredMessages.Add(message);
+                        throw receiveLink.TerminalException;
                     }
 
-                    return brokeredMessages;
+                    if (hasMessages && amqpMessages != null)
+                    {
+                        foreach (var amqpMessage in amqpMessages)
+                        {
+                            if (this.ReceiveMode == ReceiveMode.ReceiveAndDelete)
+                            {
+                                receiveLink.DisposeDelivery(amqpMessage, true, AmqpConstants.AcceptedOutcome);
+                            }
+
+                            Message message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
+
+                            if (this.ReceiveMode == ReceiveMode.PeekLock &&
+                               message.SystemProperties.LockedUntilUtc <= DateTime.UtcNow)
+                            {
+                                receiveLink.ReleaseMessage(amqpMessage);
+                                continue;
+                            }
+                            else
+                            {
+                                if (brokeredMessages == null)
+                                {
+                                    brokeredMessages = new List<Message>();
+                                }
+
+                                brokeredMessages.Add(message);
+                            }
+                        }
+                        
+                        if(brokeredMessages != null)
+                        {
+                            break;
+                        }
+                    }
                 }
 
-                return null;
+                return brokeredMessages;
             }
             catch (Exception exception)
             {
@@ -1023,7 +1040,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             linkSettings.AddProperty(AmqpClientConstants.TimeoutName, (uint)timeout.TotalMilliseconds);
 
-            AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] { ClaimConstants.Listen }, this.CbsTokenProvider, linkSettings);
+            AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] { ClaimConstants.Listen }, this.CbsTokenProvider, linkSettings, this.ClientId);
             ReceivingAmqpLink receivingAmqpLink = (ReceivingAmqpLink)await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
 
             MessagingEventSource.Log.AmqpReceiveLinkCreateStop(this.ClientId);
@@ -1040,7 +1057,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             AmqpLinkSettings linkSettings = new AmqpLinkSettings();
             linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, AmqpClientConstants.EntityTypeManagement);
 
-            AmqpRequestResponseLinkCreator requestResponseLinkCreator = new AmqpRequestResponseLinkCreator(entityPath, this.ServiceBusConnection, new[] { ClaimConstants.Manage, ClaimConstants.Listen }, this.CbsTokenProvider, linkSettings);
+            AmqpRequestResponseLinkCreator requestResponseLinkCreator = new AmqpRequestResponseLinkCreator(entityPath, this.ServiceBusConnection, new[] { ClaimConstants.Manage, ClaimConstants.Listen }, this.CbsTokenProvider, linkSettings, this.ClientId);
             RequestResponseAmqpLink requestResponseAmqpLink = (RequestResponseAmqpLink)await requestResponseLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
 
             MessagingEventSource.Log.AmqpReceiveLinkCreateStop(this.ClientId);
@@ -1087,7 +1104,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        async Task OnMessageHandlerAsync(
+        void OnMessageHandler(
             MessageHandlerOptions registerHandlerOptions,
             Func<Message, CancellationToken, Task> callback)
         {
@@ -1106,7 +1123,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.receivePump.StartPumpAsync().ConfigureAwait(false);
+                this.receivePump.StartPump();
             }
             catch (Exception exception)
             {

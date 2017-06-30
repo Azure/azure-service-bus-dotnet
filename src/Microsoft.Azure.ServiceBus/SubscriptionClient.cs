@@ -253,14 +253,15 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>Asynchronously processes a message.</summary>
-        /// <param name="handler"></param>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
+        /// <param name="handler">A <see cref="Func{T1, T2, TResult}"/> that processes messages.</param>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is used to notify exceptions.</param>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler);
+            this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, exceptionReceivedHandler);
         }
 
         /// <summary>Asynchronously processes a message.</summary>
-        /// <param name="handler"></param>
+        /// <param name="handler">A <see cref="Func{T1, T2, TResult}"/> that processes messages.</param>
         /// <param name="registerHandlerOptions">Calls a message option.</param>
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions registerHandlerOptions)
         {
@@ -268,19 +269,20 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>Register a session handler.</summary>
-        /// <param name="handler"></param>
-        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler)
+        /// <param name="handler">A <see cref="Func{T1, T2, TResult}"/> that processes sessions.</param>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is used to notify exceptions.</param>
+        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            var sessionHandlerOptions = new SessionHandlerOptions();
+            var sessionHandlerOptions = new SessionHandlerOptions(exceptionReceivedHandler);
             this.RegisterSessionHandler(handler, sessionHandlerOptions);
         }
 
         /// <summary>Register a session handler.</summary>
-        /// <param name="handler"></param>
+        /// <param name="handler">A <see cref="Func{T1, T2, TResult}"/> that processes sessions.</param>
         /// <param name="sessionHandlerOptions">Options associated with session pump processing.</param>
         public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, SessionHandlerOptions sessionHandlerOptions)
         {
-            this.SessionPumpHost.OnSessionHandlerAsync(handler, sessionHandlerOptions).GetAwaiter().GetResult();
+            this.SessionPumpHost.OnSessionHandler(handler, sessionHandlerOptions);
         }
 
         /// <summary>
