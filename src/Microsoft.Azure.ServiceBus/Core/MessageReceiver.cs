@@ -652,12 +652,11 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Receive messages continously from the entity. Registers a message handler and begins a new thread to receive messages.
         /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
-        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
-        /// <remarks>Enable prefetch to speeden up the receive rate. 
-        /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
+        /// <param name="handler">A <see cref="Func{T1, T2, TResult}"/> that processes messages.</param>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is used to notify exceptions.</param>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            this.RegisterMessageHandler(handler, new MessageHandlerOptions());
+            this.RegisterMessageHandler(handler, new MessageHandlerOptions(exceptionReceivedHandler));
         }
 
         /// <summary>
@@ -669,8 +668,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <remarks>Enable prefetch to speeden up the receive rate.</remarks>
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
         {
-            messageHandlerOptions.MessageClientEntity = this;
-            this.OnMessageHandlerAsync(messageHandlerOptions, handler).GetAwaiter().GetResult();
+            this.OnMessageHandler(messageHandlerOptions, handler);
         }
 
         /// <summary></summary>
@@ -1160,7 +1158,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        async Task OnMessageHandlerAsync(
+        void OnMessageHandler(
             MessageHandlerOptions registerHandlerOptions,
             Func<Message, CancellationToken, Task> callback)
         {
@@ -1179,7 +1177,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.receivePump.StartPumpAsync().ConfigureAwait(false);
+                this.receivePump.StartPump();
             }
             catch (Exception exception)
             {

@@ -300,20 +300,22 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Receive messages continously from the subscription. Registers a message handler and begins a new thread to receive messages.
-        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the subscription client.
+        /// Receive messages continously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
         /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
+        /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
         /// <remarks>Enable prefetch to speeden up the receive rate. 
         /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler);
+            this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, exceptionReceivedHandler);
         }
 
         /// <summary>
-        /// Receive messages continously from the subscription. Registers a message handler and begins a new thread to receive messages.
-        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the subscription client.
+        /// Receive messages continously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
         /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
         /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
@@ -324,31 +326,32 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Receive session messages continously from the subscription. Registers a message handler and begins a new thread to receive session-messages.
+        /// Receive session messages continously from the queue. Registers a message handler and begins a new thread to receive session-messages.
         /// This handler(<see cref="Func{IMessageSession, Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the subscription client.
         /// </summary>
         /// <param name="handler">A <see cref="Func{IMessageSession, Message, CancellationToken, Task}"/> that processes messages. 
         /// <see cref="IMessageSession"/> contains the session information, and must be used to perform Complete/Abandon/Deadletter or other such operations on the <see cref="Message"/></param>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
+        /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
         /// <remarks>  Enable prefetch to speeden up the receive rate. 
         /// Use <see cref="RegisterSessionHandler(Func{IMessageSession,Message,CancellationToken,Task}, SessionHandlerOptions)"/> to configure the settings of the pump.</remarks>
-        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler)
+        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            var sessionHandlerOptions = new SessionHandlerOptions();
+            var sessionHandlerOptions = new SessionHandlerOptions(exceptionReceivedHandler);
             this.RegisterSessionHandler(handler, sessionHandlerOptions);
         }
 
         /// <summary>
-        /// Receive session messages continously from the subscription. Registers a message handler and begins a new thread to receive session-messages.
+        /// Receive session messages continously from the queue. Registers a message handler and begins a new thread to receive session-messages.
         /// This handler(<see cref="Func{IMessageSession, Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the subscription client.
         /// </summary>
         /// <param name="handler">A <see cref="Func{IMessageSession, Message, CancellationToken, Task}"/> that processes messages. 
         /// <see cref="IMessageSession"/> contains the session information, and must be used to perform Complete/Abandon/Deadletter or other such operations on the <see cref="Message"/></param>
         /// <param name="sessionHandlerOptions">Options used to configure the settings of the session pump.</param>
-        /// <remarks>  Enable prefetch to speeden up the receive rate. 
-        /// Use <see cref="RegisterSessionHandler(Func{IMessageSession,Message,CancellationToken,Task}, SessionHandlerOptions)"/> to configure the settings of the pump.</remarks>
+        /// <remarks>  Enable prefetch to speeden up the receive rate. </remarks>
         public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, SessionHandlerOptions sessionHandlerOptions)
         {
-            this.SessionPumpHost.OnSessionHandlerAsync(handler, sessionHandlerOptions).GetAwaiter().GetResult();
+            this.SessionPumpHost.OnSessionHandler(handler, sessionHandlerOptions);
         }
 
         /// <summary>

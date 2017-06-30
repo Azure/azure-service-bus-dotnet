@@ -6,6 +6,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>
     /// An interface used to describe common functionality for receiving messages from <see cref="IQueueClient"/> and <see cref="ISubscriptionClient"/>.
@@ -31,9 +32,11 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
         /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
+        /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
         /// <remarks>Enable prefetch to speeden up the receive rate. 
         /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
-        void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler);
+        void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler);
 
         /// <summary>
         /// Receive messages continously from the entity. Registers a message handler and begins a new thread to receive messages.
