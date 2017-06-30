@@ -48,7 +48,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public Task RenewSessionLockAsync()
         {
-            return this.OnRenewLockAsync();
+            return this.OnRenewSessionLockAsync();
         }
 
         protected override Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
@@ -156,7 +156,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        protected async Task OnRenewLockAsync()
+        protected async Task OnRenewSessionLockAsync()
         {
             try
             {

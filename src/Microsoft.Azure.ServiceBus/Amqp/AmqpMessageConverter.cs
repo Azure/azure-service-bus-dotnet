@@ -122,17 +122,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 amqpMessage.MessageAnnotations.Map.Add(ScheduledEnqueueTimeUtcName, sbMessage.ScheduledEnqueueTimeUtc);
             }
-
-            if (sbMessage.Publisher != null)
-            {
-                amqpMessage.MessageAnnotations.Map.Add(PublisherName, sbMessage.Publisher);
-            }
-
-            if (sbMessage.DeadLetterSource != null)
-            {
-                amqpMessage.MessageAnnotations.Map.Add(DeadLetterSourceName, sbMessage.DeadLetterSource);
-            }
-
+            
             if (sbMessage.PartitionKey != null)
             {
                 amqpMessage.MessageAnnotations.Map.Add(PartitionKeyName, sbMessage.PartitionKey);
@@ -221,7 +211,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             byteArray = new byte[arraySegmentValue.Count];
                             Array.ConstrainedCopy(arraySegmentValue.Array, arraySegmentValue.Offset, byteArray, 0, arraySegmentValue.Count);
                         }
-                        dataSegments.AddRange(arraySegmentValue);
+                        dataSegments.AddRange(byteArray);
                     }
                 }
                 sbMessage = new SBMessage(dataSegments.ToArray());
@@ -324,9 +314,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         case LockedUntilName:
                             sbMessage.SystemProperties.LockedUntilUtc = (DateTime)pair.Value;
                             break;
-                        case PublisherName:
-                            sbMessage.Publisher = (string)pair.Value;
-                            break;
                         case PartitionKeyName:
                             sbMessage.PartitionKey = (string)pair.Value;
                             break;
@@ -334,7 +321,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             sbMessage.SystemProperties.PartitionId = (short)pair.Value;
                             break;
                         case DeadLetterSourceName:
-                            sbMessage.DeadLetterSource = (string)pair.Value;
+                            sbMessage.SystemProperties.DeadLetterSource = (string)pair.Value;
                             break;
                         default:
                             object netObject;
