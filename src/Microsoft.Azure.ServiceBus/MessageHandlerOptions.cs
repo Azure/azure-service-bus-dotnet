@@ -9,8 +9,8 @@ namespace Microsoft.Azure.ServiceBus
     using Primitives;
 
     /// <summary>Provides options associated with message pump processing using
-    /// <see cref="QueueClient.RegisterMessageHandler(Func{Message,CancellationToken,Task},MessageHandlerOptions)" /> and
-    /// <see cref="SubscriptionClient.RegisterMessageHandler(Func{Message,CancellationToken,Task},MessageHandlerOptions)" />.</summary>
+    /// <see cref="QueueClient.RegisterMessageHandler(Func{Message, CancellationToken, Task}, MessageHandlerOptions)" /> and
+    /// <see cref="SubscriptionClient.RegisterMessageHandler(Func{Message, CancellationToken, Task}, MessageHandlerOptions)" />.</summary>
     public sealed class MessageHandlerOptions
     {
         int maxConcurrentCalls;
