@@ -420,7 +420,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)this.EntityType);
             }
 
-            AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] { ClaimConstants.Send }, this.CbsTokenProvider, linkSettings);
+            AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] { ClaimConstants.Send }, this.CbsTokenProvider, linkSettings, this.ClientId);
             SendingAmqpLink sendingAmqpLink = (SendingAmqpLink)await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
 
             MessagingEventSource.Log.AmqpSendLinkCreateStop(this.ClientId);
@@ -438,7 +438,8 @@ namespace Microsoft.Azure.ServiceBus.Core
                 this.ServiceBusConnection,
                 new[] { ClaimConstants.Manage, ClaimConstants.Send },
                 this.CbsTokenProvider,
-                linkSettings);
+                linkSettings,
+                this.ClientId);
 
             RequestResponseAmqpLink requestResponseAmqpLink =
                 (RequestResponseAmqpLink)await requestResponseLinkCreator.CreateAndOpenAmqpLinkAsync()
