@@ -3,7 +3,10 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Core;
 
     /// <summary>
     /// An interface showing the common functionality between all Service Bus clients.
@@ -11,19 +14,42 @@ namespace Microsoft.Azure.ServiceBus
     public interface IClientEntity
     {
         /// <summary>
-        /// Get the client ID.
+        /// Gets the ID to identify this client. This can be used to correlate logs and exceptions.
         /// </summary>
+        /// <remarks>Every new client has a unique ID (in that process).</remarks>
         string ClientId { get; }
 
         /// <summary>
-        /// Determines whether or not the ClientEntity is closed or being closed.
+        /// Returns true if the client is closed or closing.
         /// </summary>
         bool IsClosedOrClosing { get; }
 
         /// <summary>
-        /// Closes the ClientEntity.
+        /// Duration after which individual operations will timeout.
         /// </summary>
-        /// <returns>The asynchronous operation.</returns>
+        TimeSpan OperationTimeout { get; }
+
+        /// <summary>
+        /// Closes the Client. Closes the connections opened by it.
+        /// </summary>
+        /// <returns>The asynchronous operation</returns>
         Task CloseAsync();
+
+        /// <summary>
+        /// Gets a list of currently registered plugins for this client.
+        /// </summary>
+        IList<ServiceBusPlugin> RegisteredPlugins { get; }
+
+        /// <summary>
+        /// Registers a <see cref="ServiceBusPlugin"/> to be used with this client.
+        /// </summary>
+        /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register.</param>
+        void RegisterPlugin(ServiceBusPlugin serviceBusPlugin);
+
+        /// <summary>
+        /// Unregisters a <see cref="ServiceBusPlugin"/>.
+        /// </summary>
+        /// <param name="serviceBusPluginName">The name <see cref="ServiceBusPlugin.Name"/> to be unregistered</param>
+        void UnregisterPlugin(string serviceBusPluginName);
     }
 }

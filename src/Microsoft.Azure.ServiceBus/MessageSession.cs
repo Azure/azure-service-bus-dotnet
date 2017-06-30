@@ -39,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task RenewSessionLockAsync()
         {
-            return this.OnRenewLockAsync();
+            return this.OnRenewSessionLockAsync();
         }
 
         protected override void OnMessageHandler(MessageHandlerOptions registerHandlerOptions, Func<Message, CancellationToken, Task> callback)
@@ -119,7 +119,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        protected async Task OnRenewLockAsync()
+        protected async Task OnRenewSessionLockAsync()
         {
             try
             {
