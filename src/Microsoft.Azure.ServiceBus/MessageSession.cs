@@ -52,8 +52,6 @@ namespace Microsoft.Azure.ServiceBus
             throw new InvalidOperationException($"{nameof(RenewLockAsync)} is not supported for Session. Use {this.RenewSessionLockAsync()} to renew sessions instead");
         }
 
-        // TODO: What are other operations which are not allowed in Session - Peek/ReceiveBySequenceNumber?
-
         protected async Task<Stream> OnGetStateAsync()
         {
             try
