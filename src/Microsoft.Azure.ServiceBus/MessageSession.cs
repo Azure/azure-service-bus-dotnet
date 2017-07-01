@@ -39,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task RenewSessionLockAsync()
         {
-            return this.OnRenewLockAsync();
+            return this.OnRenewSessionLockAsync();
         }
 
         protected override void OnMessageHandler(MessageHandlerOptions registerHandlerOptions, Func<Message, CancellationToken, Task> callback)
@@ -51,8 +51,6 @@ namespace Microsoft.Azure.ServiceBus
         {
             throw new InvalidOperationException($"{nameof(RenewLockAsync)} is not supported for Session. Use {this.RenewSessionLockAsync()} to renew sessions instead");
         }
-
-        // TODO: What are other operations which are not allowed in Session - Peek/ReceiveBySequenceNumber?
 
         protected async Task<Stream> OnGetStateAsync()
         {
@@ -119,7 +117,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        protected async Task OnRenewLockAsync()
+        protected async Task OnRenewSessionLockAsync()
         {
             try
             {
