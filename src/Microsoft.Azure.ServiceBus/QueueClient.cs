@@ -7,9 +7,8 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Amqp;
     using Core;
-    using Microsoft.Azure.Amqp;
+    using Azure.Amqp;
     using Primitives;
 
     /// <summary>
@@ -60,7 +59,7 @@ namespace Microsoft.Azure.ServiceBus
         int prefetchCount;
         MessageSender innerSender;
         MessageReceiver innerReceiver;
-        AmqpSessionClient sessionClient;
+        SessionClient sessionClient;
         SessionPumpHost sessionPumpHost;
 
         /// <summary>
@@ -215,7 +214,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        internal AmqpSessionClient SessionClient
+        internal SessionClient SessionClient
         {
             get
             {
@@ -225,7 +224,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.sessionClient == null)
                         {
-                            this.sessionClient = new AmqpSessionClient(
+                            this.sessionClient = new SessionClient(
                                 this.ClientId,
                                 this.Path,
                                 MessagingEntityType.Queue,

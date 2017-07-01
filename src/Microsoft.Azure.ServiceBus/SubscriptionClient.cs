@@ -54,7 +54,7 @@ namespace Microsoft.Azure.ServiceBus
         readonly object syncLock;
         readonly bool ownsConnection;
         IInnerSubscriptionClient innerSubscriptionClient;
-        AmqpSessionClient sessionClient;
+        SessionClient sessionClient;
         SessionPumpHost sessionPumpHost;
 
         /// <summary>
@@ -190,7 +190,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        internal AmqpSessionClient SessionClient
+        internal SessionClient SessionClient
         {
             get
             {
@@ -200,7 +200,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.sessionClient == null)
                         {
-                            this.sessionClient = new AmqpSessionClient(
+                            this.sessionClient = new SessionClient(
                                 this.ClientId,
                                 this.Path,
                                 MessagingEntityType.Subscriber,
