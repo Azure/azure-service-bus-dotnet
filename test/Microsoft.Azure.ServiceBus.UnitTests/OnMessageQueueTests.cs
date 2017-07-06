@@ -82,7 +82,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 });
 
             Stopwatch stopwatch = Stopwatch.StartNew();
-            while (stopwatch.Elapsed.TotalSeconds <= 5)
+            while (stopwatch.Elapsed.TotalSeconds <= 10)
             {
                 if(exceptionReceivedHandlerCalled)
                 {
