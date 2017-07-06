@@ -28,7 +28,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Gets the DateTime that the current receiver is locked until. This is only applicable when Sessions are used.
+        /// Gets the time that the session identified by <see cref="SessionId"/> is locked until for this client.
         /// </summary>
         public DateTime LockedUntilUtc
         {
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Gets the SessionId of the current receiver. This is only applicable when Sessions are used.
+        /// Gets the SessionId.
         /// </summary>
         public string SessionId
         {
