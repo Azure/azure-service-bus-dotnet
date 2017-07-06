@@ -108,7 +108,7 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         /// <param name="clientTypeName">The type of the client.</param>
         /// <param name="postfix">Information that can be appended by the client.</param>
-        protected static string GenerateClientId(string clientTypeName, string postfix)
+        protected static string GenerateClientId(string clientTypeName, string postfix = "")
         {
             return $"{clientTypeName}{GetNextId()}{postfix}";
         }
