@@ -72,6 +72,7 @@ namespace Microsoft.Azure.ServiceBus
             : base($"{nameof(TopicClient)}{GetNextId()}({entityPath})", retryPolicy)
         {
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
             this.TopicName = entityPath;
             this.TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(

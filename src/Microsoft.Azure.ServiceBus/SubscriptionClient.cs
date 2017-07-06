@@ -102,6 +102,7 @@ namespace Microsoft.Azure.ServiceBus
             : base($"{nameof(SubscriptionClient)}{ClientEntity.GetNextId()}({subscriptionName})", retryPolicy)
         {
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
             this.TopicPath = topicPath;
             this.SubscriptionName = subscriptionName;
@@ -208,7 +209,8 @@ namespace Microsoft.Azure.ServiceBus
                                 this.PrefetchCount,
                                 this.ServiceBusConnection,
                                 this.CbsTokenProvider,
-                                this.RetryPolicy);
+                                this.RetryPolicy,
+                                this.RegisteredPlugins);
                         }
                     }
                 }
