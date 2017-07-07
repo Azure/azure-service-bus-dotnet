@@ -32,8 +32,8 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public DateTime LockedUntilUtc
         {
-            get => LockedUntilUtcInternal;
-            internal set => LockedUntilUtcInternal = value;
+            get => this.LockedUntilUtcInternal;
+            internal set => this.LockedUntilUtcInternal = value;
         }
 
         /// <summary>
@@ -41,8 +41,8 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public string SessionId
         {
-            get => SessionIdInternal;
-            internal set => SessionIdInternal = value;
+            get => this.SessionIdInternal;
+            internal set => this.SessionIdInternal = value;
         }
 
         public Task<Stream> GetStateAsync()
