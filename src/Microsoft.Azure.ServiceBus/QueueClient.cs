@@ -284,13 +284,13 @@ namespace Microsoft.Azure.ServiceBus
                 await this.innerReceiver.CloseAsync().ConfigureAwait(false);
             }
 
+            this.sessionPumpHost?.Close();
+
             if (this.sessionClient != null)
             {
                 await this.sessionClient.CloseAsync().ConfigureAwait(false);
             }
-
-            this.sessionPumpHost?.Close();
-
+            
             if (this.ownsConnection)
             {
                 await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);

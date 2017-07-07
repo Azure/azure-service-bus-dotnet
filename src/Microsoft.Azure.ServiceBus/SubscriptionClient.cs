@@ -255,12 +255,12 @@ namespace Microsoft.Azure.ServiceBus
                 await this.innerSubscriptionClient.CloseAsync().ConfigureAwait(false);
             }
 
+            this.sessionPumpHost?.Close();
+
             if (this.sessionClient != null)
             {
                 await this.sessionClient.CloseAsync().ConfigureAwait(false);
             }
-
-            this.sessionPumpHost?.Close();
 
             if (this.ownsConnection)
             {
