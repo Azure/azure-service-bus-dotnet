@@ -1180,5 +1180,20 @@ namespace Microsoft.Azure.ServiceBus
         {
             WriteEvent(99, exception);
         }
+
+        [NonEvent]
+        public void LinkStateLost(string clientId, string receiveLinkName, AmqpObjectState receiveLinkState, bool isSessionReceiver, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.LinkStateLost(clientId, receiveLinkName, receiveLinkState.ToString(), isSessionReceiver, exception.ToString());
+            }
+        }
+
+        [Event(100, Level = EventLevel.Error, Message = "Link state lost. Throwing LockLostException for clientId: {0}, receiveLinkName: {1}, receiveLinkState: {2}, isSessionReceiver: {3}, exception: {4}.")]
+        void LinkStateLost(string clientId, string receiveLinkName, string receiveLinkState, bool isSessionReceiver, string exception)
+        {
+            WriteEvent(100, clientId, receiveLinkName, receiveLinkState, isSessionReceiver, exception);
+        }
     }
 }
