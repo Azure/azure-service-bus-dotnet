@@ -250,7 +250,7 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionStop(
                 this.ClientId,
                 this.EntityPath,
-                session.SessionId);
+                session.SessionIdInternal);
 
             // Register plugins on the message session.
             foreach (var serviceBusPlugin in this.RegisteredPlugins)
