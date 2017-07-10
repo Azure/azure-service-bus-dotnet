@@ -98,7 +98,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         QueueClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode, RetryPolicy retryPolicy)
-            : base($"{nameof(QueueClient)}{ClientEntity.GetNextId()}({entityPath})", retryPolicy)
+            : base(ClientEntity.GenerateClientId(nameof(QueueClient), entityPath), retryPolicy)
         {
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
             this.syncLock = new object();
@@ -286,6 +286,11 @@ namespace Microsoft.Azure.ServiceBus
 
             this.sessionPumpHost?.Close();
 
+            if (this.sessionClient != null)
+            {
+                await this.sessionClient.CloseAsync().ConfigureAwait(false);
+            }
+            
             if (this.ownsConnection)
             {
                 await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
