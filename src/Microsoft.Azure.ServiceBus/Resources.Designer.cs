@@ -336,6 +336,6 @@ namespace Microsoft.Azure.ServiceBus {
             get {
                 return ResourceManager.GetString("TokenMissingExpiresOn", resourceCulture);
             }
-        }
+        }        
     }
 }
