@@ -71,6 +71,8 @@ namespace Microsoft.Azure.ServiceBus
         TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, RetryPolicy retryPolicy)
             : base(ClientEntity.GenerateClientId(nameof(TopicClient), entityPath), retryPolicy)
         {
+            MessagingEventSource.Log.TopicClientCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath);
+
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
             this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
@@ -79,6 +81,8 @@ namespace Microsoft.Azure.ServiceBus
                 serviceBusConnection.SasKeyName,
                 serviceBusConnection.SasKey);
             this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
+
+            MessagingEventSource.Log.TopicClientCreateStop(serviceBusConnection?.Endpoint.Authority, entityPath, this.ClientId);
         }
 
         /// <summary>

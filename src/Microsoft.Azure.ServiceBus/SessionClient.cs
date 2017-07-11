@@ -252,6 +252,7 @@ namespace Microsoft.Azure.ServiceBus
                 this.EntityPath,
                 session.SessionIdInternal);
 
+            session.UpdateClientId(ClientEntity.GenerateClientId(nameof(MessageSession), $"{this.EntityPath}_{session.SessionId}"));
             // Register plugins on the message session.
             foreach (var serviceBusPlugin in this.RegisteredPlugins)
             {
