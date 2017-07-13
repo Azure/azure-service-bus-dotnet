@@ -687,15 +687,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceivingAmqpLink receivingAmqpLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
             Source source = (Source)receivingAmqpLink.Settings.Source;
             string tempSessionId;
-            if (!source.FilterSet.TryGetValue(AmqpClientConstants.SessionFilterName, out tempSessionId))
+            if (!source.FilterSet.TryGetValue(AmqpClientConstants.SessionFilterName, out tempSessionId) || string.IsNullOrWhiteSpace(tempSessionId))
             {
                 receivingAmqpLink.Session.SafeClose();
-                throw new ServiceBusException(false, Resources.AmqpFieldSessionId);
+                throw new ServiceBusException(true, Resources.AmqpFieldSessionId);
             }
-            if (!string.IsNullOrWhiteSpace(tempSessionId))
-            {
-                this.SessionIdInternal = tempSessionId;
-            }
+
+            this.SessionIdInternal = tempSessionId;
             long lockedUntilUtcTicks;
             this.LockedUntilUtcInternal = receivingAmqpLink.Settings.Properties.TryGetValue(AmqpClientConstants.LockedUntilUtc, out lockedUntilUtcTicks) ? new DateTime(lockedUntilUtcTicks, DateTimeKind.Utc) : DateTime.MinValue;
         }
