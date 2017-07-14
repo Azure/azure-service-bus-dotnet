@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
   <img src="service-bus.png" alt="Microsoft Azure Relay" width="100"/>
 </p>
 
@@ -8,8 +8,8 @@
 
 |Build/Package|Status|
 |------|-------------|
-|master|[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/vinaysurya/azure-service-bus-dotnet/branch/master) [![codecov](https://codecov.io/gh/Azure/azure-service-bus-dotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/azure-service-bus-dotnet)|
-|dev|[![Build status](https://ci.appveyor.com/api/projects/status/anpaipqto58ka5lk/branch/master?svg=true)](https://ci.appveyor.com/project/vinaysurya/azure-service-bus-dotnet/branch/dev) [![codecov](https://codecov.io/gh/Azure/azure-service-bus-dotnet/branch/dev/graph/badge.svg)](https://codecov.io/gh/Azure/azure-service-bus-dotnet)|
+|master|[![Build status](https://ci.appveyor.com/api/projects/status/o4kaqt06h62d0ugp?svg=true)](https://ci.appveyor.com/project/vinaysurya/azure-service-bus-dotnet) [![codecov](https://codecov.io/gh/Azure/azure-service-bus-dotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/azure-service-bus-dotnet)|
+|dev|[![Build status](https://ci.appveyor.com/api/projects/status/o4kaqt06h62d0ugp/branch/dev?svg=true)](https://ci.appveyor.com/project/vinaysurya/azure-service-bus-dotnet/branch/dev) [![codecov](https://codecov.io/gh/Azure/azure-service-bus-dotnet/branch/dev/graph/badge.svg)](https://codecov.io/gh/Azure/azure-service-bus-dotnet)|
 |Microsoft.Azure.ServiceBus|[![NuGet Version and Downloads count](https://buildstats.info/nuget/Microsoft.Azure.ServiceBus?includePreReleases=true)](https://www.nuget.org/packages/Microsoft.Azure.ServiceBus/)|
 
 This is the next generation Service Bus .NET client library that focuses on queues & topics. If you are looking for Event Hubs and Relay clients, follow the below links:
