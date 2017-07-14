@@ -8,6 +8,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.ServiceBus.Amqp;
+    using Microsoft.Azure.ServiceBus.InteropExtensions;
     using Xunit;
 
     public class AmqpConverterTests
@@ -23,7 +24,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var amqpMessage = AmqpMessage.Create(amqpValue);
 
             var sbMessage = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
-            Assert.Equal(messageBody, sbMessage.Body);
+            Assert.Equal(messageBody, sbMessage.GetBody<byte[]>(null));
         }
 
         [Fact]
@@ -37,7 +38,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var amqpMessage = AmqpMessage.Create(amqpValue);
 
             var sbMessage = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
-            Assert.Equal(messageBody, sbMessage.Body);
+            Assert.Equal(messageBody, sbMessage.GetBody<byte[]>(null));
         }
 
         [Fact]
@@ -94,8 +95,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 To = to,
                 ContentType = contentType,
                 ReplyTo = replyTo,
-                ReplyToSessionId = replyToSessionId,
-                Publisher = publisher,
+                ReplyToSessionId = replyToSessionId
             };
             sbMessage.UserProperties.Add("UserProperty", "SomeUserProperty");
 
@@ -113,7 +113,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.Equal(contentType, convertedSbMessage.ContentType);
             Assert.Equal(replyTo, convertedSbMessage.ReplyTo);
             Assert.Equal(replyToSessionId, convertedSbMessage.ReplyToSessionId);
-            Assert.Equal(publisher, convertedSbMessage.Publisher);
         }
     }
 }

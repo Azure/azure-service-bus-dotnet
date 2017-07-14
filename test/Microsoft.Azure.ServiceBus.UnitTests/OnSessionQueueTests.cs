@@ -5,8 +5,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Threading.Tasks;
     using Core;
+    using Microsoft.Azure.ServiceBus.Primitives;
     using Xunit;
 
     public class OnSessionQueueTests
@@ -60,7 +62,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             try
             {
                 SessionHandlerOptions handlerOptions =
-                    new SessionHandlerOptions()
+                    new SessionHandlerOptions(ExceptionReceivedHandler)
                     {
                         MaxConcurrentSessions = 5,
                         MessageWaitTimeout = TimeSpan.FromSeconds(5),
@@ -97,16 +99,44 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         [Fact]
         [DisplayTestMethodName]
-        void OnSessionHandlerShouldFailOnNonSessionFulQueue()
+        async Task OnSessionExceptionHandlerCalledWhenRegisteredOnNonSessionFulQueue()
         {
+            bool exceptionReceivedHandlerCalled = false;
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
 
-            Assert.Throws<InvalidOperationException>(
-               () => queueClient.RegisterSessionHandler(
+            SessionHandlerOptions sessionHandlerOptions = new SessionHandlerOptions(
+            (eventArgs) =>
+            {
+                Assert.NotNull(eventArgs);
+                Assert.NotNull(eventArgs.Exception);
+                if (eventArgs.Exception is InvalidOperationException)
+                {
+                    exceptionReceivedHandlerCalled = true;
+                }
+                return Task.CompletedTask;
+            })
+            { MaxConcurrentSessions = 1 };
+
+            queueClient.RegisterSessionHandler(
                (session, message, token) =>
                {
                    return Task.CompletedTask;
-               }));
+               },
+               sessionHandlerOptions);
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            while (stopwatch.Elapsed.TotalSeconds <= 5)
+            {
+                if (exceptionReceivedHandlerCalled)
+                {
+                    break;
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(1));
+            }
+
+            Assert.True(exceptionReceivedHandlerCalled);
+            await queueClient.CloseAsync();
         }
 
         async Task OnSessionTestAsync(string queueName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
@@ -116,7 +146,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             try
             {
                 SessionHandlerOptions handlerOptions =
-                    new SessionHandlerOptions()
+                    new SessionHandlerOptions(ExceptionReceivedHandler)
                     {
                         MaxConcurrentSessions = maxConcurrentCalls,
                         MessageWaitTimeout = TimeSpan.FromSeconds(5),
@@ -142,6 +172,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 await queueClient.CloseAsync();
             }
+        }
+
+        Task ExceptionReceivedHandler(ExceptionReceivedEventArgs eventArgs)
+        {
+            TestUtility.Log($"Exception Received: ClientId: {eventArgs.ExceptionReceivedContext.ClientId}, EntityPath: {eventArgs.ExceptionReceivedContext.EntityPath}, Exception: {eventArgs.Exception.Message}");
+            return Task.CompletedTask;
         }
     }
 }

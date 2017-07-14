@@ -6,6 +6,7 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using Filters;
 
     /// <summary>
     /// The object used to communicate and transfer data with Service Bus.
@@ -23,17 +24,17 @@ namespace Microsoft.Azure.ServiceBus
         /// Creates a new Message
         /// </summary>
         public Message()
-            : this(default(byte[]))
+            : this(null)
         {
         }
 
         /// <summary>
         /// Creates a new message from the specified payload.
         /// </summary>
-        /// <param name="array"></param>
-        public Message(byte[] array)
+        /// <param name="body">The payload of the message in bytes</param>
+        public Message(byte[] body)
         {
-            this.Body = array;
+            this.Body = body;
             this.SystemProperties = new SystemPropertiesCollection();
             this.UserProperties = new Dictionary<string, object>();
         }
@@ -50,15 +51,13 @@ namespace Microsoft.Azure.ServiceBus
         public byte[] Body { get; set; }
 
         /// <summary>
-        /// Gets or sets the MessageId.
+        /// Gets or sets the MessageId to identify the message.
         /// </summary>
-        /// <remarks>A value set by the user to uniquely identify the message. This value will be used for message deduplication.</remarks>
+        /// <remarks>A value set by the user to identify the message. In case message deduplication is enabled on the entity, this value will be used for deduplication.
+        /// Max MessageId size is 128 chars.</remarks>
         public string MessageId
         {
-            get
-            {
-                return this.messageId;
-            }
+            get => this.messageId;
 
             set
             {
@@ -69,13 +68,11 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>Gets or sets a partition key for sending a transactional message to a queue or topic that is not session-aware.</summary>
         /// <value>The partition key for sending a transactional message.</value>
-        /// <remarks>Transactions are not currently supported with this library.</remarks>
+        /// <remarks>Transactions are not currently supported with this library. Messages with same partitionKey are sent to the same partition.
+        /// Max PartitionKey size is 128 chars.</remarks>
         public string PartitionKey
         {
-            get
-            {
-                return this.partitionKey;
-            }
+            get => this.partitionKey;
 
             set
             {
@@ -84,14 +81,12 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        /// <summary>Gets or sets a partition key value when a transaction is to be used to send messages via a transfer queue.</summary>
+        /// <summary>Gets or sets a partition key for sending a transactional message via a transfer queue.</summary>
         /// <value>The partition key value when a transaction is to be used to send messages via a transfer queue.</value>
+        /// <remarks>Max size of ViaPartitionKey is 128 chars.</remarks>
         public string ViaPartitionKey
         {
-            get
-            {
-                return this.viaPartitionKey;
-            }
+            get => this.viaPartitionKey;
 
             set
             {
@@ -100,14 +95,12 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        /// <summary>Gets or sets the identifier of the session.</summary>
+        /// <summary>Gets or sets a sessionId. A message with sessionId set can only be received using a <see cref="IMessageSession"/> object.</summary>
         /// <value>The identifier of the session.</value>
+        /// <remarks>Max size of sessionId is 128 chars.</remarks>
         public string SessionId
         {
-            get
-            {
-                return this.sessionId;
-            }
+            get => this.sessionId;
 
             set
             {
@@ -118,12 +111,10 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>Gets or sets the session identifier to reply to.</summary>
         /// <value>The session identifier to reply to.</value>
+        /// <remarks>Max size of ReplyToSessionId is 128.</remarks>
         public string ReplyToSessionId
         {
-            get
-            {
-                return this.replyToSessionId;
-            }
+            get => this.replyToSessionId;
 
             set
             {
@@ -135,6 +126,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>Gets the date and time in UTC at which the message is set to expire.</summary>
         /// <value>The message expiration time in UTC.</value>
         /// <exception cref="System.InvalidOperationException">If the message has not been received. For example if a new message was created but not yet sent and received.</exception>
+        /// <remarks>Unless specifically set for a message, this value is controlled by the 'DefaultMessageTimeToLive' property set while creating the entity.</remarks>
         public DateTime ExpiresAtUtc
         {
             get
@@ -148,8 +140,13 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        /// <summary>Gets or sets the message’s time to live value. This is the duration after which the message expires, starting from when the message is sent to the Service Bus. Messages older than their TimeToLive value will expire and no longer be retained in the message store. Subscribers will be unable to receive expired messages. TimeToLive is the maximum lifetime that a message can be received, but its value cannot exceed the entity specified 
-        /// value on the destination queue or subscription. If a lower TimeToLive value is specified, it will be applied to the individual message. However, a larger value specified on the message will be overridden by the entity’s DefaultMessageTimeToLive value.</summary> 
+        /// <summary>
+        /// Gets or sets the message’s time to live value. This is the duration after which the message expires, starting from when the message is sent to the Service Bus. 
+        /// Messages older than their TimeToLive value will expire and no longer be retained in the message store. Expired messages cannot be received. 
+        /// TimeToLive is the maximum lifetime that a message can be received, but its value cannot exceed the entity specified value on the destination queue or subscription. 
+        /// If a lower TimeToLive value is specified, it will be applied to the individual message. However, a larger value specified on the message will be overridden by the 
+        /// entity’s DefaultMessageTimeToLive value.
+        /// </summary> 
         /// <value>The message’s time to live value.</value>
         /// <remarks>If the TTL set on a message by the sender exceeds the destination's TTL, then the message's TTL will be overwritten by the later one.</remarks>
         public TimeSpan TimeToLive
@@ -171,8 +168,9 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        /// <summary>Gets or sets the identifier of the correlation.</summary>
+        /// <summary>Gets or sets the a correlation identifier.</summary>
         /// <value>The identifier of the correlation.</value>
+        /// <remarks>Its a custom property that can be used to either transfer a correlation Id to the destination or be used in <see cref="CorrelationFilter"/></remarks>
         public string CorrelationId { get; set; }
 
         /// <summary>Gets or sets the application specific label.</summary>
@@ -192,15 +190,6 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>The reply to queue address.</value>
         public string ReplyTo { get; set; }
 
-        /// <summary> Gets or sets the the Publisher. </summary>
-        /// <value> Identifies the Publisher Sending the Message. </value>
-        public string Publisher { get; set; }
-
-        /// <summary>
-        /// Gets the name of the queue or subscription that this message was enqueued on, before it was deadlettered.
-        /// </summary>
-        public string DeadLetterSource { get; set; }
-
         /// <summary>Gets or sets the date and time in UTC at which the message will be enqueued. This 
         /// property returns the time in UTC; when setting the property, the supplied DateTime value must also be in UTC.</summary> 
         /// <value>The scheduled enqueue time in UTC. This value is for delayed message sending. 
@@ -211,9 +200,13 @@ namespace Microsoft.Azure.ServiceBus
 
         // TODO: Calculate the size of the properties and body
         /// <summary>
-        /// Gets the total size of the message in bytes.
+        /// Gets the total size of the message body in bytes.
         /// </summary>
-        public long Size { get; internal set; }
+        public long Size
+        {
+            get => Body.Length;
+            //internal set;
+        }
 
         /// <summary>
         /// Gets the user property bag, which can be used for custom message properties.
@@ -281,19 +274,14 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public sealed class SystemPropertiesCollection
         {
-            private int deliveryCount;
-
-            private DateTime lockedUntilUtc;
-
-            private long sequenceNumber = -1;
-
-            private short partitionId;
-
-            private long enqueuedSequenceNumber;
-
-            private DateTime enqueuedTimeUtc;
-
-            private Guid lockTokenGuid;
+            int deliveryCount;
+            DateTime lockedUntilUtc;
+            long sequenceNumber = -1;
+            short partitionId;
+            long enqueuedSequenceNumber;
+            DateTime enqueuedTimeUtc;
+            Guid lockTokenGuid;
+            string deadLetterSource;
 
             /// <summary>
             /// Specifies whether or not there is a lock token set on the current message.
@@ -359,6 +347,23 @@ namespace Microsoft.Azure.ServiceBus
                 }
             }
 
+            /// <summary>
+            /// Gets the name of the queue or subscription that this message was enqueued on, before it was deadlettered.
+            /// </summary>
+            public string DeadLetterSource
+            {
+                get
+                {
+                    this.ThrowIfNotReceived();
+                    return this.deadLetterSource;
+                }
+
+                internal set
+                {
+                    this.deadLetterSource = value;
+                }
+            }
+
             internal short PartitionId
             {
                 get
@@ -375,6 +380,8 @@ namespace Microsoft.Azure.ServiceBus
 
             /// <summary>Gets or sets the enqueued sequence number of the message.</summary>
             /// <value>The enqueued sequence number of the message.</value>
+            /// <remarks>In scenarios of Topic-Subscription or ForwardTo, the message is initially enqueued on a different entity as compared to the 
+            /// entity from where the message is received. This returns the sequence number of the message in the initial entity.</remarks>
             public long EnqueuedSequenceNumber
             {
                 get
@@ -419,7 +426,13 @@ namespace Microsoft.Azure.ServiceBus
                 }
             }
 
-            private void ThrowIfNotReceived()
+            internal object BodyObject
+            {
+                get;
+                set;
+            }
+
+            void ThrowIfNotReceived()
             {
                 if (!this.IsReceived)
                 {

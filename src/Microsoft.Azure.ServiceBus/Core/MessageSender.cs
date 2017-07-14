@@ -17,29 +17,46 @@ namespace Microsoft.Azure.ServiceBus.Core
     /// <summary>
     /// The MessageSender can be used to send messages to Queues or Topics.
     /// </summary>
+    /// <example>
+    /// Create a new MessageSender to send to a Queue
+    /// <code>
+    /// IMessageSender messageSender = new MessageSender(
+    ///     namespaceConnectionString,
+    ///     queueName)
+    /// </code>
+    /// 
+    /// Send message
+    /// <code>
+    /// byte[] data = GetData();
+    /// await messageSender.SendAsync(data);
+    /// </code>
+    /// </example>
+    /// <remarks>This uses AMQP protocol to communicate with service.</remarks>
     public class MessageSender : ClientEntity, IMessageSender
     {
         int deliveryCount;
         readonly bool ownsConnection;
 
         /// <summary>
-        /// Creates a new MessageSender.
+        /// Creates a new AMQP MessageSender.
         /// </summary>
-        /// <param name="connectionStringBuilder">The <see cref="ServiceBusConnectionStringBuilder"/> used for the connection details</param>
-        /// <param name="retryPolicy">The <see cref="RetryPolicy"/> that will be used when communicating with Service Bus</param>
+        /// <param name="connectionStringBuilder">The <see cref="ServiceBusConnectionStringBuilder"/> having entity level connection details.</param>
+        /// <param name="retryPolicy">The <see cref="RetryPolicy"/> that will be used when communicating with Service Bus. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <remarks>Creates a new connection to the entity, which is opened during the first operation.</remarks>
         public MessageSender(
             ServiceBusConnectionStringBuilder connectionStringBuilder,
             RetryPolicy retryPolicy = null)
-            : this(connectionStringBuilder?.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, retryPolicy)
+            : this(connectionStringBuilder?.GetNamespaceConnectionString(), connectionStringBuilder?.EntityPath, retryPolicy)
         {
         }
 
         /// <summary>
-        /// Creates a new MessageSender.
+        /// Creates a new AMQP MessageSender.
         /// </summary>
-        /// <param name="connectionString">The connection string used to communicate with Service Bus.</param>
-        /// <param name="entityPath">The path of the entity for this sender.</param>
-        /// <param name="retryPolicy">The <see cref="RetryPolicy"/> that will be used when communicating with Service Bus</param>
+        /// <param name="connectionString">Namespace connection string used to communicate with Service Bus. Must not contain Entity details.</param>
+        /// <param name="entityPath">The path of the entity this sender should connect to.</param>
+        /// <param name="retryPolicy">The <see cref="RetryPolicy"/> that will be used when communicating with Service Bus. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <remarks>Creates a new connection to the entity, which is opened during the first operation.</remarks>
         public MessageSender(
             string connectionString, 
             string entityPath, 
@@ -68,30 +85,33 @@ namespace Microsoft.Azure.ServiceBus.Core
             ServiceBusConnection serviceBusConnection,
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy)
-            : base(nameof(MessageSender) + StringUtility.GetRandomString(), retryPolicy ?? RetryPolicy.Default)
+            : base(ClientEntity.GenerateClientId(nameof(MessageSender), entityPath), retryPolicy ?? RetryPolicy.Default)
         {
+            MessagingEventSource.Log.MessageSenderCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath);
+
+            this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
             this.OperationTimeout = serviceBusConnection.OperationTimeout;
             this.Path = entityPath;
             this.EntityType = entityType;
-            this.ServiceBusConnection = serviceBusConnection;
             this.CbsTokenProvider = cbsTokenProvider;
             this.SendLinkManager = new FaultTolerantAmqpObject<SendingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
             this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
+
+            MessagingEventSource.Log.MessageSenderCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
         }
 
         /// <summary>
-        /// Gets a list of currently registered plugins.
+        /// Gets a list of currently registered plugins for this sender.
         /// </summary>
-        public IList<ServiceBusPlugin> RegisteredPlugins { get; } = new List<ServiceBusPlugin>();
-
-        internal TimeSpan OperationTimeout { get; }
-
-        internal MessagingEntityType? EntityType { get; private set; }
+        /// <seealso cref="RegisterPlugin"/>
+        public override IList<ServiceBusPlugin> RegisteredPlugins { get; } = new List<ServiceBusPlugin>();
 
         /// <summary>
-        /// Gets the path of the MessageSender.
+        /// Gets the entity path of the MessageSender.
         /// </summary>
         public virtual string Path { get; private set; }
+
+        internal MessagingEntityType? EntityType { get; private set; }
 
         ServiceBusConnection ServiceBusConnection { get; }
 
@@ -101,8 +121,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         FaultTolerantAmqpObject<RequestResponseAmqpLink> RequestResponseLinkManager { get; }
 
-        /// <summary></summary>
-        /// <returns></returns>
+        /// <summary>Closes the connection.</summary>
         protected override async Task OnClosingAsync()
         {
             await this.SendLinkManager.CloseAsync().ConfigureAwait(false);
@@ -127,7 +146,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 }
                 catch (Exception ex)
                 {
-                    MessagingEventSource.Log.PluginCallFailed(plugin.Name, message.MessageId, ex.Message);
+                    MessagingEventSource.Log.PluginCallFailed(plugin.Name, message.MessageId, ex);
                     if (!plugin.ShouldContinueOnException)
                     {
                         throw;
@@ -155,7 +174,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>
-        /// Sends a message to the path of the <see cref="MessageSender"/>.
+        /// Sends a message to the entity as described by <see cref="Path"/>.
         /// </summary>
         /// <param name="message">The <see cref="Message"/> to send</param>
         /// <returns>An asynchronous operation</returns>
@@ -165,7 +184,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>
-        /// Sends a list of messages to the path of the <see cref="MessageSender"/>.
+        /// Sends a list of messages to the entity as described by <see cref="Path"/>.
         /// </summary>
         /// <param name="messageList">The <see cref="IList{Message}"/> to send</param>
         /// <returns>An asynchronous operation</returns>
@@ -195,11 +214,11 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>
-        /// Schedules a message to appear on Service Bus.
+        /// Schedules a message to appear on Service Bus at a later time.
         /// </summary>
-        /// <param name="message">The <see cref="Message"/></param>
-        /// <param name="scheduleEnqueueTimeUtc">The UTC time that the message should be available for processing</param>
-        /// <returns>An asynchronous operation</returns>
+        /// <param name="message">The <see cref="Message"/> that needs to be scheduled.</param>
+        /// <param name="scheduleEnqueueTimeUtc">The UTC time at which the message should be available for processing</param>
+        /// <returns>The sequence number of the message that was scheduled.</returns>
         public async Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
             if (message == null)
@@ -351,7 +370,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 request.Map[ManagementConstants.Properties.Messages] = new List<AmqpMap> { entry };
 
                 IEnumerable<long> sequenceNumbers = null;
-                var response = await this.ExecuteRequestResponseAsync(request);
+                var response = await this.ExecuteRequestResponseAsync(request).ConfigureAwait(false);
                 if (response.StatusCode == AmqpResponseStatusCode.OK)
                 {
                     sequenceNumbers = response.GetValue<long[]>(ManagementConstants.Properties.SequenceNumbers);
@@ -405,7 +424,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)this.EntityType);
             }
 
-            AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] { ClaimConstants.Send }, this.CbsTokenProvider, linkSettings);
+            AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, new[] { ClaimConstants.Send }, this.CbsTokenProvider, linkSettings, this.ClientId);
             SendingAmqpLink sendingAmqpLink = (SendingAmqpLink)await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
 
             MessagingEventSource.Log.AmqpSendLinkCreateStop(this.ClientId);
@@ -423,7 +442,8 @@ namespace Microsoft.Azure.ServiceBus.Core
                 this.ServiceBusConnection,
                 new[] { ClaimConstants.Manage, ClaimConstants.Send },
                 this.CbsTokenProvider,
-                linkSettings);
+                linkSettings,
+                this.ClientId);
 
             RequestResponseAmqpLink requestResponseAmqpLink =
                 (RequestResponseAmqpLink)await requestResponseLinkCreator.CreateAndOpenAmqpLinkAsync()
@@ -468,10 +488,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>
-        /// Registers a <see cref="ServiceBusPlugin"/> to be used for sending messages to Service Bus.
+        /// Registers a <see cref="ServiceBusPlugin"/> to be used with this sender.
         /// </summary>
-        /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register</param>
-        public void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
+        /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register.</param>
+        public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             if (serviceBusPlugin == null)
             {
@@ -489,7 +509,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Unregisters a <see cref="ServiceBusPlugin"/>.
         /// </summary>
         /// <param name="serviceBusPluginName">The name <see cref="ServiceBusPlugin.Name"/> to be unregistered</param>
-        public void UnregisterPlugin(string serviceBusPluginName)
+        public override void UnregisterPlugin(string serviceBusPluginName)
         {
             if (serviceBusPluginName == null)
             {

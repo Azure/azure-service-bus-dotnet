@@ -6,7 +6,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
     using System;
     using System.Threading.Tasks;
 
-    class TaskExtensionHelper
+    static class TaskExtensionHelper
     {
         public static void Schedule(Func<Task> func)
         {
@@ -16,9 +16,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 {
                     await func().ConfigureAwait(false);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // TODO: Log any unexpected exception here.
+                    MessagingEventSource.Log.ScheduleTaskFailed(func, ex);
                 }
             });
         }

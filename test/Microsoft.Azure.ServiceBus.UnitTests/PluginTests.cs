@@ -90,6 +90,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 var sendReceivePlugin = new SendReceivePlugin();
                 messageSender.RegisterPlugin(sendReceivePlugin);
+                messageReceiver.RegisterPlugin(sendReceivePlugin);
 
                 var sendMessage = new Message(Encoding.UTF8.GetBytes("Test message"))
                 {
@@ -97,9 +98,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 };
                 await messageSender.SendAsync(sendMessage);
 
-                var receivedMessage = await messageReceiver.ReceiveAsync(1, TimeSpan.FromMinutes(1));
+                // Ensure the plugin is called.
+                Assert.True(sendReceivePlugin.MessageBodies.ContainsKey(sendMessage.MessageId));
 
-                Assert.Equal(sendMessage.Body, receivedMessage.First().Body);
+                var receivedMessage = await messageReceiver.ReceiveAsync(TimeSpan.FromMinutes(1));
+
+                Assert.Equal(sendMessage.Body, receivedMessage.Body);
             }
 
             finally
@@ -151,6 +155,56 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await messageReceiver.CloseAsync();
             }
         }
+
+        [Fact]
+        [DisplayTestMethodName]
+        async Task QueueClientShouldPassPluginsToMessageSession()
+        {
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName);
+            try
+            {
+                bool messageReceived = false;
+                var sendReceivePlugin = new SendReceivePlugin();
+                queueClient.RegisterPlugin(sendReceivePlugin);
+
+                var sendMessage = new Message(Encoding.UTF8.GetBytes("Test message"))
+                {
+                    MessageId = Guid.NewGuid().ToString(),
+                    SessionId = Guid.NewGuid().ToString()
+                };
+                await queueClient.SendAsync(sendMessage);
+
+                // Ensure the plugin is called.
+                Assert.True(sendReceivePlugin.MessageBodies.ContainsKey(sendMessage.MessageId));
+
+                queueClient.RegisterSessionHandler(
+                    (session, message, cancellationToken) =>
+                    {
+                        Assert.Equal(sendMessage.SessionId, session.SessionId);
+                        Assert.True(session.RegisteredPlugins.Contains(sendReceivePlugin));
+                        Assert.Equal(sendMessage.Body, message.Body);
+
+                        messageReceived = true;
+                        return Task.CompletedTask;
+                    },
+                    exceptionArgs => Task.CompletedTask);
+
+                for (int i = 0; i < 20; i++)
+                {
+                    if (messageReceived)
+                    {
+                        break;
+                    }
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                }
+
+                Assert.True(messageReceived);
+            }
+            finally
+            {
+                await queueClient.CloseAsync();
+            }
+        }
     }
 
     internal class FirstSendPlugin : ServiceBusPlugin
@@ -180,21 +234,22 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     internal class SendReceivePlugin : ServiceBusPlugin
     {
         // Null the body on send, and replace it when received.
-        Dictionary<string, byte[]> MessageBodies = new Dictionary<string, byte[]>();
+        public Dictionary<string, byte[]> MessageBodies = new Dictionary<string,byte[]>();
 
         public override string Name => nameof(SendReceivePlugin);
 
         public override Task<Message> BeforeMessageSend(Message message)
         {
-            MessageBodies.Add(message.MessageId, message.Body);
-            message.Body = null;
-            return Task.FromResult(message);
+            this.MessageBodies.Add(message.MessageId, message.Body);
+            var clonedMessage = message.Clone();
+            clonedMessage.Body = null;
+            return Task.FromResult(clonedMessage);
         }
 
         public override Task<Message> AfterMessageReceive(Message message)
         {
             Assert.Null(message.Body);
-            message.Body = MessageBodies[message.MessageId];
+            message.Body = this.MessageBodies[message.MessageId];
             return Task.FromResult(message);
         }
     }
