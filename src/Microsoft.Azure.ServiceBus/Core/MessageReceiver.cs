@@ -735,6 +735,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             RequestResponseAmqpLink requestResponseAmqpLink = null;
             if (!this.RequestResponseLinkManager.TryGetOpenedObject(out requestResponseAmqpLink))
             {
+                MessagingEventSource.Log.CreatingNewLink(this.ClientId, this.isSessionReceiver, this.SessionIdInternal, true, this.LinkError);
                 requestResponseAmqpLink = await this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false); 
             }
 
@@ -765,6 +766,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);              
                 if(!this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
                 {
+                    MessagingEventSource.Log.CreatingNewLink(this.ClientId, this.isSessionReceiver, this.SessionIdInternal, false, this.LinkError);
                     receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
                 }
 
@@ -1043,6 +1045,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 if (!this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
                 {
+                    MessagingEventSource.Log.CreatingNewLink(this.ClientId, this.isSessionReceiver, this.SessionIdInternal, false, this.LinkError);
                     receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false); 
                 }
 
