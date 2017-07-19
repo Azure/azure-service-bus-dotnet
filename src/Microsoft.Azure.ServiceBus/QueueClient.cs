@@ -7,14 +7,51 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Amqp;
     using Core;
-    using Microsoft.Azure.Amqp;
+    using Azure.Amqp;
     using Primitives;
 
     /// <summary>
-    /// Used for all basic interactions with a Service Bus queue.
+    /// QueueClient can be used for all basic interactions with a Service Bus Queue.
     /// </summary>
+    /// <example>
+    /// Create a new QueueClient
+    /// <code>
+    /// IQueueClient queueClient = new QueueClient(
+    ///     namespaceConnectionString,
+    ///     queueName,
+    ///     ReceiveMode.PeekLock,
+    ///     RetryExponential);
+    /// </code>
+    /// 
+    /// Send a message to the queue:
+    /// <code>
+    /// byte[] data = GetData();
+    /// await queueClient.SendAsync(data);
+    /// </code>
+    /// 
+    /// Register a message handler which will be invoked every time a message is received.
+    /// <code>
+    /// queueClient.RegisterMessageHandler(
+    ///        async (message, token) =&gt;
+    ///        {
+    ///            // Process the message
+    ///            Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+    ///
+    ///            // Complete the message so that it is not received again.
+    ///            // This can be done only if the queueClient is opened in ReceiveMode.PeekLock mode.
+    ///            await queueClient.CompleteAsync(message.SystemProperties.LockToken);
+    ///        },
+    ///        async (exceptionEvent) =&gt;
+    ///        {
+    ///            // Process the exception
+    ///            Console.WriteLine("Exception = " + exceptionEvent.Exception);
+    ///            return Task.CompletedTask;
+    ///        });
+    /// </code>
+    /// </example>
+    /// <remarks>Use <see cref="MessageSender"/> or <see cref="MessageReceiver"/> for advanced set of functionality.
+    /// It uses AMQP protocol for communicating with servicebus.</remarks>
     public class QueueClient : ClientEntity, IQueueClient
     {
         readonly bool ownsConnection;
@@ -22,7 +59,7 @@ namespace Microsoft.Azure.ServiceBus
         int prefetchCount;
         MessageSender innerSender;
         MessageReceiver innerReceiver;
-        AmqpSessionClient sessionClient;
+        SessionClient sessionClient;
         SessionPumpHost sessionPumpHost;
 
         /// <summary>
@@ -31,18 +68,20 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="connectionStringBuilder"><see cref="ServiceBusConnectionStringBuilder"/> having namespace and queue information.</param>
         /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
         /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <remarks>Creates a new connection to the queue, which is opened during the first send/receive operation.</remarks>
         public QueueClient(ServiceBusConnectionStringBuilder connectionStringBuilder, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
-            : this(connectionStringBuilder.GetNamespaceConnectionString(), connectionStringBuilder.EntityPath, receiveMode, retryPolicy)
+            : this(connectionStringBuilder?.GetNamespaceConnectionString(), connectionStringBuilder?.EntityPath, receiveMode, retryPolicy)
         {
         }
 
         /// <summary>
         /// Instantiates a new <see cref="QueueClient"/> to perform operations on a queue.
         /// </summary>
-        /// <param name="connectionString">Namespace connection string. <remarks>Should not contain queue information.</remarks></param>
-        /// <param name="entityPath">Path to the queue</param>
+        /// <param name="connectionString">Namespace connection string. Must not contain queue information.</param>
+        /// <param name="entityPath">Name of the queue</param>
         /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
         /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <remarks>Creates a new connection to the queue, which is opened during the first send/receive operation.</remarks>
         public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
@@ -59,16 +98,21 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         QueueClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode, RetryPolicy retryPolicy)
-            : base($"{nameof(QueueClient)}{ClientEntity.GetNextId()}({entityPath})", retryPolicy)
+            : base(ClientEntity.GenerateClientId(nameof(QueueClient), entityPath), retryPolicy)
         {
+            MessagingEventSource.Log.QueueClientCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath, receiveMode.ToString());
+
+            this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
             this.QueueName = entityPath;
             this.ReceiveMode = receiveMode;
-            this.ServiceBusConnection = serviceBusConnection;
             this.TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(
                 serviceBusConnection.SasKeyName,
                 serviceBusConnection.SasKey);
             this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
+
+            MessagingEventSource.Log.QueueClientCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
         }
 
         /// <summary>
@@ -77,7 +121,7 @@ namespace Microsoft.Azure.ServiceBus
         public string QueueName { get; }
 
         /// <summary>
-        /// Gets the <see cref="ReceiveMode.ReceiveMode"/> for the QueueClient.
+        /// Gets the <see cref="ServiceBus.ReceiveMode"/> for the QueueClient.
         /// </summary>
         public ReceiveMode ReceiveMode { get; }
 
@@ -87,9 +131,22 @@ namespace Microsoft.Azure.ServiceBus
         public string Path => this.QueueName;
 
         /// <summary>
-        /// Gets or sets the number of messages that the queue client can simultaneously request.
-        /// </summary>
-        /// <value>The number of messages that the queue client can simultaneously request.</value>
+        /// Prefetch speeds up the message flow by aiming to have a message readily available for local retrieval when and before the application asks for one using Receive.
+        /// Setting a non-zero value prefetches PrefetchCount number of messages.
+        /// Setting the value to zero turns prefetch off.</summary>
+        /// <remarks> 
+        /// <para>
+        /// When Prefetch is enabled, the client will quietly acquire more messages, up to the PrefetchCount limit, than what the application 
+        /// immediately asks for. The message pump will therefore acquire a message for immediate consumption 
+        /// that will be returned as soon as available, and the client will proceed to acquire further messages to fill the prefetch buffer in the background. 
+        /// </para>
+        /// <para>
+        /// While messages are available in the prefetch buffer, any subsequent ReceiveAsync calls will be immediately satisfied from the buffer, and the buffer is 
+        /// replenished in the background as space becomes available.If there are no messages available for delivery, the receive operation will drain the 
+        /// buffer and then wait or block as expected. 
+        /// </para>
+        /// <para>Updates to this value take effect on the next receive call to the service.</para>
+        /// </remarks>
         public int PrefetchCount
         {
             get => this.prefetchCount;
@@ -106,6 +163,11 @@ namespace Microsoft.Azure.ServiceBus
                 }
             }
         }
+
+        /// <summary>
+        /// Gets a list of currently registered plugins for this QueueClient.
+        /// </summary>
+        public override IList<ServiceBusPlugin> RegisteredPlugins => this.InnerSender.RegisteredPlugins;
 
         internal MessageSender InnerSender
         {
@@ -157,7 +219,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        internal AmqpSessionClient SessionClient
+        internal SessionClient SessionClient
         {
             get
             {
@@ -167,7 +229,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (this.sessionClient == null)
                         {
-                            this.sessionClient = new AmqpSessionClient(
+                            this.sessionClient = new SessionClient(
                                 this.ClientId,
                                 this.Path,
                                 MessagingEntityType.Queue,
@@ -175,7 +237,10 @@ namespace Microsoft.Azure.ServiceBus
                                 this.PrefetchCount,
                                 this.ServiceBusConnection,
                                 this.CbsTokenProvider,
-                                this.RetryPolicy);
+                                this.RetryPolicy,
+                                this.RegisteredPlugins);
+
+
                         }
                     }
                 }
@@ -197,7 +262,8 @@ namespace Microsoft.Azure.ServiceBus
                             this.sessionPumpHost = new SessionPumpHost(
                                 this.ClientId,
                                 this.ReceiveMode,
-                                this.SessionClient);
+                                this.SessionClient,
+                                this.ServiceBusConnection.Endpoint.Authority);
                         }
                     }
                 }
@@ -228,6 +294,11 @@ namespace Microsoft.Azure.ServiceBus
 
             this.sessionPumpHost?.Close();
 
+            if (this.sessionClient != null)
+            {
+                await this.sessionClient.CloseAsync().ConfigureAwait(false);
+            }
+            
             if (this.ownsConnection)
             {
                 await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
@@ -255,10 +326,13 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Completes a <see cref="Message"/> using a lock token.
+        /// Completes a <see cref="Message"/> using its lock token. This will delete the message from the queue.
         /// </summary>
         /// <param name="lockToken">The lock token of the corresponding message to complete.</param>
-        /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, only when <see cref="ReceiveMode"/> is set to <see cref="ReceiveMode.PeekLock"/>.</remarks>
+        /// <remarks>
+        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
+        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
+        /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         public Task CompleteAsync(string lockToken)
         {
@@ -269,7 +343,9 @@ namespace Microsoft.Azure.ServiceBus
         /// Abandons a <see cref="Message"/> using a lock token. This will make the message available again for processing.
         /// </summary>
         /// <param name="lockToken">The lock token of the corresponding message to abandon.</param>
-        /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, only when <see cref="ReceiveMode"/> is set to <see cref="ReceiveMode.PeekLock"/>.</remarks>
+        /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
+        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
+        /// Abandoning a message will increase the delivery count on the message.</remarks>
         /// <returns>The asynchronous operation.</returns>
         public Task AbandonAsync(string lockToken)
         {
@@ -277,74 +353,101 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Moves a message to the deadletter queue.
+        /// Moves a message to the deadletter sub-queue.
         /// </summary>
         /// <param name="lockToken">The lock token of the corresponding message to deadletter.</param>
-        /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, only when <see cref="ReceiveMode"/> is set to <see cref="ReceiveMode.PeekLock"/>. 
-        /// In order to receive a message from the deadletter queue, you will need a new <see cref="IMessageReceiver"/>, with the corresponding path. You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.</remarks>
+        /// <remarks>
+        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
+        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
+        /// In order to receive a message from the deadletter sub-queue, you will need a new <see cref="IMessageReceiver"/> or <see cref="IQueueClient"/>, with the corresponding path. 
+        /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.</remarks>
         /// <returns>The asynchronous operation.</returns>
         public Task DeadLetterAsync(string lockToken)
         {
             return this.InnerReceiver.DeadLetterAsync(lockToken);
         }
 
-        /// <summary>Asynchronously processes a message.</summary>
-        /// <param name="handler"></param>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler)
+        /// <summary>
+        /// Receive messages continously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
+        /// </summary>
+        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
+        /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
+        /// <remarks>Enable prefetch to speeden up the receive rate. 
+        /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            this.InnerReceiver.RegisterMessageHandler(handler);
+            this.InnerReceiver.RegisterMessageHandler(handler, new MessageHandlerOptions(exceptionReceivedHandler));
         }
 
-        /// <summary>Asynchronously processes a message.</summary>
-        /// <param name="handler"></param>
-        /// <param name="messageHandlerOptions">Options associated with message pump processing.</param>
+        /// <summary>
+        /// Receive messages continously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
+        /// </summary>
+        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
+        /// <remarks>Enable prefetch to speeden up the receive rate.</remarks>
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
         {
             this.InnerReceiver.RegisterMessageHandler(handler, messageHandlerOptions);
         }
 
-        /// <summary>Register a session handler.</summary>
-        /// <param name="handler"></param>
-        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler)
+        /// <summary>
+        /// Receive session messages continously from the queue. Registers a message handler and begins a new thread to receive session-messages.
+        /// This handler(<see cref="Func{IMessageSession, Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the queue client.
+        /// </summary>
+        /// <param name="handler">A <see cref="Func{IMessageSession, Message, CancellationToken, Task}"/> that processes messages. 
+        /// <see cref="IMessageSession"/> contains the session information, and must be used to perform Complete/Abandon/Deadletter or other such operations on the <see cref="Message"/></param>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
+        /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
+        /// <remarks>  Enable prefetch to speeden up the receive rate. 
+        /// Use <see cref="RegisterSessionHandler(Func{IMessageSession,Message,CancellationToken,Task}, SessionHandlerOptions)"/> to configure the settings of the pump.</remarks>
+        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            var sessionHandlerOptions = new SessionHandlerOptions();
+            var sessionHandlerOptions = new SessionHandlerOptions(exceptionReceivedHandler);
             this.RegisterSessionHandler(handler, sessionHandlerOptions);
         }
 
-        /// <summary>Register a session handler.</summary>
-        /// <param name="handler"></param>
-        /// <param name="sessionHandlerOptions">Options associated with session pump processing.</param>
+        /// <summary>
+        /// Receive session messages continously from the queue. Registers a message handler and begins a new thread to receive session-messages.
+        /// This handler(<see cref="Func{IMessageSession, Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the queue client.
+        /// </summary>
+        /// <param name="handler">A <see cref="Func{IMessageSession, Message, CancellationToken, Task}"/> that processes messages. 
+        /// <see cref="IMessageSession"/> contains the session information, and must be used to perform Complete/Abandon/Deadletter or other such operations on the <see cref="Message"/></param>
+        /// <param name="sessionHandlerOptions">Options used to configure the settings of the session pump.</param>
+        /// <remarks>  Enable prefetch to speeden up the receive rate. </remarks>
         public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, SessionHandlerOptions sessionHandlerOptions)
         {
-            this.SessionPumpHost.OnSessionHandlerAsync(handler, sessionHandlerOptions).GetAwaiter().GetResult();
+            this.SessionPumpHost.OnSessionHandler(handler, sessionHandlerOptions);
         }
 
         /// <summary>
-        /// Sends a scheduled message
+        /// Schedules a message to appear on Service Bus at a later time.
         /// </summary>
-        /// <param name="message">Message to be scheduled</param>
-        /// <param name="scheduleEnqueueTimeUtc">Time of enqueue</param>
-        /// <returns>Sequence number that is needed for cancelling.</returns>
+        /// <param name="message">The <see cref="Message"/> that needs to be scheduled.</param>
+        /// <param name="scheduleEnqueueTimeUtc">The UTC time at which the message should be available for processing</param>
+        /// <returns>The sequence number of the message that was scheduled.</returns>
         public Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
             return this.InnerSender.ScheduleMessageAsync(message, scheduleEnqueueTimeUtc);
         }
 
         /// <summary>
-        /// Cancels a scheduled message
+        /// Cancels a message that was scheduled.
         /// </summary>
-        /// <param name="sequenceNumber">Returned on scheduling a message.</param>
-        /// <returns></returns>
+        /// <param name="sequenceNumber">The <see cref="Message.SystemPropertiesCollection.SequenceNumber"/> of the message to be cancelled.</param>
+        /// <returns>An asynchronous operation</returns>
         public Task CancelScheduledMessageAsync(long sequenceNumber)
         {
             return this.InnerSender.CancelScheduledMessageAsync(sequenceNumber);
         }
 
         /// <summary>
-        /// Registers a <see cref="ServiceBusPlugin"/> to be used for sending and receiving messages from Service Bus.
+        /// Registers a <see cref="ServiceBusPlugin"/> to be used with this queue client.
         /// </summary>
-        /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register</param>
-        public void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
+        /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register.</param>
+        public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             this.InnerSender.RegisterPlugin(serviceBusPlugin);
             this.InnerReceiver.RegisterPlugin(serviceBusPlugin);
@@ -354,7 +457,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Unregisters a <see cref="ServiceBusPlugin"/>.
         /// </summary>
         /// <param name="serviceBusPluginName">The name <see cref="ServiceBusPlugin.Name"/> to be unregistered</param>
-        public void UnregisterPlugin(string serviceBusPluginName)
+        public override void UnregisterPlugin(string serviceBusPluginName)
         {
             this.InnerSender.UnregisterPlugin(serviceBusPluginName);
             this.InnerReceiver.UnregisterPlugin(serviceBusPluginName);

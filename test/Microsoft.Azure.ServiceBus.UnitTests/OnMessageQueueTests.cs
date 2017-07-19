@@ -3,7 +3,9 @@
 
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
+    using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Threading.Tasks;
     using Xunit;
 
@@ -49,12 +51,55 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
             try
             {
-                this.OnMessageRegistrationWithoutPendingMessagesTestCase(queueClient.InnerReceiver, maxConcurrentCalls, true);
+                await this.OnMessageRegistrationWithoutPendingMessagesTestCase(queueClient.InnerSender, queueClient.InnerReceiver, maxConcurrentCalls, true);
             }
             finally
             {
                 await queueClient.CloseAsync();
             }
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        async Task OnMessageExceptionHandlerCalledTest()
+        {
+            string queueName = "nonexistentqueuename";
+            bool exceptionReceivedHandlerCalled = false;
+
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
+            queueClient.RegisterMessageHandler(
+                (message, token) => throw new Exception("Unexpected exception: Did not expect messages here"),
+                (eventArgs) =>
+                {
+                    Assert.NotNull(eventArgs);
+                    Assert.NotNull(eventArgs.Exception);
+                    if (eventArgs.Exception is MessagingEntityNotFoundException)
+                    {
+                        exceptionReceivedHandlerCalled = true;
+                    }
+                    return Task.CompletedTask;
+                });
+
+            try
+            {
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                while (stopwatch.Elapsed.TotalSeconds <= 10)
+                {
+                    if (exceptionReceivedHandlerCalled)
+                    {
+                        break;
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
+
+                TestUtility.Log($"{DateTime.Now}: ExceptionReceivedHandlerCalled: {exceptionReceivedHandlerCalled}");
+                Assert.True(exceptionReceivedHandlerCalled);
+            }
+            finally
+            {
+                await queueClient.CloseAsync();
+            }            
         }
 
         async Task OnMessageTestAsync(string queueName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)

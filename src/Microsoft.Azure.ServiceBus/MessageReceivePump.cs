@@ -12,33 +12,29 @@ namespace Microsoft.Azure.ServiceBus
     sealed class MessageReceivePump
     {
         readonly Func<Message, CancellationToken, Task> onMessageCallback;
+        readonly string endpoint;
         readonly MessageHandlerOptions registerHandlerOptions;
         readonly IMessageReceiver messageReceiver;
         readonly CancellationToken pumpCancellationToken;
         readonly SemaphoreSlim maxConcurrentCallsSemaphoreSlim;
 
-        public MessageReceivePump(
-            IMessageReceiver messageReceiver,
-            MessageHandlerOptions registerHandlerOptions,
-            Func<Message, CancellationToken, Task> callback,
+        public MessageReceivePump(IMessageReceiver messageReceiver, 
+            MessageHandlerOptions registerHandlerOptions, 
+            Func<Message, CancellationToken, Task> callback, 
+            string endpoint, 
             CancellationToken pumpCancellationToken)
         {
             this.messageReceiver = messageReceiver ?? throw new ArgumentNullException(nameof(messageReceiver));
             this.registerHandlerOptions = registerHandlerOptions;
             this.onMessageCallback = callback;
+            this.endpoint = endpoint;
             this.pumpCancellationToken = pumpCancellationToken;
             this.maxConcurrentCallsSemaphoreSlim = new SemaphoreSlim(this.registerHandlerOptions.MaxConcurrentCalls);
         }
 
-        public async Task StartPumpAsync()
+        public void StartPump()
         {
-            var initialMessage = await this.messageReceiver.ReceiveAsync(Constants.MessageReceiverStartPumpInitialReceiveTimeout).ConfigureAwait(false);
-            if (initialMessage != null)
-            {
-                MessagingEventSource.Log.MessageReceiverPumpInitialMessageReceived(this.messageReceiver.ClientId, initialMessage);
-            }
-
-            TaskExtensionHelper.Schedule(() => this.MessagePumpTask(initialMessage));
+            TaskExtensionHelper.Schedule(() => this.MessagePumpTaskAsync());
         }
 
         bool ShouldRenewLock()
@@ -48,7 +44,13 @@ namespace Microsoft.Azure.ServiceBus
                 this.registerHandlerOptions.AutoRenewLock;
         }
 
-        async Task MessagePumpTask(Message initialMessage)
+        Task RaiseExceptionReceived(Exception e, string action)
+        {
+            var eventArgs = new ExceptionReceivedEventArgs(e, action, this.endpoint, this.messageReceiver.Path, this.messageReceiver.ClientId);
+            return this.registerHandlerOptions.RaiseExceptionReceived(eventArgs);
+        }
+
+        async Task MessagePumpTaskAsync()
         {
             while (!this.pumpCancellationToken.IsCancellationRequested)
             {
@@ -56,16 +58,7 @@ namespace Microsoft.Azure.ServiceBus
                 try
                 {
                     await this.maxConcurrentCallsSemaphoreSlim.WaitAsync(this.pumpCancellationToken).ConfigureAwait(false);
-
-                    if (initialMessage == null)
-                    {
-                        message = await this.messageReceiver.ReceiveAsync(this.registerHandlerOptions.ReceiveTimeOut).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        message = initialMessage;
-                        initialMessage = null;
-                    }
+                    message = await this.messageReceiver.ReceiveAsync(this.registerHandlerOptions.ReceiveTimeOut).ConfigureAwait(false);                  
 
                     if (message != null)
                     {
@@ -76,7 +69,7 @@ namespace Microsoft.Azure.ServiceBus
                 catch (Exception exception)
                 {
                     MessagingEventSource.Log.MessageReceivePumpTaskException(this.messageReceiver.ClientId, string.Empty, exception);
-                    this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Receive));
+                    await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Receive).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -103,7 +96,7 @@ namespace Microsoft.Azure.ServiceBus
                 TaskExtensionHelper.Schedule(() => this.RenewMessageLockTask(message, renewLockCancellationTokenSource.Token));
 
                 // After a threshold time of renewal('AutoRenewTimeout'), create timer to cancel anymore renewals.
-                autoRenewLockCancellationTimer = new Timer(this.CancelAutoRenewlock, renewLockCancellationTokenSource, this.registerHandlerOptions.MaxAutoRenewDuration, TimeSpan.FromMilliseconds(-1));
+                autoRenewLockCancellationTimer = new Timer(this.CancelAutoRenewLock, renewLockCancellationTokenSource, this.registerHandlerOptions.MaxAutoRenewDuration, TimeSpan.FromMilliseconds(-1));
             }
 
             try
@@ -115,7 +108,7 @@ namespace Microsoft.Azure.ServiceBus
             catch (Exception exception)
             {
                 MessagingEventSource.Log.MessageReceiverPumpUserCallbackException(this.messageReceiver.ClientId, message, exception);
-                this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.UserCallback));
+                await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.UserCallback).ConfigureAwait(false);
 
                 // Nothing much to do if UserCallback throws, Abandon message and Release semaphore.
                 await this.AbandonMessageIfNeededAsync(message).ConfigureAwait(false);
@@ -136,7 +129,7 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.MessageReceiverPumpDispatchTaskStop(this.messageReceiver.ClientId, message, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
         }
 
-        void CancelAutoRenewlock(object state)
+        void CancelAutoRenewLock(object state)
         {
             var renewLockCancellationTokenSource = (CancellationTokenSource)state;
             try
@@ -160,7 +153,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Abandon));
+                await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Abandon).ConfigureAwait(false);
             }
         }
 
@@ -176,7 +169,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.Complete));
+                await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Complete).ConfigureAwait(false);
             }
         }
 
@@ -210,7 +203,7 @@ namespace Microsoft.Azure.ServiceBus
                     // Lets not bother user with this exception.
                     if (!(exception is TaskCanceledException))
                     {
-                        this.registerHandlerOptions.RaiseExceptionReceived(new ExceptionReceivedEventArgs(exception, ExceptionReceivedEventArgsAction.RenewLock));
+                        await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.RenewLock).ConfigureAwait(false);
                     }
 
                     if (!MessagingUtilities.ShouldRetry(exception))

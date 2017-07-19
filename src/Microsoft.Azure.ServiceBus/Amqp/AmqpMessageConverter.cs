@@ -122,17 +122,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 amqpMessage.MessageAnnotations.Map.Add(ScheduledEnqueueTimeUtcName, sbMessage.ScheduledEnqueueTimeUtc);
             }
-
-            if (sbMessage.Publisher != null)
-            {
-                amqpMessage.MessageAnnotations.Map.Add(PublisherName, sbMessage.Publisher);
-            }
-
-            if (sbMessage.DeadLetterSource != null)
-            {
-                amqpMessage.MessageAnnotations.Map.Add(DeadLetterSourceName, sbMessage.DeadLetterSource);
-            }
-
+            
             if (sbMessage.PartitionKey != null)
             {
                 amqpMessage.MessageAnnotations.Map.Add(PartitionKeyName, sbMessage.PartitionKey);
@@ -170,33 +160,20 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
 
             SBMessage sbMessage;
-
-            // ToDo: Further testing is needed to ensure interop scenarios with other clients.
+            
             if ((amqpMessage.BodyType & SectionFlag.AmqpValue) != 0
                 && amqpMessage.ValueBody.Value != null)
             {
-                if (amqpMessage.ValueBody.Value is byte[] byteArrayValue)
+                sbMessage = new SBMessage();
+
+                object dotNetObject = null;
+                if (TryGetNetObjectFromAmqpObject(amqpMessage.ValueBody.Value, MappingType.MessageBody, out dotNetObject))
                 {
-                    sbMessage = new SBMessage(byteArrayValue);
-                }
-                else if (amqpMessage.ValueBody.Value is ArraySegment<byte> arraySegmentValue)
-                {
-                    byte[] byteArray;
-                    if (arraySegmentValue.Count == arraySegmentValue.Array.Length)
-                    {
-                        byteArray = arraySegmentValue.Array;
-                    }
-                    else
-                    {
-                        byteArray = new byte[arraySegmentValue.Count];
-                        Array.ConstrainedCopy(arraySegmentValue.Array, arraySegmentValue.Offset, byteArray, 0, arraySegmentValue.Count);
-                    }
-                    
-                    sbMessage = new SBMessage(byteArray);
+                    sbMessage.SystemProperties.BodyObject = dotNetObject;                    
                 }
                 else
                 {
-                    sbMessage = new SBMessage();
+                    sbMessage.SystemProperties.BodyObject = amqpMessage.ValueBody.Value;
                 }
             }
             else if ((amqpMessage.BodyType & SectionFlag.Data) != 0
@@ -221,7 +198,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             byteArray = new byte[arraySegmentValue.Count];
                             Array.ConstrainedCopy(arraySegmentValue.Array, arraySegmentValue.Offset, byteArray, 0, arraySegmentValue.Count);
                         }
-                        dataSegments.AddRange(arraySegmentValue);
+                        dataSegments.AddRange(byteArray);
                     }
                 }
                 sbMessage = new SBMessage(dataSegments.ToArray());
@@ -324,9 +301,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         case LockedUntilName:
                             sbMessage.SystemProperties.LockedUntilUtc = (DateTime)pair.Value;
                             break;
-                        case PublisherName:
-                            sbMessage.Publisher = (string)pair.Value;
-                            break;
                         case PartitionKeyName:
                             sbMessage.PartitionKey = (string)pair.Value;
                             break;
@@ -334,7 +308,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             sbMessage.SystemProperties.PartitionId = (short)pair.Value;
                             break;
                         case DeadLetterSourceName:
-                            sbMessage.DeadLetterSource = (string)pair.Value;
+                            sbMessage.SystemProperties.DeadLetterSource = (string)pair.Value;
                             break;
                         default:
                             object netObject;
