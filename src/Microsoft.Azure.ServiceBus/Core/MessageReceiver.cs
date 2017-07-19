@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -212,6 +213,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         internal string SessionIdInternal { get; set; }
 
         internal MessagingEntityType? EntityType { get; private set; }
+
+        Error LinkError { get; set; }
 
         ServiceBusConnection ServiceBusConnection { get; }
 
@@ -690,6 +693,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);
             ReceivingAmqpLink receivingAmqpLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+            
             Source source = (Source)receivingAmqpLink.Settings.Source;
             string tempSessionId;
             if (!source.FilterSet.TryGetValue(AmqpClientConstants.SessionFilterName, out tempSessionId))
@@ -704,16 +708,38 @@ namespace Microsoft.Azure.ServiceBus.Core
                 throw new ServiceBusException(true, Resources.AmqpFieldSessionId);
             }
 
+            receivingAmqpLink.Closed += this.OnSessionReceiverLinkClosed;
+            Debug.WriteLine($"{DateTime.Now}: ReceivingLink: {receivingAmqpLink}");
+
             this.SessionIdInternal = tempSessionId;
             long lockedUntilUtcTicks;
             this.LockedUntilUtcInternal = receivingAmqpLink.Settings.Properties.TryGetValue(AmqpClientConstants.LockedUntilUtc, out lockedUntilUtcTicks) ? new DateTime(lockedUntilUtcTicks, DateTimeKind.Utc) : DateTime.MinValue;
         }
 
+        void OnSessionReceiverLinkClosed(object sender, EventArgs e)
+        {
+            ReceivingAmqpLink amqpLink = (ReceivingAmqpLink)sender;
+            if (amqpLink != null)
+            {
+                AmqpException amqpException = amqpLink.TerminalException as AmqpException;
+                this.LinkError = amqpException != null ? amqpException.Error : null;
+            }
+        }
+
         internal async Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
         {
             AmqpMessage amqpMessage = amqpRequestMessage.AmqpMessage;
+            if (this.isSessionReceiver)
+            {
+                this.ThrowIfSessionLockLost();
+            }
+
             TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-            RequestResponseAmqpLink requestResponseAmqpLink = await this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+            RequestResponseAmqpLink requestResponseAmqpLink = null;
+            if (!this.RequestResponseLinkManager.TryGetOpenedObject(out requestResponseAmqpLink))
+            {
+                requestResponseAmqpLink = await this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false); 
+            }
 
             AmqpMessage responseAmqpMessage = await Task.Factory.FromAsync(
                 (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, timeoutHelper.RemainingTime(), c, s),
@@ -731,10 +757,21 @@ namespace Microsoft.Azure.ServiceBus.Core
         protected virtual async Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
         {
             ReceivingAmqpLink receiveLink = null;
+
+            if (this.isSessionReceiver)
+            {
+                this.ThrowIfSessionLockLost();
+            }
+
             try
             {
-                TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);
-                receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);              
+                if(!this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+                {
+                    Debug.WriteLine($"{DateTime.Now}: No OpenedObject found: Calling GetOrCreateAsync()");
+                    Console.WriteLine($"{DateTime.Now}: No OpenedObject found: Calling GetOrCreateAsync()");
+                    receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                }              
 
                 IEnumerable<AmqpMessage> amqpMessages = null;
                 IList<Message> brokeredMessages = null;
@@ -1004,7 +1041,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceivingAmqpLink receiveLink = null;
             try
             {
-                receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                if (!this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+                {
+                    receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false); 
+                }
+
                 Task<Outcome>[] disposeMessageTasks = new Task<Outcome>[deliveryTags.Count];
                 int i = 0;
                 foreach (ArraySegment<byte> deliveryTag in deliveryTags)
@@ -1086,7 +1127,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         async Task<ReceivingAmqpLink> CreateLinkAsync(TimeSpan timeout)
         {
             FilterSet filterMap = null;
-
+            Debug.WriteLine($"{DateTime.Now}: CreateLinkAsync() called");
+            Console.WriteLine($"{DateTime.Now}: CreateLinkAsync() called");
             MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, false, this.EntityType, this.Path);
 
             if (this.isSessionReceiver)
@@ -1171,6 +1213,15 @@ namespace Microsoft.Azure.ServiceBus.Core
             if (this.ReceiveMode != ReceiveMode.PeekLock)
             {
                 throw Fx.Exception.AsError(new InvalidOperationException("The operation is only supported in 'PeekLock' receive mode."));
+            }
+        }
+
+        void ThrowIfSessionLockLost()
+        {
+            if (this.LinkError != null &&
+                this.LinkError.Condition.Equals(AmqpClientConstants.SessionLockLostError))
+            {
+                throw AmqpExceptionHelper.ToMessagingContractException(this.LinkError);
             }
         }
 

@@ -73,57 +73,66 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         // TODO: Update this when Session is implemented
-        /*
+
         [Fact]
         async Task SessionLockLostExceptionTest()
         {
-            var messagingFactory = new ServiceBusClientFactory();
-            var queueClient =
-                (QueueClient)messagingFactory.CreateQueueClientFromConnectionString(
-                    TestUtility.GetEntityConnectionString(TestConstants.SessionNonPartitionedQueueName));
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName);
+            var sessionClient = new SessionClient(TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName);
 
             try
             {
                 var messageId = "test-message1";
                 var sessionId = Guid.NewGuid().ToString();
-            await queueClient.SendAsync(new Message
-                { MessageId = messageId, SessionId = sessionId });
+                await sender.SendAsync(new Message() { MessageId = messageId, SessionId = sessionId });
                 TestUtility.Log($"Sent Message: {messageId} to Session: {sessionId}");
 
-                MessageSession messageSession = await queueClient.AcceptMessageSessionAsync(sessionId);
-            Assert.NotNull(messageSession);
+                var sessionReceiver = await sessionClient.AcceptMessageSessionAsync(sessionId);
+                Assert.NotNull(sessionReceiver);
+                TestUtility.Log($"{DateTime.UtcNow}: Received Session: SessionId: {sessionReceiver.SessionId}");
 
-                var message = await messageSession.ReceiveAsync();
+                Message message = await sessionReceiver.ReceiveAsync();
                 Assert.True(message.MessageId == messageId);
-                TestUtility.Log($"Received Message: SessionId: {messageSession.SessionId}");
+                TestUtility.Log($"{DateTime.UtcNow}: Received Message: MessageId: {message.MessageId}");
 
                 // Let the Session expire
-                await Task.Delay(TimeSpan.FromMinutes(1));
+                TestUtility.Log($"{DateTime.UtcNow}: Waiting 1 min for session lock to time out...");
+                await Task.Delay(TimeSpan.FromSeconds(65));
 
-                // Complete should throw
-                await Assert.ThrowsAsync<SessionLockLostException>(async () => await message.CompleteAsync());
                 try
                 {
-                    await messageSession.CloseAsync();
+                    message = await sessionReceiver.ReceiveAsync();
+                    TestUtility.Log($"{DateTime.UtcNow}: Received Session: SessionId: {sessionReceiver.SessionId}");
                 }
-                catch (Exception e)
+                catch(Exception e)
                 {
-                    TestUtility.Log($"Got Exception on Session Close(): SessionId: {messageSession.SessionId}, Exception: {e.Message}");
+                    TestUtility.Log($"{DateTime.UtcNow}: Got Exception: {e.Message}");
                 }
 
-                messageSession = await queueClient.AcceptMessageSessionAsync(sessionId);
-            Assert.NotNull(messageSession);
+                await Assert.ThrowsAsync<SessionLockLostException>(async () => await sessionReceiver.ReceiveAsync());
+                await Assert.ThrowsAsync<SessionLockLostException>(async () => await sessionReceiver.RenewSessionLockAsync());
+                await Assert.ThrowsAsync<SessionLockLostException>(async () => await sessionReceiver.GetStateAsync());
+                await Assert.ThrowsAsync<SessionLockLostException>(async () => await sessionReceiver.SetStateAsync(null));
+                await Assert.ThrowsAsync<SessionLockLostException>(async () => await sessionReceiver.CompleteAsync(message.SystemProperties.LockToken));
 
-                message = await messageSession.ReceiveAsync();
-                TestUtility.Log($"Received Message: SessionId: {messageSession.SessionId}");
+                await sessionReceiver.CloseAsync();
+                TestUtility.Log($"{DateTime.UtcNow}: Closed Session Receiver...");
 
-                await message.CompleteAsync();
+                //Accept a new Session and Complete the message
+                sessionReceiver = await sessionClient.AcceptMessageSessionAsync(sessionId);
+                Assert.NotNull(sessionReceiver);
+                TestUtility.Log($"{DateTime.UtcNow}: Received Session: SessionId: {sessionReceiver.SessionId}");
+                message = await sessionReceiver.ReceiveAsync();
+                TestUtility.Log($"{DateTime.UtcNow}: Received Message: MessageId: {message.MessageId}");
+                await sessionReceiver.CompleteAsync(message.SystemProperties.LockToken);
+                await sessionReceiver.CloseAsync();
             }
             finally
             {
-                await queueClient.CloseAsync();
+                await sender.CloseAsync();
+                await sessionClient.CloseAsync();
             }
         }
-        */
+
     }
 }
