@@ -212,7 +212,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 var rules = (await subscriptionClient.GetRulesAsync()).ToList();
                 Assert.Equal(1, rules.Count);
                 var firstRule = rules[0];
-                Assert.Equal(SubscriptionClient.DefaultRule, firstRule.Name);
+                Assert.Equal(RuleDescription.DefaultRuleName, firstRule.Name);
                 Assert.IsType<TrueFilter>(firstRule.Filter);
                 Assert.Null(firstRule.Action);
                 
