@@ -5,7 +5,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -709,8 +708,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             receivingAmqpLink.Closed += this.OnSessionReceiverLinkClosed;
-            Debug.WriteLine($"{DateTime.Now}: ReceivingLink: {receivingAmqpLink}");
-
             this.SessionIdInternal = tempSessionId;
             long lockedUntilUtcTicks;
             this.LockedUntilUtcInternal = receivingAmqpLink.Settings.Properties.TryGetValue(AmqpClientConstants.LockedUntilUtc, out lockedUntilUtcTicks) ? new DateTime(lockedUntilUtcTicks, DateTimeKind.Utc) : DateTime.MinValue;
@@ -768,10 +765,8 @@ namespace Microsoft.Azure.ServiceBus.Core
                 TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);              
                 if(!this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
                 {
-                    Debug.WriteLine($"{DateTime.Now}: No OpenedObject found: Calling GetOrCreateAsync()");
-                    Console.WriteLine($"{DateTime.Now}: No OpenedObject found: Calling GetOrCreateAsync()");
                     receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
-                }              
+                }
 
                 IEnumerable<AmqpMessage> amqpMessages = null;
                 IList<Message> brokeredMessages = null;
@@ -1127,8 +1122,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         async Task<ReceivingAmqpLink> CreateLinkAsync(TimeSpan timeout)
         {
             FilterSet filterMap = null;
-            Debug.WriteLine($"{DateTime.Now}: CreateLinkAsync() called");
-            Console.WriteLine($"{DateTime.Now}: CreateLinkAsync() called");
             MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, false, this.EntityType, this.Path);
 
             if (this.isSessionReceiver)
