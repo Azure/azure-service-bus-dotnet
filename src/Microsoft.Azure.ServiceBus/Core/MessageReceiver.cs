@@ -1122,6 +1122,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         async Task<ReceivingAmqpLink> CreateLinkAsync(TimeSpan timeout)
         {
             FilterSet filterMap = null;
+
             MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, false, this.EntityType, this.Path);
 
             if (this.isSessionReceiver)
