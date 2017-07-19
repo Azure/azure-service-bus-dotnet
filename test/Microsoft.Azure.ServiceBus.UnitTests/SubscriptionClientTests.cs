@@ -89,9 +89,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     await subscriptionClient.RemoveRuleAsync(RuleDescription.DefaultRuleName);
                 }
-                catch
+                catch(Exception e)
                 {
-                    // ignored
+                    TestUtility.Log($"Remove Default Rule failed with: {e.Message}");
                 }
 
                 await subscriptionClient.AddRuleAsync(new RuleDescription
@@ -122,11 +122,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 Assert.NotNull(messages);
                 Assert.True(messages.Count == 1);
                 Assert.True(messageId2.Equals(messages.First().MessageId));
-            }
-            finally
-            {
+
                 await subscriptionClient.RemoveRuleAsync("RedSql");
                 await subscriptionClient.AddRuleAsync(RuleDescription.DefaultRuleName, new TrueFilter());
+            }
+            finally
+            {               
                 await subscriptionClient.CloseAsync();
                 await topicClient.CloseAsync();
             }
