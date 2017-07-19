@@ -93,6 +93,12 @@ namespace Microsoft.Azure.ServiceBus
         Task RemoveRuleAsync(string ruleName);
 
         /// <summary>
+        /// Get all rules associated with the subscription.
+        /// </summary>
+        /// <returns>IEnumerable of rules</returns>
+        Task<IEnumerable<RuleDescription>> GetRulesAsync();
+
+        /// <summary>
         /// Receive session messages continously from the subscription. Registers a message handler and begins a new thread to receive session-messages.
         /// This handler(<see cref="Func{T1,T2,T3,TResult}"/>) is awaited on every time a new message is received by the subscription client.
         /// </summary>
@@ -113,11 +119,5 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="sessionHandlerOptions">Options used to configure the settings of the session pump.</param>
         /// <remarks>  Enable prefetch to speeden up the receive rate. </remarks>
         void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, SessionHandlerOptions sessionHandlerOptions);
-
-        /// <summary>
-        /// Get rules for the subscription.
-        /// </summary>
-        /// <returns>IEnumerable of rules</returns>
-        Task<IEnumerable<RuleDescription>> GetRulesAsync();
     }
 }
