@@ -38,9 +38,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     await subscriptionClient.RemoveRuleAsync(RuleDescription.DefaultRuleName);
                 }
-                catch
+                catch (Exception e)
                 {
-                    // ignored
+                    TestUtility.Log($"Remove Default Rule failed with Exception: {e.Message}");
                 }
 
                 await subscriptionClient.AddRuleAsync(new RuleDescription
@@ -64,8 +64,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                await subscriptionClient.RemoveRuleAsync("RedCorrelation");
-                await subscriptionClient.AddRuleAsync(RuleDescription.DefaultRuleName, new TrueFilter());
+                try
+                {
+                    await subscriptionClient.RemoveRuleAsync("RedCorrelation");
+                    await subscriptionClient.AddRuleAsync(RuleDescription.DefaultRuleName, new TrueFilter());
+                }
+                catch (Exception e)
+                {
+                    TestUtility.Log($" Cleanup failed with Exception: {e.Message}");
+                }
+
                 await subscriptionClient.CloseAsync();
                 await topicClient.CloseAsync();
             }
