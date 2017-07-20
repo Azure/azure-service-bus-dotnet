@@ -720,6 +720,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 AmqpException amqpException = amqpLink.TerminalException as AmqpException;
                 this.LinkError = amqpException != null ? amqpException.Error : null;
+                MessagingEventSource.Log.SessionReceiverLinkClosed(this.ClientId, this.SessionIdInternal, this.LinkError);
             }
         }
 

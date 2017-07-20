@@ -1190,5 +1190,21 @@ namespace Microsoft.Azure.ServiceBus
         {
             WriteEvent(105, clientId, isSessionReceiver, sessionId, isRequestResponseLink, linkError);
         }
+
+        [NonEvent]
+        public void SessionReceiverLinkClosed(string clientId, string sessionId, Error linkError)
+        {
+            if (this.IsEnabled())
+            {
+                string linkErrorString = linkError != null ? linkError.Condition.Value : string.Empty;
+                this.SessionReceiverLinkClosed(clientId, sessionId ?? string.Empty, linkErrorString);
+            }
+        }
+
+        [Event(106, Level = EventLevel.Error, Message = "SessionReceiver Link Closed. ClientId: {0}, SessionId: {1}, LinkError: {2}.")]
+        void SessionReceiverLinkClosed(string clientId, string sessionId, string linkError)
+        {
+            WriteEvent(106, clientId, sessionId, linkError);
+        }
     }
 }
