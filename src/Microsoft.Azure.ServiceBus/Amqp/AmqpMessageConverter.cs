@@ -358,6 +358,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             AmqpMap amqpAction = GetRuleActionMap(description.Action as SqlRuleAction);
             ruleDescriptionMap[ManagementConstants.Properties.SqlRuleAction] = amqpAction;
+            ruleDescriptionMap[ManagementConstants.Properties.RuleName] = description.Name;
 
             return ruleDescriptionMap;
         }
