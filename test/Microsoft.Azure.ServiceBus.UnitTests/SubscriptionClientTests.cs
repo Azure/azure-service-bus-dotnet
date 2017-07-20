@@ -229,7 +229,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 Assert.Equal(1, rules.Count);
                 var firstRule = rules[0];
                 Assert.Equal(RuleDescription.DefaultRuleName, firstRule.Name);
-                Assert.IsType<TrueFilter>(firstRule.Filter);
+                Assert.IsType<SqlFilter>(firstRule.Filter);
                 Assert.Null(firstRule.Action);
                 
                 await subscriptionClient.AddRuleAsync(sqlRuleName, new SqlFilter("price > 10"));
