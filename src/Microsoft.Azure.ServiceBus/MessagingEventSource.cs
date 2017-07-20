@@ -9,6 +9,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Reflection;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
+    using Microsoft.Azure.Amqp.Framing;
 
     [EventSource(Name = "Microsoft-Azure-ServiceBus")]
     internal sealed class MessagingEventSource : EventSource
@@ -1205,6 +1206,38 @@ namespace Microsoft.Azure.ServiceBus
         void GetRulesException(string clientId, string exception)
         {
             this.WriteEvent(104, clientId, exception);
+        }
+
+        [NonEvent]
+        public void CreatingNewLink(string clientId, bool isSessionReceiver, string sessionId, bool isRequestResponseLink, Error linkError)
+        {
+            if (this.IsEnabled())
+            {
+                string linkErrorString = linkError != null ? linkError.Condition.Value : string.Empty;
+                this.CreatingNewLink(clientId, isSessionReceiver, sessionId ?? string.Empty, isRequestResponseLink, linkErrorString);
+            }
+        }
+
+        [Event(105, Level = EventLevel.Informational, Message = "Creating/Recreating New Link. ClientId: {0}, IsSessionReceiver: {1}, SessionId: {2}, IsRequestResponseLink: {3}, LinkError: {4}.")]
+        void CreatingNewLink(string clientId, bool isSessionReceiver, string sessionId, bool isRequestResponseLink, string linkError)
+        {
+            WriteEvent(105, clientId, isSessionReceiver, sessionId, isRequestResponseLink, linkError);
+        }
+
+        [NonEvent]
+        public void SessionReceiverLinkClosed(string clientId, string sessionId, Error linkError)
+        {
+            if (this.IsEnabled())
+            {
+                string linkErrorString = linkError != null ? linkError.Condition.Value : string.Empty;
+                this.SessionReceiverLinkClosed(clientId, sessionId ?? string.Empty, linkErrorString);
+            }
+        }
+
+        [Event(106, Level = EventLevel.Error, Message = "SessionReceiver Link Closed. ClientId: {0}, SessionId: {1}, LinkError: {2}.")]
+        void SessionReceiverLinkClosed(string clientId, string sessionId, string linkError)
+        {
+            WriteEvent(106, clientId, sessionId, linkError);
         }
     }
 }
