@@ -197,7 +197,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         [Fact]
         [DisplayTestMethodName]
-        async Task GetRulesTestCase()
+        public async Task GetRulesTestCase()
         {
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,

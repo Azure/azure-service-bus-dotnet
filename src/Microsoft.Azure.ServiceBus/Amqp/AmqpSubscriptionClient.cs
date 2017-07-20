@@ -10,12 +10,24 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using Azure.Amqp.Encoding;
     using Core;
     using Filters;
-    
+    using Framing;
+
     internal sealed class AmqpSubscriptionClient : IInnerSubscriptionClient
     {
         int prefetchCount;
         readonly object syncLock;
         MessageReceiver innerReceiver;
+
+        static AmqpSubscriptionClient()
+        {
+            AmqpCodec.RegisterKnownTypes(AmqpTrueFilterCodec.Name, AmqpTrueFilterCodec.Code, () => new AmqpTrueFilterCodec());
+            AmqpCodec.RegisterKnownTypes(AmqpFalseFilterCodec.Name, AmqpFalseFilterCodec.Code, () => new AmqpFalseFilterCodec());
+            AmqpCodec.RegisterKnownTypes(AmqpCorrelationFilterCodec.Name, AmqpCorrelationFilterCodec.Code, () => new AmqpCorrelationFilterCodec());
+            AmqpCodec.RegisterKnownTypes(AmqpSqlFilterCodec.Name, AmqpSqlFilterCodec.Code, () => new AmqpSqlFilterCodec());
+            AmqpCodec.RegisterKnownTypes(AmqpEmptyRuleActionCodec.Name, AmqpEmptyRuleActionCodec.Code, () => new AmqpEmptyRuleActionCodec());
+            AmqpCodec.RegisterKnownTypes(AmqpSqlRuleActionCodec.Name, AmqpSqlRuleActionCodec.Code, () => new AmqpSqlRuleActionCodec());
+            AmqpCodec.RegisterKnownTypes(AmqpRuleDescriptionCodec.Name, AmqpRuleDescriptionCodec.Code, () => new AmqpRuleDescriptionCodec());
+        }
 
         public AmqpSubscriptionClient(
             string path,
@@ -165,7 +177,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     var ruleList = response.GetListValue<AmqpMap>(ManagementConstants.Properties.Rules);
                     foreach (var entry in ruleList)
                     {
-                        var amqpRule = (AmqpMap)entry[ManagementConstants.Properties.RuleDescription];
+                        var amqpRule = (AmqpRuleDescriptionCodec)entry[ManagementConstants.Properties.RuleDescription];
                         var ruleDescription = AmqpMessageConverter.GetRuleDescription(amqpRule);
                         rules.Add(ruleDescription);
                     }
