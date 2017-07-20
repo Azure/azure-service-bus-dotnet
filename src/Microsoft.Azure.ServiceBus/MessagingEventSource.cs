@@ -1185,10 +1185,10 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(102, Level = EventLevel.Error, Message = "Creating/Recreating New Link. ClientId: {0}, IsSessionReceiver: {1}, SessionId: {2}, IsRequestResponseLink: {3}, LinkError: {4}.")]
+        [Event(105, Level = EventLevel.Informational, Message = "Creating/Recreating New Link. ClientId: {0}, IsSessionReceiver: {1}, SessionId: {2}, IsRequestResponseLink: {3}, LinkError: {4}.")]
         void CreatingNewLink(string clientId, bool isSessionReceiver, string sessionId, bool isRequestResponseLink, string linkError)
         {
-            WriteEvent(102, clientId, isSessionReceiver, sessionId, isRequestResponseLink, linkError);
+            WriteEvent(105, clientId, isSessionReceiver, sessionId, isRequestResponseLink, linkError);
         }
     }
 }
