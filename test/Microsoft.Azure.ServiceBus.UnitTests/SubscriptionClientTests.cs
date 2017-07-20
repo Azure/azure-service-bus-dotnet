@@ -129,13 +129,20 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 var messages = await subscriptionClient.InnerSubscriptionClient.InnerReceiver.ReceiveAsync(maxMessageCount: 2);
                 Assert.NotNull(messages);
                 Assert.True(messages.Count == 1);
-                Assert.True(messageId2.Equals(messages.First().MessageId));
-
-                await subscriptionClient.RemoveRuleAsync("RedSql");
-                await subscriptionClient.AddRuleAsync(RuleDescription.DefaultRuleName, new TrueFilter());
+                Assert.True(messageId2.Equals(messages.First().MessageId));                
             }
             finally
-            {               
+            {
+                try
+                {
+                    await subscriptionClient.RemoveRuleAsync("RedSql");
+                    await subscriptionClient.AddRuleAsync(RuleDescription.DefaultRuleName, new TrueFilter());
+                }
+                catch (Exception e)
+                {
+                    TestUtility.Log($" Cleanup failed with Exception: {e.Message}");
+                }
+
                 await subscriptionClient.CloseAsync();
                 await topicClient.CloseAsync();
             }
