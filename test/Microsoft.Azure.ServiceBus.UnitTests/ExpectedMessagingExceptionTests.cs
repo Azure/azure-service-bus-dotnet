@@ -93,9 +93,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 Assert.True(message.MessageId == messageId);
                 TestUtility.Log($"Received Message: MessageId: {message.MessageId}");
 
-                // Let the Session expire
+                // Let the Session expire with some buffer time
                 TestUtility.Log($"Waiting for session lock to time out...");
-                await Task.Delay(sessionReceiver.LockedUntilUtc - DateTime.UtcNow);
+                await Task.Delay((sessionReceiver.LockedUntilUtc - DateTime.UtcNow) + TimeSpan.FromSeconds(5));
 
                 await Assert.ThrowsAsync<SessionLockLostException>(async () => await sessionReceiver.ReceiveAsync());
                 await Assert.ThrowsAsync<SessionLockLostException>(async () => await sessionReceiver.RenewSessionLockAsync());
