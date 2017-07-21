@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp.Framing
     sealed class AmqpFalseFilterCodec : AmqpFilterCodec
     {
         public static readonly string Name = AmqpConstants.Vendor + ":false-filter:list";
-        public static readonly ulong Code = 0x000001370000008;
+        public const ulong Code = 0x000001370000008;
 
         public AmqpFalseFilterCodec() : base(Name, Code) { }
 

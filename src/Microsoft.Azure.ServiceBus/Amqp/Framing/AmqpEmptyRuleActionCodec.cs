@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp.Framing
     sealed class AmqpEmptyRuleActionCodec : AmqpRuleActionCodec
     {
         public static readonly string Name = AmqpConstants.Vendor + ":empty-rule-action:list";
-        public static readonly ulong Code = 0x0000013700000005;
+        public const ulong Code = 0x0000013700000005;
         const int Fields = 0;
 
         public AmqpEmptyRuleActionCodec() : base(Name, Code) { }

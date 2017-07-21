@@ -381,44 +381,45 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         {
             Filter filter;
 
-            if (amqpFilter.DescriptorCode == AmqpSqlFilterCodec.Code)
+            switch (amqpFilter.DescriptorCode)
             {
-                AmqpSqlFilterCodec amqpSqlFilter = (AmqpSqlFilterCodec)amqpFilter;
-                filter = new SqlFilter(amqpSqlFilter.Expression);
-            }
-            else if (amqpFilter.DescriptorCode == AmqpTrueFilterCodec.Code)
-            {
-                filter = new TrueFilter();
-            }
-            else if (amqpFilter.DescriptorCode == AmqpFalseFilterCodec.Code)
-            {
-                filter = new FalseFilter();
-            }
-            else if (amqpFilter.DescriptorCode == AmqpCorrelationFilterCodec.Code)
-            {
-                AmqpCorrelationFilterCodec amqpCorrelationFilter = (AmqpCorrelationFilterCodec)amqpFilter;
-                CorrelationFilter correlationFilter = new CorrelationFilter()
-                {
-                    CorrelationId = amqpCorrelationFilter.CorrelationId,
-                    MessageId = amqpCorrelationFilter.MessageId,
-                    To = amqpCorrelationFilter.To,
-                    ReplyTo = amqpCorrelationFilter.ReplyTo,
-                    Label = amqpCorrelationFilter.Label,
-                    SessionId = amqpCorrelationFilter.SessionId,
-                    ReplyToSessionId = amqpCorrelationFilter.ReplyToSessionId,
-                    ContentType = amqpCorrelationFilter.ContentType
-                };
+                case AmqpSqlFilterCodec.Code:
+                    var amqpSqlFilter = (AmqpSqlFilterCodec)amqpFilter;
+                    filter = new SqlFilter(amqpSqlFilter.Expression);
+                    break;
 
-                foreach (var property in amqpCorrelationFilter.Properties)
-                {
-                    correlationFilter.Properties.Add(property.Key.Key.ToString(), property.Value);
-                }
+                case AmqpTrueFilterCodec.Code:
+                    filter = new TrueFilter();
+                    break;
 
-                filter = correlationFilter;
-            }
-            else
-            {
-                throw new NotSupportedException($"Unknown filter descriptor code: {amqpFilter.DescriptorCode}");
+                case AmqpFalseFilterCodec.Code:
+                    filter = new FalseFilter();
+                    break;
+
+                case AmqpCorrelationFilterCodec.Code:
+                    var amqpCorrelationFilter = (AmqpCorrelationFilterCodec)amqpFilter;
+                    var correlationFilter = new CorrelationFilter()
+                    {
+                        CorrelationId = amqpCorrelationFilter.CorrelationId,
+                        MessageId = amqpCorrelationFilter.MessageId,
+                        To = amqpCorrelationFilter.To,
+                        ReplyTo = amqpCorrelationFilter.ReplyTo,
+                        Label = amqpCorrelationFilter.Label,
+                        SessionId = amqpCorrelationFilter.SessionId,
+                        ReplyToSessionId = amqpCorrelationFilter.ReplyToSessionId,
+                        ContentType = amqpCorrelationFilter.ContentType
+                    };
+
+                    foreach (var property in amqpCorrelationFilter.Properties)
+                    {
+                        correlationFilter.Properties.Add(property.Key.Key.ToString(), property.Value);
+                    }
+
+                    filter = correlationFilter;
+                    break;
+
+                default:
+                    throw new NotSupportedException($"Unknown filter descriptor code: {amqpFilter.DescriptorCode}");
             }
 
             return filter;
@@ -647,17 +648,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return amqpFilterMap;
         }
 
-        static SqlFilter GetSqlFilter(AmqpMap map)
-        {
-            string sqlExpression;
-            if (map.TryGetValue(ManagementConstants.Properties.Expression, out sqlExpression))
-            {
-                return new SqlFilter(sqlExpression);
-            }
-
-            return null;
-        }
-
         static AmqpMap GetCorrelationFilterMap(CorrelationFilter correlationFilter)
         {
             AmqpMap correlationFilterMap = new AmqpMap
@@ -682,33 +672,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             return correlationFilterMap;
         }
-
-        static CorrelationFilter GetCorrelationFilter(AmqpMap amqpCorrelationFilterMap)
-        {
-            var correlationFilter = new CorrelationFilter()
-            {
-                CorrelationId = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.CorrelationId],
-                MessageId = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.MessageId],
-                To = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.To],
-                ReplyTo = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.ReplyTo],
-                Label = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.Label],
-                SessionId = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.SessionId],
-                ReplyToSessionId = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.ReplyToSessionId],
-                ContentType = (string)amqpCorrelationFilterMap[ManagementConstants.Properties.ContentType]
-            };
-
-            var propertiesMap = amqpCorrelationFilterMap[ManagementConstants.Properties.CorrelationFilterProperties] as AmqpMap;
-            if (propertiesMap != null)
-            {
-                foreach (var property in propertiesMap)
-                {
-                    correlationFilter.Properties.Add(property.Key.Key.ToString(), property.Value);
-                }
-            }
-
-            return correlationFilter;
-        }
-
+        
         static AmqpMap GetRuleActionMap(SqlRuleAction sqlRuleAction)
         {
             AmqpMap ruleActionMap = null;
@@ -718,17 +682,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
 
             return ruleActionMap;
-        }
-
-        static RuleAction GetRuleAction(AmqpMap amqpRuleActionMap)
-        {
-            string expression = (string) amqpRuleActionMap?[ManagementConstants.Properties.Expression];
-            if (expression != null)
-            {
-                return new SqlRuleAction(expression);
-            }
-
-            return null;
         }
     }
 }

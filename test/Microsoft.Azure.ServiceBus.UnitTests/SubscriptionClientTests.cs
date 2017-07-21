@@ -289,8 +289,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                await subscriptionClient.RemoveRuleAsync(sqlRuleName);
-                await subscriptionClient.RemoveRuleAsync(correlationRuleName);
+                try
+                {
+                    await subscriptionClient.RemoveRuleAsync(sqlRuleName);
+                    await subscriptionClient.RemoveRuleAsync(correlationRuleName);
+                }
+                catch (Exception)
+                {
+                    // Ignore the exception as we are just trying to clean up the rules that we MIGHT have added.
+                }
                 await subscriptionClient.CloseAsync();
             }
         }

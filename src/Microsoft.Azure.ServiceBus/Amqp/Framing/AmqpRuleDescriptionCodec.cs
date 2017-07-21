@@ -10,7 +10,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp.Framing
     sealed class AmqpRuleDescriptionCodec : DescribedList
     {
         public static readonly string Name = AmqpConstants.Vendor + ":rule-description:list";
-        public static readonly ulong Code = 0x0000013700000004;
+        public const ulong Code = 0x0000013700000004;
         const int Fields = 4;
 
         public AmqpRuleDescriptionCodec() : base(Name, Code) { }

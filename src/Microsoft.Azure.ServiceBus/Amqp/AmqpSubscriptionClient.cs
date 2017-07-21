@@ -170,10 +170,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 amqpRequestMessage.Map[ManagementConstants.Properties.Skip] = skip;
 
                 var response = await this.InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
-                List<RuleDescription> rules;
+                List<RuleDescription> rules = new List<RuleDescription>();
                 if (response.StatusCode == AmqpResponseStatusCode.OK)
                 {
-                    rules = new List<RuleDescription>();
                     var ruleList = response.GetListValue<AmqpMap>(ManagementConstants.Properties.Rules);
                     foreach (var entry in ruleList)
                     {
@@ -184,7 +183,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 }
                 else if (response.StatusCode == AmqpResponseStatusCode.NoContent)
                 {
-                    rules = new List<RuleDescription>();
+                    // Do nothing. Return empty list;
                 }
                 else
                 {

@@ -5,7 +5,7 @@
     sealed class AmqpTrueFilterCodec : AmqpFilterCodec
     {
         public static readonly string Name = AmqpConstants.Vendor + ":true-filter:list";
-        public static readonly ulong Code = 0x000001370000007;
+        public const ulong Code = 0x000001370000007;
 
         public AmqpTrueFilterCodec() : base((string) Name, (ulong) Code) { }
 

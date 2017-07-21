@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp.Framing
     sealed class AmqpSqlFilterCodec : AmqpFilterCodec
     {
         public static readonly string Name = AmqpConstants.Vendor + ":sql-filter:list";
-        public static readonly ulong Code = 0x000001370000006;
+        public const ulong Code = 0x000001370000006;
         const int Fields = 2;
 
         public AmqpSqlFilterCodec() : base(Name, Code) { }

@@ -9,7 +9,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp.Framing
     sealed class AmqpSqlRuleActionCodec : AmqpRuleActionCodec
     {
         public static readonly string Name = AmqpConstants.Vendor + ":sql-rule-action:list";
-        public static readonly ulong Code = 0x0000013700000006;
+        public const ulong Code = 0x0000013700000006;
         const int Fields = 2;
 
         public AmqpSqlRuleActionCodec() : base(Name, Code) { }

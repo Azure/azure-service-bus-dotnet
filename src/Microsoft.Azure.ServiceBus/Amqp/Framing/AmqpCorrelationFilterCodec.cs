@@ -10,7 +10,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp.Framing
     sealed class AmqpCorrelationFilterCodec : AmqpFilterCodec
     {
         public static readonly string Name = AmqpConstants.Vendor + ":correlation-filter:list";
-        public static readonly ulong Code = 0x000001370000009;
+        public const ulong Code = 0x000001370000009;
         const int Fields = 9;
 
         AmqpMap properties;
