@@ -26,6 +26,10 @@ This library is built using .NET Standard 1.3. For more information on what plat
 
 See our [Contribution Guidelines](./.github/CONTRIBUTING.md).
 
+## How to get support
+
+See our [Support Guidelines](./.github/SUPPORT.md)
+
 ## FAQ
 
 ### Where can I find examples that use this library?
