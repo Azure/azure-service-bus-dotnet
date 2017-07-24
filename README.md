@@ -36,7 +36,7 @@ See our [Contribution Guidelines](./.github/CONTRIBUTING.md).
 
 In order to run the unit tests, you will need to do the following:
 
-1. Deploy the Azure Resource Manager template located at [/build/azuredeploy.json](/templates/azuredeploy.json) by clicking the following button:
+1. Deploy the Azure Resource Manager template located at [/build/azuredeploy.json](/build/azuredeploy.json) by clicking the following button:
 
     <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-service-bus-dotnet%2Fmaster%2Fbuild%2Fazuredeploy.json" target="_blank">
         <img src="http://azuredeploy.net/deploybutton.png"/>
