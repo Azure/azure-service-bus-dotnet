@@ -221,22 +221,22 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             switch (amqpObject)
             {
                 case AmqpSession amqpSession:
-                    innerException = amqpSession.Connection.TerminalException;
+                    innerException = amqpSession.TerminalException ?? amqpSession.Connection.TerminalException;
                     break;
 
                 case AmqpLink amqpLink:
-                    innerException = amqpLink.Session.TerminalException ?? amqpLink.Session.Connection.TerminalException;
+                    innerException = amqpLink.TerminalException ?? amqpLink.Session.TerminalException ?? amqpLink.Session.Connection.TerminalException;
                     break;
 
                 case RequestResponseAmqpLink amqpReqRespLink:
-                    innerException = amqpReqRespLink.Session.TerminalException ?? amqpReqRespLink.Session.Connection.TerminalException;
+                    innerException = amqpReqRespLink.TerminalException ?? amqpReqRespLink.Session.TerminalException ?? amqpReqRespLink.Session.Connection.TerminalException;
                     break;
 
                 default:
                     return null;
             }
-            
-            return GetClientException(innerException);
+
+            return innerException == null ? null : GetClientException(innerException);
         }
     }
 }
