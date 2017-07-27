@@ -68,6 +68,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Identifier of the message.
         /// </summary>
         /// <value>The identifier of the message.</value>
+        /// <remarks>Max MessageId size is 128 chars.</remarks>
         public string MessageId
         {
             get;
@@ -108,6 +109,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Session identifier.
         /// </summary>
         /// <value>The session identifier.</value>
+        /// <remarks>Max size of sessionId is 128 chars.</remarks>
         public string SessionId
         {
             get;
@@ -118,6 +120,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Session identifier to reply to.
         /// </summary>
         /// <value>The session identifier to reply to.</value>
+        /// <remarks>Max size of ReplyToSessionId is 128.</remarks>
         public string ReplyToSessionId
         {
             get;
@@ -138,6 +141,12 @@ namespace Microsoft.Azure.ServiceBus
         /// Application specific properties of the message.
         /// </summary>
         /// <value>The application specific properties of the message.</value>
+        /// <remarks>
+        /// Only following value types are supported:
+        /// byte, sbyte, char, short, ushort, int, uint, long, ulong, float, double, decimal, 
+        /// bool, Guid, string, Uri, DateTime, DateTimeOffset, TimeSpan, Stream, byte[], 
+        /// and IList / IDictionary of supported types
+        /// </remarks>
         public IDictionary<string, object> Properties => this.properties ?? (this.properties = new PropertyDictionary());
 
         /// <summary>
