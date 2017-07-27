@@ -11,12 +11,12 @@ namespace Microsoft.Azure.ServiceBus
     public sealed class MessagingEntityNotFoundException : ServiceBusException
     {
         internal MessagingEntityNotFoundException(string message)
-            : this(message, null)
+            : this(message, (Exception) null)
         {
         }
 
         internal MessagingEntityNotFoundException(string message, Exception innerException)
-            : base(false, message, innerException)
+            : base((bool) false, message, innerException)
         {
         }
     }

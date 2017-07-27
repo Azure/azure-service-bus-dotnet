@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
 
+    ensure each of these are documented in their respective remarks location
     static class Constants
     {
         public const int MaxMessageIdLength = 128;

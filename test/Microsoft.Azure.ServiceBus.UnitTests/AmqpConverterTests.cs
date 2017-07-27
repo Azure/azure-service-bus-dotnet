@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.ServiceBus.Amqp;
-    using Microsoft.Azure.ServiceBus.InteropExtensions;
+    using Microsoft.Azure.ServiceBus.Extensions;
     using Xunit;
 
     public class AmqpConverterTests

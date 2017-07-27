@@ -11,12 +11,12 @@ namespace Microsoft.Azure.ServiceBus
     public sealed class ServerBusyException : ServiceBusException
     {
         internal ServerBusyException(string message)
-            : this(message, null)
+            : this(message, (Exception) null)
         {
         }
 
         internal ServerBusyException(string message, Exception innerException)
-            : base(true, message, innerException)
+            : base((bool) true, message, innerException)
         {
         }
     }

@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus.Filters
-{
-    using System.Collections.Generic;
-    using System.Globalization;
+using System.Collections.Generic;
+using System.Globalization;
+using Microsoft.Azure.ServiceBus.Primitives;
 
+namespace Microsoft.Azure.ServiceBus
+{
     /// <summary>
     /// Represents set of actions written in SQL language-based syntax that is performed against a <see cref="Message" />.
     /// </summary>

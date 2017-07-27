@@ -6,7 +6,6 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>
     /// An interface used to describe common functionality for receiving messages from <see cref="IQueueClient"/> and <see cref="ISubscriptionClient"/>.

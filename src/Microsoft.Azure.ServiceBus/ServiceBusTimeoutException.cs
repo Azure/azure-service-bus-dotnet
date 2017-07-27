@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus.Primitives
+namespace Microsoft.Azure.ServiceBus
 {
     using System;
 
@@ -10,11 +10,11 @@ namespace Microsoft.Azure.ServiceBus.Primitives
     /// </summary>
     public class ServiceBusTimeoutException : ServiceBusException
     {
-        internal ServiceBusTimeoutException(string message) : this(message, null)
+        internal ServiceBusTimeoutException(string message) : this(message, (Exception) null)
         {
         }
 
-        internal ServiceBusTimeoutException(string message, Exception innerException) : base(true, message, innerException)
+        internal ServiceBusTimeoutException(string message, Exception innerException) : base((bool) true, message, innerException)
         {
         }
     }

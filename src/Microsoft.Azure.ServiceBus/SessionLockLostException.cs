@@ -11,12 +11,12 @@ namespace Microsoft.Azure.ServiceBus
     public sealed class SessionLockLostException : ServiceBusException
     {
         internal SessionLockLostException(string message)
-            : this(message, null)
+            : this(message, (Exception) null)
         {
         }
 
         internal SessionLockLostException(string message, Exception innerException)
-            : base(false, message, innerException)
+            : base((bool) false, message, innerException)
         {
         }
     }

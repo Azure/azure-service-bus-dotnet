@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus.Filters
+using Microsoft.Azure.ServiceBus.Primitives;
+
+namespace Microsoft.Azure.ServiceBus
 {
     /// <summary>
     /// Represents a description of a rule.

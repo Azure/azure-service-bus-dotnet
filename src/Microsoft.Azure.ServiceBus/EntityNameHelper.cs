@@ -34,7 +34,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The path as a string of the subqueue entity.</returns>
         public static string FormatSubQueuePath(string entityPath, string subQueueName)
         {
-            return string.Concat(entityPath, EntityNameHelper.PathDelimiter, subQueueName);
+            return string.Concat(entityPath, (string) EntityNameHelper.PathDelimiter, subQueueName);
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public static string Format​Transfer​Dead​Letter​Path(string entityPath)
         {
-            return string.Concat(entityPath, PathDelimiter, TransferDeadLetterQueueName);
+            return string.Concat(entityPath, (string) PathDelimiter, (string) TransferDeadLetterQueueName);
         }
     }
 }

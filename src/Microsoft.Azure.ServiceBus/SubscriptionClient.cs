@@ -10,7 +10,6 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.ServiceBus.Amqp;
     using Microsoft.Azure.ServiceBus.Core;
-    using Microsoft.Azure.ServiceBus.Filters;
     using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>
