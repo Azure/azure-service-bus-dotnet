@@ -11,7 +11,7 @@ namespace Microsoft.Azure.ServiceBus
         protected ClientEntity(string clientId, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy) { }
         public string ClientId { get; }
         public bool IsClosedOrClosing { get; }
-        public System.TimeSpan OperationTimeout { get; }
+        public abstract System.TimeSpan OperationTimeout { get; set; }
         public abstract System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin> RegisteredPlugins { get; }
         public Microsoft.Azure.ServiceBus.RetryPolicy RetryPolicy { get; }
         public System.Threading.Tasks.Task CloseAsync() { }
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         string ClientId { get; }
         bool IsClosedOrClosing { get; }
-        System.TimeSpan OperationTimeout { get; }
+        System.TimeSpan OperationTimeout { get; set; }
         System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin> RegisteredPlugins { get; }
         System.Threading.Tasks.Task CloseAsync();
         void RegisterPlugin(Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin serviceBusPlugin);
@@ -177,6 +177,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         public QueueClient(Microsoft.Azure.ServiceBus.ServiceBusConnectionStringBuilder connectionStringBuilder, Microsoft.Azure.ServiceBus.ReceiveMode receiveMode = 0, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null) { }
         public QueueClient(string connectionString, string entityPath, Microsoft.Azure.ServiceBus.ReceiveMode receiveMode = 0, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null) { }
+        public override System.TimeSpan OperationTimeout { get; set; }
         public string Path { get; }
         public int PrefetchCount { get; set; }
         public string QueueName { get; }
@@ -269,6 +270,7 @@ namespace Microsoft.Azure.ServiceBus
         public SessionClient(Microsoft.Azure.ServiceBus.ServiceBusConnectionStringBuilder connectionStringBuilder, Microsoft.Azure.ServiceBus.ReceiveMode receiveMode = 0, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null, int prefetchCount = 0) { }
         public SessionClient(string connectionString, string entityPath, Microsoft.Azure.ServiceBus.ReceiveMode receiveMode = 0, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null, int prefetchCount = 0) { }
         public string EntityPath { get; }
+        public override System.TimeSpan OperationTimeout { get; set; }
         public override System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin> RegisteredPlugins { get; }
         public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.IMessageSession> AcceptMessageSessionAsync() { }
         public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.IMessageSession> AcceptMessageSessionAsync(System.TimeSpan serverWaitTime) { }
@@ -306,6 +308,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         public SubscriptionClient(Microsoft.Azure.ServiceBus.ServiceBusConnectionStringBuilder connectionStringBuilder, string subscriptionName, Microsoft.Azure.ServiceBus.ReceiveMode receiveMode = 0, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null) { }
         public SubscriptionClient(string connectionString, string topicPath, string subscriptionName, Microsoft.Azure.ServiceBus.ReceiveMode receiveMode = 0, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null) { }
+        public override System.TimeSpan OperationTimeout { get; set; }
         public string Path { get; }
         public int PrefetchCount { get; set; }
         public Microsoft.Azure.ServiceBus.ReceiveMode ReceiveMode { get; }
@@ -331,6 +334,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         public TopicClient(Microsoft.Azure.ServiceBus.ServiceBusConnectionStringBuilder connectionStringBuilder, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null) { }
         public TopicClient(string connectionString, string entityPath, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null) { }
+        public override System.TimeSpan OperationTimeout { get; set; }
         public string Path { get; }
         public override System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin> RegisteredPlugins { get; }
         public string TopicName { get; }
@@ -364,8 +368,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Message> ReceiveAsync(System.TimeSpan operationTimeout);
         System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> ReceiveAsync(int maxMessageCount);
         System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> ReceiveAsync(int maxMessageCount, System.TimeSpan operationTimeout);
-        System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Message> ReceiveBySequenceNumberAsync(long sequenceNumber);
-        System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> ReceiveBySequenceNumberAsync(System.Collections.Generic.IEnumerable<long> sequenceNumbers);
+        System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Message> ReceiveDeferredMessageAsync(long sequenceNumber);
+        System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> ReceiveDeferredMessageAsync(System.Collections.Generic.IEnumerable<long> sequenceNumbers);
         System.Threading.Tasks.Task<System.DateTime> RenewLockAsync(string lockToken);
     }
     public interface IMessageSender : Microsoft.Azure.ServiceBus.Core.ISenderClient, Microsoft.Azure.ServiceBus.IClientEntity { }
@@ -392,6 +396,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         public MessageReceiver(Microsoft.Azure.ServiceBus.ServiceBusConnectionStringBuilder connectionStringBuilder, Microsoft.Azure.ServiceBus.ReceiveMode receiveMode = 0, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null, int prefetchCount = 0) { }
         public MessageReceiver(string connectionString, string entityPath, Microsoft.Azure.ServiceBus.ReceiveMode receiveMode = 0, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null, int prefetchCount = 0) { }
         public long LastPeekedSequenceNumber { get; }
+        public override System.TimeSpan OperationTimeout { get; set; }
         public string Path { get; }
         public int PrefetchCount { get; set; }
         public Microsoft.Azure.ServiceBus.ReceiveMode ReceiveMode { get; set; }
@@ -409,7 +414,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         protected virtual void OnMessageHandler(Microsoft.Azure.ServiceBus.MessageHandlerOptions registerHandlerOptions, System.Func<Microsoft.Azure.ServiceBus.Message, System.Threading.CancellationToken, System.Threading.Tasks.Task> callback) { }
         protected virtual System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1) { }
         protected virtual System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> OnReceiveAsync(int maxMessageCount, System.TimeSpan serverWaitTime) { }
-        protected virtual System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> OnReceiveBySequenceNumberAsync(System.Collections.Generic.IEnumerable<long> sequenceNumbers) { }
+        protected virtual System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> OnReceiveDeferredMessageAsync(System.Collections.Generic.IEnumerable<long> sequenceNumbers) { }
         protected virtual System.Threading.Tasks.Task<System.DateTime> OnRenewLockAsync(string lockToken) { }
         public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Message> PeekAsync() { }
         public System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> PeekAsync(int maxMessageCount) { }
@@ -419,9 +424,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Message> ReceiveAsync(System.TimeSpan operationTimeout) { }
         public System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> ReceiveAsync(int maxMessageCount) { }
         public System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> ReceiveAsync(int maxMessageCount, System.TimeSpan operationTimeout) { }
-        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Message> ReceiveBySequenceNumberAsync(long sequenceNumber) { }
-        public System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> ReceiveBySequenceNumberAsync(System.Collections.Generic.IEnumerable<long> sequenceNumbers) { }
-        public void RegisterMessageHandler(System.Func<Microsoft.Azure.ServiceBus.Message, System.Threading.CancellationToken, System.Threading.Tasks.Task> handler, System.Func<Microsoft.Azure.ServiceBus.ExceptionReceivedEventArgs, System.Threading.Tasks.Task> exceptionReceivedHandler) { }
+        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Message> ReceiveDeferredMessageAsync(long sequenceNumber) { }
+        public System.Threading.Tasks.Task<System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message>> ReceiveDeferredMessageAsync(System.Collections.Generic.IEnumerable<long> sequenceNumbers) { }
+        public void RegisterMessageHandler(System.Func<Microsoft.Azure.ServiceBus.Message, System.Threading.CancellationToken, System.Threading.Tasks.Task> handler, System.Func<Microsoft.Azure.ServiceBus.Primitives.ExceptionReceivedEventArgs, System.Threading.Tasks.Task> exceptionReceivedHandler) { }
         public void RegisterMessageHandler(System.Func<Microsoft.Azure.ServiceBus.Message, System.Threading.CancellationToken, System.Threading.Tasks.Task> handler, Microsoft.Azure.ServiceBus.MessageHandlerOptions messageHandlerOptions) { }
         public override void RegisterPlugin(Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin serviceBusPlugin) { }
         public System.Threading.Tasks.Task<System.DateTime> RenewLockAsync(string lockToken) { }
@@ -431,6 +436,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     {
         public MessageSender(Microsoft.Azure.ServiceBus.ServiceBusConnectionStringBuilder connectionStringBuilder, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null) { }
         public MessageSender(string connectionString, string entityPath, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null) { }
+        public override System.TimeSpan OperationTimeout { get; set; }
         public string Path { get; }
         public override System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin> RegisteredPlugins { get; }
         public System.Threading.Tasks.Task CancelScheduledMessageAsync(long sequenceNumber) { }
