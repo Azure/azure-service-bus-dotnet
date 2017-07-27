@@ -13,7 +13,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary></summary>
         /// <param name="message"></param>
         protected internal ServiceBusCommunicationException(string message)
-            : this(message, (Exception) null)
+            : this(message, null)
         {
         }
 
@@ -21,7 +21,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="message"></param>
         /// <param name="innerException"></param>
         protected internal ServiceBusCommunicationException(string message, Exception innerException)
-            : base((bool) true, message, innerException)
+            : base(true, message, innerException)
         {
         }
     }

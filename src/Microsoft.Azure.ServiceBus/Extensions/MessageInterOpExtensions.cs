@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus.Extensions
+namespace Microsoft.Azure.ServiceBus.InteropExtensions
 {
     using System;
     using System.IO;
     using System.Runtime.Serialization;
+    using Microsoft.Azure.ServiceBus.Extensions;
 
     /// <summary>
     /// A Message Extension Class that provides extension methods to deserialize 
