@@ -5,12 +5,9 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
 
-    ensure each of these are documented in their respective remarks location
     static class Constants
     {
         public const int MaxMessageIdLength = 128;
-
-        public const int MaxDestinationLength = 128;
 
         public const int MaxPartitionKeyLength = 128;
 
@@ -26,15 +23,11 @@ namespace Microsoft.Azure.ServiceBus
 
         public const int DefaultClientPrefetchCount = 0;
 
-        public static readonly int MaximumMessageHeaderPropertySize = ushort.MaxValue;
-
         public static readonly long DefaultLastPeekedSequenceNumber = 0;
 
         public static readonly TimeSpan DefaultOperationTimeout = TimeSpan.FromMinutes(1);
 
         public static readonly TimeSpan ClientPumpRenewLockTimeout = TimeSpan.FromMinutes(5);
-
-        public static readonly TimeSpan MinimumLockDuration = TimeSpan.FromSeconds(5);
 
         public static readonly TimeSpan MaximumRenewBufferDuration = TimeSpan.FromSeconds(10);
 

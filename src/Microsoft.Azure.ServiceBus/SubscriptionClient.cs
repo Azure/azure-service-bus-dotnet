@@ -141,7 +141,9 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Prefetch speeds up the message flow by aiming to have a message readily available for local retrieval when and before the application asks for one using Receive.
         /// Setting a non-zero value prefetches PrefetchCount number of messages.
-        /// Setting the value to zero turns prefetch off.</summary>
+        /// Setting the value to zero turns prefetch off.
+        /// Defaults to 0.
+        /// </summary>
         /// <remarks> 
         /// <para>
         /// When Prefetch is enabled, the client will quietly acquire more messages, up to the PrefetchCount limit, than what the application 
@@ -168,6 +170,10 @@ namespace Microsoft.Azure.ServiceBus
                 if (this.innerSubscriptionClient != null)
                 {
                     this.innerSubscriptionClient.PrefetchCount = value;
+                }
+                if (this.sessionClient != null)
+                {
+                    this.sessionClient.PrefetchCount = value;
                 }
             }
         }
@@ -381,6 +387,7 @@ namespace Microsoft.Azure.ServiceBus
         /// A default <see cref="TrueFilter"/> rule named <see cref="RuleDescription.DefaultRuleName"/> is always added while creation of the Subscription.
         /// You can add multiple rules with distinct names to the same subscription. 
         /// Multiple filters combine with each other using logical OR condition. i.e., If any filter succeeds, the message is passed on to the subscription.
+        /// Max allowed length of rule name is 50 chars.
         /// </remarks>
         public Task AddRuleAsync(string ruleName, Filter filter)
         {

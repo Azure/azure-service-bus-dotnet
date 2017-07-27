@@ -102,6 +102,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Gets or sets the name of the rule.
         /// </summary>
         /// <value>Returns a <see cref="System.String" /> Representing the name of the rule.</value>
+        /// <remarks>Max allowed length of rule name is 50 chars.</remarks>
         public string Name
         {
             get

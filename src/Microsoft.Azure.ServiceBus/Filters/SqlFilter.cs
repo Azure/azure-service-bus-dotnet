@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.Globalization;
-using Microsoft.Azure.ServiceBus.Primitives;
-
 namespace Microsoft.Azure.ServiceBus
 {
+    using System.Collections.Generic;
+    using System.Globalization;
+    using Primitives;
+
     /// <summary>
     /// Represents a filter which is a composition of an expression and an action that is executed in the pub/sub pipeline.
     /// </summary>
@@ -25,6 +25,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Initializes a new instance of the <see cref="SqlFilter" /> class using the specified SQL expression.
         /// </summary>
         /// <param name="sqlExpression">The SQL expression.</param>
+        /// <remarks>Max allowed length of sql expression is 1024 chars.</remarks>
         public SqlFilter(string sqlExpression)
         {
             if (string.IsNullOrEmpty(sqlExpression))
@@ -48,6 +49,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Gets the SQL expression.
         /// </summary>
         /// <value>The SQL expression.</value>
+        /// <remarks>Max allowed length of sql expression is 1024 chars.</remarks>
         public string SqlExpression { get; private set; }
 
         /// <summary>

@@ -143,7 +143,7 @@ namespace Microsoft.Azure.ServiceBus
 
         MessagingEntityType? EntityType { get; }
 
-        int PrefetchCount { get; }
+        internal int PrefetchCount { get; set; }
 
         ServiceBusConnection ServiceBusConnection { get; }
 
