@@ -7,7 +7,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
     using System.IO;
     using System.Runtime.Serialization;
     using Xunit;
-    using Microsoft.Azure.ServiceBus.Extensions;
+    using InteropExtensions;
 
     public class MessageInteropTests
     {

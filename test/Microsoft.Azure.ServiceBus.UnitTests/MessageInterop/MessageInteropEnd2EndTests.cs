@@ -10,7 +10,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
     using System.Text;
     using System.Threading.Tasks;
     using Xunit;
-    using Extensions;
+    using InteropExtensions;
 
     public class MessageInteropEnd2EndTests
     {
