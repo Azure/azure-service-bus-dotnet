@@ -6,7 +6,6 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
     using System;
     using System.IO;
     using System.Runtime.Serialization;
-    using Microsoft.Azure.ServiceBus.Extensions;
 
     /// <summary>
     /// A Message Extension Class that provides extension methods to deserialize 
