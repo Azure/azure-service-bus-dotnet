@@ -456,7 +456,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         public virtual System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Message> BeforeMessageSend(Microsoft.Azure.ServiceBus.Message message) { }
     }
 }
-namespace Microsoft.Azure.ServiceBus.Extensions
+namespace Microsoft.Azure.ServiceBus.InteropExtensions
 {
     
     public class static DataContractBinarySerializer<T>
