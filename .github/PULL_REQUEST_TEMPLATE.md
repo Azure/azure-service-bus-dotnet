@@ -1,3 +1,8 @@
 ## Description
 
-Describe what [issue](./issues) this PR is solving. Refer to the [contributing guidelines](./.github/CONTRIBUTING.md) for general information.
+This following list is used to make sure that common guidelines for a pull request are followed.
+
+- **Read the [contribution guidelines](./CONTRIBUTING.md).** 
+- Make title of the pull request clear and informative. 
+- Link to appropreate [issue](./issues).
+- Include include test coverage for the included changes.
