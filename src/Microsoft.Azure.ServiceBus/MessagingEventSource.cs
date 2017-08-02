@@ -10,6 +10,7 @@ namespace Microsoft.Azure.ServiceBus
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Framing;
+    using Microsoft.Azure.ServiceBus.Amqp;
     using Microsoft.Azure.ServiceBus.Primitives;
 
     [EventSource(Name = "Microsoft-Azure-ServiceBus")]
@@ -1034,7 +1035,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.AmqpLinkCreationException(entityPath, session.ToString(), session.State.ToString(), session.TerminalException != null ? session.TerminalException.ToString() : string.Empty, connection.ToString(), connection.State.ToString(), exception.ToString());
+                this.AmqpLinkCreationException(entityPath, session.ToString(), session.State.ToString(), session.GetInnerException()?.ToString() ?? string.Empty, connection.ToString(), connection.State.ToString(), exception.ToString());
             }
         }
 

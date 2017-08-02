@@ -728,8 +728,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceivingAmqpLink amqpLink = (ReceivingAmqpLink)sender;
             if (amqpLink != null)
             {
-                AmqpException amqpException = amqpLink.TerminalException as AmqpException;
-                this.LinkError = amqpException != null ? amqpException.Error : null;
+                AmqpException amqpException = amqpLink.GetInnerException() as AmqpException;
+                this.LinkError = amqpException?.Error;
                 MessagingEventSource.Log.SessionReceiverLinkClosed(this.ClientId, this.SessionIdInternal, this.LinkError);
             }
         }
@@ -791,9 +791,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                     a => receiveLink.EndReceiveMessages(a, out amqpMessages),
                     this).ConfigureAwait(false);
 
-                    if (receiveLink.TerminalException != null)
+                    if (receiveLink.GetInnerException() != null)
                     {
-                        throw receiveLink.TerminalException;
+                        throw receiveLink.GetInnerException();
                     }
 
                     if (hasMessages && amqpMessages != null)
@@ -1231,10 +1231,16 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         void ThrowIfSessionLockLost()
         {
-            if (this.LinkError != null &&
-                this.LinkError.Condition.Equals(AmqpClientConstants.SessionLockLostError))
+            if (this.LinkError != null)
             {
-                throw this.LinkError.ToMessagingContractException();
+                if (this.LinkError.Condition.Equals(AmqpClientConstants.SessionLockLostError))
+                {
+                    throw this.LinkError.ToMessagingContractException();
+                }
+                else
+                {
+                    throw new SessionLockLostException("Session was lost. See inner exception for details.", this.LinkError.ToMessagingContractException());
+                }
             }
         }
 
