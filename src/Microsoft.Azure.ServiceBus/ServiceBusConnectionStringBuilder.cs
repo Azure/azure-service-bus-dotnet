@@ -6,6 +6,7 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Text;
+    using Primitives;
 
     /// <summary>
     /// Used to generate Service Bus connection strings.
@@ -94,7 +95,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
 
                 var uriBuilder = new UriBuilder(value.Trim());
-                this.endpoint = EndpointScheme + "://" + uriBuilder.Host;
+                this.endpoint = (value.Contains("://") ? uriBuilder.Scheme : EndpointScheme) + "://" + uriBuilder.Host;
             }
         }
 

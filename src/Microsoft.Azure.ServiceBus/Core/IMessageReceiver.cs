@@ -29,32 +29,13 @@ namespace Microsoft.Azure.ServiceBus.Core
     /// The MessageReceiver provides advanced functionality that is not found in the 
     /// <see cref="QueueClient" /> or <see cref="SubscriptionClient" />. For instance, 
     /// <see cref="ReceiveAsync()"/>, which allows you to receive messages on demand, but also requires
-    /// you to manually renew locks using <see cref="RenewLockAsync(string)"/>.
+    /// you to manually renew locks using <see cref="RenewLockAsync(Message)"/>.
     /// </remarks>
     /// <seealso cref="MessageReceiver"/>
     /// <seealso cref="QueueClient"/>
     /// <seealso cref="SubscriptionClient"/>
     public interface IMessageReceiver : IReceiverClient
     {
-        /// <summary>
-        /// Prefetch speeds up the message flow by aiming to have a message readily available for local retrieval when and before the application asks for one using Receive.
-        /// Setting a non-zero value prefetches PrefetchCount number of messages.
-        /// Setting the value to zero turns prefetch off.</summary>
-        /// <remarks> 
-        /// <para>
-        /// When Prefetch is enabled, the receiver will quietly acquire more messages, up to the PrefetchCount limit, than what the application 
-        /// immediately asks for. A single initial Receive/ReceiveAsync call will therefore acquire a message for immediate consumption 
-        /// that will be returned as soon as available, and the client will proceed to acquire further messages to fill the prefetch buffer in the background. 
-        /// </para>
-        /// <para>
-        /// While messages are available in the prefetch buffer, any subsequent ReceiveAsync calls will be immediately satisfied from the buffer, and the buffer is 
-        /// replenished in the background as space becomes available.If there are no messages available for delivery, the receive operation will drain the 
-        /// buffer and then wait or block as expected. 
-        /// </para>
-        /// <para>Updates to this value take effect on the next receive call to the service.</para>
-        /// </remarks>
-        int PrefetchCount { get; set; }
-
         /// <summary>Gets the sequence number of the last peeked message.</summary>
         /// <seealso cref="PeekAsync()"/>
         long LastPeekedSequenceNumber { get; }
@@ -91,18 +72,22 @@ namespace Microsoft.Azure.ServiceBus.Core
         Task<IList<Message>> ReceiveAsync(int maxMessageCount, TimeSpan operationTimeout);
 
         /// <summary>
-        /// Receives a particular message identified by <paramref name="sequenceNumber"/>.
+        /// Receives a specific deferred message identified by <paramref name="sequenceNumber"/>.
         /// </summary>
         /// <param name="sequenceNumber">The sequence number of the message that will be received.</param>
-        /// <returns>Message identified by sequence number <paramref name="sequenceNumber"/>. Returns null if no such message is found.</returns>
-        Task<Message> ReceiveBySequenceNumberAsync(long sequenceNumber);
+        /// <returns>Message identified by sequence number <paramref name="sequenceNumber"/>. Returns null if no such message is found. 
+        /// Throws if the message has not been deferred.</returns>
+        /// <seealso cref="DeferAsync"/>
+        Task<Message> ReceiveDeferredMessageAsync(long sequenceNumber);
 
         /// <summary>
-        /// Receives a <see cref="IList{Message}"/> messages identified by <paramref name="sequenceNumbers"/>.
+        /// Receives a <see cref="IList{Message}"/> of deferred messages identified by <paramref name="sequenceNumbers"/>.
         /// </summary>
         /// <param name="sequenceNumbers">An <see cref="IEnumerable{T}"/> containing the sequence numbers to receive.</param>
-        /// <returns>Messages identified by sequence number are returned. Returns null if no messages are found.</returns>
-        Task<IList<Message>> ReceiveBySequenceNumberAsync(IEnumerable<long> sequenceNumbers);
+        /// <returns>Messages identified by sequence number are returned. Returns null if no messages are found.
+        /// Throws if the messages have not been deferred.</returns>
+        /// <seealso cref="DeferAsync"/>
+        Task<IList<Message>> ReceiveDeferredMessageAsync(IEnumerable<long> sequenceNumbers);
 
         /// <summary>
         /// Completes a series of <see cref="Message"/> using a list of lock tokens. This will delete the message from the service.
@@ -121,15 +106,16 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
         /// In order to receive this message again in the future, you will need to save the <see cref="Message.SystemPropertiesCollection.SequenceNumber"/>
-        /// and receive it using <see cref="ReceiveBySequenceNumberAsync(long)"/>.
+        /// and receive it using <see cref="ReceiveDeferredMessageAsync(long)"/>.
+        /// Deferring messages does not impact message's expiration, meaning that deferred messages can still expire.
         /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         Task DeferAsync(string lockToken);
 
         /// <summary>
-        /// Renews the lock on the message specified by the lock token. The lock will be renewed based on the setting specified on the queue.
+        /// Renews the lock on the message. The lock will be renewed based on the setting specified on the queue.
         /// </summary>
-        /// <param name="lockToken">The lock token of the <see cref="Message" />.</param>
+        /// <param name="message"> <see cref="Message" />.</param>
         /// <remarks>
         /// When a message is received in <see cref="ServiceBus.ReceiveMode.PeekLock"/> mode, the message is locked on the server for this 
         /// receiver instance for a duration as specified during the Queue/Subscription creation (LockDuration).
@@ -137,7 +123,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// the entity's LockDuration. 
         /// </remarks>
         /// <returns>The asynchronous operation.</returns>
-        Task<DateTime> RenewLockAsync(string lockToken);
+        Task RenewLockAsync(Message message);
 
         /// <summary>
         /// Fetches the next active message without changing the state of the receiver or the message source.

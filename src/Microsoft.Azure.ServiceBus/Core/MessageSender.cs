@@ -111,6 +111,15 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         public virtual string Path { get; private set; }
 
+        /// <summary>
+        /// Duration after which individual operations will timeout.
+        /// </summary>
+        public override TimeSpan OperationTimeout
+        {
+            get => this.ServiceBusConnection.OperationTimeout;
+            set => this.ServiceBusConnection.OperationTimeout = value;
+        }
+
         internal MessagingEntityType? EntityType { get; private set; }
 
         ServiceBusConnection ServiceBusConnection { get; }
@@ -289,9 +298,14 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         internal async Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
         {
+            RequestResponseAmqpLink requestResponseAmqpLink = null;
             AmqpMessage amqpMessage = amqpRequestMessage.AmqpMessage;
             TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-            RequestResponseAmqpLink requestResponseAmqpLink = await this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+
+            if (!this.RequestResponseLinkManager.TryGetOpenedObject(out requestResponseAmqpLink))
+            {
+                requestResponseAmqpLink = await this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false); 
+            }
 
             AmqpMessage responseAmqpMessage = await Task.Factory.FromAsync(
                 (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, timeoutHelper.RemainingTime(), c, s),
@@ -310,7 +324,10 @@ namespace Microsoft.Azure.ServiceBus.Core
                 SendingAmqpLink amqpLink = null;
                 try
                 {
-                    amqpLink = await this.SendLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                    if (!this.SendLinkManager.TryGetOpenedObject(out amqpLink))
+                    {
+                        amqpLink = await this.SendLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false); 
+                    }
                     if (amqpLink.Settings.MaxMessageSize.HasValue)
                     {
                         ulong size = (ulong)amqpMessage.SerializedMessageSize;
@@ -327,7 +344,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     if (outcome.DescriptorCode != Accepted.Code)
                     {
                         Rejected rejected = (Rejected)outcome;
-                        throw Fx.Exception.AsError(AmqpExceptionHelper.ToMessagingContractException(rejected.Error));
+                        throw Fx.Exception.AsError(rejected.Error.ToMessagingContractException());
                     }
                 }
                 catch (Exception exception)

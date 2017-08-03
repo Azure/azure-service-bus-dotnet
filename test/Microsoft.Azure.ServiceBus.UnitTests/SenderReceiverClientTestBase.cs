@@ -10,7 +10,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Text;
     using System.Threading.Tasks;
     using Core;
-    using Microsoft.Azure.ServiceBus.Primitives;
     using Xunit;
 
     public abstract class SenderReceiverClientTestBase
@@ -99,12 +98,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.True(receivedMessages.Count() == messageCount - deferMessagesCount);
 
             // Receive / Abandon deferred messages
-            receivedMessages = await messageReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers);
+            receivedMessages = await messageReceiver.ReceiveDeferredMessageAsync(sequenceNumbers);
             Assert.True(receivedMessages.Count() == 5);
             await TestUtility.DeferMessagesAsync(messageReceiver, receivedMessages);
 
             // Receive Again and Check delivery count
-            receivedMessages = await messageReceiver.ReceiveBySequenceNumberAsync(sequenceNumbers);
+            receivedMessages = await messageReceiver.ReceiveDeferredMessageAsync(sequenceNumbers);
             int count = receivedMessages.Count(message => message.SystemProperties.DeliveryCount == 3);
             Assert.True(count == receivedMessages.Count());
 
@@ -127,16 +126,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             TestUtility.Log("Sleeping 10 seconds...");
             await Task.Delay(TimeSpan.FromSeconds(10));
 
-            DateTime lockedUntilUtcTime = await messageReceiver.RenewLockAsync(receivedMessages.First().SystemProperties.LockToken);
-            TestUtility.Log($"After First Renewal: {lockedUntilUtcTime}");
-            Assert.True(lockedUntilUtcTime >= firstLockedUntilUtcTime + TimeSpan.FromSeconds(10));
+            
+            await messageReceiver.RenewLockAsync(message);
+            TestUtility.Log($"After First Renewal: {message.SystemProperties.LockedUntilUtc}");
+            Assert.True(message.SystemProperties.LockedUntilUtc >= firstLockedUntilUtcTime + TimeSpan.FromSeconds(10));
 
             TestUtility.Log("Sleeping 5 seconds...");
             await Task.Delay(TimeSpan.FromSeconds(5));
 
-            lockedUntilUtcTime = await messageReceiver.RenewLockAsync(receivedMessages.First().SystemProperties.LockToken);
-            TestUtility.Log($"After Second Renewal: {lockedUntilUtcTime}");
-            Assert.True(lockedUntilUtcTime >= firstLockedUntilUtcTime + TimeSpan.FromSeconds(5));
+            await messageReceiver.RenewLockAsync(message);
+            TestUtility.Log($"After Second Renewal: {message.SystemProperties.LockedUntilUtc}");
+            Assert.True(message.SystemProperties.LockedUntilUtc >= firstLockedUntilUtcTime + TimeSpan.FromSeconds(5));
 
             // Complete Messages
             await TestUtility.CompleteMessagesAsync(messageReceiver, receivedMessages);

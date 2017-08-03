@@ -7,6 +7,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Framing;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
     internal abstract class AmqpLinkCreator
     {
@@ -58,13 +59,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 MessagingEventSource.Log.AmqpSessionCreationException(this.entityPath, connection, exception);
                 session?.Abort();
-                throw;
+                throw AmqpExceptionHelper.GetClientException(exception, null, session.GetInnerException());
             }
 
+            AmqpObject link = null;
             try
             {
                 // Create Link
-                AmqpObject link = this.OnCreateAmqpLink(connection, this.amqpLinkSettings, session);
+                link = this.OnCreateAmqpLink(connection, this.amqpLinkSettings, session);
                 await link.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
                 return link;
             }
@@ -76,7 +78,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     connection,
                     exception);
 
-                throw;
+                throw AmqpExceptionHelper.GetClientException(exception, null, link?.GetInnerException());
             }
         }
 

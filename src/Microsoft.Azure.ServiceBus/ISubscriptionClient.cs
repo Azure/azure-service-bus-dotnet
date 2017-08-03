@@ -5,10 +5,9 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
     using System.Threading;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Core;
-    using Filters;
-    using Primitives;
 
     /// <summary>
     /// SubscriptionClient can be used for all basic interactions with a Service Bus Subscription.
@@ -67,6 +66,7 @@ namespace Microsoft.Azure.ServiceBus
         /// You can add rules to the subscription that will decide filter which messages from the topic should reach the subscription.
         /// A default <see cref="TrueFilter"/> rule named <see cref="RuleDescription.DefaultRuleName"/> is always added while creation of the Subscription.
         /// You can add multiple rules with distinct names to the same subscription.
+        /// Multiple filters combine with each other using logical OR condition. i.e., If any filter succeeds, the message is passed on to the subscription.
         /// </remarks>
         Task AddRuleAsync(string ruleName, Filter filter);
 
@@ -79,6 +79,7 @@ namespace Microsoft.Azure.ServiceBus
         /// You can add rules to the subscription that will decide filter which messages from the topic should reach the subscription.
         /// A default <see cref="TrueFilter"/> rule named <see cref="RuleDescription.DefaultRuleName"/> is always added while creation of the Subscription.
         /// You can add multiple rules with distinct names to the same subscription.
+        /// Multiple filters combine with each other using logical OR condition. i.e., If any filter succeeds, the message is passed on to the subscription.
         /// </remarks>
         Task AddRuleAsync(RuleDescription description);
 
@@ -88,6 +89,12 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="ruleName">The name of the rule.</param>
         /// <returns>A task instance that represents the asynchronous remove rule operation.</returns>
         Task RemoveRuleAsync(string ruleName);
+
+        /// <summary>
+        /// Get all rules associated with the subscription.
+        /// </summary>
+        /// <returns>IEnumerable of rules</returns>
+        Task<IEnumerable<RuleDescription>> GetRulesAsync();
 
         /// <summary>
         /// Receive session messages continously from the subscription. Registers a message handler and begins a new thread to receive session-messages.

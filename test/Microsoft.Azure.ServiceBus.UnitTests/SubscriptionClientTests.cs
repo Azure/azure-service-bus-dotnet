@@ -7,7 +7,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Filters;
     using Xunit;
 
     public sealed class SubscriptionClientTests : SenderReceiverClientTestBase
@@ -38,9 +37,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     await subscriptionClient.RemoveRuleAsync(RuleDescription.DefaultRuleName);
                 }
-                catch
+                catch (Exception e)
                 {
-                    // ignored
+                    TestUtility.Log($"Remove Default Rule failed with Exception: {e.Message}");
                 }
 
                 await subscriptionClient.AddRuleAsync(new RuleDescription
@@ -64,8 +63,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
             finally
             {
-                await subscriptionClient.RemoveRuleAsync("RedCorrelation");
-                await subscriptionClient.AddRuleAsync(RuleDescription.DefaultRuleName, new TrueFilter());
+                try
+                {
+                    await subscriptionClient.RemoveRuleAsync("RedCorrelation");
+                    await subscriptionClient.AddRuleAsync(RuleDescription.DefaultRuleName, new TrueFilter());
+                }
+                catch (Exception e)
+                {
+                    TestUtility.Log($" Cleanup failed with Exception: {e.Message}");
+                }
+
                 await subscriptionClient.CloseAsync();
                 await topicClient.CloseAsync();
             }
@@ -89,9 +96,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     await subscriptionClient.RemoveRuleAsync(RuleDescription.DefaultRuleName);
                 }
-                catch
+                catch(Exception e)
                 {
-                    // ignored
+                    TestUtility.Log($"Remove Default Rule failed with: {e.Message}");
                 }
 
                 await subscriptionClient.AddRuleAsync(new RuleDescription
@@ -121,12 +128,20 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 var messages = await subscriptionClient.InnerSubscriptionClient.InnerReceiver.ReceiveAsync(maxMessageCount: 2);
                 Assert.NotNull(messages);
                 Assert.True(messages.Count == 1);
-                Assert.True(messageId2.Equals(messages.First().MessageId));
+                Assert.True(messageId2.Equals(messages.First().MessageId));                
             }
             finally
             {
-                await subscriptionClient.RemoveRuleAsync("RedSql");
-                await subscriptionClient.AddRuleAsync(RuleDescription.DefaultRuleName, new TrueFilter());
+                try
+                {
+                    await subscriptionClient.RemoveRuleAsync("RedSql");
+                    await subscriptionClient.AddRuleAsync(RuleDescription.DefaultRuleName, new TrueFilter());
+                }
+                catch (Exception e)
+                {
+                    TestUtility.Log($" Cleanup failed with Exception: {e.Message}");
+                }
+
                 await subscriptionClient.CloseAsync();
                 await topicClient.CloseAsync();
             }
@@ -192,6 +207,97 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await subscriptionClient.AddRuleAsync(RuleDescription.DefaultRuleName, new TrueFilter());
                 await subscriptionClient.CloseAsync();
                 await topicClient.CloseAsync();
+            }
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task GetRulesTestCase()
+        {
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                TestConstants.NonPartitionedTopicName,
+                TestConstants.SubscriptionName,
+                ReceiveMode.ReceiveAndDelete);
+            string sqlRuleName = "sqlRule";
+            string correlationRuleName = "correlationRule";
+
+            try
+            {
+                var rules = (await subscriptionClient.GetRulesAsync()).ToList();
+                Assert.Equal(1, rules.Count);
+                var firstRule = rules[0];
+                Assert.Equal(RuleDescription.DefaultRuleName, firstRule.Name);
+                Assert.IsType<SqlFilter>(firstRule.Filter);
+                Assert.Null(firstRule.Action);
+                
+                await subscriptionClient.AddRuleAsync(sqlRuleName, new SqlFilter("price > 10"));
+                
+                RuleDescription ruleDescription = new RuleDescription(correlationRuleName)
+                {
+                    Filter = new CorrelationFilter
+                    {
+                        CorrelationId = "correlationId",
+                        Label = "label",
+                        MessageId = "messageId",
+                        Properties =
+                        {
+                            {"key1", "value1"}
+                        },
+                        ReplyTo = "replyTo",
+                        ReplyToSessionId = "replyToSessionId",
+                        SessionId = "sessionId",
+                        To = "to"
+                    },
+                    Action = new SqlRuleAction("Set CorrelationId = 'newValue'")
+                };
+                await subscriptionClient.AddRuleAsync(ruleDescription);
+
+                rules = (await subscriptionClient.GetRulesAsync()).ToList();
+                Assert.Equal(3, rules.Count);
+
+                var sqlRule = rules.FirstOrDefault(rule => rule.Name.Equals(sqlRuleName));
+                Assert.NotNull(sqlRule);
+                Assert.Null(sqlRule.Action);
+                Assert.IsType<SqlFilter>(sqlRule.Filter);
+                Assert.Equal("price > 10", ((SqlFilter) sqlRule.Filter).SqlExpression);
+
+                var correlationRule = rules.FirstOrDefault(rule => rule.Name.Equals(correlationRuleName));
+                Assert.NotNull(correlationRule);
+                Assert.IsType<SqlRuleAction>(correlationRule.Action);
+                var sqlRuleAction = correlationRule.Action as SqlRuleAction;
+                Assert.NotNull(sqlRuleAction);
+                Assert.Equal("Set CorrelationId = 'newValue'", sqlRuleAction.SqlExpression);
+                Assert.IsType<CorrelationFilter>(correlationRule.Filter);
+                var correlationFilter = correlationRule.Filter as CorrelationFilter;
+                Assert.NotNull(correlationFilter);
+                Assert.Equal("correlationId", correlationFilter.CorrelationId);
+                Assert.Equal("label", correlationFilter.Label);
+                Assert.Equal("messageId", correlationFilter.MessageId);
+                Assert.Equal("replyTo", correlationFilter.ReplyTo);
+                Assert.Equal("replyToSessionId", correlationFilter.ReplyToSessionId);
+                Assert.Equal("sessionId", correlationFilter.SessionId);
+                Assert.Equal("to", correlationFilter.To);
+                Assert.NotNull(correlationFilter.Properties);
+                Assert.Equal("value1", correlationFilter.Properties["key1"]);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            finally
+            {
+                try
+                {
+                    await subscriptionClient.RemoveRuleAsync(sqlRuleName);
+                    await subscriptionClient.RemoveRuleAsync(correlationRuleName);
+                }
+                catch (Exception)
+                {
+                    // Ignore the exception as we are just trying to clean up the rules that we MIGHT have added.
+                }
+                await subscriptionClient.CloseAsync();
             }
         }
 

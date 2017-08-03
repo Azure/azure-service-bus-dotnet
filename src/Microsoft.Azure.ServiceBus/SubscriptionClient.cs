@@ -10,7 +10,6 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.ServiceBus.Amqp;
     using Microsoft.Azure.ServiceBus.Core;
-    using Microsoft.Azure.ServiceBus.Filters;
     using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>
@@ -140,9 +139,20 @@ namespace Microsoft.Azure.ServiceBus
         public ReceiveMode ReceiveMode { get; }
 
         /// <summary>
+        /// Duration after which individual operations will timeout.
+        /// </summary>
+        public override TimeSpan OperationTimeout
+        {
+            get => this.ServiceBusConnection.OperationTimeout;
+            set => this.ServiceBusConnection.OperationTimeout = value;
+        }
+
+        /// <summary>
         /// Prefetch speeds up the message flow by aiming to have a message readily available for local retrieval when and before the application asks for one using Receive.
         /// Setting a non-zero value prefetches PrefetchCount number of messages.
-        /// Setting the value to zero turns prefetch off.</summary>
+        /// Setting the value to zero turns prefetch off.
+        /// Defaults to 0.
+        /// </summary>
         /// <remarks> 
         /// <para>
         /// When Prefetch is enabled, the client will quietly acquire more messages, up to the PrefetchCount limit, than what the application 
@@ -169,6 +179,10 @@ namespace Microsoft.Azure.ServiceBus
                 if (this.innerSubscriptionClient != null)
                 {
                     this.innerSubscriptionClient.PrefetchCount = value;
+                }
+                if (this.sessionClient != null)
+                {
+                    this.sessionClient.PrefetchCount = value;
                 }
             }
         }
@@ -380,7 +394,9 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>
         /// You can add rules to the subscription that decides which messages from the topic should reach the subscription.
         /// A default <see cref="TrueFilter"/> rule named <see cref="RuleDescription.DefaultRuleName"/> is always added while creation of the Subscription.
-        /// You can add multiple rules with distinct names to the same subscription.
+        /// You can add multiple rules with distinct names to the same subscription. 
+        /// Multiple filters combine with each other using logical OR condition. i.e., If any filter succeeds, the message is passed on to the subscription.
+        /// Max allowed length of rule name is 50 chars.
         /// </remarks>
         public Task AddRuleAsync(string ruleName, Filter filter)
         {
@@ -396,6 +412,7 @@ namespace Microsoft.Azure.ServiceBus
         /// You can add rules to the subscription that decides which messages from the topic should reach the subscription.
         /// A default <see cref="TrueFilter"/> rule named <see cref="RuleDescription.DefaultRuleName"/> is always added while creation of the Subscription.
         /// You can add multiple rules with distinct names to the same subscription.
+        /// Multiple filters combine with each other using logical OR condition. i.e., If any filter succeeds, the message is passed on to the subscription.
         /// </remarks>
         public async Task AddRuleAsync(RuleDescription description)
         {
@@ -445,6 +462,31 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             MessagingEventSource.Log.RemoveRuleStop(this.ClientId);
+        }
+
+        /// <summary>
+        /// Get all rules associated with the subscription.
+        /// </summary>
+        /// <returns>IEnumerable of rules</returns>
+        public async Task<IEnumerable<RuleDescription>> GetRulesAsync()
+        {
+            MessagingEventSource.Log.GetRulesStart(this.ClientId);
+            int skip = 0;
+            int top = int.MaxValue;
+            IEnumerable<RuleDescription> rules;
+
+            try
+            {
+                rules = await this.InnerSubscriptionClient.OnGetRulesAsync(top, skip);
+            }
+            catch (Exception exception)
+            {
+                MessagingEventSource.Log.GetRulesException(this.ClientId, exception);
+                throw;
+            }
+
+            MessagingEventSource.Log.GetRulesStop(this.ClientId);
+            return rules;
         }
 
         /// <summary>

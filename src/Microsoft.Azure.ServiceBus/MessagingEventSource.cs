@@ -9,6 +9,9 @@ namespace Microsoft.Azure.ServiceBus
     using System.Reflection;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
+    using Microsoft.Azure.Amqp.Framing;
+    using Microsoft.Azure.ServiceBus.Amqp;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
     [EventSource(Name = "Microsoft-Azure-ServiceBus")]
     internal sealed class MessagingEventSource : EventSource
@@ -308,23 +311,23 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiveBySequenceNumberStart(string clientId, int messageCount, IEnumerable<long> sequenceNumbers)
+        public void MessageReceiveDeferredMessageStart(string clientId, int messageCount, IEnumerable<long> sequenceNumbers)
         {
             if (this.IsEnabled())
             {
                 string formattedsequenceNumbers = StringUtility.GetFormattedSequenceNumbers(sequenceNumbers);
-                this.MessageReceiveBySequenceNumberStart(clientId, messageCount, formattedsequenceNumbers);
+                this.MessageReceiveDeferredMessageStart(clientId, messageCount, formattedsequenceNumbers);
             }
         }
 
-        [Event(28, Level = EventLevel.Informational, Message = "{0}: ReceiveBySequenceNumberAsync start. MessageCount = {1}, LockTokens = {2}")]
-        void MessageReceiveBySequenceNumberStart(string clientId, int messageCount, string sequenceNumbers)
+        [Event(28, Level = EventLevel.Informational, Message = "{0}: ReceiveDeferredMessageAsync start. MessageCount = {1}, LockTokens = {2}")]
+        void MessageReceiveDeferredMessageStart(string clientId, int messageCount, string sequenceNumbers)
         {
             this.WriteEvent(28, clientId, messageCount, sequenceNumbers);
         }
 
-        [Event(29, Level = EventLevel.Informational, Message = "{0}: ReceiveBySequenceNumberAsync done. Received '{1}' messages")]
-        public void MessageReceiveBySequenceNumberStop(string clientId, int messageCount)
+        [Event(29, Level = EventLevel.Informational, Message = "{0}: ReceiveDeferredMessageAsync done. Received '{1}' messages")]
+        public void MessageReceiveDeferredMessageStop(string clientId, int messageCount)
         {
             if (this.IsEnabled())
             {
@@ -333,16 +336,16 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void MessageReceiveBySequenceNumberException(string clientId, Exception exception)
+        public void MessageReceiveDeferredMessageException(string clientId, Exception exception)
         {
             if (this.IsEnabled())
             {
-                this.MessageReceiveBySequenceNumberException(clientId, exception.ToString());
+                this.MessageReceiveDeferredMessageException(clientId, exception.ToString());
             }
         }
 
-        [Event(30, Level = EventLevel.Error, Message = "{0}: ReceiveBySequenceNumberAsync Exception: {1}.")]
-        void MessageReceiveBySequenceNumberException(string clientId, string exception)
+        [Event(30, Level = EventLevel.Error, Message = "{0}: ReceiveDeferredMessageAsync Exception: {1}.")]
+        void MessageReceiveDeferredMessageException(string clientId, string exception)
         {
             this.WriteEvent(30, clientId, exception);
         }
@@ -495,7 +498,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.WriteEvent(47, namespaceName, entityName);
+                this.WriteEvent(47, namespaceName, entityName, receiveMode);
             }
         }
 
@@ -1032,7 +1035,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.AmqpLinkCreationException(entityPath, session.ToString(), session.State.ToString(), session.TerminalException != null ? session.TerminalException.ToString() : string.Empty, connection.ToString(), connection.State.ToString(), exception.ToString());
+                this.AmqpLinkCreationException(entityPath, session.ToString(), session.State.ToString(), session.GetInnerException()?.ToString() ?? string.Empty, connection.ToString(), connection.State.ToString(), exception.ToString());
             }
         }
 
@@ -1172,6 +1175,69 @@ namespace Microsoft.Azure.ServiceBus
             {
                 WriteEvent(101, oldClientId, newClientId); 
             }
+        }
+
+        [Event(102, Level = EventLevel.Informational, Message = "{0}: GetRulesException start.")]
+        public void GetRulesStart(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(102, clientId);
+            }
+        }
+
+        [Event(103, Level = EventLevel.Informational, Message = "{0}: GetRulesException done.")]
+        public void GetRulesStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(103, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void GetRulesException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.GetRulesException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(104, Level = EventLevel.Error, Message = "{0}: GetRulesException Exception: {1}.")]
+        void GetRulesException(string clientId, string exception)
+        {
+            this.WriteEvent(104, clientId, exception);
+        }
+
+        [NonEvent]
+        public void CreatingNewLink(string clientId, bool isSessionReceiver, string sessionId, bool isRequestResponseLink, Exception linkException)
+        {
+            if (this.IsEnabled())
+            {
+                this.CreatingNewLink(clientId, isSessionReceiver, sessionId ?? string.Empty, isRequestResponseLink, linkException?.ToString() ?? string.Empty);
+            }
+        }
+
+        [Event(105, Level = EventLevel.Informational, Message = "Creating/Recreating New Link. ClientId: {0}, IsSessionReceiver: {1}, SessionId: {2}, IsRequestResponseLink: {3}, LinkError: {4}.")]
+        void CreatingNewLink(string clientId, bool isSessionReceiver, string sessionId, bool isRequestResponseLink, string linkError)
+        {
+            WriteEvent(105, clientId, isSessionReceiver, sessionId, isRequestResponseLink, linkError);
+        }
+
+        [NonEvent]
+        public void SessionReceiverLinkClosed(string clientId, string sessionId, Exception linkException)
+        {
+            if (this.IsEnabled())
+            {
+                this.SessionReceiverLinkClosed(clientId, sessionId ?? string.Empty, linkException?.ToString() ?? string.Empty);
+            }
+        }
+
+        [Event(106, Level = EventLevel.Error, Message = "SessionReceiver Link Closed. ClientId: {0}, SessionId: {1}, linkException: {2}.")]
+        void SessionReceiverLinkClosed(string clientId, string sessionId, string linkException)
+        {
+            WriteEvent(106, clientId, sessionId, linkException);
         }
     }
 }

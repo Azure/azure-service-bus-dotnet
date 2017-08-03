@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus.Filters
+namespace Microsoft.Azure.ServiceBus
 {
     /// <summary>
-    /// Matches a filter expression.
+    /// Matches all the messages arriving to be selected for the subscription.
     /// </summary>
     public sealed class TrueFilter : SqlFilter
     {
