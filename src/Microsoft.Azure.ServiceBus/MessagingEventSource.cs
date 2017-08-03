@@ -1215,7 +1215,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.CreatingNewLink(clientId, isSessionReceiver, sessionId ?? string.Empty, isRequestResponseLink, linkException.ToString());
+                this.CreatingNewLink(clientId, isSessionReceiver, sessionId ?? string.Empty, isRequestResponseLink, linkException?.ToString() ?? string.Empty);
             }
         }
 
@@ -1230,7 +1230,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (this.IsEnabled())
             {
-                this.SessionReceiverLinkClosed(clientId, sessionId ?? string.Empty, linkException.ToString());
+                this.SessionReceiverLinkClosed(clientId, sessionId ?? string.Empty, linkException?.ToString() ?? string.Empty);
             }
         }
 
