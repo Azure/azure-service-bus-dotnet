@@ -101,7 +101,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static AmqpConnectionSettings CreateAmqpConnectionSettings(uint maxFrameSize, string containerId, string hostName)
         {
-            AmqpConnectionSettings connectionSettings = new AmqpConnectionSettings
+            var connectionSettings = new AmqpConnectionSettings
             {
                 MaxFrameSize = maxFrameSize,
                 ContainerId = containerId,

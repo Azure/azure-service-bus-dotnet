@@ -44,5 +44,4 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             return attribute == null ? null : getter(attribute);
         }
     }
-
 }
