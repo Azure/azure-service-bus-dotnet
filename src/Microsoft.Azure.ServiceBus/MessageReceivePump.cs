@@ -109,10 +109,13 @@ namespace Microsoft.Azure.ServiceBus
             {
                 MessagingEventSource.Log.MessageReceiverPumpUserCallbackException(this.messageReceiver.ClientId, message, exception);
                 await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.UserCallback).ConfigureAwait(false);
+                this.maxConcurrentCallsSemaphoreSlim.Release();
 
                 // Nothing much to do if UserCallback throws, Abandon message and Release semaphore.
-                await this.AbandonMessageIfNeededAsync(message).ConfigureAwait(false);
-                this.maxConcurrentCallsSemaphoreSlim.Release();
+                if (!(exception is MessageLockLostException))
+                {
+                    await this.AbandonMessageIfNeededAsync(message).ConfigureAwait(false); 
+                }
                 return;
             }
             finally
