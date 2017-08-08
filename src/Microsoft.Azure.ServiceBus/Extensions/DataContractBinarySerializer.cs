@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
     /// ReadObject(Stream) and WriteObject(Stream, object) pick Binary Xml Reader/Writer 
     /// instead of text.
     /// </summary>
-    sealed class DataContractBinarySerializer : XmlObjectSerializer
+    public sealed class DataContractBinarySerializer : XmlObjectSerializer
     {
         readonly DataContractSerializer dataContractSerializer;
 
