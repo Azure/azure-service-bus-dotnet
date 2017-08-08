@@ -6,6 +6,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Drawing;
+    using System.Threading;
     using System.Threading.Tasks;
     using Xunit;
 
@@ -66,6 +68,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             string queueName = "nonexistentqueuename";
             bool exceptionReceivedHandlerCalled = false;
 
+            var reset = new ManualResetEventSlim();
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
             queueClient.RegisterMessageHandler(
                 (message, token) => throw new Exception("Unexpected exception: Did not expect messages here"),
@@ -76,22 +79,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     if (eventArgs.Exception is MessagingEntityNotFoundException)
                     {
                         exceptionReceivedHandlerCalled = true;
+                        reset.Set();
                     }
                     return Task.CompletedTask;
                 });
 
             try
             {
-                Stopwatch stopwatch = Stopwatch.StartNew();
-                while (stopwatch.Elapsed.TotalSeconds <= 10)
-                {
-                    if (exceptionReceivedHandlerCalled)
-                    {
-                        break;
-                    }
-
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                }
+                reset.Wait(TimeSpan.FromSeconds(61));
 
                 TestUtility.Log($"{DateTime.Now}: ExceptionReceivedHandlerCalled: {exceptionReceivedHandlerCalled}");
                 Assert.True(exceptionReceivedHandlerCalled);
@@ -99,7 +94,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             finally
             {
                 await queueClient.CloseAsync();
-            }            
+            }
         }
 
         async Task OnMessageTestAsync(string queueName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
