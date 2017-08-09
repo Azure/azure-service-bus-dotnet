@@ -103,6 +103,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await sessionReceiver.SetStateAsync(sessionState);
                 TestUtility.Log($"Set Session State: {sessionStateString} for Session: {sessionReceiver.SessionId}");
 
+                returnedSessionState = await sessionReceiver.GetStateAsync();
                 returnedSessionStateString = Encoding.UTF8.GetString(returnedSessionState);
                 TestUtility.Log($"Get Session State Returned: {returnedSessionStateString} for Session: {sessionReceiver.SessionId}");
                 Assert.Equal(sessionStateString, returnedSessionStateString);
