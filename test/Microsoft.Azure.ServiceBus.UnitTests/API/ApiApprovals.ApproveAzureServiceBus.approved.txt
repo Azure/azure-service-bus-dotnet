@@ -89,7 +89,7 @@ namespace Microsoft.Azure.ServiceBus
         string SessionId { get; }
         System.Threading.Tasks.Task<byte[]> GetStateAsync();
         System.Threading.Tasks.Task RenewSessionLockAsync();
-        System.Threading.Tasks.Task SetStateAsync(byte[]);
+        System.Threading.Tasks.Task SetStateAsync(byte[] sessionState);
     }
     public interface IQueueClient : Microsoft.Azure.ServiceBus.Core.IReceiverClient, Microsoft.Azure.ServiceBus.Core.ISenderClient, Microsoft.Azure.ServiceBus.IClientEntity
     {
