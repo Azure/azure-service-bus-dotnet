@@ -49,7 +49,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         {
             this.activeRequestResponseClientLink = requestResponseLink;
             this.activeRequestResponseClientLink.Link.Closed += new EventHandler(this.OnRequestResponseLinkClosed);
-            if (this.activeSendReceiveClientLink.Link.State == AmqpObjectState.Opened)
+            if (this.activeRequestResponseClientLink.Link.State == AmqpObjectState.Opened)
             {
                 this.SetRenewCBSTokenTimer(requestResponseLink);
             }

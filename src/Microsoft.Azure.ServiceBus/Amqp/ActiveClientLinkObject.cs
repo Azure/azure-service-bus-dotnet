@@ -5,7 +5,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using Microsoft.Azure.Amqp;
     using System;
-    using System.Threading;
 
     abstract class ActiveClientLinkObject
     {
