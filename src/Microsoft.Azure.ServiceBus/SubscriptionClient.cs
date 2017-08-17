@@ -98,7 +98,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode, RetryPolicy retryPolicy)
-            : base(ClientEntity.GenerateClientId(nameof(SubscriptionClient), $"{topicPath}/{subscriptionName}"), retryPolicy)
+            : base(nameof(SubscriptionClient), $"{topicPath}/{subscriptionName}", retryPolicy)
         {
             MessagingEventSource.Log.SubscriptionClientCreateStart(serviceBusConnection?.Endpoint.Authority, topicPath, subscriptionName, receiveMode.ToString());
 
@@ -266,28 +266,6 @@ namespace Microsoft.Azure.ServiceBus
 
         TokenProvider TokenProvider { get; }
 
-        /// <summary></summary>
-        /// <returns></returns>
-        protected override async Task OnClosingAsync()
-        {
-            if (this.innerSubscriptionClient != null)
-            {
-                await this.innerSubscriptionClient.CloseAsync().ConfigureAwait(false);
-            }
-
-            this.sessionPumpHost?.Close();
-
-            if (this.sessionClient != null)
-            {
-                await this.sessionClient.CloseAsync().ConfigureAwait(false);
-            }
-
-            if (this.ownsConnection)
-            {
-                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
-            }
-        }
-
         /// <summary>
         /// Completes a <see cref="Message"/> using its lock token. This will delete the message from the subscription.
         /// </summary>
@@ -299,6 +277,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The asynchronous operation.</returns>
         public Task CompleteAsync(string lockToken)
         {
+            this.ThrowIfClosed();
             return this.InnerSubscriptionClient.InnerReceiver.CompleteAsync(lockToken);
         }
 
@@ -312,6 +291,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The asynchronous operation.</returns>
         public Task AbandonAsync(string lockToken)
         {
+            this.ThrowIfClosed();
             return this.InnerSubscriptionClient.InnerReceiver.AbandonAsync(lockToken);
         }
 
@@ -327,6 +307,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The asynchronous operation.</returns>
         public Task DeadLetterAsync(string lockToken)
         {
+            this.ThrowIfClosed();
             return this.InnerSubscriptionClient.InnerReceiver.DeadLetterAsync(lockToken);
         }
 
@@ -341,6 +322,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
+            this.ThrowIfClosed();
             this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, exceptionReceivedHandler);
         }
 
@@ -353,6 +335,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>Enable prefetch to speeden up the receive rate.</remarks>
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
         {
+            this.ThrowIfClosed();
             this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, messageHandlerOptions);
         }
 
@@ -382,6 +365,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>  Enable prefetch to speeden up the receive rate. </remarks>
         public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, SessionHandlerOptions sessionHandlerOptions)
         {
+            this.ThrowIfClosed();
             this.SessionPumpHost.OnSessionHandler(handler, sessionHandlerOptions);
         }
 
@@ -416,6 +400,8 @@ namespace Microsoft.Azure.ServiceBus
         /// </remarks>
         public async Task AddRuleAsync(RuleDescription description)
         {
+            this.ThrowIfClosed();
+
             if (description == null)
             {
                 throw Fx.Exception.ArgumentNull(nameof(description));
@@ -444,6 +430,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>A task instance that represents the asynchronous remove rule operation.</returns>
         public async Task RemoveRuleAsync(string ruleName)
         {
+            this.ThrowIfClosed();
+
             if (string.IsNullOrWhiteSpace(ruleName))
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(ruleName));
@@ -470,6 +458,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>IEnumerable of rules</returns>
         public async Task<IEnumerable<RuleDescription>> GetRulesAsync()
         {
+            this.ThrowIfClosed();
+
             MessagingEventSource.Log.GetRulesStart(this.ClientId);
             int skip = 0;
             int top = int.MaxValue;
@@ -500,6 +490,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register</param>
         public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
+            this.ThrowIfClosed();
             this.InnerSubscriptionClient.InnerReceiver.RegisterPlugin(serviceBusPlugin);
         }
 
@@ -509,7 +500,30 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="serviceBusPluginName">The name <see cref="ServiceBusPlugin.Name"/> to be unregistered</param>
         public override void UnregisterPlugin(string serviceBusPluginName)
         {
+            this.ThrowIfClosed();
             this.InnerSubscriptionClient.InnerReceiver.UnregisterPlugin(serviceBusPluginName);
+        }
+
+        /// <summary></summary>
+        /// <returns></returns>
+        protected override async Task OnClosingAsync()
+        {
+            if (this.innerSubscriptionClient != null)
+            {
+                await this.innerSubscriptionClient.CloseAsync().ConfigureAwait(false);
+            }
+
+            this.sessionPumpHost?.Close();
+
+            if (this.sessionClient != null)
+            {
+                await this.sessionClient.CloseAsync().ConfigureAwait(false);
+            }
+
+            if (this.ownsConnection)
+            {
+                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+            }
         }
     }
 }
