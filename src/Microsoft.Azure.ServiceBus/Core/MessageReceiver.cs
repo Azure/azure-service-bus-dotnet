@@ -127,8 +127,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.CbsTokenProvider = cbsTokenProvider;
             this.SessionIdInternal = sessionId;
             this.isSessionReceiver = isSessionReceiver;
-            this.ReceiveLinkManager = new FaultTolerantAmqpObject<ReceivingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
-            this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
+            this.ReceiveLinkManager = new FaultTolerantAmqpObject<ReceivingAmqpLink>(this.CreateLinkAsync, CloseSession);
+            this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, CloseRequestResponseSession);
             this.requestResponseLockedMessages = new ConcurrentExpiringSet<Guid>();
             this.PrefetchCount = prefetchCount;
             this.messageReceivePumpSyncLock = new object();
@@ -1106,6 +1106,16 @@ namespace Microsoft.Azure.ServiceBus.Core
             return count;
         }
 
+        static void CloseSession(ReceivingAmqpLink link)
+        {
+            link.Session.SafeClose();
+        }
+
+        static void CloseRequestResponseSession(RequestResponseAmqpLink requestResponseAmqpLink)
+        {
+            requestResponseAmqpLink.Session.SafeClose();
+        }
+
         async Task<Message> ProcessMessage(Message message)
         {
             var processedMessage = message;
@@ -1154,7 +1164,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-            IList<ArraySegment<byte>> deliveryTags = this.ConvertLockTokensToDeliveryTags(lockTokens);
+            List<ArraySegment<byte>> deliveryTags = this.ConvertLockTokensToDeliveryTags(lockTokens);
 
             ReceivingAmqpLink receiveLink = null;
             try
@@ -1329,19 +1339,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        IList<ArraySegment<byte>> ConvertLockTokensToDeliveryTags(IEnumerable<Guid> lockTokens)
+        List<ArraySegment<byte>> ConvertLockTokensToDeliveryTags(IEnumerable<Guid> lockTokens)
         {
             return lockTokens.Select(lockToken => new ArraySegment<byte>(lockToken.ToByteArray())).ToList();
-        }
-
-        void CloseSession(ReceivingAmqpLink link)
-        {
-            link.Session.SafeClose();
-        }
-
-        void CloseRequestResponseSession(RequestResponseAmqpLink requestResponseAmqpLink)
-        {
-            requestResponseAmqpLink.Session.SafeClose();
         }
 
         void ThrowIfNotPeekLockMode()

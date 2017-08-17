@@ -95,8 +95,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.Path = entityPath;
             this.EntityType = entityType;
             this.CbsTokenProvider = cbsTokenProvider;
-            this.SendLinkManager = new FaultTolerantAmqpObject<SendingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
-            this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
+            this.SendLinkManager = new FaultTolerantAmqpObject<SendingAmqpLink>(this.CreateLinkAsync, CloseSession);
+            this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, CloseRequestResponseSession);
             this.clientLinkManager = new ActiveClientLinkManager(this.ClientId, this.CbsTokenProvider);
 
             MessagingEventSource.Log.MessageSenderCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
@@ -344,6 +344,17 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
+        static void CloseSession(SendingAmqpLink link)
+        {
+            // Note we close the session (which includes the link).
+            link.Session.SafeClose();
+        }
+
+        static void CloseRequestResponseSession(RequestResponseAmqpLink requestResponseAmqpLink)
+        {
+            requestResponseAmqpLink.Session.SafeClose();
+        }
+
         async Task<Message> ProcessMessage(Message message)
         {
             var processedMessage = message;
@@ -559,17 +570,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             int deliveryId = Interlocked.Increment(ref this.deliveryCount);
             return new ArraySegment<byte>(BitConverter.GetBytes(deliveryId));
-        }
-
-        void CloseSession(SendingAmqpLink link)
-        {
-            // Note we close the session (which includes the link).
-            link.Session.SafeClose();
-        }
-
-        void CloseRequestResponseSession(RequestResponseAmqpLink requestResponseAmqpLink)
-        {
-            requestResponseAmqpLink.Session.SafeClose();
         }
     }
 }
