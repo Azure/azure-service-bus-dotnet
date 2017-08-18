@@ -42,18 +42,21 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public string SessionId => this.SessionIdInternal;
 
-        public Task<Stream> GetStateAsync()
+        public Task<byte[]> GetStateAsync()
         {
+            this.ThrowIfClosed();
             return this.OnGetStateAsync();
         }
 
-        public Task SetStateAsync(Stream sessionState)
+        public Task SetStateAsync(byte[] sessionState)
         {
+            this.ThrowIfClosed();
             return this.OnSetStateAsync(sessionState);
         }
 
         public Task RenewSessionLockAsync()
         {
+            this.ThrowIfClosed();
             return this.OnRenewSessionLockAsync();
         }
 
@@ -67,7 +70,7 @@ namespace Microsoft.Azure.ServiceBus
             throw new InvalidOperationException($"{nameof(RenewLockAsync)} is not supported for Session. Use {nameof(RenewSessionLockAsync)} to renew sessions instead");
         }
 
-        protected async Task<Stream> OnGetStateAsync()
+        protected async Task<byte[]> OnGetStateAsync()
         {
             try
             {
@@ -76,12 +79,12 @@ namespace Microsoft.Azure.ServiceBus
 
                 AmqpResponseMessage amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
-                Stream sessionState = null;
+                byte[] sessionState = null;
                 if (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.OK)
                 {
                     if (amqpResponseMessage.Map[ManagementConstants.Properties.SessionState] != null)
                     {
-                        sessionState = new BufferListStream(new[] { amqpResponseMessage.GetValue<ArraySegment<byte>>(ManagementConstants.Properties.SessionState) });
+                        sessionState = amqpResponseMessage.GetValue<ArraySegment<byte>>(ManagementConstants.Properties.SessionState).Array;
                     }
                 }
                 else
@@ -97,22 +100,16 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        protected async Task OnSetStateAsync(Stream sessionState)
+        protected async Task OnSetStateAsync(byte[] sessionState)
         {
             try
             {
-                if (sessionState != null && sessionState.CanSeek && sessionState.Position != 0)
-                {
-                    throw new InvalidOperationException(Resources.CannotSerializeSessionStateWithPartiallyConsumedStream);
-                }
-
                 AmqpRequestMessage amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.SetSessionStateOperation, this.OperationTimeout, null);
                 amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionIdInternal;
 
                 if (sessionState != null)
                 {
-                    BufferListStream buffer = BufferListStream.Create(sessionState, AmqpConstants.SegmentSize);
-                    ArraySegment<byte> value = buffer.ReadBytes((int)buffer.Length);
+                    var value = new ArraySegment<byte>(sessionState);
                     amqpRequestMessage.Map[ManagementConstants.Properties.SessionState] = value;
                 }
                 else
@@ -153,6 +150,17 @@ namespace Microsoft.Azure.ServiceBus
             catch (Exception exception)
             {
                 throw AmqpExceptionHelper.GetClientException(exception);
+            }
+        }
+
+        /// <summary>
+        /// Throw an OperationCanceledException if the object is Closing.
+        /// </summary>
+        protected override void ThrowIfClosed()
+        {
+            if (this.IsClosedOrClosing)
+            {
+                throw new ObjectDisposedException($"MessageSession with Id '{this.ClientId}' has already been closed. Please accept a new MessageSession.");
             }
         }
     }

@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus
     
     public abstract class ClientEntity : Microsoft.Azure.ServiceBus.IClientEntity
     {
-        protected ClientEntity(string clientId, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy) { }
+        protected ClientEntity(string clientTypeName, string postfix, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy) { }
         public string ClientId { get; }
         public bool IsClosedOrClosing { get; }
         public abstract System.TimeSpan OperationTimeout { get; set; }
@@ -19,6 +19,7 @@ namespace Microsoft.Azure.ServiceBus
         protected static long GetNextId() { }
         protected abstract System.Threading.Tasks.Task OnClosingAsync();
         public abstract void RegisterPlugin(Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin serviceBusPlugin);
+        protected virtual void ThrowIfClosed() { }
         public abstract void UnregisterPlugin(string serviceBusPluginName);
     }
     public sealed class CorrelationFilter : Microsoft.Azure.ServiceBus.Filter
@@ -87,9 +88,9 @@ namespace Microsoft.Azure.ServiceBus
     {
         System.DateTime LockedUntilUtc { get; }
         string SessionId { get; }
-        System.Threading.Tasks.Task<System.IO.Stream> GetStateAsync();
+        System.Threading.Tasks.Task<byte[]> GetStateAsync();
         System.Threading.Tasks.Task RenewSessionLockAsync();
-        System.Threading.Tasks.Task SetStateAsync(System.IO.Stream sessionState);
+        System.Threading.Tasks.Task SetStateAsync(byte[] sessionState);
     }
     public interface IQueueClient : Microsoft.Azure.ServiceBus.Core.IReceiverClient, Microsoft.Azure.ServiceBus.Core.ISenderClient, Microsoft.Azure.ServiceBus.IClientEntity
     {
@@ -462,7 +463,7 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
     public class static DataContractBinarySerializer<T>
     
     {
-        public static System.Runtime.Serialization.XmlObjectSerializer Instance;
+        public static readonly System.Runtime.Serialization.XmlObjectSerializer Instance;
     }
     public class static MessageInteropExtensions
     {

@@ -4,7 +4,6 @@
 
 # Microsoft Azure Service Bus Client for .NET
 
-**Please be aware that this library is currently in active development, and is not intended for production**
 
 |Build/Package|Status|
 |------|-------------|
