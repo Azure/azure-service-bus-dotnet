@@ -240,8 +240,8 @@ namespace Microsoft.Azure.ServiceBus
             finally
             {
                 userCallbackTimer.Dispose();
-                await this.CloseSessionIfNeededAsync(session).ConfigureAwait(false);
                 CancelAndDisposeCancellationTokenSource(renewLockCancellationTokenSource);
+                await this.CloseSessionIfNeededAsync(session).ConfigureAwait(false);
                 this.maxConcurrentSessionsSemaphoreSlim.Release();
             }
         }
