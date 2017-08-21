@@ -66,8 +66,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         async Task<AmqpConnection> CreateConnectionAsync(TimeSpan timeout)
         {
             string hostName = this.Endpoint.Host;
-            string networkHost = this.Endpoint.Host;
-            int port = this.Endpoint.Port;
 
             TimeoutHelper timeoutHelper = new TimeoutHelper(timeout);
             AmqpSettings amqpSettings = AmqpConnectionHelper.CreateAmqpSettings(
@@ -75,14 +73,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 useSslStreamSecurity: true,
                 hasTokenProvider: true);
 
-            TransportSettings tpSettings = AmqpConnectionHelper.CreateTcpTransportSettings(
-                networkHost: networkHost,
-                hostName: hostName,
-                port: port,
-                useSslStreamSecurity: true);
-
-            AmqpTransportInitiator initiator = new AmqpTransportInitiator(amqpSettings, tpSettings);
-            TransportBase transport = await initiator.ConnectTaskAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+            TransportSettings transportSettings = CreateTransportSettings();
+            TransportInitiator initiator = transportSettings.CreateInitiator();
+            TransportBase transport = await ConnectTaskAsync(initiator, timeoutHelper).ConfigureAwait(false);
 
             string containerId = Guid.NewGuid().ToString();
             AmqpConnectionSettings amqpConnectionSettings = AmqpConnectionHelper.CreateAmqpConnectionSettings(AmqpConstants.DefaultMaxFrameSize, containerId, hostName);
@@ -99,6 +92,50 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             MessagingEventSource.Log.AmqpConnectionCreated(hostName, connection);
 
             return connection;
+        }
+
+        private TransportSettings CreateTransportSettings()
+        {
+            string hostName = this.Endpoint.Host;
+            string networkHost = this.Endpoint.Host;
+            int port = this.Endpoint.Port;
+            string scheme = this.Endpoint.Scheme;
+
+            if (scheme.Equals(WebSocketConstants.WebSocketSecureScheme, StringComparison.OrdinalIgnoreCase))
+            {
+                return AmqpConnectionHelper.CreateWebSocketTransportSettings(
+                    networkHost: networkHost,
+                    hostName: hostName,
+                    port: port);
+            }
+            else
+            {
+                return AmqpConnectionHelper.CreateTcpTransportSettings(
+                    networkHost: networkHost,
+                    hostName: hostName,
+                    port: port,
+                    useSslStreamSecurity: true);
+            }
+        }
+
+        private static Task<TransportBase> ConnectTaskAsync(TransportInitiator transportInitiator, TimeoutHelper timeoutHelper)
+        {
+            TaskCompletionSource<TransportBase> tcs = new TaskCompletionSource<TransportBase>();
+            TransportAsyncCallbackArgs callbackArgs = new TransportAsyncCallbackArgs()
+            {
+                CompletedCallback = a =>
+                {
+                    if (a.Exception != null)
+                        tcs.SetException(a.Exception);
+                    else
+                        tcs.SetResult(a.Transport);
+                }
+            };
+
+            if (!transportInitiator.ConnectAsync(timeoutHelper.RemainingTime(), callbackArgs))
+                callbackArgs.CompletedCallback(callbackArgs);
+
+            return tcs.Task;
         }
     }
 }
