@@ -97,6 +97,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
         /// </remarks>
         /// <param name="lockTokens">An <see cref="IEnumerable{T}"/> containing the lock tokens of the corresponding messages to complete.</param>
+        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
         /// <returns>The asynchronous operation.</returns>
         Task CompleteAsync(IEnumerable<string> lockTokens);
 

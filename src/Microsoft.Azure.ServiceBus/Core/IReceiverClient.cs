@@ -74,6 +74,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <remarks>
         /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
+        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
         /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         Task CompleteAsync(string lockToken);
