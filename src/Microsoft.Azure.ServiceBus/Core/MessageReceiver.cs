@@ -423,7 +423,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <param name="lockToken">The lock token of the corresponding message to abandon.</param>
         /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
-        /// Abandoning a message will increase the delivery count on the message.</remarks>
+        /// Abandoning a message will increase the delivery count on the message.
+        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
+        /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         public async Task AbandonAsync(string lockToken)
         {
@@ -457,6 +459,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// In order to receive this message again in the future, you will need to save the <see cref="Message.SystemPropertiesCollection.SequenceNumber"/>
         /// and receive it using <see cref="ReceiveDeferredMessageAsync(long)"/>.
         /// Deferring messages does not impact message's expiration, meaning that deferred messages can still expire.
+        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
         /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         public async Task DeferAsync(string lockToken)
@@ -492,7 +495,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
         /// In order to receive a message from the deadletter queue, you will need a new <see cref="IMessageReceiver"/>, with the corresponding path. 
-        /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.</remarks>
+        /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
+        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
+        /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         public async Task DeadLetterAsync(string lockToken)
         {

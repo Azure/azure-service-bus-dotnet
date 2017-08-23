@@ -288,7 +288,9 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="lockToken">The lock token of the corresponding message to abandon.</param>
         /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
-        /// Abandoning a message will increase the delivery count on the message.</remarks>
+        /// Abandoning a message will increase the delivery count on the message.
+        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
+        /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         public Task AbandonAsync(string lockToken)
         {
@@ -304,7 +306,9 @@ namespace Microsoft.Azure.ServiceBus
         /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
         /// In order to receive a message from the deadletter sub-queue, you will need a new <see cref="IMessageReceiver"/> or <see cref="IQueueClient"/>, with the corresponding path. 
-        /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.</remarks>
+        /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
+        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
+        /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         public Task DeadLetterAsync(string lockToken)
         {
@@ -313,7 +317,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Receive messages continously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
         /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
         /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
