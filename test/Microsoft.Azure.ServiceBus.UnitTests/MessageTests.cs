@@ -1,9 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
@@ -60,6 +62,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
         public class WhenQueryingIsReceivedProperty
         {
+            public static IEnumerable<object> TestConnectionStrings => new object[]
+            {
+                new object[] { TestUtility.NamespaceConnectionString },
+                new object[] { TestUtility.WebSocketsNamespaceConnectionString },
+            };
+
+            public static IEnumerable<object> ReceiveModePermutations =>
+                from connectionString in TestConnectionStrings
+                from receiveMode in new object[] {ReceiveMode.PeekLock, ReceiveMode.ReceiveAndDelete}
+                select new[] {connectionString, receiveMode};
+
             [Fact]
             [DisplayTestMethodName]
             void Should_return_false_for_message_that_was_not_sent()
@@ -71,11 +84,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             [Theory]
             [DisplayTestMethodName]
-            [InlineData(ReceiveMode.ReceiveAndDelete)]
-            [InlineData(ReceiveMode.PeekLock)]
-            async Task Should_return_true_for_message_that_was_sent_and_received(ReceiveMode receiveMode)
+            [MemberData(nameof(ReceiveModePermutations))]
+            async Task Should_return_true_for_message_that_was_sent_and_received(string connectionString, ReceiveMode receiveMode)
             {
-                var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, receiveMode);
+                var queueClient = new QueueClient(connectionString, TestConstants.NonPartitionedQueueName, receiveMode);
 
                 try
                 {
@@ -95,11 +107,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 }
             }
 
-            [Fact]
+            [Theory]
             [DisplayTestMethodName]
-            async Task Should_return_true_for_peeked_message()
+            [MemberData(nameof(TestConnectionStrings))]
+            async Task Should_return_true_for_peeked_message(string connectionString)
             {
-                var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.PeekLock);
+                var queueClient = new QueueClient(connectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.PeekLock);
 
                 try
                 {
@@ -116,11 +129,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 }
             }
 
-            [Fact]
+            [Theory]
             [DisplayTestMethodName]
-            public async Task MessageWithMaxMessageSizeShouldWorkAsExpected()
+            [MemberData(nameof(TestConnectionStrings))]
+            public async Task MessageWithMaxMessageSizeShouldWorkAsExpected(string connectionString)
             {
-                var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.PeekLock);
+                var queueClient = new QueueClient(connectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.PeekLock);
 
                 try
                 {

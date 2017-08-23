@@ -11,8 +11,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { TestConstants.NonPartitionedTopicName, 5 },
-            new object[] { TestConstants.PartitionedTopicName, 5 },
+            new object[] { TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedTopicName, 5 },
+            new object[] { TestUtility.NamespaceConnectionString, TestConstants.PartitionedTopicName, 5 },
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.NonPartitionedTopicName, 5 },
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.PartitionedTopicName, 5 },
         };
 
         string SubscriptionName => TestConstants.SubscriptionName;
@@ -20,26 +22,26 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task OnMessagePeekLockWithAutoCompleteTrue(string topicName, int maxConcurrentCalls)
+        async Task OnMessagePeekLockWithAutoCompleteTrue(string connectionString, string topicName, int maxConcurrentCalls)
         {
-            await this.OnMessageTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
+            await this.OnMessageTestAsync(connectionString, topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
         }
 
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task OnMessageReceiveDelete(string topicName, int maxConcurrentCalls)
+        async Task OnMessageReceiveDelete(string connectionString, string topicName, int maxConcurrentCalls)
         {
-            await this.OnMessageTestAsync(topicName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
+            await this.OnMessageTestAsync(connectionString, topicName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
         }
 
-        async Task OnMessageTestAsync(string topicName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
+        async Task OnMessageTestAsync(string connectionString, string topicName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
         {
             const int messageCount = 10;
 
-            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var topicClient = new TopicClient(connectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                TestUtility.NamespaceConnectionString,
+                connectionString,
                 topicName,
                 this.SubscriptionName,
                 mode);

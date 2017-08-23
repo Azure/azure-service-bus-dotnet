@@ -20,8 +20,10 @@ namespace Microsoft.Azure.ServiceBus
         static readonly string SharedAccessKeyNameConfigName = "SharedAccessKeyName";
         static readonly string SharedAccessKeyConfigName = "SharedAccessKey";
         static readonly string EntityPathConfigName = "EntityPath";
+        static readonly string TransportTypeConfigName = "TransportType";
 
         string entityPath, sasKeyName, sasKey, endpoint;
+        TransportType transportType;
 
         /// <summary>
         /// Instantiates a new <see cref="ServiceBusConnectionStringBuilder"/>
@@ -77,6 +79,31 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
+        /// Instantiates a new <see cref="T:Microsoft.Azure.ServiceBus.ServiceBusConnectionStringBuilder" />.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// var connectionStringBuilder = new ServiceBusConnectionStringBuilder(
+        ///     "contoso.servicebus.windows.net",
+        ///     "myQueue",
+        ///     "RootManageSharedAccessKey",
+        ///     "&amp;lt;sharedAccessKey&amp;gt;,
+        ///     TransportType.Amqp
+        /// );
+        /// </code>
+        /// </example>
+        /// <param name="endpoint">Fully qualified endpoint.</param>
+        /// <param name="entityPath">Path to the entity.</param>
+        /// <param name="sharedAccessKeyName">Shared access key name.</param>
+        /// <param name="sharedAccessKey">Shared access key.</param>
+        /// <param name="transportType">Transport type</param>
+        public ServiceBusConnectionStringBuilder(string endpoint, string entityPath, string sharedAccessKeyName, string sharedAccessKey, TransportType transportType)
+            : this(endpoint,entityPath,sharedAccessKeyName,sharedAccessKey)
+        {
+            this.TransportType = transportType;
+        }
+
+        /// <summary>
         /// Fully qualified domain name of the endpoint.
         /// </summary>
         /// <example>
@@ -127,6 +154,15 @@ namespace Microsoft.Azure.ServiceBus
             set => this.sasKey = value.Trim();
         }
 
+        /// <summary>
+        /// Get the transport type from the connection string
+        /// </summary>
+        public TransportType TransportType
+        {
+            get => this.transportType;
+            set => this.transportType = value;
+        }
+
         internal Dictionary<string, string> ConnectionStringProperties = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
 
         /// <summary>
@@ -148,7 +184,12 @@ namespace Microsoft.Azure.ServiceBus
 
             if (!string.IsNullOrWhiteSpace(this.SasKey))
             {
-                connectionStringBuilder.Append($"{SharedAccessKeyConfigName}{KeyValueSeparator}{this.SasKey}");
+                connectionStringBuilder.Append($"{SharedAccessKeyConfigName}{KeyValueSeparator}{this.SasKey}{KeyValuePairDelimiter}");
+            }
+
+            if (this.TransportType != TransportType.Amqp)
+            {
+                connectionStringBuilder.Append($"{TransportTypeConfigName}{KeyValueSeparator}{this.TransportType}");
             }
 
             return connectionStringBuilder.ToString().Trim(';');
@@ -212,6 +253,13 @@ namespace Microsoft.Azure.ServiceBus
                 else if (key.Equals(SharedAccessKeyConfigName, StringComparison.OrdinalIgnoreCase))
                 {
                     this.SasKey = value;
+                }
+                else if (key.Equals(TransportTypeConfigName, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (Enum.TryParse(value, true, out TransportType transportType))
+                    {
+                        this.TransportType = transportType;
+                    }
                 }
                 else
                 {

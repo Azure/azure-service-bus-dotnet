@@ -13,10 +13,20 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { TestConstants.NonPartitionedSessionTopicName, 1 },
-            new object[] { TestConstants.NonPartitionedSessionTopicName, 5 },
-            new object[] { TestConstants.PartitionedSessionTopicName, 1 },
-            new object[] { TestConstants.PartitionedSessionTopicName, 5 },
+            new object[] { TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedSessionTopicName, 1 },
+            new object[] { TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedSessionTopicName, 5 },
+            new object[] { TestUtility.NamespaceConnectionString, TestConstants.PartitionedSessionTopicName, 1 },
+            new object[] { TestUtility.NamespaceConnectionString, TestConstants.PartitionedSessionTopicName, 5 },
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.NonPartitionedSessionTopicName, 1 },
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.NonPartitionedSessionTopicName, 5 },
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.PartitionedSessionTopicName, 1 },
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.PartitionedSessionTopicName, 5 },
+        };
+
+        public static IEnumerable<object> TestConnectionStrings => new object[]
+        {
+            new object[] { TestUtility.NamespaceConnectionString },
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString },
         };
 
         string SubscriptionName => TestConstants.SessionSubscriptionName;
@@ -24,25 +34,26 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task OnSessionPeekLockWithAutoCompleteTrue(string topicName, int maxConcurrentCalls)
+        async Task OnSessionPeekLockWithAutoCompleteTrue(string connectionString, string topicName, int maxConcurrentCalls)
         {
-            await this.OnSessionTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
+            await this.OnSessionTestAsync(connectionString, topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
         }
 
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task OnSessionPeekLockWithAutoCompleteFalse(string topicName, int maxConcurrentCalls)
+        async Task OnSessionPeekLockWithAutoCompleteFalse(string connectionString, string topicName, int maxConcurrentCalls)
         {
-            await this.OnSessionTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
+            await this.OnSessionTestAsync(connectionString, topicName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
         }
 
-        [Fact]
+        [Theory]
+        [MemberData(nameof(TestConnectionStrings))]
         [DisplayTestMethodName]
-        async Task OnSessionExceptionHandlerCalledWhenRegisteredOnNonSessionFulSubscription()
+        async Task OnSessionExceptionHandlerCalledWhenRegisteredOnNonSessionFulSubscription(string connectionString)
         {
             bool exceptionReceivedHandlerCalled = false;
-            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedTopicName);
+            var topicClient = new TopicClient(connectionString, TestConstants.NonPartitionedTopicName);
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicClient.TopicName,
@@ -92,12 +103,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        async Task OnSessionTestAsync(string topicName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
+        async Task OnSessionTestAsync(string connectionString, string topicName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
         {
             TestUtility.Log($"Topic: {topicName}, MaxConcurrentCalls: {maxConcurrentCalls}, Receive Mode: {mode.ToString()}, AutoComplete: {autoComplete}");
-            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var topicClient = new TopicClient(connectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                TestUtility.NamespaceConnectionString,
+                connectionString,
                 topicClient.TopicName,
                 this.SubscriptionName,
                 ReceiveMode.PeekLock);

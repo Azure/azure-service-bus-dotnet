@@ -14,17 +14,19 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { TestConstants.SessionNonPartitionedQueueName },
-            new object[] { TestConstants.SessionPartitionedQueueName },
+            new object[] { TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName },
+            new object[] { TestUtility.NamespaceConnectionString, TestConstants.SessionPartitionedQueueName },
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName },
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.SessionPartitionedQueueName },
         };
 
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task SessionTest(string queueName)
+        async Task SessionTest(string connectionString, string queueName)
         {
-            var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
-            var sessionClient = new SessionClient(TestUtility.NamespaceConnectionString, queueName);
+            var sender = new MessageSender(connectionString, queueName);
+            var sessionClient = new SessionClient(connectionString, queueName);
 
             try
             {
@@ -57,15 +59,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await sessionClient.CloseAsync().ConfigureAwait(false);
             }
         }
-
         
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task GetAndSetSessionStateTest(string queueName)
+        async Task GetAndSetSessionStateTest(string connectionString, string queueName)
         {
-            var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
-            var sessionClient = new SessionClient(TestUtility.NamespaceConnectionString, queueName);
+            var sender = new MessageSender(connectionString, queueName);
+            var sessionClient = new SessionClient(connectionString, queueName);
 
             try
             {
@@ -120,10 +121,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task SessionRenewLockTest(string queueName)
+        async Task SessionRenewLockTest(string connectionString, string queueName)
         {
-            var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
-            var sessionClient = new SessionClient(TestUtility.NamespaceConnectionString, queueName);
+            var sender = new MessageSender(connectionString, queueName);
+            var sessionClient = new SessionClient(connectionString, queueName);
 
             try
             {
@@ -173,10 +174,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task PeekSessionAsyncTest(string queueName, int messageCount = 10)
+        async Task PeekSessionAsyncTest(string connectionString, string queueName, int messageCount = 10)
         {
-            var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
-            var sessionClient = new SessionClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
+            var sender = new MessageSender(connectionString, queueName);
+            var sessionClient = new SessionClient(connectionString, queueName, ReceiveMode.ReceiveAndDelete);
 
             try
             {

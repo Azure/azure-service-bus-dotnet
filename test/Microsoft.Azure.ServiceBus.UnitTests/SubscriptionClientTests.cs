@@ -13,8 +13,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { TestConstants.NonPartitionedTopicName },
-            new object[] { TestConstants.PartitionedTopicName }
+            new object[] { TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedTopicName},
+            new object[] { TestUtility.NamespaceConnectionString, TestConstants.PartitionedTopicName},
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.NonPartitionedTopicName},
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.PartitionedTopicName}
+        };
+
+        public static IEnumerable<object> TestConnectionStrings => new object[]
+        {
+            new object[] { TestUtility.NamespaceConnectionString },
+            new object[] { TestUtility.WebSocketsNamespaceConnectionString }
         };
 
         string SubscriptionName => TestConstants.SubscriptionName;
@@ -22,11 +30,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task CorrelationFilterTestCase(string topicName, int messageCount = 10)
+        async Task CorrelationFilterTestCase(string connectionString, string topicName, int messageCount = 10)
         {
-            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var topicClient = new TopicClient(connectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                TestUtility.NamespaceConnectionString,
+                connectionString,
                 topicName,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
@@ -81,11 +89,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task SqlFilterTestCase(string topicName, int messageCount = 10)
+        async Task SqlFilterTestCase(string connectionString, string topicName, int messageCount = 10)
         {
-            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var topicClient = new TopicClient(connectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                TestUtility.NamespaceConnectionString,
+                connectionString,
                 topicName,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
@@ -96,7 +104,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     await subscriptionClient.RemoveRuleAsync(RuleDescription.DefaultRuleName);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     TestUtility.Log($"Remove Default Rule failed with: {e.Message}");
                 }
@@ -128,7 +136,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 var messages = await subscriptionClient.InnerSubscriptionClient.InnerReceiver.ReceiveAsync(maxMessageCount: 2);
                 Assert.NotNull(messages);
                 Assert.True(messages.Count == 1);
-                Assert.True(messageId2.Equals(messages.First().MessageId));                
+                Assert.True(messageId2.Equals(messages.First().MessageId));
             }
             finally
             {
@@ -150,11 +158,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task SqlActionTestCase(string topicName, int messageCount = 10)
+        async Task SqlActionTestCase(string connectionString, string topicName, int messageCount = 10)
         {
-            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var topicClient = new TopicClient(connectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                TestUtility.NamespaceConnectionString,
+                connectionString,
                 topicName,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
@@ -210,12 +218,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Fact]
+        [Theory]
+        [MemberData(nameof(TestConnectionStrings))]
         [DisplayTestMethodName]
-        public async Task GetRulesTestCase()
+        public async Task GetRulesTestCase(string connectionString)
         {
             var subscriptionClient = new SubscriptionClient(
-                TestUtility.NamespaceConnectionString,
+                connectionString,
                 TestConstants.NonPartitionedTopicName,
                 TestConstants.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
@@ -230,9 +239,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 Assert.Equal(RuleDescription.DefaultRuleName, firstRule.Name);
                 Assert.IsType<SqlFilter>(firstRule.Filter);
                 Assert.Null(firstRule.Action);
-                
+
                 await subscriptionClient.AddRuleAsync(sqlRuleName, new SqlFilter("price > 10"));
-                
+
                 RuleDescription ruleDescription = new RuleDescription(correlationRuleName)
                 {
                     Filter = new CorrelationFilter
@@ -260,7 +269,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 Assert.NotNull(sqlRule);
                 Assert.Null(sqlRule.Action);
                 Assert.IsType<SqlFilter>(sqlRule.Filter);
-                Assert.Equal("price > 10", ((SqlFilter) sqlRule.Filter).SqlExpression);
+                Assert.Equal("price > 10", ((SqlFilter)sqlRule.Filter).SqlExpression);
 
                 var correlationRule = rules.FirstOrDefault(rule => rule.Name.Equals(correlationRuleName));
                 Assert.NotNull(correlationRule);
@@ -301,12 +310,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Fact]
+        [Theory]
+        [MemberData(nameof(TestConnectionStrings))]
         [DisplayTestMethodName]
-        async Task UpdatingPrefetchCountOnSubscriptionClientUpdatesTheReceiverPrefetchCount()
+        async Task UpdatingPrefetchCountOnSubscriptionClientUpdatesTheReceiverPrefetchCount(string connectionString)
         {
             var subscriptionClient = new SubscriptionClient(
-                TestUtility.NamespaceConnectionString,
+                connectionString,
                 TestConstants.NonPartitionedTopicName,
                 TestConstants.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
