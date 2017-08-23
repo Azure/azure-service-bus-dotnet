@@ -74,7 +74,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <remarks>
         /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
-        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
+        /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         Task CompleteAsync(string lockToken);
@@ -86,7 +86,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
         /// Abandoning a message will increase the delivery count on the message.
-        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
+        /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         Task AbandonAsync(string lockToken);
@@ -100,7 +100,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
         /// In order to receive a message from the deadletter queue, you will need a new <see cref="IMessageReceiver"/>, with the corresponding path. 
         /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
-        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
+        /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         Task DeadLetterAsync(string lockToken);

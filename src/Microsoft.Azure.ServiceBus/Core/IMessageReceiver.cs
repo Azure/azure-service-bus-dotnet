@@ -97,7 +97,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
         /// </remarks>
         /// <param name="lockTokens">An <see cref="IEnumerable{T}"/> containing the lock tokens of the corresponding messages to complete.</param>
-        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
+        /// This operation can only be performed on messages that were received by this receiver.
         /// <returns>The asynchronous operation.</returns>
         Task CompleteAsync(IEnumerable<string> lockTokens);
 
@@ -109,7 +109,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// In order to receive this message again in the future, you will need to save the <see cref="Message.SystemPropertiesCollection.SequenceNumber"/>
         /// and receive it using <see cref="ReceiveDeferredMessageAsync(long)"/>.
         /// Deferring messages does not impact message's expiration, meaning that deferred messages can still expire.
-        /// When using AMQP, this operation can only be performed on messages that were received by this receiver.
+        /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
         /// <returns>The asynchronous operation.</returns>
         Task DeferAsync(string lockToken);
