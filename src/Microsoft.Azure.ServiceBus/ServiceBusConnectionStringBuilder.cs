@@ -15,15 +15,14 @@ namespace Microsoft.Azure.ServiceBus
     {
         const char KeyValueSeparator = '=';
         const char KeyValuePairDelimiter = ';';
-        static readonly string EndpointScheme = "amqps";
-        static readonly string EndpointConfigName = "Endpoint";
-        static readonly string SharedAccessKeyNameConfigName = "SharedAccessKeyName";
-        static readonly string SharedAccessKeyConfigName = "SharedAccessKey";
-        static readonly string EntityPathConfigName = "EntityPath";
-        static readonly string TransportTypeConfigName = "TransportType";
+        const string EndpointScheme = "amqps";
+        const string EndpointConfigName = "Endpoint";
+        const string SharedAccessKeyNameConfigName = "SharedAccessKeyName";
+        const string SharedAccessKeyConfigName = "SharedAccessKey";
+        const string EntityPathConfigName = "EntityPath";
+        const string TransportTypeConfigName = "TransportType";
 
         string entityPath, sasKeyName, sasKey, endpoint;
-        TransportType transportType;
 
         /// <summary>
         /// Instantiates a new <see cref="ServiceBusConnectionStringBuilder"/>
@@ -98,7 +97,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="sharedAccessKey">Shared access key.</param>
         /// <param name="transportType">Transport type</param>
         public ServiceBusConnectionStringBuilder(string endpoint, string entityPath, string sharedAccessKeyName, string sharedAccessKey, TransportType transportType)
-            : this(endpoint,entityPath,sharedAccessKeyName,sharedAccessKey)
+            : this(endpoint, entityPath, sharedAccessKeyName, sharedAccessKey)
         {
             this.TransportType = transportType;
         }
@@ -157,11 +156,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Get the transport type from the connection string
         /// </summary>
-        public TransportType TransportType
-        {
-            get => this.transportType;
-            set => this.transportType = value;
-        }
+        public TransportType TransportType { get; set; }
 
         internal Dictionary<string, string> ConnectionStringProperties = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
 

@@ -11,10 +11,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedTopicName },
-            new object[] { TestUtility.NamespaceConnectionString, TestConstants.PartitionedTopicName },
-            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.NonPartitionedTopicName },
-            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.PartitionedTopicName }
+            new object[] { TestConstants.NonPartitionedTopicName },
+            new object[] { TestConstants.PartitionedTopicName }
         };
 
         string SubscriptionName => TestConstants.SubscriptionName;
@@ -22,11 +20,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task PeekLockTest(string connectionString, string topicName, int messageCount = 10)
+        async Task PeekLockTest(string topicName, int messageCount = 10)
         {
-            var topicClient = new TopicClient(connectionString, topicName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                connectionString,
+                TestUtility.NamespaceConnectionString,
                 topicName,
                 this.SubscriptionName);
 
@@ -47,11 +45,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task TopicClientReceiveDeleteTestCase(string connectionString, string topicName, int messageCount = 10)
+        async Task TopicClientReceiveDeleteTestCase(string topicName, int messageCount = 10)
         {
-            var topicClient = new TopicClient(connectionString, topicName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                connectionString,
+                TestUtility.NamespaceConnectionString,
                 topicName,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
@@ -73,11 +71,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task TopicClientPeekLockWithAbandonTestCase(string connectionString, string topicName, int messageCount = 10)
+        async Task TopicClientPeekLockWithAbandonTestCase(string topicName, int messageCount = 10)
         {
-            var topicClient = new TopicClient(connectionString, topicName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                connectionString,
+                TestUtility.NamespaceConnectionString,
                 topicName,
                 this.SubscriptionName);
             try
@@ -98,18 +96,18 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task TopicClientPeekLockWithDeadLetterTestCase(string connectionString, string topicName, int messageCount = 10)
+        async Task TopicClientPeekLockWithDeadLetterTestCase(string topicName, int messageCount = 10)
         {
-            var topicClient = new TopicClient(connectionString, topicName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                connectionString,
+                TestUtility.NamespaceConnectionString,
                 topicName,
                 this.SubscriptionName);
 
             // Create DLQ Client To Receive DeadLetteredMessages
             var subscriptionDeadletterPath = EntityNameHelper.FormatDeadLetterPath(this.SubscriptionName);
             var deadLetterSubscriptionClient = new SubscriptionClient(
-                connectionString,
+                TestUtility.NamespaceConnectionString,
                 topicName,
                 subscriptionDeadletterPath);
 
@@ -133,11 +131,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task TopicClientRenewLockTestCase(string connectionString, string topicName, int messageCount = 10)
+        async Task TopicClientRenewLockTestCase(string topicName, int messageCount = 10)
         {
-            var topicClient = new TopicClient(connectionString, topicName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                connectionString,
+                TestUtility.NamespaceConnectionString,
                 topicName,
                 this.SubscriptionName);
             try
@@ -157,11 +155,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTest(string connectionString, string topicName, int messageCount = 1)
+        async Task ScheduleMessagesAppearAfterScheduledTimeAsyncTest(string topicName, int messageCount = 1)
         {
-            var topicClient = new TopicClient(connectionString, topicName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                connectionString,
+                TestUtility.NamespaceConnectionString,
                 topicName,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
@@ -183,11 +181,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task CancelScheduledMessagesAsyncTest(string connectionString, string topicName, int messageCount = 1)
+        async Task CancelScheduledMessagesAsyncTest(string topicName, int messageCount = 1)
         {
-            var topicClient = new TopicClient(connectionString, topicName);
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
             var subscriptionClient = new SubscriptionClient(
-                connectionString,
+                TestUtility.NamespaceConnectionString,
                 topicName,
                 this.SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);

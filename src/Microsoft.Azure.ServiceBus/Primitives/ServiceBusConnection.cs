@@ -43,7 +43,8 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public string SasKeyName { get; set; }
 
         /// <summary>
-        /// Get the transport type from the connection string
+        /// Get the transport type from the connection string.
+        /// <remarks>Amqp and AmqpWebSockets are available.</remarks>
         /// </summary>
         public TransportType TransportType { get; set; }
 
@@ -114,14 +115,12 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     hostName: hostName,
                     port: port);
             }
-            else
-            {
-                return AmqpConnectionHelper.CreateTcpTransportSettings(
-                    networkHost: networkHost,
-                    hostName: hostName,
-                    port: port,
-                    useSslStreamSecurity: true);
-            }
+
+            return AmqpConnectionHelper.CreateTcpTransportSettings(
+                networkHost: networkHost,
+                hostName: hostName,
+                port: port,
+                useSslStreamSecurity: true);
         }
     }
 }

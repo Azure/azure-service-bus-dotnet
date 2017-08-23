@@ -9,7 +9,8 @@ namespace Microsoft.Azure.ServiceBus
     public enum TransportType
     {
         /// <summary>
-        /// Uses AMQP over TCP
+        /// Uses AMQP over TCP.
+        /// <remarks>This is the default value.</remarks>
         /// </summary>
         Amqp = 0,
         /// <summary>

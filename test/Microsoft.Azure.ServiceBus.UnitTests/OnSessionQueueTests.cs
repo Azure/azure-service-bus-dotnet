@@ -13,61 +13,48 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         public static IEnumerable<object> TestPermutations => new object[]
         {
-            new object[] { TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName, 1 },
-            new object[] { TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName, 5 },
-            new object[] { TestUtility.NamespaceConnectionString, TestConstants.SessionPartitionedQueueName, 1 },
-            new object[] { TestUtility.NamespaceConnectionString, TestConstants.SessionPartitionedQueueName, 5 },
-            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName, 1 },
-            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName, 5 },
-            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.SessionPartitionedQueueName, 1 },
-            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.SessionPartitionedQueueName, 5 },
+            new object[] { TestConstants.SessionNonPartitionedQueueName, 1 },
+            new object[] { TestConstants.SessionNonPartitionedQueueName, 5 },
+            new object[] { TestConstants.SessionPartitionedQueueName, 1 },
+            new object[] { TestConstants.SessionPartitionedQueueName, 5 },
         };
 
         public static IEnumerable<object> PartitionedNonPartitionedTestPermutations => new object[]
         {
-            new object[] { TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName, 5 },
-            new object[] { TestUtility.NamespaceConnectionString, TestConstants.SessionPartitionedQueueName, 5 },
-            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName, 5 },
-            new object[] { TestUtility.WebSocketsNamespaceConnectionString, TestConstants.SessionPartitionedQueueName, 5 },
-        };
-
-        public static IEnumerable<object> TestConnectionStrings => new object[]
-        {
-            new object[] { TestUtility.NamespaceConnectionString },
-            new object[] { TestUtility.WebSocketsNamespaceConnectionString },
+            new object[] { TestConstants.SessionNonPartitionedQueueName, 5 },
+            new object[] { TestConstants.SessionPartitionedQueueName, 5 },
         };
 
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task OnSessionPeekLockWithAutoCompleteTrue(string connectionString, string queueName, int maxConcurrentCalls)
+        async Task OnSessionPeekLockWithAutoCompleteTrue(string queueName, int maxConcurrentCalls)
         {
-            await this.OnSessionTestAsync(connectionString, queueName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
+            await this.OnSessionTestAsync(queueName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
         }
 
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task OnSessionPeekLockWithAutoCompleteFalse(string connectionString, string queueName, int maxConcurrentCalls)
+        async Task OnSessionPeekLockWithAutoCompleteFalse(string queueName, int maxConcurrentCalls)
         {
-            await this.OnSessionTestAsync(connectionString, queueName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
+            await this.OnSessionTestAsync(queueName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
         }
 
         [Theory]
         [MemberData(nameof(PartitionedNonPartitionedTestPermutations))]
         [DisplayTestMethodName]
-        async Task OnSessionReceiveDelete(string connectionString, string queueName, int maxConcurrentCalls)
+        async Task OnSessionReceiveDelete(string queueName, int maxConcurrentCalls)
         {
-            await this.OnSessionTestAsync(connectionString, queueName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
+            await this.OnSessionTestAsync(queueName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
+        [Fact]
         [DisplayTestMethodName]
-        async Task OnSessionCanStartWithNullMessageButReturnSessionLater(string connectionString)
+        async Task OnSessionCanStartWithNullMessageButReturnSessionLater()
         {
             var queueClient = new QueueClient(
-                        connectionString,
+                        TestUtility.NamespaceConnectionString,
                         TestConstants.SessionNonPartitionedQueueName,
                         ReceiveMode.PeekLock);
             try
@@ -108,13 +95,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
+        [Fact]
         [DisplayTestMethodName]
-        async Task OnSessionExceptionHandlerCalledWhenRegisteredOnNonSessionFulQueue(string connectionString)
+        async Task OnSessionExceptionHandlerCalledWhenRegisteredOnNonSessionFulQueue()
         {
             bool exceptionReceivedHandlerCalled = false;
-            var queueClient = new QueueClient(connectionString, TestConstants.NonPartitionedQueueName);
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
 
             SessionHandlerOptions sessionHandlerOptions = new SessionHandlerOptions(
             (eventArgs) =>
@@ -151,10 +137,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await queueClient.CloseAsync();
         }
 
-        async Task OnSessionTestAsync(string connectionString, string queueName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
+        async Task OnSessionTestAsync(string queueName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
         {
             TestUtility.Log($"Queue: {queueName}, MaxConcurrentCalls: {maxConcurrentCalls}, Receive Mode: {mode.ToString()}, AutoComplete: {autoComplete}");
-            var queueClient = new QueueClient(connectionString, queueName, mode);
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, mode);
             try
             {
                 SessionHandlerOptions handlerOptions =

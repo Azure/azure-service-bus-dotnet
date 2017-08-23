@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
@@ -13,20 +12,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     public class ExpectedMessagingExceptionTests
     {
-        public static IEnumerable<object> TestConnectionStrings => new object[]
-        {
-            new object[] { TestUtility.NamespaceConnectionString },
-            new object[] { TestUtility.WebSocketsNamespaceConnectionString },
-        };
-
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
-        async Task MessageLockLostExceptionTest(string connectionString)
+        [Fact]
+        async Task MessageLockLostExceptionTest()
         {
             const int messageCount = 2;
 
-            var sender = new MessageSender(connectionString, TestConstants.NonPartitionedQueueName);
-            var receiver = new MessageReceiver(connectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.PeekLock);
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.PeekLock);
 
             try
             {
@@ -55,12 +47,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
-        async Task CompleteOnPeekedMessagesShouldThrowTest(string connectionString)
+        [Fact]
+        async Task CompleteOnPeekedMessagesShouldThrowTest()
         {
-            var sender = new MessageSender(connectionString, TestConstants.NonPartitionedQueueName);
-            var receiver = new MessageReceiver(connectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
 
             try
             {
@@ -81,12 +72,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
-        async Task SessionLockLostExceptionTest(string connectionString)
+        [Fact]
+        async Task SessionLockLostExceptionTest()
         {
-            var sender = new MessageSender(connectionString, TestConstants.SessionNonPartitionedQueueName);
-            var sessionClient = new SessionClient(connectionString, TestConstants.SessionNonPartitionedQueueName);
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName);
+            var sessionClient = new SessionClient(TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName);
 
             try
             {
@@ -132,12 +122,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
-        async Task OperationsOnMessageSenderReceiverAfterCloseShouldThrowObjectDisposedExceptionTest(string connectionString)
+        [Fact]
+        async Task OperationsOnMessageSenderReceiverAfterCloseShouldThrowObjectDisposedExceptionTest()
         {
-            var sender = new MessageSender(connectionString, TestConstants.NonPartitionedQueueName);
-            var receiver = new MessageReceiver(connectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
 
             await sender.CloseAsync();
             await receiver.CloseAsync();
@@ -147,12 +136,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await Assert.ThrowsAsync<ObjectDisposedException>(async () => await receiver.CompleteAsync("blah"));
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
-        async Task OperationsOnMessageSessionAfterCloseShouldThrowObjectDisposedExceptionTest(string connectionString)
+        [Fact]
+        async Task OperationsOnMessageSessionAfterCloseShouldThrowObjectDisposedExceptionTest()
         {
-            var sender = new MessageSender(connectionString, TestConstants.SessionNonPartitionedQueueName);
-            var sessionClient = new SessionClient(connectionString, TestConstants.SessionNonPartitionedQueueName);
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName);
+            var sessionClient = new SessionClient(TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName);
             IMessageSession sessionReceiver = null;
 
             try

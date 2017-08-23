@@ -13,18 +13,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     public class PluginTests
     {
-        public static IEnumerable<object> TestConnectionStrings => new object[]
-        {
-            new object[] { TestUtility.NamespaceConnectionString },
-            new object[] { TestUtility.WebSocketsNamespaceConnectionString },
-        };
-
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
+        [Fact]
         [DisplayTestMethodName]
-        async Task Registering_plugin_multiple_times_should_throw(string connectionString)
+        async Task Registering_plugin_multiple_times_should_throw()
         {
-            var messageReceiver = new MessageReceiver(connectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
+            var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
             var firstPlugin = new FirstSendPlugin();
             var secondPlugin = new FirstSendPlugin();
 
@@ -33,12 +26,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await messageReceiver.CloseAsync();
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
+        [Fact]
         [DisplayTestMethodName]
-        async Task Unregistering_plugin_should_complete_with_plugin_set(string connectionString)
+        async Task Unregistering_plugin_should_complete_with_plugin_set()
         {
-            var messageReceiver = new MessageReceiver(connectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
+            var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
             var firstPlugin = new FirstSendPlugin();
 
             messageReceiver.RegisterPlugin(firstPlugin);
@@ -46,23 +38,21 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await messageReceiver.CloseAsync();
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
+        [Fact]
         [DisplayTestMethodName]
-        async Task Unregistering_plugin_should_complete_without_plugin_set(string connectionString)
+        async Task Unregistering_plugin_should_complete_without_plugin_set()
         {
-            var messageReceiver = new MessageReceiver(connectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
+            var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
             messageReceiver.UnregisterPlugin("Non-existant plugin");
             await messageReceiver.CloseAsync();
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
+        [Fact]
         [DisplayTestMethodName]
-        async Task Multiple_plugins_should_run_in_order(string connectionString)
+        async Task Multiple_plugins_should_run_in_order()
         {
-            var messageSender = new MessageSender(connectionString, TestConstants.NonPartitionedQueueName);
-            var messageReceiver = new MessageReceiver(connectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
+            var messageSender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+            var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
 
             try
             {
@@ -89,13 +79,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
+        [Fact]
         [DisplayTestMethodName]
-        async Task Multiple_plugins_should_be_able_to_manipulate_message(string connectionString)
+        async Task Multiple_plugins_should_be_able_to_manipulate_message()
         {
-            var messageSender = new MessageSender(connectionString, TestConstants.NonPartitionedQueueName);
-            var messageReceiver = new MessageReceiver(connectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
+            var messageSender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+            var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
 
             try
             {
@@ -124,12 +113,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
+        [Fact]
         [DisplayTestMethodName]
-        async Task Plugin_without_ShouldContinueOnException_should_throw(string connectionString)
+        async Task Plugin_without_ShouldContinueOnException_should_throw()
         {
-            var messageSender = new MessageSender(connectionString, TestConstants.NonPartitionedQueueName);
+            var messageSender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
             try
             {
                 var plugin = new ExceptionPlugin();
@@ -145,12 +133,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
+        [Fact]
         [DisplayTestMethodName]
-        async Task Plugin_with_ShouldContinueOnException_should_continue(string connectionString)
+        async Task Plugin_with_ShouldContinueOnException_should_continue()
         {
-            var messageSender = new MessageSender(connectionString, TestConstants.NonPartitionedQueueName);
+            var messageSender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
             try
             {
                 var plugin = new ShouldCompleteAnywayExceptionPlugin();
@@ -163,18 +150,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             finally
             {
                 await messageSender.CloseAsync();
-                var messageReceiver = new MessageReceiver(connectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
+                var messageReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName, ReceiveMode.ReceiveAndDelete);
                 await messageReceiver.ReceiveAsync();
                 await messageReceiver.CloseAsync();
             }
         }
 
-        [Theory]
-        [MemberData(nameof(TestConnectionStrings))]
+        [Fact]
         [DisplayTestMethodName]
-        async Task QueueClientShouldPassPluginsToMessageSession(string connectionString)
+        async Task QueueClientShouldPassPluginsToMessageSession()
         {
-            var queueClient = new QueueClient(connectionString, TestConstants.SessionNonPartitionedQueueName);
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName);
             try
             {
                 bool messageReceived = false;
