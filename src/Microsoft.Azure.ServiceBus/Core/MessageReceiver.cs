@@ -283,6 +283,11 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             this.ThrowIfClosed();
 
+            if (operationTimeout <= TimeSpan.Zero)
+            {
+                throw Fx.Exception.ArgumentOutOfRange(nameof(operationTimeout), operationTimeout, Resources.TimeoutMustBePositiveNonZero.FormatForUser(nameof(operationTimeout), operationTimeout));
+            }
+
             MessagingEventSource.Log.MessageReceiveStart(this.ClientId, maxMessageCount);
 
             IList<Message> unprocessedMessageList = null;
