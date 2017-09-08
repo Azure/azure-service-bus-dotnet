@@ -323,7 +323,6 @@ namespace Microsoft.Azure.ServiceBus
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
         /// This operation can only be performed on messages that were received by this client.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         public Task CompleteAsync(string lockToken)
         {
             this.ThrowIfClosed();
@@ -340,7 +339,6 @@ namespace Microsoft.Azure.ServiceBus
         /// This operation can only be performed on messages that were received by this client.
         /// </remarks>
         /// This operation can only be performed on messages that were received by this client.
-        /// <returns>The asynchronous operation.</returns>
         public Task AbandonAsync(string lockToken)
         {
             this.ThrowIfClosed();
@@ -358,7 +356,6 @@ namespace Microsoft.Azure.ServiceBus
         /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
         /// This operation can only be performed on messages that were received by this client.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         public Task DeadLetterAsync(string lockToken)
         {
             this.ThrowIfClosed();
@@ -467,8 +464,6 @@ namespace Microsoft.Azure.ServiceBus
             this.InnerReceiver.UnregisterPlugin(serviceBusPluginName);
         }
 
-        /// <summary></summary>
-        /// <returns></returns>
         protected override async Task OnClosingAsync()
         {
             if (this.innerSender != null)

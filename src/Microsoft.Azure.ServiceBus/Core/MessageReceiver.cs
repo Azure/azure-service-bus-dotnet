@@ -375,7 +375,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         public Task CompleteAsync(string lockToken)
         {
             return this.CompleteAsync(new[] { lockToken });
@@ -390,7 +389,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
         /// <param name="lockTokens">An <see cref="IEnumerable{T}"/> containing the lock tokens of the corresponding messages to complete.</param>
-        /// <returns>The asynchronous operation.</returns>
         public async Task CompleteAsync(IEnumerable<string> lockTokens)
         {
             this.ThrowIfClosed();
@@ -426,7 +424,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Abandoning a message will increase the delivery count on the message.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         public async Task AbandonAsync(string lockToken)
         {
             this.ThrowIfClosed();
@@ -461,7 +458,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Deferring messages does not impact message's expiration, meaning that deferred messages can still expire.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         public async Task DeferAsync(string lockToken)
         {
             this.ThrowIfClosed();
@@ -498,7 +494,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         public async Task DeadLetterAsync(string lockToken)
         {
             this.ThrowIfClosed();
@@ -534,7 +529,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// If processing of the message requires longer than this duration, the lock needs to be renewed. For each renewal, the lock is renewed by
         /// the entity's LockDuration.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         public async Task RenewLockAsync(Message message)
         {
             this.ThrowIfClosed();
@@ -744,8 +738,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             return responseMessage;
         }
 
-        /// <summary></summary>
-        /// <returns>The asynchronous operation.</returns>
         protected override async Task OnClosingAsync()
         {
             this.clientLinkManager.Close();
@@ -767,10 +759,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        /// <summary></summary>
-        /// <param name="maxMessageCount"></param>
-        /// <param name="serverWaitTime"></param>
-        /// <returns>The asynchronous operation.</returns>
         protected virtual async Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
         {
             ReceivingAmqpLink receiveLink = null;
@@ -848,10 +836,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        /// <summary></summary>
-        /// <param name="fromSequenceNumber"></param>
-        /// <param name="messageCount"></param>
-        /// <returns>The asynchronous operation.</returns>
         protected virtual async Task<IList<Message>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
         {
             try
@@ -909,9 +893,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        /// <summary></summary>
-        /// <param name="sequenceNumbers"></param>
-        /// <returns>The asynchronous operation.</returns>
         protected virtual async Task<IList<Message>> OnReceiveDeferredMessageAsync(IEnumerable<long> sequenceNumbers)
         {
             List<Message> messages = new List<Message>();
@@ -954,9 +935,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             return messages;
         }
 
-        /// <summary></summary>
-        /// <param name="lockTokens"></param>
-        /// <returns>The asynchronous operation.</returns>
         protected virtual async Task OnCompleteAsync(IEnumerable<string> lockTokens)
         {
             var lockTokenGuids = lockTokens.Select(lt => new Guid(lt));
@@ -970,9 +948,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        /// <summary></summary>
-        /// <param name="lockToken"></param>
-        /// <returns>The asynchronous operation.</returns>
         protected virtual async Task OnAbandonAsync(string lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
@@ -986,9 +961,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        /// <summary></summary>
-        /// <param name="lockToken"></param>
-        /// <returns>The asynchronous operation.</returns>
         protected virtual async Task OnDeferAsync(string lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
@@ -1002,9 +974,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        /// <summary></summary>
-        /// <param name="lockToken"></param>
-        /// <returns>The asynchronous operation.</returns>
         protected virtual async Task OnDeadLetterAsync(string lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
@@ -1018,9 +987,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        /// <summary></summary>
-        /// <param name="lockToken"></param>
-        /// <returns>The asynchronour operation.</returns>
         protected virtual async Task<DateTime> OnRenewLockAsync(string lockToken)
         {
             DateTime lockedUntilUtc = DateTime.MinValue;

@@ -46,7 +46,6 @@ namespace Microsoft.Azure.ServiceBus
         /// Set a custom state on the session which can be later retrieved using <see cref="GetStateAsync"/>
         /// </summary>
         /// <param name="sessionState">A byte array of session state</param>
-        /// <returns>The asynchronous operation</returns>
         /// <remarks>This state is stored on Service Bus forever unless you set an empty state on it.</remarks>
         Task SetStateAsync(byte[] sessionState);
 
@@ -63,7 +62,6 @@ namespace Microsoft.Azure.ServiceBus
         /// Renewal of session renews all the messages in the session as well. Each individual message need not be renewed.
         /// </para>
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         Task RenewSessionLockAsync();
     }
 }

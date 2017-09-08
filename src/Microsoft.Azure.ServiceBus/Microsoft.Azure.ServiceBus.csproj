@@ -27,6 +27,7 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Microsoft.Azure.ServiceBus.xml</DocumentationFile>
     <LangVersion>7</LangVersion>
+    <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
 
   <Target Name="IncludePDBsInPackage">

@@ -98,7 +98,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </remarks>
         /// <param name="lockTokens">An <see cref="IEnumerable{T}"/> containing the lock tokens of the corresponding messages to complete.</param>
         /// This operation can only be performed on messages that were received by this receiver.
-        /// <returns>The asynchronous operation.</returns>
         Task CompleteAsync(IEnumerable<string> lockTokens);
 
         /// <summary>Indicates that the receiver wants to defer the processing for the message.</summary>
@@ -111,7 +110,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Deferring messages does not impact message's expiration, meaning that deferred messages can still expire.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         Task DeferAsync(string lockToken);
 
         /// <summary>
@@ -124,7 +122,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// If processing of the message requires longer than this duration, the lock needs to be renewed. For each renewal, the lock is renewed by
         /// the entity's LockDuration.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         Task RenewLockAsync(Message message);
 
         /// <summary>

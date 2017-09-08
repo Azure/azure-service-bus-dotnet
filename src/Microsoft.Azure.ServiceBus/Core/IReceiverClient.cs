@@ -76,7 +76,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         Task CompleteAsync(string lockToken);
 
         /// <summary>
@@ -88,7 +87,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Abandoning a message will increase the delivery count on the message.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         Task AbandonAsync(string lockToken);
 
         /// <summary>
@@ -102,7 +100,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         Task DeadLetterAsync(string lockToken);
     }
 }

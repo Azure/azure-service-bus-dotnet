@@ -305,8 +305,6 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        /// <summary></summary>
-        /// <returns>The asynchronous operation.</returns>
         protected override async Task OnClosingAsync()
         {
             if (this.ownsConnection)
