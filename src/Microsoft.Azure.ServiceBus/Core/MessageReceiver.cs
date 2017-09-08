@@ -998,7 +998,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
             else
             {
-                await this.DisposeMessagesAsync(lockTokens, new Modified() { UndeliverableHere = true }).ConfigureAwait(false);
+                await this.DisposeMessagesAsync(lockTokens, new Modified { UndeliverableHere = true }).ConfigureAwait(false);
             }
         }
 

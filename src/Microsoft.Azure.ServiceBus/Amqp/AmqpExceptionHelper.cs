@@ -15,7 +15,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
     static class AmqpExceptionHelper
     {
-        static readonly Dictionary<string, AmqpResponseStatusCode> ConditionToStatusMap = new Dictionary<string, AmqpResponseStatusCode>()
+        static readonly Dictionary<string, AmqpResponseStatusCode> ConditionToStatusMap = new Dictionary<string, AmqpResponseStatusCode>
         {
             { AmqpClientConstants.TimeoutError.Value, AmqpResponseStatusCode.RequestTimeout },
             { AmqpErrorCode.NotFound.Value, AmqpResponseStatusCode.NotFound },

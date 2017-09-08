@@ -57,7 +57,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                 if (dataList == null)
                 {
-                    dataList = new List<Data>() { ToData(firstAmqpMessage) };
+                    dataList = new List<Data> { ToData(firstAmqpMessage) };
                 }
 
                 dataList.Add(ToData(amqpMessage));
@@ -93,7 +93,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static AmqpMessage SBMessageToAmqpMessage(SBMessage sbMessage)
         {
-            var amqpMessage = sbMessage.Body == null ? AmqpMessage.Create() : AmqpMessage.Create(new Data () { Value = new ArraySegment<byte>(sbMessage.Body) });
+            var amqpMessage = sbMessage.Body == null ? AmqpMessage.Create() : AmqpMessage.Create(new Data { Value = new ArraySegment<byte>(sbMessage.Body) });
 
             amqpMessage.Properties.MessageId = sbMessage.MessageId;
             amqpMessage.Properties.CorrelationId = sbMessage.CorrelationId;
@@ -398,7 +398,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                 case AmqpCorrelationFilterCodec.Code:
                     var amqpCorrelationFilter = (AmqpCorrelationFilterCodec)amqpFilter;
-                    var correlationFilter = new CorrelationFilter()
+                    var correlationFilter = new CorrelationFilter
                     {
                         CorrelationId = amqpCorrelationFilter.CorrelationId,
                         MessageId = amqpCorrelationFilter.MessageId,
