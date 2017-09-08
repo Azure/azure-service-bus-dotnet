@@ -62,7 +62,8 @@ namespace Microsoft.Azure.ServiceBus
         public bool AutoComplete { get; set; }
 
         /// <summary>Gets or sets the maximum duration within which the lock will be renewed automatically. This
-        /// value should be greater than the longest message lock duration; for example, the LockDuration Property. </summary>
+        /// value should be greater than the longest message lock duration; for example, the LockDuration Property. 
+        /// Also client must have manage rather than just listen permissions (no error will be thrown)</summary>
         /// <value>The maximum duration during which locks are automatically renewed.</value>
         public TimeSpan MaxAutoRenewDuration
         {
