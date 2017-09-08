@@ -10,7 +10,7 @@ namespace Microsoft.Azure.ServiceBus
     using Primitives;
 
     /// <summary>
-    /// Represents an abstraction for retrying messaging operations. Users should not 
+    /// Represents an abstraction for retrying messaging operations. Users should not
     /// implement this class, and instead should use one of the provided implementations.
     /// </summary>
     public abstract class RetryPolicy

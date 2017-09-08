@@ -99,7 +99,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             finally
             {
                 await queueClient.CloseAsync();
-            }            
+            }
         }
 
         async Task OnMessageTestAsync(string queueName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)

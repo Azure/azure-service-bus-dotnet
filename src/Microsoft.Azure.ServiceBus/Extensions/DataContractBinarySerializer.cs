@@ -10,8 +10,8 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
 
     /// <summary>
     /// This class describes a serializer class used to serialize and deserialize an Object.
-    /// This class is almost identical to DataContractSerializer; only difference is that 
-    /// ReadObject(Stream) and WriteObject(Stream, object) pick Binary Xml Reader/Writer 
+    /// This class is almost identical to DataContractSerializer; only difference is that
+    /// ReadObject(Stream) and WriteObject(Stream, object) pick Binary Xml Reader/Writer
     /// instead of text.
     /// </summary>
     sealed class DataContractBinarySerializer : XmlObjectSerializer

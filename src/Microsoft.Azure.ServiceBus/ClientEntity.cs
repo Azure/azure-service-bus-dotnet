@@ -126,7 +126,7 @@ namespace Microsoft.Azure.ServiceBus
                 throw new ObjectDisposedException($"{this.clientTypeName} with Id '{this.ClientId}' has already been closed. Please create a new {this.clientTypeName}.");
             }
         }
-        
+
         /// <summary>
         /// Updates the client id.
         /// </summary>

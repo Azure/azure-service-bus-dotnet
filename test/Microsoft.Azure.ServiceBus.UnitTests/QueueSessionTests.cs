@@ -58,7 +58,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        
+
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
@@ -142,7 +142,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log("Sleeping 10 seconds...");
                 await Task.Delay(TimeSpan.FromSeconds(10));
 
-                // For session it looks like when the session is received, sometimes the session LockedUntil UTC 
+                // For session it looks like when the session is received, sometimes the session LockedUntil UTC
                 // is turning out slightly more than the Default Lock Duration(lock is for 1 minute, but the session was locked
                 // for 1 min and 2 seconds. We will need to look at if this is an issue on service or some kind of time SKU.
                 // Temporarily changing this test to look at the renew request time instead.

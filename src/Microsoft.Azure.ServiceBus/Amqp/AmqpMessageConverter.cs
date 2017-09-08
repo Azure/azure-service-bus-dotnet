@@ -123,7 +123,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 amqpMessage.MessageAnnotations.Map.Add(ScheduledEnqueueTimeUtcName, sbMessage.ScheduledEnqueueTimeUtc);
             }
-            
+
             if (sbMessage.PartitionKey != null)
             {
                 amqpMessage.MessageAnnotations.Map.Add(PartitionKeyName, sbMessage.PartitionKey);
@@ -161,7 +161,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
 
             SBMessage sbMessage;
-            
+
             if ((amqpMessage.BodyType & SectionFlag.AmqpValue) != 0
                 && amqpMessage.ValueBody.Value != null)
             {
@@ -170,7 +170,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 object dotNetObject = null;
                 if (TryGetNetObjectFromAmqpObject(amqpMessage.ValueBody.Value, MappingType.MessageBody, out dotNetObject))
                 {
-                    sbMessage.SystemProperties.BodyObject = dotNetObject;                    
+                    sbMessage.SystemProperties.BodyObject = dotNetObject;
                 }
                 else
                 {
@@ -672,7 +672,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             return correlationFilterMap;
         }
-        
+
         static AmqpMap GetRuleActionMap(SqlRuleAction sqlRuleAction)
         {
             AmqpMap ruleActionMap = null;

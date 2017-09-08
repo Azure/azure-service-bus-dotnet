@@ -121,7 +121,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             try
             {
                 var plugin = new ExceptionPlugin();
-                
+
                 messageSender.RegisterPlugin(plugin);
 
                 var sendMessage = new Message(Encoding.UTF8.GetBytes("Test message"));
