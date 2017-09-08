@@ -1293,8 +1293,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 endPointAddress,
                 endPointAddress.AbsoluteUri,
                 claims,
-                linkDetails.Item2,
-                this.ClientId);
+                linkDetails.Item2);
 
             this.clientLinkManager.SetActiveSendReceiveLink(activeSendReceiveClientLink);
 
