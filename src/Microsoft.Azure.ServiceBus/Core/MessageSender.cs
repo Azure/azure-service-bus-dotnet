@@ -288,11 +288,10 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         internal async Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
         {
-            RequestResponseAmqpLink requestResponseAmqpLink = null;
             AmqpMessage amqpMessage = amqpRequestMessage.AmqpMessage;
-            TimeoutHelper timeoutHelper = new TimeoutHelper(OperationTimeout, true);
+            var timeoutHelper = new TimeoutHelper(OperationTimeout, true);
 
-            if (!RequestResponseLinkManager.TryGetOpenedObject(out requestResponseAmqpLink))
+            if (!RequestResponseLinkManager.TryGetOpenedObject(out var requestResponseAmqpLink))
             {
                 requestResponseAmqpLink = await RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
             }
@@ -302,8 +301,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 (a) => requestResponseAmqpLink.EndRequest(a),
                 this).ConfigureAwait(false);
 
-            AmqpResponseMessage responseMessage = AmqpResponseMessage.CreateResponse(responseAmqpMessage);
-            return responseMessage;
+            return AmqpResponseMessage.CreateResponse(responseAmqpMessage);
         }
 
         /// <summary>Closes the connection.</summary>
@@ -409,7 +407,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     }
                     if (amqpLink.Settings.MaxMessageSize.HasValue)
                     {
-                        ulong size = (ulong)amqpMessage.SerializedMessageSize;
+                        var size = (ulong)amqpMessage.SerializedMessageSize;
                         if (size > amqpLink.Settings.MaxMessageSize.Value)
                         {
                             // TODO: Add MessageSizeExceededException
@@ -444,7 +442,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     null);
 
                 ArraySegment<byte>[] payload = amqpMessage.GetPayload();
-                BufferListStream buffer = new BufferListStream(payload);
+                var buffer = new BufferListStream(payload);
                 ArraySegment<byte> value = buffer.ReadBytes((int)buffer.Length);
 
                 var entry = new AmqpMap();
@@ -502,7 +500,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             MessagingEventSource.Log.AmqpSendLinkCreateStart(ClientId, EntityType, Path);
 
-            AmqpLinkSettings linkSettings = new AmqpLinkSettings
+            var linkSettings = new AmqpLinkSettings
             {
                 Role = false,
                 InitialDeliveryCount = 0,
@@ -514,9 +512,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                 linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)EntityType);
             }
 
-            Uri endPointAddress = new Uri(ServiceBusConnection.Endpoint, Path);
-            string[] claims = new[] {ClaimConstants.Send};
-            AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(Path, ServiceBusConnection, endPointAddress, claims, CbsTokenProvider, linkSettings, ClientId);
+            var endPointAddress = new Uri(ServiceBusConnection.Endpoint, Path);
+            var claims = new[] {ClaimConstants.Send};
+            var sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(Path, ServiceBusConnection, endPointAddress, claims, CbsTokenProvider, linkSettings, ClientId);
             Tuple<AmqpObject, DateTime> linkDetails = await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
 
             var sendingAmqpLink = (SendingAmqpLink) linkDetails.Item1;
@@ -536,12 +534,12 @@ namespace Microsoft.Azure.ServiceBus.Core
         async Task<RequestResponseAmqpLink> CreateRequestResponseLinkAsync(TimeSpan timeout)
         {
             var entityPath = Path + '/' + AmqpClientConstants.ManagementAddress;
-            AmqpLinkSettings linkSettings = new AmqpLinkSettings();
+            var linkSettings = new AmqpLinkSettings();
             linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, AmqpClientConstants.EntityTypeManagement);
 
-            Uri endPointAddress = new Uri(ServiceBusConnection.Endpoint, entityPath);
-            string[] claims = new[] { ClaimConstants.Manage, ClaimConstants.Send };
-            AmqpRequestResponseLinkCreator requestResponseLinkCreator = new AmqpRequestResponseLinkCreator(
+            var endPointAddress = new Uri(ServiceBusConnection.Endpoint, entityPath);
+            var claims = new[] { ClaimConstants.Manage, ClaimConstants.Send };
+            var requestResponseLinkCreator = new AmqpRequestResponseLinkCreator(
                 entityPath,
                 ServiceBusConnection,
                 endPointAddress,
