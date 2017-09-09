@@ -32,12 +32,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
             MessageSender fullFrameWorkClientSender = messagingFactory.CreateMessageSender(queueName);
 
             // Create a .NetStandard MessageReceiver
-            Core.MessageReceiver dotNetStandardMessageReceiver = new Core.MessageReceiver(TestUtility.NamespaceConnectionString, queueName, ServiceBus.ReceiveMode.ReceiveAndDelete);
+            var dotNetStandardMessageReceiver = new Core.MessageReceiver(TestUtility.NamespaceConnectionString, queueName, ServiceBus.ReceiveMode.ReceiveAndDelete);
 
             try
             {
                 // Send Plain string
-                string message1Body = "contosoString";
+                var message1Body = "contosoString";
                 var message1 = new BrokeredMessage(message1Body);
                 await fullFrameWorkClientSender.SendAsync(message1);
 
@@ -95,11 +95,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
         {
             // Override and Create a new ConnectionString with SbmpConnection Endpoint scheme
             string[] temp = TestUtility.NamespaceConnectionString.Split(':');
-            string sbConnectionString = "Endpoint=sb:" + temp[1];
+            var sbConnectionString = "Endpoint=sb:" + temp[1];
 
             if (transportType == TransportType.Amqp)
             {
-                sbConnectionString += ';' + nameof(TransportType) + '=' + TransportType.Amqp.ToString();
+                sbConnectionString += $"{';'}{nameof(TransportType)}{'='}{TransportType.Amqp}";
             }
 
             return sbConnectionString;

@@ -23,7 +23,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
                 return false;
             }
 
-            TestBook book = (TestBook)obj;
+            var book = (TestBook)obj;
 
             return
                 Name.Equals(book.Name, StringComparison.OrdinalIgnoreCase) &&
