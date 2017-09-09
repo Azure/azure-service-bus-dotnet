@@ -42,7 +42,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 throw Fx.Exception.ArgumentNull(tokenString == null ? nameof(tokenString) : nameof(audience));
             }
 
-            this.token = tokenString;
+            token = tokenString;
             this.expiresAtUtc = expiresAtUtc;
             this.audience = audience;
         }
@@ -59,9 +59,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 throw Fx.Exception.ArgumentNull(nameof(tokenString));
             }
 
-            this.token = tokenString;
+            token = tokenString;
             this.expiresAtUtc = expiresAtUtc;
-            this.audience = this.GetAudienceFromToken(tokenString);
+            audience = GetAudienceFromToken(tokenString);
         }
 
         /// <summary>
@@ -75,79 +75,40 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 throw Fx.Exception.ArgumentNull(nameof(tokenString));
             }
 
-            this.token = tokenString;
-            this.GetExpirationDateAndAudienceFromToken(tokenString, out this.expiresAtUtc, out this.audience);
+            token = tokenString;
+            GetExpirationDateAndAudienceFromToken(tokenString, out expiresAtUtc, out audience);
         }
 
         /// <summary>
         /// Gets the audience of this token.
         /// </summary>
-        public string Audience
-        {
-            get
-            {
-                return this.audience;
-            }
-        }
+        public string Audience => audience;
 
         /// <summary>
         /// Gets the expiration time of this token.
         /// </summary>
-        public DateTime ExpiresAtUtc
-        {
-            get
-            {
-                return this.expiresAtUtc;
-            }
-        }
+        public DateTime ExpiresAtUtc => expiresAtUtc;
 
         /// <summary>
         /// Gets the actual token.
         /// </summary>
-        public object TokenValue
-        {
-            get { return this.token; }
-        }
+        public object TokenValue => token;
 
-        protected virtual string ExpiresOnFieldName
-        {
-            get
-            {
-                return InternalExpiresOnFieldName;
-            }
-        }
+        protected virtual string ExpiresOnFieldName => InternalExpiresOnFieldName;
 
-        protected virtual string AudienceFieldName
-        {
-            get
-            {
-                return InternalAudienceFieldName;
-            }
-        }
+        protected virtual string AudienceFieldName => InternalAudienceFieldName;
 
-        protected virtual string KeyValueSeparator
-        {
-            get
-            {
-                return InternalKeyValueSeparator;
-            }
-        }
+        protected virtual string KeyValueSeparator => InternalKeyValueSeparator;
 
-        protected virtual string PairSeparator
-        {
-            get
-            {
-                return InternalPairSeparator;
-            }
-        }
+        protected virtual string PairSeparator => InternalPairSeparator;
 
         static IDictionary<string, string> Decode(string encodedString, Func<string, string> keyDecoder, Func<string, string> valueDecoder, string keyValueSeparator, string pairSeparator)
         {
-            IDictionary<string, string> dictionary = new Dictionary<string, string>();
+            var dictionary = new Dictionary<string, string>();
             IEnumerable<string> valueEncodedPairs = encodedString.Split(new[] { pairSeparator }, StringSplitOptions.None);
-            foreach (string valueEncodedPair in valueEncodedPairs)
+            foreach (var valueEncodedPair in valueEncodedPairs)
             {
-                string[] pair = valueEncodedPair.Split(new[] { keyValueSeparator }, StringSplitOptions.None);
+                var pair = valueEncodedPair.Split(new[] { keyValueSeparator }, StringSplitOptions.None);
                 if (pair.Length != 2)
                 {
                     throw new FormatException(Resources.InvalidEncoding);
@@ -162,8 +123,8 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         string GetAudienceFromToken(string token)
         {
             string audience;
-            IDictionary<string, string> decodedToken = Decode(token, Decoder, Decoder, this.KeyValueSeparator, this.PairSeparator);
-            if (!decodedToken.TryGetValue(this.AudienceFieldName, out audience))
+            IDictionary<string, string> decodedToken = Decode(token, Decoder, Decoder, KeyValueSeparator, PairSeparator);
+            if (!decodedToken.TryGetValue(AudienceFieldName, out audience))
             {
                 throw new FormatException(Resources.TokenMissingAudience);
             }
@@ -174,13 +135,13 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         void GetExpirationDateAndAudienceFromToken(string token, out DateTime expiresOn, out string audience)
         {
             string expiresIn;
-            IDictionary<string, string> decodedToken = Decode(token, Decoder, Decoder, this.KeyValueSeparator, this.PairSeparator);
-            if (!decodedToken.TryGetValue(this.ExpiresOnFieldName, out expiresIn))
+            IDictionary<string, string> decodedToken = Decode(token, Decoder, Decoder, KeyValueSeparator, PairSeparator);
+            if (!decodedToken.TryGetValue(ExpiresOnFieldName, out expiresIn))
             {
                 throw new FormatException(Resources.TokenMissingExpiresOn);
             }
 
-            if (!decodedToken.TryGetValue(this.AudienceFieldName, out audience))
+            if (!decodedToken.TryGetValue(AudienceFieldName, out audience))
             {
                 throw new FormatException(Resources.TokenMissingAudience);
             }

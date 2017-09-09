@@ -11,24 +11,24 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
 
         public TestBook(string name, int id, int count)
         {
-            this.Name = name;
-            this.Count = count;
-            this.Id = id;
+            Name = name;
+            Count = count;
+            Id = id;
         }
 
-        public override bool Equals(Object obj)
+        public override bool Equals(object obj)
         {
             if (obj == null || GetType() != obj.GetType())
             {
                 return false;
             }
 
-            TestBook book = (TestBook)obj;
+            var book = (TestBook)obj;
 
             return
-                this.Name.Equals(book.Name, StringComparison.OrdinalIgnoreCase) &&
-                this.Count == book.Count &&
-                this.Id == book.Id;
+                Name.Equals(book.Name, StringComparison.OrdinalIgnoreCase) &&
+                Count == book.Count &&
+                Id == book.Id;
         }
 
         public override int GetHashCode()

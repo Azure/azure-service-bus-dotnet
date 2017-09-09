@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
-    using Microsoft.Azure.Amqp.Encoding;
+    using Azure.Amqp.Encoding;
 
     static class ManagementConstants
     {

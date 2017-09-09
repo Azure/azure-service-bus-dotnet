@@ -17,27 +17,23 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         AmqpResponseMessage(AmqpMessage responseMessage)
         {
             this.responseMessage = responseMessage;
-            this.StatusCode = this.responseMessage.GetResponseStatusCode();
-            string trackingId;
-            if (this.responseMessage.ApplicationProperties.Map.TryGetValue(ManagementConstants.Properties.TrackingId, out trackingId))
+            StatusCode = this.responseMessage.GetResponseStatusCode();
+            if (this.responseMessage.ApplicationProperties.Map.TryGetValue(ManagementConstants.Properties.TrackingId, out string trackingId))
             {
-                this.TrackingId = trackingId;
+                TrackingId = trackingId;
             }
 
             if (responseMessage.ValueBody != null)
             {
-                this.Map = responseMessage.ValueBody.Value as AmqpMap;
+                Map = responseMessage.ValueBody.Value as AmqpMap;
             }
         }
 
-        public AmqpMessage AmqpMessage
-        {
-            get { return this.responseMessage; }
-        }
+        public AmqpMessage AmqpMessage => responseMessage;
 
         public AmqpResponseStatusCode StatusCode { get; }
 
-        public string TrackingId { get; private set; }
+        public string TrackingId { get; }
 
         public AmqpMap Map { get; }
 
@@ -48,12 +44,12 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public TValue GetValue<TValue>(MapKey key)
         {
-            if (this.Map == null)
+            if (Map == null)
             {
                 throw new ArgumentException(AmqpValue.Name);
             }
 
-            var valueObject = this.Map[key];
+            var valueObject = Map[key];
             if (valueObject == null)
             {
                 throw new ArgumentException(key.ToString());
@@ -64,31 +60,31 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 throw new ArgumentException(key.ToString());
             }
 
-            return (TValue)this.Map[key];
+            return (TValue)Map[key];
         }
 
         public IEnumerable<TValue> GetListValue<TValue>(MapKey key)
         {
-            if (this.Map == null)
+            if (Map == null)
             {
                 throw new ArgumentException(AmqpValue.Name);
             }
 
-            List<object> list = (List<object>)this.Map[key];
+            var list = (List<object>)Map[key];
 
             return list.Cast<TValue>();
         }
 
         public AmqpSymbol GetResponseErrorCondition()
         {
-            object condition = this.responseMessage.ApplicationProperties.Map[ManagementConstants.Response.ErrorCondition];
+            var condition = responseMessage.ApplicationProperties.Map[ManagementConstants.Response.ErrorCondition];
 
             return condition is AmqpSymbol amqpSymbol ? amqpSymbol : null;
         }
 
         public Exception ToMessagingContractException()
         {
-            return this.responseMessage.ToMessagingContractException(this.StatusCode);
+            return responseMessage.ToMessagingContractException(StatusCode);
         }
     }
 }

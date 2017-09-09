@@ -9,9 +9,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.IO;
     using System.Net.Sockets;
     using System.Text;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Encoding;
-    using Microsoft.Azure.Amqp.Framing;
+    using Azure.Amqp;
+    using Azure.Amqp.Encoding;
+    using Azure.Amqp.Framing;
 
     static class AmqpExceptionHelper
     {
@@ -41,7 +41,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static AmqpSymbol GetResponseErrorCondition(AmqpMessage response, AmqpResponseStatusCode statusCode)
         {
-            object condition = response.ApplicationProperties.Map[ManagementConstants.Response.ErrorCondition];
+            var condition = response.ApplicationProperties.Map[ManagementConstants.Response.ErrorCondition];
             if (condition != null)
             {
                 return (AmqpSymbol)condition;
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static AmqpResponseStatusCode GetResponseStatusCode(this AmqpMessage responseMessage)
         {
-            AmqpResponseStatusCode responseStatusCode = AmqpResponseStatusCode.Unused;
+            var responseStatusCode = AmqpResponseStatusCode.Unused;
             object statusCodeValue = responseMessage?.ApplicationProperties.Map[ManagementConstants.Response.StatusCode];
             if (statusCodeValue is int && Enum.IsDefined(typeof(AmqpResponseStatusCode), statusCodeValue))
             {
@@ -73,11 +73,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static Exception ToMessagingContractException(this AmqpMessage responseMessage, AmqpResponseStatusCode statusCode)
         {
-            AmqpSymbol errorCondition = AmqpExceptionHelper.GetResponseErrorCondition(responseMessage, statusCode);
+            AmqpSymbol errorCondition = GetResponseErrorCondition(responseMessage, statusCode);
             var statusDescription = responseMessage.ApplicationProperties.Map[ManagementConstants.Response.StatusDescription] as string ?? errorCondition.Value;
-            Exception exception = AmqpExceptionHelper.ToMessagingContractException(errorCondition.Value, statusDescription);
-
-            return exception;
+            return ToMessagingContractException(errorCondition.Value, statusDescription);
         }
 
         public static Exception ToMessagingContractException(this Error error, bool connectionError = false)
@@ -162,14 +160,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static Exception GetClientException(Exception exception, string referenceId = null, Exception innerException = null, bool connectionError = false)
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             builder.AppendFormat(CultureInfo.InvariantCulture, exception.Message);
             if (referenceId != null)
             {
                 builder.AppendFormat(CultureInfo.InvariantCulture, $"Reference: {referenceId}, {DateTime.UtcNow}");
             }
 
-            string message = builder.ToString();
+            var message = builder.ToString();
             var aggregateException = innerException == null ? exception : new AggregateException(exception, innerException);
 
             switch (exception)
@@ -203,9 +201,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static string GetTrackingId(this AmqpLink link)
         {
-            string trackingContext = null;
-            if (link.Settings.Properties != null &&
-                link.Settings.Properties.TryGetValue<string>(AmqpClientConstants.TrackingIdName, out trackingContext))
+            var fields = link.Settings.Properties;
+            if (fields != null &&
+                fields.TryGetValue<string>(AmqpClientConstants.TrackingIdName, out var trackingContext))
             {
                 return trackingContext;
             }
@@ -215,7 +213,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static Exception GetInnerException(this AmqpObject amqpObject)
         {
-            bool connectionError = false;
+            var connectionError = false;
             Exception innerException;
             switch (amqpObject)
             {

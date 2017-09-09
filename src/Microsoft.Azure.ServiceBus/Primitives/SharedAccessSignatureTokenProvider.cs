@@ -39,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         }
 
         internal SharedAccessSignatureTokenProvider(string keyName, string sharedAccessKey, TimeSpan tokenTimeToLive, TokenScope tokenScope)
-            : this(keyName, sharedAccessKey, TokenProvider.MessagingTokenProviderKeyEncoder, tokenTimeToLive, tokenScope)
+            : this(keyName, sharedAccessKey, MessagingTokenProviderKeyEncoder, tokenTimeToLive, tokenScope)
         {
         }
 
@@ -72,27 +72,27 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
             this.keyName = keyName;
             this.tokenTimeToLive = tokenTimeToLive;
-            this.encodedSharedAccessKey = customKeyEncoder != null ?
+            encodedSharedAccessKey = customKeyEncoder != null ?
                 customKeyEncoder(sharedAccessKey) :
-                TokenProvider.MessagingTokenProviderKeyEncoder(sharedAccessKey);
+                MessagingTokenProviderKeyEncoder(sharedAccessKey);
         }
 
         protected override Task<SecurityToken> OnGetTokenAsync(string appliesTo, string action, TimeSpan timeout)
         {
-            string tokenString = this.BuildSignature(appliesTo);
-            SharedAccessSignatureToken securityToken = new SharedAccessSignatureToken(tokenString);
+            string tokenString = BuildSignature(appliesTo);
+            var securityToken = new SharedAccessSignatureToken(tokenString);
             return Task.FromResult<SecurityToken>(securityToken);
         }
 
         protected virtual string BuildSignature(string targetUri)
         {
-            return string.IsNullOrWhiteSpace(this.sharedAccessSignature)
+            return string.IsNullOrWhiteSpace(sharedAccessSignature)
                 ? SharedAccessSignatureBuilder.BuildSignature(
-                    this.keyName,
-                    this.encodedSharedAccessKey,
+                    keyName,
+                    encodedSharedAccessKey,
                     targetUri,
-                    this.tokenTimeToLive)
-                : this.sharedAccessSignature;
+                    tokenTimeToLive)
+                : sharedAccessSignature;
         }
 
         static class SharedAccessSignatureBuilder
@@ -108,7 +108,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 // is case sensitive.
                 string expiresOn = BuildExpiresOn(timeToLive);
                 string audienceUri = WebUtility.UrlEncode(targetUri);
-                List<string> fields = new List<string> { audienceUri, expiresOn };
+                var fields = new List<string> { audienceUri, expiresOn };
 
                 // Example string to be signed:
                 // http://mynamespace.servicebus.windows.net/a/b/c?myvalue1=a
@@ -134,15 +134,15 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
             static string BuildExpiresOn(TimeSpan timeToLive)
             {
-                DateTime expiresOn = DateTime.UtcNow.Add(timeToLive);
-                TimeSpan secondsFromBaseTime = expiresOn.Subtract(EpochTime);
-                long seconds = Convert.ToInt64(secondsFromBaseTime.TotalSeconds, CultureInfo.InvariantCulture);
+                var expiresOn = DateTime.UtcNow.Add(timeToLive);
+                var secondsFromBaseTime = expiresOn.Subtract(EpochTime);
+                var seconds = Convert.ToInt64(secondsFromBaseTime.TotalSeconds, CultureInfo.InvariantCulture);
                 return Convert.ToString(seconds, CultureInfo.InvariantCulture);
             }
 
             static string Sign(string requestString, byte[] encodedSharedAccessKey)
             {
-                using (HMACSHA256 hmac = new HMACSHA256(encodedSharedAccessKey))
+                using (var hmac = new HMACSHA256(encodedSharedAccessKey))
                 {
                     return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(requestString)));
                 }
@@ -170,37 +170,13 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             {
             }
 
-            protected override string AudienceFieldName
-            {
-                get
-                {
-                    return SignedResourceFullFieldName;
-                }
-            }
+            protected override string AudienceFieldName => SignedResourceFullFieldName;
 
-            protected override string ExpiresOnFieldName
-            {
-                get
-                {
-                    return SignedExpiry;
-                }
-            }
+            protected override string ExpiresOnFieldName => SignedExpiry;
 
-            protected override string KeyValueSeparator
-            {
-                get
-                {
-                    return SasKeyValueSeparator;
-                }
-            }
+            protected override string KeyValueSeparator => SasKeyValueSeparator;
 
-            protected override string PairSeparator
-            {
-                get
-                {
-                    return SasPairSeparator;
-                }
-            }
+            protected override string PairSeparator => SasPairSeparator;
 
             internal static void Validate(string sharedAccessSignature)
             {
@@ -245,7 +221,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     throw new ArgumentNullException(nameof(sharedAccessSignature));
                 }
 
-                IDictionary<string, string> parsedFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                var parsedFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 string[] tokenFields = tokenLines[1].Trim().Split(new[] { SasPairSeparator }, StringSplitOptions.None);
 
                 foreach (string tokenField in tokenFields)

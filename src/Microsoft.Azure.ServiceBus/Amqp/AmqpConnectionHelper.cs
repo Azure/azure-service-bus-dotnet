@@ -4,10 +4,10 @@
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Sasl;
-    using Microsoft.Azure.Amqp.Transport;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Azure.Amqp;
+    using Azure.Amqp.Sasl;
+    using Azure.Amqp.Transport;
+    using Primitives;
 
     internal class AmqpConnectionHelper
     {
@@ -23,7 +23,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             System.Net.NetworkCredential networkCredential = null,
             bool forceTokenProvider = true)
         {
-            AmqpSettings settings = new AmqpSettings();
+            var settings = new AmqpSettings();
             if (useSslStreamSecurity && !useWebSockets && sslStreamUpgrade)
             {
                 var tlsSettings = new TlsTransportSettings
@@ -38,7 +38,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             if (hasTokenProvider || networkCredential != null)
             {
-                SaslTransportProvider saslProvider = new SaslTransportProvider();
+                var saslProvider = new SaslTransportProvider();
                 saslProvider.Versions.Add(new AmqpVersion(amqpVersion));
                 settings.TransportProviders.Add(saslProvider);
 
@@ -62,7 +62,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 }
             }
 
-            AmqpTransportProvider amqpProvider = new AmqpTransportProvider();
+            var amqpProvider = new AmqpTransportProvider();
             amqpProvider.Versions.Add(new AmqpVersion(amqpVersion));
             settings.TransportProviders.Add(amqpProvider);
 
@@ -78,7 +78,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             string sslHostName = null,
             System.Security.Cryptography.X509Certificates.X509Certificate2 certificate = null)
         {
-            TcpTransportSettings tcpSettings = new TcpTransportSettings
+            var tcpSettings = new TcpTransportSettings
             {
                 Host = networkHost,
                 Port = port < 0 ? AmqpConstants.DefaultSecurePort : port,
@@ -89,7 +89,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             TransportSettings tpSettings = tcpSettings;
             if (useSslStreamSecurity && !sslStreamUpgrade)
             {
-                TlsTransportSettings tlsSettings = new TlsTransportSettings(tcpSettings)
+                var tlsSettings = new TlsTransportSettings(tcpSettings)
                 {
                     TargetHost = sslHostName ?? hostName
                 };
@@ -104,8 +104,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             string hostName,
             int port)
         {
-            UriBuilder uriBuilder = new UriBuilder(WebSocketConstants.WebSocketSecureScheme, networkHost, port < 0 ? WebSocketConstants.WebSocketSecurePort : port, WebSocketConstants.WebSocketDefaultPath);
-            WebSocketTransportSettings tcpSettings = new WebSocketTransportSettings
+            var uriBuilder = new UriBuilder(WebSocketConstants.WebSocketSecureScheme, networkHost, port < 0 ? WebSocketConstants.WebSocketSecurePort : port, WebSocketConstants.WebSocketDefaultPath);
+            var tcpSettings = new WebSocketTransportSettings
             {
                 Uri = uriBuilder.Uri,
                 ReceiveBufferSize = AmqpConstants.TransportBufferSize,

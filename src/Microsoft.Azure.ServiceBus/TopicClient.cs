@@ -6,9 +6,9 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.ServiceBus.Core;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Azure.Amqp;
+    using Core;
+    using Primitives;
 
     /// <summary>
     /// TopicClient can be used for all basic interactions with a Service Bus topic.
@@ -65,7 +65,7 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
             }
 
-            this.ownsConnection = true;
+            ownsConnection = true;
         }
 
         TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, RetryPolicy retryPolicy)
@@ -73,16 +73,16 @@ namespace Microsoft.Azure.ServiceBus
         {
             MessagingEventSource.Log.TopicClientCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath);
 
-            this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
-            this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
-            this.syncLock = new object();
-            this.TopicName = entityPath;
-            this.TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(
+            ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            OperationTimeout = ServiceBusConnection.OperationTimeout;
+            syncLock = new object();
+            TopicName = entityPath;
+            TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(
                 serviceBusConnection.SasKeyName,
                 serviceBusConnection.SasKey);
-            this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
+            CbsTokenProvider = new TokenProviderAdapter(TokenProvider, serviceBusConnection.OperationTimeout);
 
-            MessagingEventSource.Log.TopicClientCreateStop(serviceBusConnection?.Endpoint.Authority, entityPath, this.ClientId);
+            MessagingEventSource.Log.TopicClientCreateStop(serviceBusConnection?.Endpoint.Authority, entityPath, ClientId);
         }
 
         /// <summary>
@@ -95,36 +95,36 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public override TimeSpan OperationTimeout
         {
-            get => this.ServiceBusConnection.OperationTimeout;
-            set => this.ServiceBusConnection.OperationTimeout = value;
+            get => ServiceBusConnection.OperationTimeout;
+            set => ServiceBusConnection.OperationTimeout = value;
         }
 
         /// <summary>
         /// Gets the name of the topic.
         /// </summary>
-        public string Path => this.TopicName;
+        public string Path => TopicName;
 
         internal MessageSender InnerSender
         {
             get
             {
-                if (this.innerSender == null)
+                if (innerSender == null)
                 {
-                    lock (this.syncLock)
+                    lock (syncLock)
                     {
-                        if (this.innerSender == null)
+                        if (innerSender == null)
                         {
-                            this.innerSender = new MessageSender(
-                                this.TopicName,
+                            innerSender = new MessageSender(
+                                TopicName,
                                 MessagingEntityType.Topic,
-                                this.ServiceBusConnection,
-                                this.CbsTokenProvider,
-                                this.RetryPolicy);
+                                ServiceBusConnection,
+                                CbsTokenProvider,
+                                RetryPolicy);
                         }
                     }
                 }
 
-                return this.innerSender;
+                return innerSender;
             }
         }
 
@@ -141,7 +141,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>An asynchronous operation</returns>
         public Task SendAsync(Message message)
         {
-            return this.SendAsync(new[] { message });
+            return SendAsync(new[] { message });
         }
 
         /// <summary>
@@ -151,8 +151,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>An asynchronous operation</returns>
         public Task SendAsync(IList<Message> messageList)
         {
-            this.ThrowIfClosed();
-            return this.InnerSender.SendAsync(messageList);
+            ThrowIfClosed();
+            return InnerSender.SendAsync(messageList);
         }
 
         /// <summary>
@@ -163,8 +163,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The sequence number of the message that was scheduled.</returns>
         public Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
-            this.ThrowIfClosed();
-            return this.InnerSender.ScheduleMessageAsync(message, scheduleEnqueueTimeUtc);
+            ThrowIfClosed();
+            return InnerSender.ScheduleMessageAsync(message, scheduleEnqueueTimeUtc);
         }
 
         /// <summary>
@@ -174,14 +174,14 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>An asynchronous operation</returns>
         public Task CancelScheduledMessageAsync(long sequenceNumber)
         {
-            this.ThrowIfClosed();
-            return this.InnerSender.CancelScheduledMessageAsync(sequenceNumber);
+            ThrowIfClosed();
+            return InnerSender.CancelScheduledMessageAsync(sequenceNumber);
         }
 
         /// <summary>
         /// Gets a list of currently registered plugins for this TopicClient.
         /// </summary>
-        public override IList<ServiceBusPlugin> RegisteredPlugins => this.InnerSender.RegisteredPlugins;
+        public override IList<ServiceBusPlugin> RegisteredPlugins => InnerSender.RegisteredPlugins;
 
         /// <summary>
         /// Registers a <see cref="ServiceBusPlugin"/> to be used with this topic client.
@@ -189,8 +189,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register.</param>
         public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
-            this.ThrowIfClosed();
-            this.InnerSender.RegisterPlugin(serviceBusPlugin);
+            ThrowIfClosed();
+            InnerSender.RegisterPlugin(serviceBusPlugin);
         }
 
         /// <summary>
@@ -199,20 +199,20 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="serviceBusPluginName">The name <see cref="ServiceBusPlugin.Name"/> to be unregistered</param>
         public override void UnregisterPlugin(string serviceBusPluginName)
         {
-            this.ThrowIfClosed();
-            this.InnerSender.UnregisterPlugin(serviceBusPluginName);
+            ThrowIfClosed();
+            InnerSender.UnregisterPlugin(serviceBusPluginName);
         }
 
         protected override async Task OnClosingAsync()
         {
-            if (this.innerSender != null)
+            if (innerSender != null)
             {
-                await this.innerSender.CloseAsync().ConfigureAwait(false);
+                await innerSender.CloseAsync().ConfigureAwait(false);
             }
 
-            if (this.ownsConnection)
+            if (ownsConnection)
             {
-                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+                await ServiceBusConnection.CloseAsync().ConfigureAwait(false);
             }
         }
     }

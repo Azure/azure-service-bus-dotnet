@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
 {
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using ServiceBus.Primitives;
     using Xunit;
 
     public class ServiceBusNamespaceConnectionTests

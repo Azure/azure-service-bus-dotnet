@@ -41,10 +41,10 @@ namespace Microsoft.Azure.ServiceBus
                 throw new ArgumentException(Resources.ExponentialRetryBackoffRange.FormatForUser(minBackoff, maxBackoff));
             }
 
-            this.MinimalBackoff = minBackoff;
-            this.MaximumBackoff = maxBackoff;
-            this.DeltaBackoff = deltaBackoff;
-            this.MaxRetryCount = maxRetryCount;
+            MinimalBackoff = minBackoff;
+            MaximumBackoff = maxBackoff;
+            DeltaBackoff = deltaBackoff;
+            MaxRetryCount = maxRetryCount;
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="retryInterval">The amount of time to delay before retry.</param>
         protected override bool OnShouldRetry(TimeSpan remainingTime, int currentRetryCount, out TimeSpan retryInterval)
         {
-            if (currentRetryCount > this.MaxRetryCount)
+            if (currentRetryCount > MaxRetryCount)
             {
                 retryInterval = TimeSpan.Zero;
                 return false;
@@ -87,10 +87,10 @@ namespace Microsoft.Azure.ServiceBus
 
             // Logic: - first use currentRetryCount to calculate the size of the interval.
             //        - then get the interval in terms of sleep time (between min and max sleep time)
-            //        - if interval to large to fit inside ReminaingTime, we quit.
-            int randomizedInterval = ConcurrentRandom.Next((int)(this.DeltaBackoff.TotalMilliseconds * 0.8), (int)(this.DeltaBackoff.TotalMilliseconds * 1.2));
-            double increment = (Math.Pow(2, currentRetryCount) - 1) * randomizedInterval;
-            double timeToSleepMsec = Math.Min(this.MinimalBackoff.TotalMilliseconds + increment, this.MaximumBackoff.TotalMilliseconds);
+            //        - if interval to large to fit inside RemainingTime, we quit.
+            var randomizedInterval = ConcurrentRandom.Next((int)(DeltaBackoff.TotalMilliseconds * 0.8), (int)(DeltaBackoff.TotalMilliseconds * 1.2));
+            var increment = (Math.Pow(2, currentRetryCount) - 1) * randomizedInterval;
+            var timeToSleepMsec = Math.Min(MinimalBackoff.TotalMilliseconds + increment, MaximumBackoff.TotalMilliseconds);
             retryInterval = TimeSpan.FromMilliseconds(timeToSleepMsec);
 
             return true;

@@ -34,9 +34,9 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="body">The payload of the message in bytes</param>
         public Message(byte[] body)
         {
-            this.Body = body;
-            this.SystemProperties = new SystemPropertiesCollection();
-            this.UserProperties = new Dictionary<string, object>();
+            Body = body;
+            SystemProperties = new SystemPropertiesCollection();
+            UserProperties = new Dictionary<string, object>();
         }
 
         /// <summary>
@@ -57,12 +57,12 @@ namespace Microsoft.Azure.ServiceBus
         /// Max MessageId size is 128 chars.</remarks>
         public string MessageId
         {
-            get => this.messageId;
+            get => messageId;
 
             set
             {
-                Message.ValidateMessageId(value);
-                this.messageId = value;
+                ValidateMessageId(value);
+                messageId = value;
             }
         }
 
@@ -72,12 +72,12 @@ namespace Microsoft.Azure.ServiceBus
         /// Max PartitionKey size is 128 chars.</remarks>
         public string PartitionKey
         {
-            get => this.partitionKey;
+            get => partitionKey;
 
             set
             {
-                Message.ValidatePartitionKey(nameof(this.PartitionKey), value);
-                this.partitionKey = value;
+                ValidatePartitionKey(nameof(PartitionKey), value);
+                partitionKey = value;
             }
         }
 
@@ -86,12 +86,12 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>Max size of ViaPartitionKey is 128 chars.</remarks>
         public string ViaPartitionKey
         {
-            get => this.viaPartitionKey;
+            get => viaPartitionKey;
 
             set
             {
-                Message.ValidatePartitionKey(nameof(this.ViaPartitionKey), value);
-                this.viaPartitionKey = value;
+                ValidatePartitionKey(nameof(ViaPartitionKey), value);
+                viaPartitionKey = value;
             }
         }
 
@@ -100,12 +100,12 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>Max size of sessionId is 128 chars.</remarks>
         public string SessionId
         {
-            get => this.sessionId;
+            get => sessionId;
 
             set
             {
-                Message.ValidateSessionId(nameof(this.SessionId), value);
-                this.sessionId = value;
+                ValidateSessionId(nameof(SessionId), value);
+                sessionId = value;
             }
         }
 
@@ -114,12 +114,12 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>Max size of ReplyToSessionId is 128.</remarks>
         public string ReplyToSessionId
         {
-            get => this.replyToSessionId;
+            get => replyToSessionId;
 
             set
             {
-                Message.ValidateSessionId(nameof(this.ReplyToSessionId), value);
-                this.replyToSessionId = value;
+                ValidateSessionId(nameof(ReplyToSessionId), value);
+                replyToSessionId = value;
             }
         }
 
@@ -131,12 +131,12 @@ namespace Microsoft.Azure.ServiceBus
         {
             get
             {
-                if (this.TimeToLive >= DateTime.MaxValue.Subtract(this.SystemProperties.EnqueuedTimeUtc))
+                if (TimeToLive >= DateTime.MaxValue.Subtract(SystemProperties.EnqueuedTimeUtc))
                 {
                     return DateTime.MaxValue;
                 }
 
-                return this.SystemProperties.EnqueuedTimeUtc.Add(this.TimeToLive);
+                return SystemProperties.EnqueuedTimeUtc.Add(TimeToLive);
             }
         }
 
@@ -153,18 +153,18 @@ namespace Microsoft.Azure.ServiceBus
         {
             get
             {
-                if (this.timeToLive == TimeSpan.Zero)
+                if (timeToLive == TimeSpan.Zero)
                 {
                     return TimeSpan.MaxValue;
                 }
 
-                return this.timeToLive;
+                return timeToLive;
             }
 
             set
             {
                 TimeoutHelper.ThrowIfNonPositiveArgument(value);
-                this.timeToLive = value;
+                timeToLive = value;
             }
         }
 
@@ -194,7 +194,7 @@ namespace Microsoft.Azure.ServiceBus
         /// property returns the time in UTC; when setting the property, the supplied DateTime value must also be in UTC.</summary>
         /// <value>The scheduled enqueue time in UTC. This value is for delayed message sending.
         /// It is utilized to delay messages sending to a specific time in the future.</value>
-        /// <remarks> Message enquing time does not mean that the message will be sent at the same time. It will get enqueued, but the actual sending time
+        /// <remarks> Message enqueuing time does not mean that the message will be sent at the same time. It will get enqueued, but the actual sending time
         /// depends on the queue's workload and its state.</remarks>
         public DateTime ScheduledEnqueueTimeUtc { get; set; }
 
@@ -202,11 +202,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Gets the total size of the message body in bytes.
         /// </summary>
-        public long Size
-        {
-            get => Body.Length;
-            //internal set;
-        }
+        public long Size => Body.Length;
 
         /// <summary>
         /// Gets the user property bag, which can be used for custom message properties.
@@ -228,20 +224,20 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The string representation of the current message.</returns>
         public override string ToString()
         {
-            return string.Format(CultureInfo.CurrentCulture, $"{{MessageId:{this.MessageId}}}");
+            return string.Format(CultureInfo.CurrentCulture, $"{{MessageId:{MessageId}}}");
         }
 
         /// <summary>Clones a message, so that it is possible to send a clone of a message as a new message.</summary>
         /// <returns>The <see cref="Message" /> that contains the cloned message.</returns>
         public Message Clone()
         {
-            var clone = (Message)this.MemberwiseClone();
+            var clone = (Message)MemberwiseClone();
             clone.SystemProperties = new SystemPropertiesCollection();
 
-            if (this.Body != null)
+            if (Body != null)
             {
-                var clonedBody = new byte[this.Body.Length];
-                Array.Copy(this.Body, clonedBody, this.Body.Length);
+                var clonedBody = new byte[Body.Length];
+                Array.Copy(Body, clonedBody, Body.Length);
                 clone.Body = clonedBody;
             }
             return clone;
@@ -293,16 +289,16 @@ namespace Microsoft.Azure.ServiceBus
             /// Specifies whether or not there is a lock token set on the current message.
             /// </summary>
             /// <remarks>A lock token will only be specified if the message was received using <see cref="ReceiveMode.PeekLock"/></remarks>
-            public bool IsLockTokenSet => this.lockTokenGuid != default(Guid);
+            public bool IsLockTokenSet => lockTokenGuid != default;
 
             /// <summary>
             /// Gets the lock token for the current message.
             /// </summary>
             /// <remarks>A lock token will only be specified if the message was received using <see cref="ReceiveMode.PeekLock"/></remarks>
-            public string LockToken => this.LockTokenGuid.ToString();
+            public string LockToken => LockTokenGuid.ToString();
 
             /// <summary>Specifies if message is a received message or not.</summary>
-            public bool IsReceived => this.sequenceNumber > -1;
+            public bool IsReceived => sequenceNumber > -1;
 
             /// <summary>
             /// Get the current delivery count.
@@ -312,14 +308,11 @@ namespace Microsoft.Azure.ServiceBus
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.deliveryCount;
+                    ThrowIfNotReceived();
+                    return deliveryCount;
                 }
 
-                internal set
-                {
-                    this.deliveryCount = value;
-                }
+                internal set => deliveryCount = value;
             }
 
             /// <summary>Gets the date and time in UTC until which the message will be locked in the queue/subscription.</summary>
@@ -328,14 +321,11 @@ namespace Microsoft.Azure.ServiceBus
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.lockedUntilUtc;
+                    ThrowIfNotReceived();
+                    return lockedUntilUtc;
                 }
 
-                internal set
-                {
-                    this.lockedUntilUtc = value;
-                }
+                internal set => lockedUntilUtc = value;
             }
 
             /// <summary>Gets the unique number assigned to a message by Service Bus, for this entity.</summary>
@@ -343,14 +333,11 @@ namespace Microsoft.Azure.ServiceBus
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.sequenceNumber;
+                    ThrowIfNotReceived();
+                    return sequenceNumber;
                 }
 
-                internal set
-                {
-                    this.sequenceNumber = value;
-                }
+                internal set => sequenceNumber = value;
             }
 
             /// <summary>
@@ -360,28 +347,22 @@ namespace Microsoft.Azure.ServiceBus
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.deadLetterSource;
+                    ThrowIfNotReceived();
+                    return deadLetterSource;
                 }
 
-                internal set
-                {
-                    this.deadLetterSource = value;
-                }
+                internal set => deadLetterSource = value;
             }
 
             internal short PartitionId
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.partitionId;
+                    ThrowIfNotReceived();
+                    return partitionId;
                 }
 
-                set
-                {
-                    this.partitionId = value;
-                }
+                set => partitionId = value;
             }
 
             /// <summary>Gets or sets the enqueued sequence number of the message.</summary>
@@ -392,14 +373,11 @@ namespace Microsoft.Azure.ServiceBus
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.enqueuedSequenceNumber;
+                    ThrowIfNotReceived();
+                    return enqueuedSequenceNumber;
                 }
 
-                internal set
-                {
-                    this.enqueuedSequenceNumber = value;
-                }
+                internal set => enqueuedSequenceNumber = value;
             }
 
             /// <summary>Gets or sets the date and time of the sent time in UTC.</summary>
@@ -408,28 +386,22 @@ namespace Microsoft.Azure.ServiceBus
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.enqueuedTimeUtc;
+                    ThrowIfNotReceived();
+                    return enqueuedTimeUtc;
                 }
 
-                internal set
-                {
-                    this.enqueuedTimeUtc = value;
-                }
+                internal set => enqueuedTimeUtc = value;
             }
 
             internal Guid LockTokenGuid
             {
                 get
                 {
-                    this.ThrowIfNotReceived();
-                    return this.lockTokenGuid;
+                    ThrowIfNotReceived();
+                    return lockTokenGuid;
                 }
 
-                set
-                {
-                    this.lockTokenGuid = value;
-                }
+                set => lockTokenGuid = value;
             }
 
             internal object BodyObject
@@ -440,7 +412,7 @@ namespace Microsoft.Azure.ServiceBus
 
             void ThrowIfNotReceived()
             {
-                if (!this.IsReceived)
+                if (!IsReceived)
                 {
                     throw Fx.Exception.AsError(new InvalidOperationException());
                 }

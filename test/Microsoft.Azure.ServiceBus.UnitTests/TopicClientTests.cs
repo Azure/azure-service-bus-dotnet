@@ -26,11 +26,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName);
+                SubscriptionName);
 
             try
             {
-                await this.PeekLockTestCase(
+                await PeekLockTestCase(
                     topicClient.InnerSender,
                     subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                     messageCount);
@@ -51,12 +51,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName,
+                SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
             try
             {
                 await
-                    this.ReceiveDeleteTestCase(
+                    ReceiveDeleteTestCase(
                         topicClient.InnerSender,
                         subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                         messageCount);
@@ -77,11 +77,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName);
+                SubscriptionName);
             try
             {
                 await
-                    this.PeekLockWithAbandonTestCase(
+                    PeekLockWithAbandonTestCase(
                         topicClient.InnerSender,
                         subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                         messageCount);
@@ -102,10 +102,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName);
+                SubscriptionName);
 
             // Create DLQ Client To Receive DeadLetteredMessages
-            var subscriptionDeadletterPath = EntityNameHelper.FormatDeadLetterPath(this.SubscriptionName);
+            var subscriptionDeadletterPath = EntityNameHelper.FormatDeadLetterPath(SubscriptionName);
             var deadLetterSubscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
@@ -114,7 +114,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             try
             {
                 await
-                    this.PeekLockWithDeadLetterTestCase(
+                    PeekLockWithDeadLetterTestCase(
                         topicClient.InnerSender,
                         subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                         deadLetterSubscriptionClient.InnerSubscriptionClient.InnerReceiver,
@@ -137,10 +137,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName);
+                SubscriptionName);
             try
             {
-                await this.RenewLockTestCase(
+                await RenewLockTestCase(
                     topicClient.InnerSender,
                     subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                     messageCount);
@@ -161,12 +161,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName,
+                SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
             try
             {
                 await
-                    this.ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(
+                    ScheduleMessagesAppearAfterScheduledTimeAsyncTestCase(
                         topicClient.InnerSender,
                         subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                         messageCount);
@@ -187,12 +187,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName,
+                SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
             try
             {
                 await
-                    this.CancelScheduledMessagesAsyncTestCase(
+                    CancelScheduledMessagesAsyncTestCase(
                         topicClient.InnerSender,
                         subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                         messageCount);

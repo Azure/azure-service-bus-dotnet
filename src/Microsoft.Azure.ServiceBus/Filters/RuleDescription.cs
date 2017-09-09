@@ -50,7 +50,7 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNull(nameof(filter));
             }
 
-            this.Filter = filter;
+            Filter = filter;
         }
 
         /// <summary>
@@ -65,8 +65,8 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNull(nameof(filter));
             }
 
-            this.Filter = filter;
-            this.Name = name;
+            Filter = filter;
+            Name = name;
         }
 
         /// <summary>
@@ -76,19 +76,16 @@ namespace Microsoft.Azure.ServiceBus
         /// <exception cref="System.ArgumentNullException">null (Nothing in Visual Basic) is assigned.</exception>
         public Filter Filter
         {
-            get
-            {
-                return this.filter;
-            }
+            get => filter;
 
             set
             {
                 if (value == null)
                 {
-                    throw Fx.Exception.ArgumentNull(nameof(this.Filter));
+                    throw Fx.Exception.ArgumentNull(nameof(Filter));
                 }
 
-                this.filter = value;
+                filter = value;
             }
         }
 
@@ -105,52 +102,49 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>Max allowed length of rule name is 50 chars.</remarks>
         public string Name
         {
-            get
-            {
-                return this.name;
-            }
+            get => name;
 
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.Name));
+                    throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(Name));
                 }
 
-                this.name = value;
+                name = value;
             }
         }
 
         internal void ValidateDescriptionName()
         {
-            if (string.IsNullOrWhiteSpace(this.name))
+            if (string.IsNullOrWhiteSpace(name))
             {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.name));
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(name));
             }
 
-            if (this.name.Length > Constants.RuleNameMaximumLength)
+            if (name.Length > Constants.RuleNameMaximumLength)
             {
                 throw Fx.Exception.ArgumentOutOfRange(
-                    nameof(this.name),
-                    this.name,
-                    Resources.EntityNameLengthExceedsLimit.FormatForUser(this.name, Constants.RuleNameMaximumLength));
+                    nameof(name),
+                    name,
+                    Resources.EntityNameLengthExceedsLimit.FormatForUser(name, Constants.RuleNameMaximumLength));
             }
 
-            if (this.name.Contains(Constants.PathDelimiter) || this.name.Contains(@"\"))
+            if (name.Contains(Constants.PathDelimiter) || name.Contains(@"\"))
             {
                 throw Fx.Exception.Argument(
-                    nameof(this.name),
-                    Resources.InvalidCharacterInEntityName.FormatForUser(Constants.PathDelimiter, this.name));
+                    nameof(name),
+                    Resources.InvalidCharacterInEntityName.FormatForUser(Constants.PathDelimiter, name));
             }
 
             string[] uriSchemeKeys = { "@", "?", "#" };
             foreach (var uriSchemeKey in uriSchemeKeys)
             {
-                if (this.name.Contains(uriSchemeKey))
+                if (name.Contains(uriSchemeKey))
                 {
                     throw Fx.Exception.Argument(
-                        nameof(this.name),
-                        Resources.CharacterReservedForUriScheme.FormatForUser(nameof(this.name), uriSchemeKey));
+                        nameof(name),
+                        Resources.CharacterReservedForUriScheme.FormatForUser(nameof(name), uriSchemeKey));
                 }
             }
         }

@@ -7,10 +7,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
     class ExceptionUtility
     {
-        internal ExceptionUtility()
-        {
-        }
-
         public ArgumentException Argument(string paramName, string message)
         {
             return new ArgumentException(message, paramName);
@@ -23,7 +19,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         public ArgumentException ArgumentNullOrWhiteSpace(string paramName)
         {
-            return this.Argument(paramName, Resources.ArgumentNullOrWhiteSpace.FormatForUser(paramName));
+            return Argument(paramName, Resources.ArgumentNullOrWhiteSpace.FormatForUser(paramName));
         }
 
         public ArgumentOutOfRangeException ArgumentOutOfRange(string paramName, object actualValue, string message)

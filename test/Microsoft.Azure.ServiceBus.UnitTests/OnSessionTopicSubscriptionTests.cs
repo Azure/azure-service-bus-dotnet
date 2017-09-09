@@ -26,7 +26,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         Task OnSessionPeekLockWithAutoCompleteTrue(string topicName, int maxConcurrentCalls)
         {
-            return this.OnSessionTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
+            return OnSessionTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
         }
 
         [Theory]
@@ -34,14 +34,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         Task OnSessionPeekLockWithAutoCompleteFalse(string topicName, int maxConcurrentCalls)
         {
-            return this.OnSessionTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
+            return OnSessionTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
         }
 
         [Fact]
         [DisplayTestMethodName]
         async Task OnSessionExceptionHandlerCalledWhenRegisteredOnNonSessionFulSubscription()
         {
-            bool exceptionReceivedHandlerCalled = false;
+            var exceptionReceivedHandlerCalled = false;
             var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedTopicName);
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
@@ -49,7 +49,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestConstants.SubscriptionName,
                 ReceiveMode.PeekLock);
 
-            SessionHandlerOptions sessionHandlerOptions = new SessionHandlerOptions(
+            var sessionHandlerOptions = new SessionHandlerOptions(
             (eventArgs) =>
             {
                 Assert.NotNull(eventArgs);
@@ -71,7 +71,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             try
             {
-                Stopwatch stopwatch = Stopwatch.StartNew();
+                var stopwatch = Stopwatch.StartNew();
                 while (stopwatch.Elapsed.TotalSeconds <= 10)
                 {
                     if (exceptionReceivedHandlerCalled)
@@ -99,12 +99,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicClient.TopicName,
-                this.SubscriptionName,
+                SubscriptionName,
                 ReceiveMode.PeekLock);
 
             try
             {
-                SessionHandlerOptions handlerOptions =
+                var handlerOptions =
                     new SessionHandlerOptions(ExceptionReceivedHandler)
                     {
                         MaxConcurrentSessions = 5,
@@ -112,7 +112,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                         AutoComplete = true
                     };
 
-                TestSessionHandler testSessionHandler = new TestSessionHandler(
+                var testSessionHandler = new TestSessionHandler(
                     subscriptionClient.ReceiveMode,
                     handlerOptions,
                     topicClient.InnerSender,

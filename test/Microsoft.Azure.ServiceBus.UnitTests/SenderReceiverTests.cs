@@ -7,7 +7,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Text;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Microsoft.Azure.ServiceBus.Core;
+    using Core;
     using Xunit;
 
     public class SenderReceiverTests : SenderReceiverClientTestBase
@@ -30,7 +30,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             try
             {
-                await this.PeekLockTestCase(sender, receiver, messageCount);
+                await PeekLockTestCase(sender, receiver, messageCount);
             }
             finally
             {
@@ -50,7 +50,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             try
             {
                 await
-                    this.PeekLockDeferTestCase(sender, receiver, messageCount);
+                    PeekLockDeferTestCase(sender, receiver, messageCount);
             }
             finally
             {
@@ -69,7 +69,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             try
             {
-                await this.PeekAsyncTestCase(sender, receiver, messageCount);
+                await PeekAsyncTestCase(sender, receiver, messageCount);
             }
             finally
             {
@@ -88,7 +88,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             try
             {
-                await this.ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(sender, receiver, messageCount);
+                await ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(sender, receiver, messageCount);
             }
             finally
             {
@@ -106,7 +106,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             try
             {
-                await this.ReceiveShouldThrowForServerTimeoutZero(receiver);
+                await ReceiveShouldThrowForServerTimeoutZero(receiver);
             }
             finally
             {
@@ -130,7 +130,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             try
             {
-                for (int i = 0; i < 9; i++)
+                for (var i = 0; i < 9; i++)
                 {
                     var message = new Message(Encoding.UTF8.GetBytes("test" + i))
                     {

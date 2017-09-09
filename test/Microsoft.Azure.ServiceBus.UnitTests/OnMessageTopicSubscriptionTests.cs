@@ -22,7 +22,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         Task OnMessagePeekLockWithAutoCompleteTrue(string topicName, int maxConcurrentCalls)
         {
-            return this.OnMessageTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
+            return OnMessageTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
         }
 
         [Theory]
@@ -30,7 +30,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         Task OnMessageReceiveDelete(string topicName, int maxConcurrentCalls)
         {
-            return this.OnMessageTestAsync(topicName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
+            return OnMessageTestAsync(topicName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
         }
 
         async Task OnMessageTestAsync(string topicName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
@@ -41,12 +41,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName,
+                SubscriptionName,
                 mode);
 
             try
             {
-                await this.OnMessageAsyncTestCase(
+                await OnMessageAsyncTestCase(
                     topicClient.InnerSender,
                     subscriptionClient.InnerSubscriptionClient.InnerReceiver,
                     maxConcurrentCalls,

@@ -42,7 +42,7 @@ namespace Microsoft.Azure.ServiceBus
                         Constants.MaximumSqlFilterStatementLength));
             }
 
-            this.SqlExpression = sqlExpression;
+            SqlExpression = sqlExpression;
         }
 
         /// <summary>
@@ -50,13 +50,13 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         /// <value>The SQL expression.</value>
         /// <remarks>Max allowed length of sql expression is 1024 chars.</remarks>
-        public string SqlExpression { get; private set; }
+        public string SqlExpression { get; }
 
         /// <summary>
         /// Sets the value of a filter expression.
         /// </summary>
         /// <value>The value of a filter expression.</value>
-        public IDictionary<string, object> Parameters => this.parameters ?? (this.parameters = new PropertyDictionary());
+        public IDictionary<string, object> Parameters => parameters ?? (parameters = new PropertyDictionary());
 
         /// <summary>
         /// Returns a string representation of <see cref="SqlFilter" />.
@@ -64,7 +64,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The string representation of <see cref="SqlFilter" />.</returns>
         public override string ToString()
         {
-            return string.Format(CultureInfo.InvariantCulture, "SqlFilter: {0}", this.SqlExpression);
+            return string.Format(CultureInfo.InvariantCulture, "SqlFilter: {0}", SqlExpression);
         }
     }
 }

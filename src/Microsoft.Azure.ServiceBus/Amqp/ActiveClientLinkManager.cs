@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
-    using Microsoft.Azure.Amqp;
+    using Azure.Amqp;
     using System;
     using System.Threading;
     using System.Threading.Tasks;
@@ -24,53 +24,53 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         public ActiveClientLinkManager(string clientId, ICbsTokenProvider tokenProvider)
         {
             this.clientId = clientId;
-            this.cbsTokenProvider = tokenProvider;
-            this.sendReceiveLinkCBSTokenRenewalTimer = new Timer(OnRenewSendReceiveCBSToken, this, Timeout.Infinite, Timeout.Infinite);
-            this.requestResponseLinkCBSTokenRenewalTimer = new Timer(OnRenewRequestResponseCBSToken, this, Timeout.Infinite, Timeout.Infinite);
+            cbsTokenProvider = tokenProvider;
+            sendReceiveLinkCBSTokenRenewalTimer = new Timer(OnRenewSendReceiveCBSToken, this, Timeout.Infinite, Timeout.Infinite);
+            requestResponseLinkCBSTokenRenewalTimer = new Timer(OnRenewRequestResponseCBSToken, this, Timeout.Infinite, Timeout.Infinite);
         }
 
         public void Close()
         {
-            this.sendReceiveLinkCBSTokenRenewalTimer.Dispose();
-            this.sendReceiveLinkCBSTokenRenewalTimer = null;
-            this.requestResponseLinkCBSTokenRenewalTimer.Dispose();
-            this.requestResponseLinkCBSTokenRenewalTimer = null;
+            sendReceiveLinkCBSTokenRenewalTimer.Dispose();
+            sendReceiveLinkCBSTokenRenewalTimer = null;
+            requestResponseLinkCBSTokenRenewalTimer.Dispose();
+            requestResponseLinkCBSTokenRenewalTimer = null;
         }
 
         public void SetActiveSendReceiveLink(ActiveSendReceiveClientLink sendReceiveClientLink)
         {
-            this.activeSendReceiveClientLink = sendReceiveClientLink;
-            this.activeSendReceiveClientLink.Link.Closed += this.OnSendReceiveLinkClosed;
-            if (this.activeSendReceiveClientLink.Link.State == AmqpObjectState.Opened)
+            activeSendReceiveClientLink = sendReceiveClientLink;
+            activeSendReceiveClientLink.Link.Closed += OnSendReceiveLinkClosed;
+            if (activeSendReceiveClientLink.Link.State == AmqpObjectState.Opened)
             {
-                this.SetRenewCBSTokenTimer(sendReceiveClientLink);
+                SetRenewCBSTokenTimer(sendReceiveClientLink);
             }
         }
 
         void OnSendReceiveLinkClosed(object sender, EventArgs e)
         {
-            this.ChangeRenewTimer(this.activeSendReceiveClientLink, Timeout.InfiniteTimeSpan);
+            ChangeRenewTimer(activeSendReceiveClientLink, Timeout.InfiniteTimeSpan);
         }
 
         public void SetActiveRequestResponseLink(ActiveRequestResponseLink requestResponseLink)
         {
-            this.activeRequestResponseClientLink = requestResponseLink;
-            this.activeRequestResponseClientLink.Link.Closed += this.OnRequestResponseLinkClosed;
-            if (this.activeRequestResponseClientLink.Link.State == AmqpObjectState.Opened)
+            activeRequestResponseClientLink = requestResponseLink;
+            activeRequestResponseClientLink.Link.Closed += OnRequestResponseLinkClosed;
+            if (activeRequestResponseClientLink.Link.State == AmqpObjectState.Opened)
             {
-                this.SetRenewCBSTokenTimer(requestResponseLink);
+                SetRenewCBSTokenTimer(requestResponseLink);
             }
         }
 
         static async void OnRenewSendReceiveCBSToken(object state)
         {
-            ActiveClientLinkManager thisPtr = (ActiveClientLinkManager)state;
+            var thisPtr = (ActiveClientLinkManager)state;
             await thisPtr.RenewCBSTokenAsync(thisPtr.activeSendReceiveClientLink).ConfigureAwait(false);
         }
 
         static async void OnRenewRequestResponseCBSToken(object state)
         {
-            ActiveClientLinkManager thisPtr = (ActiveClientLinkManager)state;
+            var thisPtr = (ActiveClientLinkManager)state;
             await thisPtr.RenewCBSTokenAsync(thisPtr.activeRequestResponseClientLink).ConfigureAwait(false);
         }
 
@@ -78,34 +78,34 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         {
             try
             {
-                AmqpCbsLink cbsLink = activeClientLinkObject.Connection.Extensions.Find<AmqpCbsLink>() ?? new AmqpCbsLink(activeClientLinkObject.Connection);
+                var cbsLink = activeClientLinkObject.Connection.Extensions.Find<AmqpCbsLink>() ?? new AmqpCbsLink(activeClientLinkObject.Connection);
 
                 MessagingEventSource.Log.AmqpSendAuthenticanTokenStart(activeClientLinkObject.EndpointUri, activeClientLinkObject.Audience, activeClientLinkObject.Audience, activeClientLinkObject.RequiredClaims);
 
                 activeClientLinkObject.AuthorizationValidUntilUtc = await cbsLink.SendTokenAsync(
-                    this.cbsTokenProvider,
+                    cbsTokenProvider,
                     activeClientLinkObject.EndpointUri,
                     activeClientLinkObject.Audience,
                     activeClientLinkObject.Audience,
                     activeClientLinkObject.RequiredClaims,
-                    ActiveClientLinkManager.SendTokenTimeout).ConfigureAwait(false);
+                    SendTokenTimeout).ConfigureAwait(false);
 
-                this.SetRenewCBSTokenTimer(activeClientLinkObject);
+                SetRenewCBSTokenTimer(activeClientLinkObject);
 
                 MessagingEventSource.Log.AmqpSendAuthenticanTokenStop();
             }
             catch (Exception e)
             {
                 // failed to refresh token, no need to do anything since the server will shut the link itself
-                MessagingEventSource.Log.AmqpSendAuthenticanTokenException(this.clientId, e);
+                MessagingEventSource.Log.AmqpSendAuthenticanTokenException(clientId, e);
 
-                this.ChangeRenewTimer(activeClientLinkObject, Timeout.InfiniteTimeSpan);
+                ChangeRenewTimer(activeClientLinkObject, Timeout.InfiniteTimeSpan);
             }
         }
 
         void OnRequestResponseLinkClosed(object sender, EventArgs e)
         {
-            this.ChangeRenewTimer(this.activeRequestResponseClientLink, Timeout.InfiniteTimeSpan);
+            ChangeRenewTimer(activeRequestResponseClientLink, Timeout.InfiniteTimeSpan);
         }
 
         void SetRenewCBSTokenTimer(ActiveClientLinkObject activeClientLinkObject)
@@ -115,19 +115,19 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 return;
             }
 
-            TimeSpan interval = activeClientLinkObject.AuthorizationValidUntilUtc.Subtract(DateTime.UtcNow) - ActiveClientLinkManager.TokenRefreshBuffer;
-            this.ChangeRenewTimer(activeClientLinkObject, interval);
+            TimeSpan interval = activeClientLinkObject.AuthorizationValidUntilUtc.Subtract(DateTime.UtcNow) - TokenRefreshBuffer;
+            ChangeRenewTimer(activeClientLinkObject, interval);
         }
 
         void ChangeRenewTimer(ActiveClientLinkObject activeClientLinkObject, TimeSpan dueTime)
         {
             if (activeClientLinkObject is ActiveSendReceiveClientLink)
             {
-                this.sendReceiveLinkCBSTokenRenewalTimer?.Change(dueTime, Timeout.InfiniteTimeSpan);
+                sendReceiveLinkCBSTokenRenewalTimer?.Change(dueTime, Timeout.InfiniteTimeSpan);
             }
             else
             {
-                this.requestResponseLinkCBSTokenRenewalTimer?.Change(dueTime, Timeout.InfiniteTimeSpan);
+                requestResponseLinkCBSTokenRenewalTimer?.Change(dueTime, Timeout.InfiniteTimeSpan);
             }
         }
     }

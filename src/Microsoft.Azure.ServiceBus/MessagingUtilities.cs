@@ -9,15 +9,15 @@ namespace Microsoft.Azure.ServiceBus
     {
         public static TimeSpan CalculateRenewAfterDuration(DateTime lockedUntilUtc)
         {
-            TimeSpan remaining = lockedUntilUtc - DateTime.UtcNow;
+            var remaining = lockedUntilUtc - DateTime.UtcNow;
 
             if(remaining < TimeSpan.FromMilliseconds(400))
             {
                 return TimeSpan.Zero;
             }
 
-            TimeSpan buffer = TimeSpan.FromTicks(Math.Min(remaining.Ticks / 2, Constants.MaximumRenewBufferDuration.Ticks));
-            TimeSpan renewAfter = remaining - buffer;
+            var buffer = TimeSpan.FromTicks(Math.Min(remaining.Ticks / 2, Constants.MaximumRenewBufferDuration.Ticks));
+            var renewAfter = remaining - buffer;
 
             return renewAfter;
         }
