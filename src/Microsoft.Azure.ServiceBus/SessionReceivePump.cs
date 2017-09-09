@@ -112,11 +112,11 @@ namespace Microsoft.Azure.ServiceBus
         {
             while (!pumpCancellationToken.IsCancellationRequested)
             {
-                bool concurrentSessionSemaphoreAquired = false;
+                bool concurrentSessionSemaphoreAcquired = false;
                 try
                 {
                     await maxConcurrentSessionsSemaphoreSlim.WaitAsync(pumpCancellationToken).ConfigureAwait(false);
-                    concurrentSessionSemaphoreAquired = true;
+                    concurrentSessionSemaphoreAcquired = true;
 
                     await maxPendingAcceptSessionsSemaphoreSlim.WaitAsync(pumpCancellationToken).ConfigureAwait(false);
                     IMessageSession session = await client.AcceptMessageSessionAsync().ConfigureAwait(false);
@@ -135,7 +135,7 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     MessagingEventSource.Log.SessionReceivePumpSessionReceiveException(clientId, exception);
 
-                    if (concurrentSessionSemaphoreAquired)
+                    if (concurrentSessionSemaphoreAcquired)
                     {
                         maxConcurrentSessionsSemaphoreSlim.Release();
                     }
@@ -209,7 +209,7 @@ namespace Microsoft.Azure.ServiceBus
 
                     // Set the timer
                     userCallbackTimer.Change(sessionHandlerOptions.MaxAutoRenewDuration, TimeSpan.FromMilliseconds(-1));
-                    bool callbackExceptionOccured = false;
+                    bool callbackExceptionOccurred = false;
                     try
                     {
                         await userOnSessionCallback(session, message, pumpCancellationToken).ConfigureAwait(false);
@@ -218,7 +218,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         MessagingEventSource.Log.MessageReceivePumpTaskException(clientId, session.SessionId, exception);
                         await RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.UserCallback).ConfigureAwait(false);
-                        callbackExceptionOccured = true;
+                        callbackExceptionOccurred = true;
                         if (!(exception is MessageLockLostException || exception is SessionLockLostException))
                         {
                             await AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
@@ -229,7 +229,7 @@ namespace Microsoft.Azure.ServiceBus
                         userCallbackTimer.Change(Timeout.Infinite, Timeout.Infinite);
                     }
 
-                    if (!callbackExceptionOccured)
+                    if (!callbackExceptionOccurred)
                     {
                         await CompleteMessageIfNeededAsync(session, message).ConfigureAwait(false);
                     }
