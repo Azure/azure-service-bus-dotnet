@@ -85,7 +85,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             AmqpTransportInitiator initiator = new AmqpTransportInitiator(amqpSettings, transportSettings);
             TransportBase transport = await initiator.ConnectTaskAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
-            string containerId = Guid.NewGuid().ToString();
+            var containerId = Guid.NewGuid().ToString();
             AmqpConnectionSettings amqpConnectionSettings = AmqpConnectionHelper.CreateAmqpConnectionSettings(AmqpConstants.DefaultMaxFrameSize, containerId, hostName);
             AmqpConnection connection = new AmqpConnection(transport, amqpSettings, amqpConnectionSettings);
             await connection.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
@@ -104,9 +104,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         private TransportSettings CreateTransportSettings()
         {
-            string hostName = Endpoint.Host;
-            string networkHost = Endpoint.Host;
-            int port = Endpoint.Port;
+            var hostName = Endpoint.Host;
+            var networkHost = Endpoint.Host;
+            var port = Endpoint.Port;
 
             if (TransportType == TransportType.AmqpWebSockets)
             {

@@ -172,8 +172,8 @@ namespace Microsoft.Azure.ServiceBus
 
             foreach (var pair in Properties)
             {
-                string propertyName = pair.Key;
-                object propertyValue = pair.Value;
+                var propertyName = pair.Key;
+                var propertyValue = pair.Value;
 
                 AppendPropertyExpression(ref firstExpression, builder, propertyName, propertyValue);
             }
