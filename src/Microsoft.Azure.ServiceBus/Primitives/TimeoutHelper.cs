@@ -61,7 +61,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 return Timeout.Infinite;
             }
 
-            long ticks = Ticks.FromTimeSpan(timeout);
+            var ticks = Ticks.FromTimeSpan(timeout);
             if (ticks / TimeSpan.TicksPerMillisecond > int.MaxValue)
             {
                 return int.MaxValue;
