@@ -15,19 +15,19 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         public ConcurrentExpiringSet()
         {
-            this.dictionary = new ConcurrentDictionary<TKey, DateTime>();
+            dictionary = new ConcurrentDictionary<TKey, DateTime>();
         }
 
         public void AddOrUpdate(TKey key, DateTime expiration)
         {
-            this.dictionary[key] = expiration;
-            this.ScheduleCleanup();
+            dictionary[key] = expiration;
+            ScheduleCleanup();
         }
 
         public bool Contains(TKey key)
         {
             DateTime expiration;
-            if (this.dictionary.TryGetValue(key, out expiration))
+            if (dictionary.TryGetValue(key, out expiration))
             {
                 return true;
             }
@@ -37,35 +37,35 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         void ScheduleCleanup()
         {
-            lock (this.cleanupSynObject)
+            lock (cleanupSynObject)
             {
-                if (this.cleanupScheduled)
+                if (cleanupScheduled)
                 {
                     return;
                 }
 
-                this.cleanupScheduled = true;
-                Task.Run(() => this.CollectExpiredEntries());
+                cleanupScheduled = true;
+                Task.Run(() => CollectExpiredEntries());
             }
         }
 
         void CollectExpiredEntries()
         {
-            lock (this.cleanupSynObject)
+            lock (cleanupSynObject)
             {
-                this.cleanupScheduled = false;
+                cleanupScheduled = false;
             }
 
-            foreach (var key in this.dictionary.Keys)
+            foreach (var key in dictionary.Keys)
             {
-                if (DateTime.UtcNow > this.dictionary[key])
+                if (DateTime.UtcNow > dictionary[key])
                 {
                     DateTime entry;
-                    this.dictionary.TryRemove(key, out entry);
+                    dictionary.TryRemove(key, out entry);
                 }
             }
 
-            this.ScheduleCleanup();
+            ScheduleCleanup();
         }
     }
 }

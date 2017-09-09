@@ -6,8 +6,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System;
     using System.Text;
     using Azure.Amqp.Framing;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.ServiceBus.Amqp;
+    using Azure.Amqp;
+    using Amqp;
     using InteropExtensions;
     using Xunit;
 

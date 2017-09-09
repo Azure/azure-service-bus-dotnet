@@ -39,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         }
 
         internal SharedAccessSignatureTokenProvider(string keyName, string sharedAccessKey, TimeSpan tokenTimeToLive, TokenScope tokenScope)
-            : this(keyName, sharedAccessKey, TokenProvider.MessagingTokenProviderKeyEncoder, tokenTimeToLive, tokenScope)
+            : this(keyName, sharedAccessKey, MessagingTokenProviderKeyEncoder, tokenTimeToLive, tokenScope)
         {
         }
 
@@ -72,27 +72,27 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
             this.keyName = keyName;
             this.tokenTimeToLive = tokenTimeToLive;
-            this.encodedSharedAccessKey = customKeyEncoder != null ?
+            encodedSharedAccessKey = customKeyEncoder != null ?
                 customKeyEncoder(sharedAccessKey) :
-                TokenProvider.MessagingTokenProviderKeyEncoder(sharedAccessKey);
+                MessagingTokenProviderKeyEncoder(sharedAccessKey);
         }
 
         protected override Task<SecurityToken> OnGetTokenAsync(string appliesTo, string action, TimeSpan timeout)
         {
-            string tokenString = this.BuildSignature(appliesTo);
+            string tokenString = BuildSignature(appliesTo);
             var securityToken = new SharedAccessSignatureToken(tokenString);
             return Task.FromResult<SecurityToken>(securityToken);
         }
 
         protected virtual string BuildSignature(string targetUri)
         {
-            return string.IsNullOrWhiteSpace(this.sharedAccessSignature)
+            return string.IsNullOrWhiteSpace(sharedAccessSignature)
                 ? SharedAccessSignatureBuilder.BuildSignature(
-                    this.keyName,
-                    this.encodedSharedAccessKey,
+                    keyName,
+                    encodedSharedAccessKey,
                     targetUri,
-                    this.tokenTimeToLive)
-                : this.sharedAccessSignature;
+                    tokenTimeToLive)
+                : sharedAccessSignature;
         }
 
         static class SharedAccessSignatureBuilder

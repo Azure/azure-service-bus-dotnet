@@ -5,9 +5,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 {
     using System;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Transport;
-    using Microsoft.Azure.ServiceBus.Amqp;
+    using Azure.Amqp;
+    using Azure.Amqp.Transport;
+    using Amqp;
 
     internal abstract class ServiceBusConnection
     {
@@ -15,8 +15,8 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         protected ServiceBusConnection(TimeSpan operationTimeout, RetryPolicy retryPolicy)
         {
-            this.OperationTimeout = operationTimeout;
-            this.RetryPolicy = retryPolicy;
+            OperationTimeout = operationTimeout;
+            RetryPolicy = retryPolicy;
         }
 
         public Uri Endpoint { get; set; }
@@ -52,16 +52,16 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         public Task CloseAsync()
         {
-            return this.ConnectionManager.CloseAsync();
+            return ConnectionManager.CloseAsync();
         }
 
         protected void InitializeConnection(ServiceBusConnectionStringBuilder builder)
         {
-            this.Endpoint = new Uri(builder.Endpoint);
-            this.SasKeyName = builder.SasKeyName;
-            this.SasKey = builder.SasKey;
-            this.TransportType = builder.TransportType;
-            this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, CloseConnection);
+            Endpoint = new Uri(builder.Endpoint);
+            SasKeyName = builder.SasKeyName;
+            SasKey = builder.SasKey;
+            TransportType = builder.TransportType;
+            ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(CreateConnectionAsync, CloseConnection);
         }
 
         static void CloseConnection(AmqpConnection connection)
@@ -72,7 +72,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         async Task<AmqpConnection> CreateConnectionAsync(TimeSpan timeout)
         {
-            string hostName = this.Endpoint.Host;
+            string hostName = Endpoint.Host;
 
             var timeoutHelper = new TimeoutHelper(timeout);
             AmqpSettings amqpSettings = AmqpConnectionHelper.CreateAmqpSettings(
@@ -104,9 +104,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         private TransportSettings CreateTransportSettings()
         {
-            string hostName = this.Endpoint.Host;
-            string networkHost = this.Endpoint.Host;
-            int port = this.Endpoint.Port;
+            string hostName = Endpoint.Host;
+            string networkHost = Endpoint.Host;
+            int port = Endpoint.Port;
 
             if (TransportType == TransportType.AmqpWebSockets)
             {

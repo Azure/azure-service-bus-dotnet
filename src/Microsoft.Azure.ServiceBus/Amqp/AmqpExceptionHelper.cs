@@ -9,9 +9,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.IO;
     using System.Net.Sockets;
     using System.Text;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Encoding;
-    using Microsoft.Azure.Amqp.Framing;
+    using Azure.Amqp;
+    using Azure.Amqp.Encoding;
+    using Azure.Amqp.Framing;
 
     static class AmqpExceptionHelper
     {
@@ -73,9 +73,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static Exception ToMessagingContractException(this AmqpMessage responseMessage, AmqpResponseStatusCode statusCode)
         {
-            AmqpSymbol errorCondition = AmqpExceptionHelper.GetResponseErrorCondition(responseMessage, statusCode);
+            AmqpSymbol errorCondition = GetResponseErrorCondition(responseMessage, statusCode);
             var statusDescription = responseMessage.ApplicationProperties.Map[ManagementConstants.Response.StatusDescription] as string ?? errorCondition.Value;
-            return AmqpExceptionHelper.ToMessagingContractException(errorCondition.Value, statusDescription);
+            return ToMessagingContractException(errorCondition.Value, statusDescription);
         }
 
         public static Exception ToMessagingContractException(this Error error, bool connectionError = false)

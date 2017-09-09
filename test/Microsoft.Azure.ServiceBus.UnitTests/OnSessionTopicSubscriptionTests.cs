@@ -26,7 +26,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         Task OnSessionPeekLockWithAutoCompleteTrue(string topicName, int maxConcurrentCalls)
         {
-            return this.OnSessionTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
+            return OnSessionTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
         }
 
         [Theory]
@@ -34,7 +34,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         Task OnSessionPeekLockWithAutoCompleteFalse(string topicName, int maxConcurrentCalls)
         {
-            return this.OnSessionTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
+            return OnSessionTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
         }
 
         [Fact]
@@ -99,7 +99,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicClient.TopicName,
-                this.SubscriptionName,
+                SubscriptionName,
                 ReceiveMode.PeekLock);
 
             try

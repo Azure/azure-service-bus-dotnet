@@ -122,7 +122,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 {
                     get
                     {
-                        return this.location;
+                        return location;
                     }
                 }
 
@@ -130,7 +130,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 {
                     get
                     {
-                        return this.description;
+                        return description;
                     }
                 }
             }
@@ -144,13 +144,13 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
                 public CacheAttribute(Type elementType, CacheAttrition cacheAttrition)
                 {
-                    this.Scope = Strings.DeclaringInstance;
-                    this.SizeLimit = Strings.Unbounded;
-                    this.Timeout = Strings.Infinite;
+                    Scope = Strings.DeclaringInstance;
+                    SizeLimit = Strings.Unbounded;
+                    Timeout = Strings.Infinite;
 
                     if (elementType == null)
                     {
-                        throw Fx.Exception.ArgumentNull(nameof(elementType));
+                        throw Exception.ArgumentNull(nameof(elementType));
                     }
 
                     this.elementType = elementType;
@@ -161,7 +161,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 {
                     get
                     {
-                        return this.elementType;
+                        return elementType;
                     }
                 }
 
@@ -169,7 +169,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 {
                     get
                     {
-                        return this.cacheAttrition;
+                        return cacheAttrition;
                     }
                 }
 
@@ -188,12 +188,12 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
                 public QueueAttribute(Type elementType)
                 {
-                    this.Scope = Strings.DeclaringInstance;
-                    this.SizeLimit = Strings.Unbounded;
+                    Scope = Strings.DeclaringInstance;
+                    SizeLimit = Strings.Unbounded;
 
                     if (elementType == null)
                     {
-                        throw Fx.Exception.ArgumentNull(nameof(elementType));
+                        throw Exception.ArgumentNull(nameof(elementType));
                     }
 
                     this.elementType = elementType;
@@ -203,7 +203,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 {
                     get
                     {
-                        return this.elementType;
+                        return elementType;
                     }
                 }
 
@@ -224,9 +224,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             {
                 public SynchronizationObjectAttribute()
                 {
-                    this.Blocking = true;
-                    this.Scope = Strings.DeclaringInstance;
-                    this.Kind = SynchronizationKind.FromFieldType;
+                    Blocking = true;
+                    Scope = Strings.DeclaringInstance;
+                    Kind = SynchronizationKind.FromFieldType;
                 }
 
                 public bool Blocking { get; set; }
@@ -251,7 +251,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 {
                     get
                     {
-                        return this.blocksUsing;
+                        return blocksUsing;
                     }
                 }
 
@@ -307,7 +307,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     {
                         if (exceptionType == null)
                         {
-                            throw Fx.Exception.ArgumentNull(nameof(exceptionType));
+                            throw Exception.ArgumentNull(nameof(exceptionType));
                         }
                         if (string.IsNullOrEmpty(diagnosis))
                         {
@@ -323,7 +323,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     {
                         get
                         {
-                            return this.exceptionType;
+                            return exceptionType;
                         }
                     }
 
@@ -331,7 +331,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     {
                         get
                         {
-                            return this.diagnosis;
+                            return diagnosis;
                         }
                     }
                 }

@@ -30,7 +30,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         Task OnSessionPeekLockWithAutoCompleteTrue(string queueName, int maxConcurrentCalls)
         {
-            return this.OnSessionTestAsync(queueName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
+            return OnSessionTestAsync(queueName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
         }
 
         [Theory]
@@ -38,7 +38,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         Task OnSessionPeekLockWithAutoCompleteFalse(string queueName, int maxConcurrentCalls)
         {
-            return this.OnSessionTestAsync(queueName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
+            return OnSessionTestAsync(queueName, maxConcurrentCalls, ReceiveMode.PeekLock, false);
         }
 
         [Theory]
@@ -46,7 +46,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [DisplayTestMethodName]
         Task OnSessionReceiveDelete(string queueName, int maxConcurrentCalls)
         {
-            return this.OnSessionTestAsync(queueName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
+            return OnSessionTestAsync(queueName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
         }
 
         [Fact]

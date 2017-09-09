@@ -22,9 +22,9 @@ namespace Microsoft.Azure.ServiceBus
         protected ClientEntity(string clientTypeName, string postfix, RetryPolicy retryPolicy)
         {
             this.clientTypeName = clientTypeName;
-            this.ClientId = GenerateClientId(clientTypeName, postfix);
-            this.RetryPolicy = retryPolicy ?? throw new ArgumentNullException(nameof(retryPolicy));
-            this.syncLock = new object();
+            ClientId = GenerateClientId(clientTypeName, postfix);
+            RetryPolicy = retryPolicy ?? throw new ArgumentNullException(nameof(retryPolicy));
+            syncLock = new object();
         }
 
         /// <summary>
@@ -58,18 +58,18 @@ namespace Microsoft.Azure.ServiceBus
         public async Task CloseAsync()
         {
             var callClose = false;
-            lock (this.syncLock)
+            lock (syncLock)
             {
-                if (!this.IsClosedOrClosing)
+                if (!IsClosedOrClosing)
                 {
-                    this.IsClosedOrClosing = true;
+                    IsClosedOrClosing = true;
                     callClose = true;
                 }
             }
 
             if (callClose)
             {
-                await this.OnClosingAsync().ConfigureAwait(false);
+                await OnClosingAsync().ConfigureAwait(false);
             }
         }
 
@@ -112,9 +112,9 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         protected virtual void ThrowIfClosed()
         {
-            if (this.IsClosedOrClosing)
+            if (IsClosedOrClosing)
             {
-                throw new ObjectDisposedException($"{this.clientTypeName} with Id '{this.ClientId}' has already been closed. Please create a new {this.clientTypeName}.");
+                throw new ObjectDisposedException($"{clientTypeName} with Id '{ClientId}' has already been closed. Please create a new {clientTypeName}.");
             }
         }
 
@@ -123,8 +123,8 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         internal void UpdateClientId(string newClientId)
         {
-            MessagingEventSource.Log.UpdateClientId(this.ClientId, newClientId);
-            this.ClientId = newClientId;
+            MessagingEventSource.Log.UpdateClientId(ClientId, newClientId);
+            ClientId = newClientId;
         }
     }
 }

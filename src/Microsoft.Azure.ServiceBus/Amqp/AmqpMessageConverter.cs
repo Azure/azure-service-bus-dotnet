@@ -47,7 +47,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 messageCount++;
 
-                amqpMessage = AmqpMessageConverter.SBMessageToAmqpMessage(sbMessage);
+                amqpMessage = SBMessageToAmqpMessage(sbMessage);
                 if (firstAmqpMessage == null)
                 {
                     firstAmqpMessage = amqpMessage;
@@ -83,7 +83,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             if (firstMessage.PartitionKey != null)
             {
-                amqpMessage.MessageAnnotations.Map[AmqpMessageConverter.PartitionKeyName] =
+                amqpMessage.MessageAnnotations.Map[PartitionKeyName] =
                     firstMessage.PartitionKey;
             }
 

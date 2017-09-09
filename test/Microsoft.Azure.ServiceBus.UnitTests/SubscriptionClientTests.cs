@@ -28,7 +28,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName,
+                SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
 
             try
@@ -87,7 +87,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName,
+                SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
 
             try
@@ -156,7 +156,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var subscriptionClient = new SubscriptionClient(
                 TestUtility.NamespaceConnectionString,
                 topicName,
-                this.SubscriptionName,
+                SubscriptionName,
                 ReceiveMode.ReceiveAndDelete);
 
             try

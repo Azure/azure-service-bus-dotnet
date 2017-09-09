@@ -4,8 +4,8 @@
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Encoding;
+    using Azure.Amqp;
+    using Azure.Amqp.Encoding;
 
     class AmqpClientConstants
     {

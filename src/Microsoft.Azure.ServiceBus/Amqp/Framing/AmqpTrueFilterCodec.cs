@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Azure.ServiceBus.Amqp.Framing
 {
-    using Microsoft.Azure.Amqp;
+    using Azure.Amqp;
 
     sealed class AmqpTrueFilterCodec : AmqpFilterCodec
     {

@@ -4,8 +4,8 @@
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Azure.Amqp;
+    using Primitives;
 
     internal class AmqpRequestResponseLinkCreator : AmqpLinkCreator
     {
@@ -19,8 +19,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         protected override AmqpObject OnCreateAmqpLink(AmqpConnection connection, AmqpLinkSettings linkSettings, AmqpSession amqpSession)
         {
-            AmqpObject link = new RequestResponseAmqpLink(AmqpClientConstants.EntityTypeManagement, amqpSession, this.entityPath, linkSettings.Properties);
-            linkSettings.LinkName = $"{connection.Settings.ContainerId};{connection.Identifier}:{amqpSession.Identifier}:{link.Identifier}:{this.ClientId}";
+            AmqpObject link = new RequestResponseAmqpLink(AmqpClientConstants.EntityTypeManagement, amqpSession, entityPath, linkSettings.Properties);
+            linkSettings.LinkName = $"{connection.Settings.ContainerId};{connection.Identifier}:{amqpSession.Identifier}:{link.Identifier}:{ClientId}";
             return link;
         }
     }

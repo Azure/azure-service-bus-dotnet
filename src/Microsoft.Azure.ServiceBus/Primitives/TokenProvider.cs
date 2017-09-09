@@ -17,14 +17,14 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         const TokenScope DefaultTokenScope = TokenScope.Entity;
 
         protected TokenProvider()
-            : this(TokenProvider.DefaultTokenScope)
+            : this(DefaultTokenScope)
         {
         }
 
         protected TokenProvider(TokenScope tokenScope)
         {
-            this.TokenScope = tokenScope;
-            this.ThisLock = new object();
+            TokenScope = tokenScope;
+            ThisLock = new object();
         }
 
         /// <summary>
@@ -106,15 +106,15 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public Task<SecurityToken> GetTokenAsync(string appliesTo, string action, TimeSpan timeout)
         {
             TimeoutHelper.ThrowIfNegativeArgument(timeout);
-            appliesTo = this.NormalizeAppliesTo(appliesTo);
-            return this.OnGetTokenAsync(appliesTo, action, timeout);
+            appliesTo = NormalizeAppliesTo(appliesTo);
+            return OnGetTokenAsync(appliesTo, action, timeout);
         }
 
         protected abstract Task<SecurityToken> OnGetTokenAsync(string appliesTo, string action, TimeSpan timeout);
 
         protected virtual string NormalizeAppliesTo(string appliesTo)
         {
-            return ServiceBusUriHelper.NormalizeUri(appliesTo, "http", true, stripPath: this.TokenScope == TokenScope.Namespace, ensureTrailingSlash: true);
+            return ServiceBusUriHelper.NormalizeUri(appliesTo, "http", true, stripPath: TokenScope == TokenScope.Namespace, ensureTrailingSlash: true);
         }
     }
 }

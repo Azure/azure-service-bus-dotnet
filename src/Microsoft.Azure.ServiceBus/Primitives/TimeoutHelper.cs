@@ -24,24 +24,24 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         {
             Fx.Assert(timeout >= TimeSpan.Zero, "timeout must be non-negative");
 
-            this.originalTimeout = timeout;
-            this.deadline = DateTime.MaxValue;
-            this.deadlineSet = (timeout == TimeSpan.MaxValue);
+            originalTimeout = timeout;
+            deadline = DateTime.MaxValue;
+            deadlineSet = (timeout == TimeSpan.MaxValue);
 
-            if (startTimeout && !this.deadlineSet)
+            if (startTimeout && !deadlineSet)
             {
-                this.SetDeadline();
+                SetDeadline();
             }
         }
 
         public TimeSpan OriginalTimeout
         {
-            get { return this.originalTimeout; }
+            get { return originalTimeout; }
         }
 
         public static bool IsTooLarge(TimeSpan timeout)
         {
-            return (timeout > TimeoutHelper.MaxWait) && (timeout != TimeSpan.MaxValue);
+            return (timeout > MaxWait) && (timeout != TimeSpan.MaxValue);
         }
 
         public static TimeSpan FromMilliseconds(int milliseconds)
@@ -162,18 +162,18 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         public TimeSpan RemainingTime()
         {
-            if (!this.deadlineSet)
+            if (!deadlineSet)
             {
-                this.SetDeadline();
-                return this.originalTimeout;
+                SetDeadline();
+                return originalTimeout;
             }
 
-            if (this.deadline == DateTime.MaxValue)
+            if (deadline == DateTime.MaxValue)
             {
                 return TimeSpan.MaxValue;
             }
 
-            TimeSpan remaining = this.deadline - DateTime.UtcNow;
+            TimeSpan remaining = deadline - DateTime.UtcNow;
             if (remaining <= TimeSpan.Zero)
             {
                 return TimeSpan.Zero;
@@ -184,14 +184,14 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         public TimeSpan ElapsedTime()
         {
-            return this.originalTimeout - this.RemainingTime();
+            return originalTimeout - RemainingTime();
         }
 
         void SetDeadline()
         {
-            Fx.Assert(!this.deadlineSet, "TimeoutHelper deadline set twice.");
-            this.deadline = DateTime.UtcNow + this.originalTimeout;
-            this.deadlineSet = true;
+            Fx.Assert(!deadlineSet, "TimeoutHelper deadline set twice.");
+            deadline = DateTime.UtcNow + originalTimeout;
+            deadlineSet = true;
         }
     }
 }

@@ -16,8 +16,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
     {
         public static IEnumerable<object> TestEnd2EndEntityPermutations => new object[]
         {
-            new object[] { TransportType.NetMessaging, MessageInteropEnd2EndTests.GetSbConnectionString(TransportType.NetMessaging) },
-            new object[] { TransportType.Amqp, MessageInteropEnd2EndTests.GetSbConnectionString(TransportType.Amqp) }
+            new object[] { TransportType.NetMessaging, GetSbConnectionString(TransportType.NetMessaging) },
+            new object[] { TransportType.Amqp, GetSbConnectionString(TransportType.Amqp) }
         };
 
         [Theory]

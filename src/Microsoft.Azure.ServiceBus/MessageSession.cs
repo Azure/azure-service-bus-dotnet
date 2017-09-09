@@ -33,31 +33,31 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public DateTime LockedUntilUtc
         {
-            get => this.LockedUntilUtcInternal;
-            internal set => this.LockedUntilUtcInternal = value;
+            get => LockedUntilUtcInternal;
+            internal set => LockedUntilUtcInternal = value;
         }
 
         /// <summary>
         /// Gets the SessionId.
         /// </summary>
-        public string SessionId => this.SessionIdInternal;
+        public string SessionId => SessionIdInternal;
 
         public Task<byte[]> GetStateAsync()
         {
-            this.ThrowIfClosed();
-            return this.OnGetStateAsync();
+            ThrowIfClosed();
+            return OnGetStateAsync();
         }
 
         public Task SetStateAsync(byte[] sessionState)
         {
-            this.ThrowIfClosed();
-            return this.OnSetStateAsync(sessionState);
+            ThrowIfClosed();
+            return OnSetStateAsync(sessionState);
         }
 
         public Task RenewSessionLockAsync()
         {
-            this.ThrowIfClosed();
-            return this.OnRenewSessionLockAsync();
+            ThrowIfClosed();
+            return OnRenewSessionLockAsync();
         }
 
         protected override void OnMessageHandler(MessageHandlerOptions registerHandlerOptions, Func<Message, CancellationToken, Task> callback)
@@ -74,10 +74,10 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                AmqpRequestMessage amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.GetSessionStateOperation, this.OperationTimeout, null);
-                amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionIdInternal;
+                AmqpRequestMessage amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.GetSessionStateOperation, OperationTimeout, null);
+                amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = SessionIdInternal;
 
-                AmqpResponseMessage amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                AmqpResponseMessage amqpResponseMessage = await ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 byte[] sessionState = null;
                 if (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.OK)
@@ -104,8 +104,8 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.SetSessionStateOperation, this.OperationTimeout, null);
-                amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionIdInternal;
+                var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.SetSessionStateOperation, OperationTimeout, null);
+                amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = SessionIdInternal;
 
                 if (sessionState != null)
                 {
@@ -117,7 +117,7 @@ namespace Microsoft.Azure.ServiceBus
                     amqpRequestMessage.Map[ManagementConstants.Properties.SessionState] = null;
                 }
 
-                AmqpResponseMessage amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                AmqpResponseMessage amqpResponseMessage = await ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
                 if (amqpResponseMessage.StatusCode != AmqpResponseStatusCode.OK)
                 {
                     throw amqpResponseMessage.ToMessagingContractException();
@@ -133,14 +133,14 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                AmqpRequestMessage amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewSessionLockOperation, this.OperationTimeout, null);
-                amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionIdInternal;
+                AmqpRequestMessage amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewSessionLockOperation, OperationTimeout, null);
+                amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = SessionIdInternal;
 
-                AmqpResponseMessage amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                AmqpResponseMessage amqpResponseMessage = await ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 if (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.OK)
                 {
-                    this.LockedUntilUtcInternal = amqpResponseMessage.GetValue<DateTime>(ManagementConstants.Properties.Expiration);
+                    LockedUntilUtcInternal = amqpResponseMessage.GetValue<DateTime>(ManagementConstants.Properties.Expiration);
                 }
                 else
                 {
@@ -158,9 +158,9 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         protected override void ThrowIfClosed()
         {
-            if (this.IsClosedOrClosing)
+            if (IsClosedOrClosing)
             {
-                throw new ObjectDisposedException($"MessageSession with Id '{this.ClientId}' has already been closed. Please accept a new MessageSession.");
+                throw new ObjectDisposedException($"MessageSession with Id '{ClientId}' has already been closed. Please accept a new MessageSession.");
             }
         }
     }

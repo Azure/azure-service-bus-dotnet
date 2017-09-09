@@ -7,10 +7,10 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.ServiceBus.Amqp;
-    using Microsoft.Azure.ServiceBus.Core;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Azure.Amqp;
+    using Amqp;
+    using Core;
+    using Primitives;
 
     /// <summary>
     /// SubscriptionClient can be used for all basic interactions with a Service Bus Subscription.
@@ -94,7 +94,7 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(subscriptionName);
             }
 
-            this.ownsConnection = true;
+            ownsConnection = true;
         }
 
         SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode, RetryPolicy retryPolicy)
@@ -102,19 +102,19 @@ namespace Microsoft.Azure.ServiceBus
         {
             MessagingEventSource.Log.SubscriptionClientCreateStart(serviceBusConnection?.Endpoint.Authority, topicPath, subscriptionName, receiveMode.ToString());
 
-            this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
-            this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
-            this.syncLock = new object();
-            this.TopicPath = topicPath;
-            this.SubscriptionName = subscriptionName;
-            this.Path = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
-            this.ReceiveMode = receiveMode;
-            this.TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(
+            ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            OperationTimeout = ServiceBusConnection.OperationTimeout;
+            syncLock = new object();
+            TopicPath = topicPath;
+            SubscriptionName = subscriptionName;
+            Path = EntityNameHelper.FormatSubscriptionPath(TopicPath, SubscriptionName);
+            ReceiveMode = receiveMode;
+            TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(
                 serviceBusConnection.SasKeyName,
                 serviceBusConnection.SasKey);
-            this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
+            CbsTokenProvider = new TokenProviderAdapter(TokenProvider, serviceBusConnection.OperationTimeout);
 
-            MessagingEventSource.Log.SubscriptionClientCreateStop(serviceBusConnection.Endpoint.Authority, topicPath, subscriptionName, this.ClientId);
+            MessagingEventSource.Log.SubscriptionClientCreateStop(serviceBusConnection.Endpoint.Authority, topicPath, subscriptionName, ClientId);
         }
 
         /// <summary>
@@ -143,8 +143,8 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public override TimeSpan OperationTimeout
         {
-            get => this.ServiceBusConnection.OperationTimeout;
-            set => this.ServiceBusConnection.OperationTimeout = value;
+            get => ServiceBusConnection.OperationTimeout;
+            set => ServiceBusConnection.OperationTimeout = value;
         }
 
         /// <summary>
@@ -168,21 +168,21 @@ namespace Microsoft.Azure.ServiceBus
         /// </remarks>
         public int PrefetchCount
         {
-            get => this.prefetchCount;
+            get => prefetchCount;
             set
             {
                 if (value < 0)
                 {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
+                    throw Fx.Exception.ArgumentOutOfRange(nameof(PrefetchCount), value, "Value cannot be less than 0.");
                 }
-                this.prefetchCount = value;
-                if (this.innerSubscriptionClient != null)
+                prefetchCount = value;
+                if (innerSubscriptionClient != null)
                 {
-                    this.innerSubscriptionClient.PrefetchCount = value;
+                    innerSubscriptionClient.PrefetchCount = value;
                 }
-                if (this.sessionClient != null)
+                if (sessionClient != null)
                 {
-                    this.sessionClient.PrefetchCount = value;
+                    sessionClient.PrefetchCount = value;
                 }
             }
         }
@@ -191,21 +191,21 @@ namespace Microsoft.Azure.ServiceBus
         {
             get
             {
-                if (this.innerSubscriptionClient == null)
+                if (innerSubscriptionClient == null)
                 {
-                    lock (this.syncLock)
+                    lock (syncLock)
                     {
-                        this.innerSubscriptionClient = new AmqpSubscriptionClient(
-                            this.Path,
-                            this.ServiceBusConnection,
-                            this.RetryPolicy,
-                            this.CbsTokenProvider,
-                            this.PrefetchCount,
-                            this.ReceiveMode);
+                        innerSubscriptionClient = new AmqpSubscriptionClient(
+                            Path,
+                            ServiceBusConnection,
+                            RetryPolicy,
+                            CbsTokenProvider,
+                            PrefetchCount,
+                            ReceiveMode);
                     }
                 }
 
-                return this.innerSubscriptionClient;
+                return innerSubscriptionClient;
             }
         }
 
@@ -213,27 +213,27 @@ namespace Microsoft.Azure.ServiceBus
         {
             get
             {
-                if (this.sessionClient == null)
+                if (sessionClient == null)
                 {
-                    lock (this.syncLock)
+                    lock (syncLock)
                     {
-                        if (this.sessionClient == null)
+                        if (sessionClient == null)
                         {
-                            this.sessionClient = new SessionClient(
-                                this.ClientId,
-                                this.Path,
+                            sessionClient = new SessionClient(
+                                ClientId,
+                                Path,
                                 MessagingEntityType.Subscriber,
-                                this.ReceiveMode,
-                                this.PrefetchCount,
-                                this.ServiceBusConnection,
-                                this.CbsTokenProvider,
-                                this.RetryPolicy,
-                                this.RegisteredPlugins);
+                                ReceiveMode,
+                                PrefetchCount,
+                                ServiceBusConnection,
+                                CbsTokenProvider,
+                                RetryPolicy,
+                                RegisteredPlugins);
                         }
                     }
                 }
 
-                return this.sessionClient;
+                return sessionClient;
             }
         }
 
@@ -241,22 +241,22 @@ namespace Microsoft.Azure.ServiceBus
         {
             get
             {
-                if (this.sessionPumpHost == null)
+                if (sessionPumpHost == null)
                 {
-                    lock (this.syncLock)
+                    lock (syncLock)
                     {
-                        if (this.sessionPumpHost == null)
+                        if (sessionPumpHost == null)
                         {
-                            this.sessionPumpHost = new SessionPumpHost(
-                                this.ClientId,
-                                this.ReceiveMode,
-                                this.SessionClient,
-                                this.ServiceBusConnection.Endpoint.Authority);
+                            sessionPumpHost = new SessionPumpHost(
+                                ClientId,
+                                ReceiveMode,
+                                SessionClient,
+                                ServiceBusConnection.Endpoint.Authority);
                         }
                     }
                 }
 
-                return this.sessionPumpHost;
+                return sessionPumpHost;
             }
         }
 
@@ -277,8 +277,8 @@ namespace Microsoft.Azure.ServiceBus
         /// </remarks>
         public Task CompleteAsync(string lockToken)
         {
-            this.ThrowIfClosed();
-            return this.InnerSubscriptionClient.InnerReceiver.CompleteAsync(lockToken);
+            ThrowIfClosed();
+            return InnerSubscriptionClient.InnerReceiver.CompleteAsync(lockToken);
         }
 
         /// <summary>
@@ -292,8 +292,8 @@ namespace Microsoft.Azure.ServiceBus
         /// </remarks>
         public Task AbandonAsync(string lockToken)
         {
-            this.ThrowIfClosed();
-            return this.InnerSubscriptionClient.InnerReceiver.AbandonAsync(lockToken);
+            ThrowIfClosed();
+            return InnerSubscriptionClient.InnerReceiver.AbandonAsync(lockToken);
         }
 
         /// <summary>
@@ -309,8 +309,8 @@ namespace Microsoft.Azure.ServiceBus
         /// </remarks>
         public Task DeadLetterAsync(string lockToken)
         {
-            this.ThrowIfClosed();
-            return this.InnerSubscriptionClient.InnerReceiver.DeadLetterAsync(lockToken);
+            ThrowIfClosed();
+            return InnerSubscriptionClient.InnerReceiver.DeadLetterAsync(lockToken);
         }
 
         /// <summary>
@@ -324,8 +324,8 @@ namespace Microsoft.Azure.ServiceBus
         /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            this.ThrowIfClosed();
-            this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, exceptionReceivedHandler);
+            ThrowIfClosed();
+            InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, exceptionReceivedHandler);
         }
 
         /// <summary>
@@ -337,8 +337,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
         {
-            this.ThrowIfClosed();
-            this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, messageHandlerOptions);
+            ThrowIfClosed();
+            InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, messageHandlerOptions);
         }
 
         /// <summary>
@@ -354,7 +354,7 @@ namespace Microsoft.Azure.ServiceBus
         public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
             var sessionHandlerOptions = new SessionHandlerOptions(exceptionReceivedHandler);
-            this.RegisterSessionHandler(handler, sessionHandlerOptions);
+            RegisterSessionHandler(handler, sessionHandlerOptions);
         }
 
         /// <summary>
@@ -367,8 +367,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>  Enable prefetch to speed up the receive rate. </remarks>
         public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, SessionHandlerOptions sessionHandlerOptions)
         {
-            this.ThrowIfClosed();
-            this.SessionPumpHost.OnSessionHandler(handler, sessionHandlerOptions);
+            ThrowIfClosed();
+            SessionPumpHost.OnSessionHandler(handler, sessionHandlerOptions);
         }
 
         /// <summary>
@@ -386,7 +386,7 @@ namespace Microsoft.Azure.ServiceBus
         /// </remarks>
         public Task AddRuleAsync(string ruleName, Filter filter)
         {
-            return this.AddRuleAsync(new RuleDescription(name: ruleName, filter: filter));
+            return AddRuleAsync(new RuleDescription(name: ruleName, filter: filter));
         }
 
         /// <summary>
@@ -402,7 +402,7 @@ namespace Microsoft.Azure.ServiceBus
         /// </remarks>
         public async Task AddRuleAsync(RuleDescription description)
         {
-            this.ThrowIfClosed();
+            ThrowIfClosed();
 
             if (description == null)
             {
@@ -410,19 +410,19 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             description.ValidateDescriptionName();
-            MessagingEventSource.Log.AddRuleStart(this.ClientId, description.Name);
+            MessagingEventSource.Log.AddRuleStart(ClientId, description.Name);
 
             try
             {
-                await this.InnerSubscriptionClient.OnAddRuleAsync(description).ConfigureAwait(false);
+                await InnerSubscriptionClient.OnAddRuleAsync(description).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.AddRuleException(this.ClientId, exception);
+                MessagingEventSource.Log.AddRuleException(ClientId, exception);
                 throw;
             }
 
-            MessagingEventSource.Log.AddRuleStop(this.ClientId);
+            MessagingEventSource.Log.AddRuleStop(ClientId);
         }
 
         /// <summary>
@@ -432,26 +432,26 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>A task instance that represents the asynchronous remove rule operation.</returns>
         public async Task RemoveRuleAsync(string ruleName)
         {
-            this.ThrowIfClosed();
+            ThrowIfClosed();
 
             if (string.IsNullOrWhiteSpace(ruleName))
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(ruleName));
             }
 
-            MessagingEventSource.Log.RemoveRuleStart(this.ClientId, ruleName);
+            MessagingEventSource.Log.RemoveRuleStart(ClientId, ruleName);
 
             try
             {
-                await this.InnerSubscriptionClient.OnRemoveRuleAsync(ruleName).ConfigureAwait(false);
+                await InnerSubscriptionClient.OnRemoveRuleAsync(ruleName).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.RemoveRuleException(this.ClientId, exception);
+                MessagingEventSource.Log.RemoveRuleException(ClientId, exception);
                 throw;
             }
 
-            MessagingEventSource.Log.RemoveRuleStop(this.ClientId);
+            MessagingEventSource.Log.RemoveRuleStop(ClientId);
         }
 
         /// <summary>
@@ -460,31 +460,31 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>IEnumerable of rules</returns>
         public async Task<IEnumerable<RuleDescription>> GetRulesAsync()
         {
-            this.ThrowIfClosed();
+            ThrowIfClosed();
 
-            MessagingEventSource.Log.GetRulesStart(this.ClientId);
+            MessagingEventSource.Log.GetRulesStart(ClientId);
             int skip = 0;
             int top = int.MaxValue;
             IEnumerable<RuleDescription> rules;
 
             try
             {
-                rules = await this.InnerSubscriptionClient.OnGetRulesAsync(top, skip);
+                rules = await InnerSubscriptionClient.OnGetRulesAsync(top, skip);
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.GetRulesException(this.ClientId, exception);
+                MessagingEventSource.Log.GetRulesException(ClientId, exception);
                 throw;
             }
 
-            MessagingEventSource.Log.GetRulesStop(this.ClientId);
+            MessagingEventSource.Log.GetRulesStop(ClientId);
             return rules;
         }
 
         /// <summary>
         /// Gets a list of currently registered plugins for this SubscriptionClient.
         /// </summary>
-        public override IList<ServiceBusPlugin> RegisteredPlugins => this.InnerSubscriptionClient.InnerReceiver.RegisteredPlugins;
+        public override IList<ServiceBusPlugin> RegisteredPlugins => InnerSubscriptionClient.InnerReceiver.RegisteredPlugins;
 
         /// <summary>
         /// Registers a <see cref="ServiceBusPlugin"/> to be used for receiving messages from Service Bus.
@@ -492,8 +492,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register</param>
         public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
-            this.ThrowIfClosed();
-            this.InnerSubscriptionClient.InnerReceiver.RegisterPlugin(serviceBusPlugin);
+            ThrowIfClosed();
+            InnerSubscriptionClient.InnerReceiver.RegisterPlugin(serviceBusPlugin);
         }
 
         /// <summary>
@@ -502,27 +502,27 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="serviceBusPluginName">The name <see cref="ServiceBusPlugin.Name"/> to be unregistered</param>
         public override void UnregisterPlugin(string serviceBusPluginName)
         {
-            this.ThrowIfClosed();
-            this.InnerSubscriptionClient.InnerReceiver.UnregisterPlugin(serviceBusPluginName);
+            ThrowIfClosed();
+            InnerSubscriptionClient.InnerReceiver.UnregisterPlugin(serviceBusPluginName);
         }
 
         protected override async Task OnClosingAsync()
         {
-            if (this.innerSubscriptionClient != null)
+            if (innerSubscriptionClient != null)
             {
-                await this.innerSubscriptionClient.CloseAsync().ConfigureAwait(false);
+                await innerSubscriptionClient.CloseAsync().ConfigureAwait(false);
             }
 
-            this.sessionPumpHost?.Close();
+            sessionPumpHost?.Close();
 
-            if (this.sessionClient != null)
+            if (sessionClient != null)
             {
-                await this.sessionClient.CloseAsync().ConfigureAwait(false);
+                await sessionClient.CloseAsync().ConfigureAwait(false);
             }
 
-            if (this.ownsConnection)
+            if (ownsConnection)
             {
-                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+                await ServiceBusConnection.CloseAsync().ConfigureAwait(false);
             }
         }
     }

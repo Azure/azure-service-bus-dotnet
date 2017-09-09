@@ -39,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (!string.IsNullOrWhiteSpace(connectionString))
             {
-                this.ParseConnectionString(connectionString);
+                ParseConnectionString(connectionString);
             }
         }
 
@@ -71,10 +71,10 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(string.IsNullOrWhiteSpace(sharedAccessKeyName) ? nameof(sharedAccessKeyName) : nameof(sharedAccessKey));
             }
 
-            this.Endpoint = endpoint;
-            this.EntityPath = entityPath;
-            this.SasKeyName = sharedAccessKeyName;
-            this.SasKey = sharedAccessKey;
+            Endpoint = endpoint;
+            EntityPath = entityPath;
+            SasKeyName = sharedAccessKeyName;
+            SasKey = sharedAccessKey;
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace Microsoft.Azure.ServiceBus
         public ServiceBusConnectionStringBuilder(string endpoint, string entityPath, string sharedAccessKeyName, string sharedAccessKey, TransportType transportType)
             : this(endpoint, entityPath, sharedAccessKeyName, sharedAccessKey)
         {
-            this.TransportType = transportType;
+            TransportType = transportType;
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <exception cref="UriFormatException">Throws when the hostname cannot be parsed</exception>
         public string Endpoint
         {
-            get => this.endpoint;
+            get => endpoint;
             set
             {
                 if (!value.Contains("."))
@@ -121,7 +121,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
 
                 var uriBuilder = new UriBuilder(value.Trim());
-                this.endpoint = (value.Contains("://") ? uriBuilder.Scheme : EndpointScheme) + "://" + uriBuilder.Host;
+                endpoint = (value.Contains("://") ? uriBuilder.Scheme : EndpointScheme) + "://" + uriBuilder.Host;
             }
         }
 
@@ -130,8 +130,8 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public string EntityPath
         {
-            get => this.entityPath;
-            set => this.entityPath = value.Trim();
+            get => entityPath;
+            set => entityPath = value.Trim();
         }
 
         /// <summary>
@@ -139,8 +139,8 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public string SasKeyName
         {
-            get => this.sasKeyName;
-            set => this.sasKeyName = value.Trim();
+            get => sasKeyName;
+            set => sasKeyName = value.Trim();
         }
 
         /// <summary>
@@ -149,8 +149,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>Shared Access Signature key</value>
         public string SasKey
         {
-            get => this.sasKey;
-            set => this.sasKey = value.Trim();
+            get => sasKey;
+            set => sasKey = value.Trim();
         }
 
         /// <summary>
@@ -167,24 +167,24 @@ namespace Microsoft.Azure.ServiceBus
         public string GetNamespaceConnectionString()
         {
             StringBuilder connectionStringBuilder = new StringBuilder();
-            if (this.Endpoint != null)
+            if (Endpoint != null)
             {
-                connectionStringBuilder.Append($"{EndpointConfigName}{KeyValueSeparator}{this.Endpoint}{KeyValuePairDelimiter}");
+                connectionStringBuilder.Append($"{EndpointConfigName}{KeyValueSeparator}{Endpoint}{KeyValuePairDelimiter}");
             }
 
-            if (!string.IsNullOrWhiteSpace(this.SasKeyName))
+            if (!string.IsNullOrWhiteSpace(SasKeyName))
             {
-                connectionStringBuilder.Append($"{SharedAccessKeyNameConfigName}{KeyValueSeparator}{this.SasKeyName}{KeyValuePairDelimiter}");
+                connectionStringBuilder.Append($"{SharedAccessKeyNameConfigName}{KeyValueSeparator}{SasKeyName}{KeyValuePairDelimiter}");
             }
 
-            if (!string.IsNullOrWhiteSpace(this.SasKey))
+            if (!string.IsNullOrWhiteSpace(SasKey))
             {
-                connectionStringBuilder.Append($"{SharedAccessKeyConfigName}{KeyValueSeparator}{this.SasKey}{KeyValuePairDelimiter}");
+                connectionStringBuilder.Append($"{SharedAccessKeyConfigName}{KeyValueSeparator}{SasKey}{KeyValuePairDelimiter}");
             }
 
-            if (this.TransportType != TransportType.Amqp)
+            if (TransportType != TransportType.Amqp)
             {
-                connectionStringBuilder.Append($"{TransportTypeConfigName}{KeyValueSeparator}{this.TransportType}");
+                connectionStringBuilder.Append($"{TransportTypeConfigName}{KeyValueSeparator}{TransportType}");
             }
 
             return connectionStringBuilder.ToString().Trim(';');
@@ -196,12 +196,12 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>Entity connection string</returns>
         public string GetEntityConnectionString()
         {
-            if (string.IsNullOrWhiteSpace(this.EntityPath))
+            if (string.IsNullOrWhiteSpace(EntityPath))
             {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.EntityPath));
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(EntityPath));
             }
 
-            return $"{this.GetNamespaceConnectionString()}{KeyValuePairDelimiter}{EntityPathConfigName}{KeyValueSeparator}{this.EntityPath}";
+            return $"{GetNamespaceConnectionString()}{KeyValuePairDelimiter}{EntityPathConfigName}{KeyValueSeparator}{EntityPath}";
         }
 
         /// <summary>
@@ -210,12 +210,12 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The connection string</returns>
         public override string ToString()
         {
-            if (string.IsNullOrWhiteSpace(this.EntityPath))
+            if (string.IsNullOrWhiteSpace(EntityPath))
             {
-                return this.GetNamespaceConnectionString();
+                return GetNamespaceConnectionString();
             }
 
-            return this.GetEntityConnectionString();
+            return GetEntityConnectionString();
         }
 
         void ParseConnectionString(string connectionString)
@@ -235,25 +235,25 @@ namespace Microsoft.Azure.ServiceBus
                 string value = keyAndValue[1].Trim();
                 if (key.Equals(EndpointConfigName, StringComparison.OrdinalIgnoreCase))
                 {
-                    this.Endpoint = value;
+                    Endpoint = value;
                 }
                 else if (key.Equals(SharedAccessKeyNameConfigName, StringComparison.OrdinalIgnoreCase))
                 {
-                    this.SasKeyName = value;
+                    SasKeyName = value;
                 }
                 else if (key.Equals(EntityPathConfigName, StringComparison.OrdinalIgnoreCase))
                 {
-                    this.EntityPath = value;
+                    EntityPath = value;
                 }
                 else if (key.Equals(SharedAccessKeyConfigName, StringComparison.OrdinalIgnoreCase))
                 {
-                    this.SasKey = value;
+                    SasKey = value;
                 }
                 else if (key.Equals(TransportTypeConfigName, StringComparison.OrdinalIgnoreCase))
                 {
                     if (Enum.TryParse(value, true, out TransportType transportType))
                     {
-                        this.TransportType = transportType;
+                        TransportType = transportType;
                     }
                 }
                 else

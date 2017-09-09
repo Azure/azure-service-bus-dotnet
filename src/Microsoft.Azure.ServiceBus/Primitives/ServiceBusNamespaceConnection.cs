@@ -26,7 +26,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 throw Fx.Exception.Argument(nameof(namespaceConnectionString), "NamespaceConnectionString should not contain EntityPath.");
             }
 
-            this.InitializeConnection(builder);
+            InitializeConnection(builder);
         }
     }
 }

@@ -39,17 +39,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log($"Sent Message: {messageId2} to Session: {sessionId2}");
 
                 // Receive Message, Complete and Close with SessionId - sessionId 1
-                await this.AcceptAndCompleteSessionsAsync(sessionClient, sessionId1, messageId1).ConfigureAwait(false);
+                await AcceptAndCompleteSessionsAsync(sessionClient, sessionId1, messageId1).ConfigureAwait(false);
 
                 // Receive Message, Complete and Close with SessionId - sessionId 2
-                await this.AcceptAndCompleteSessionsAsync(sessionClient, sessionId2, messageId2).ConfigureAwait(false);
+                await AcceptAndCompleteSessionsAsync(sessionClient, sessionId2, messageId2).ConfigureAwait(false);
 
                 // Receive Message, Complete and Close - With Null SessionId specified
                 var messageId3 = "test-message3";
                 var sessionId3 = "sessionId3";
                 await sender.SendAsync(new Message { MessageId = messageId3, SessionId = sessionId3 }).ConfigureAwait(false);
 
-                await this.AcceptAndCompleteSessionsAsync(sessionClient, null, messageId3).ConfigureAwait(false);
+                await AcceptAndCompleteSessionsAsync(sessionClient, null, messageId3).ConfigureAwait(false);
             }
             finally
             {
@@ -191,10 +191,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log($"Sent Message: {messageId2} to Session: {sessionId2}");
 
                 // Peek Message, Receive and Delete with SessionId - sessionId 1
-                await this.PeekAndDeleteMessageAsync(sessionClient, sessionId1, messageId1);
+                await PeekAndDeleteMessageAsync(sessionClient, sessionId1, messageId1);
 
                 // Peek Message, Receive and Delete with SessionId - sessionId 2
-                await this.PeekAndDeleteMessageAsync(sessionClient, sessionId2, messageId2);
+                await PeekAndDeleteMessageAsync(sessionClient, sessionId2, messageId2);
             }
             finally
             {

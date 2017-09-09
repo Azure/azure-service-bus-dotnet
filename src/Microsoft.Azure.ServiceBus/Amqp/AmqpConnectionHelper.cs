@@ -4,10 +4,10 @@
 namespace Microsoft.Azure.ServiceBus.Amqp
 {
     using System;
-    using Microsoft.Azure.Amqp;
-    using Microsoft.Azure.Amqp.Sasl;
-    using Microsoft.Azure.Amqp.Transport;
-    using Microsoft.Azure.ServiceBus.Primitives;
+    using Azure.Amqp;
+    using Azure.Amqp.Sasl;
+    using Azure.Amqp.Transport;
+    using Primitives;
 
     internal class AmqpConnectionHelper
     {

@@ -35,7 +35,7 @@ namespace Microsoft.Azure.ServiceBus
                         Constants.MaximumSqlRuleActionStatementLength));
             }
 
-            this.SqlExpression = sqlExpression;
+            SqlExpression = sqlExpression;
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Sets the value of a rule action.
         /// </summary>
         /// <value>The value of a rule action.</value>
-        public IDictionary<string, object> Parameters => this.parameters ?? (this.parameters = new PropertyDictionary());
+        public IDictionary<string, object> Parameters => parameters ?? (parameters = new PropertyDictionary());
 
         /// <summary>
         /// Returns a string representation of <see cref="SqlRuleAction" />.
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The string representation of <see cref="SqlRuleAction" />.</returns>
         public override string ToString()
         {
-            return string.Format(CultureInfo.InvariantCulture, "SqlRuleAction: {0}", this.SqlExpression);
+            return string.Format(CultureInfo.InvariantCulture, "SqlRuleAction: {0}", SqlExpression);
         }
     }
 }
