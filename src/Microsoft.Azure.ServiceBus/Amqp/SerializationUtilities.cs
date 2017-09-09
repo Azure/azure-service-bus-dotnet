@@ -51,8 +51,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 return PropertyValueType.Null;
             }
 
-            PropertyValueType typeId;
-            if (TypeToIntMap.TryGetValue(value.GetType(), out typeId))
+            if (TypeToIntMap.TryGetValue(value.GetType(), out var typeId))
             {
                 return typeId;
             }

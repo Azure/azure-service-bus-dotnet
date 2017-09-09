@@ -138,8 +138,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                 foreach (var pair in sbMessage.UserProperties)
                 {
-                    object amqpObject;
-                    if (TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
+                    if (TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out var amqpObject))
                     {
                         amqpMessage.ApplicationProperties.Map.Add(pair.Key, amqpObject);
                     }
@@ -167,8 +166,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 sbMessage = new SBMessage();
 
-                object dotNetObject = null;
-                if (TryGetNetObjectFromAmqpObject(amqpMessage.ValueBody.Value, MappingType.MessageBody, out dotNetObject))
+                if (TryGetNetObjectFromAmqpObject(amqpMessage.ValueBody.Value, MappingType.MessageBody, out var dotNetObject))
                 {
                     sbMessage.SystemProperties.BodyObject = dotNetObject;
                 }
@@ -272,8 +270,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 foreach (var pair in amqpMessage.ApplicationProperties.Map)
                 {
-                    object netObject;
-                    if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out netObject))
+                    if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out var netObject))
                     {
                         sbMessage.UserProperties[pair.Key.ToString()] = netObject;
                     }
@@ -312,8 +309,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             sbMessage.SystemProperties.DeadLetterSource = (string)pair.Value;
                             break;
                         default:
-                            object netObject;
-                            if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out netObject))
+                            if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out var netObject))
                             {
                                 sbMessage.UserProperties[key] = netObject;
                             }
