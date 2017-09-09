@@ -25,15 +25,15 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>Gets the action associated with the event.</summary>
         /// <value>The action associated with the event.</value>
-        public string Action { get; private set; }
+        public string Action { get; }
 
         /// <summary>The namespace name used when this exception occurred.</summary>
-        public string Endpoint { get; private set; }
+        public string Endpoint { get; }
 
         /// <summary>The entity path used when this exception occurred.</summary>
-        public string EntityPath { get; private set; }
+        public string EntityPath { get; }
 
         /// <summary>The Client Id associated with the sender, receiver or session when this exception occurred.</summary>
-        public string ClientId { get; private set; }
+        public string ClientId { get; }
     }
 }
