@@ -19,7 +19,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             try
             {
                 var random = new Random();
-                byte[] content = new byte[8];
+                var content = new byte[8];
                 random.NextBytes(content);
 
                 queueClient.RegisterMessageHandler((message, token) =>

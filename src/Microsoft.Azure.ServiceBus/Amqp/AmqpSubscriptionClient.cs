@@ -170,7 +170,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 amqpRequestMessage.Map[ManagementConstants.Properties.Skip] = skip;
 
                 var response = await this.InnerReceiver.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
-                List<RuleDescription> rules = new List<RuleDescription>();
+                var rules = new List<RuleDescription>();
                 if (response.StatusCode == AmqpResponseStatusCode.OK)
                 {
                     var ruleList = response.GetListValue<AmqpMap>(ManagementConstants.Properties.Rules);

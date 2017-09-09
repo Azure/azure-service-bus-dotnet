@@ -42,8 +42,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp.Framing
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder("correlation(");
-            int count = 0;
+            var sb = new StringBuilder("correlation(");
+            var count = 0;
             this.AddFieldToString(this.CorrelationId != null, sb, "id", this.CorrelationId, ref count);
             sb.Append(')');
             return sb.ToString();

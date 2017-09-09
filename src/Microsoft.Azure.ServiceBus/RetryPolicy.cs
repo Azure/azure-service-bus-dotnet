@@ -55,9 +55,9 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns></returns>
         public async Task RunOperation(Func<Task> operation, TimeSpan operationTimeout)
         {
-            int currentRetryCount = 0;
+            var currentRetryCount = 0;
             List<Exception> exceptions = null;
-            TimeoutHelper timeoutHelper = new TimeoutHelper(operationTimeout);
+            var timeoutHelper = new TimeoutHelper(operationTimeout);
 
             if (this.IsServerBusy && timeoutHelper.RemainingTime() < RetryPolicy.ServerBusyBaseSleepTime)
             {

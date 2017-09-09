@@ -22,8 +22,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp.Framing
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder("sql(");
-            int count = 0;
+            var sb = new StringBuilder("sql(");
+            var count = 0;
             this.AddFieldToString(this.Expression != null, sb, "expression", this.Expression, ref count);
             this.AddFieldToString(this.CompatibilityLevel != null, sb, "level", this.CompatibilityLevel, ref count);
             sb.Append(')');

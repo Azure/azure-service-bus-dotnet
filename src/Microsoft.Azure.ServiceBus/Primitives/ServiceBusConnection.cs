@@ -74,7 +74,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         {
             string hostName = this.Endpoint.Host;
 
-            TimeoutHelper timeoutHelper = new TimeoutHelper(timeout);
+            var timeoutHelper = new TimeoutHelper(timeout);
             AmqpSettings amqpSettings = AmqpConnectionHelper.CreateAmqpSettings(
                 amqpVersion: AmqpVersion,
                 useSslStreamSecurity: true,
@@ -91,7 +91,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             await connection.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
             // Always create the CBS Link + Session
-            AmqpCbsLink cbsLink = new AmqpCbsLink(connection);
+            var cbsLink = new AmqpCbsLink(connection);
             if (connection.Extensions.Find<AmqpCbsLink>() == null)
             {
                 connection.Extensions.Add(cbsLink);

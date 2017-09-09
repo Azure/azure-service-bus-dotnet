@@ -74,14 +74,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 throw new ArgumentException(AmqpValue.Name);
             }
 
-            List<object> list = (List<object>)this.Map[key];
+            var list = (List<object>)this.Map[key];
 
             return list.Cast<TValue>();
         }
 
         public AmqpSymbol GetResponseErrorCondition()
         {
-            object condition = this.responseMessage.ApplicationProperties.Map[ManagementConstants.Response.ErrorCondition];
+            var condition = this.responseMessage.ApplicationProperties.Map[ManagementConstants.Response.ErrorCondition];
 
             return condition is AmqpSymbol amqpSymbol ? amqpSymbol : null;
         }

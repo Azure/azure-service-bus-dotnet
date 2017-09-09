@@ -41,7 +41,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var retry = new RetryExponential(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(20), 5);
             var remainingTime = Constants.DefaultOperationTimeout;
             TimeSpan retryInterval;
-            bool shouldRetry = retry.ShouldRetry(remainingTime, currentRetryCount, exception, out retryInterval);
+            var shouldRetry = retry.ShouldRetry(remainingTime, currentRetryCount, exception, out retryInterval);
             Assert.True(shouldRetry == expectedShouldRetry);
         }
 
@@ -55,12 +55,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         void RetryExponentialRetryIntervalShouldIncreaseTest()
         {
-            RetryExponential policy = (RetryExponential)RetryPolicy.Default;
-            bool retry = true;
-            int retryCount = 0;
-            TimeSpan duration = Constants.DefaultOperationTimeout;
-            TimeSpan lastRetryInterval = TimeSpan.Zero;
-            ServiceBusException exception = new ServiceBusException(true, string.Empty);
+            var policy = (RetryExponential)RetryPolicy.Default;
+            var retry = true;
+            var retryCount = 0;
+            var duration = Constants.DefaultOperationTimeout;
+            var lastRetryInterval = TimeSpan.Zero;
+            var exception = new ServiceBusException(true, string.Empty);
             while (retry)
             {
                 TimeSpan retryInterval;
@@ -79,12 +79,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             // We use a constant retryCount to just test random-ness. We are
             // not testing increasing interval.
-            int retryCount = 1;
-            RetryExponential policy1 = (RetryExponential)RetryPolicy.Default;
-            RetryExponential policy2 = (RetryExponential)RetryPolicy.Default;
-            ServiceBusException exception = new ServiceBusException(true, string.Empty);
-            int retryMatchingInstances = 0;
-            for (int i = 0; i < 10; i++)
+            var retryCount = 1;
+            var policy1 = (RetryExponential)RetryPolicy.Default;
+            var policy2 = (RetryExponential)RetryPolicy.Default;
+            var exception = new ServiceBusException(true, string.Empty);
+            var retryMatchingInstances = 0;
+            for (var i = 0; i < 10; i++)
             {
                 TimeSpan retryInterval1;
                 policy1.ShouldRetry(Constants.DefaultOperationTimeout, retryCount, exception, out retryInterval1);
@@ -102,10 +102,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         void RetryExponentialServerBusyShouldSelfResetTest()
         {
-            RetryExponential policy1 = (RetryExponential)RetryPolicy.Default;
+            var policy1 = (RetryExponential)RetryPolicy.Default;
             int retryCount = 0;
             TimeSpan duration = Constants.DefaultOperationTimeout;
-            ServerBusyException exception = new ServerBusyException(string.Empty);
+            var exception = new ServerBusyException(string.Empty);
             TimeSpan retryInterval;
 
             // First ServerBusy exception
@@ -132,7 +132,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async void RunOperationShouldReturnImmediatelyIfRetryIntervalIsGreaterThanOperationTimeout()
         {
             var policy = RetryPolicy.Default;
-            Stopwatch watch = Stopwatch.StartNew();
+            var watch = Stopwatch.StartNew();
             await Assert.ThrowsAsync<ServiceBusException>(async () => await policy.RunOperation(
                     () =>
                     {
@@ -149,7 +149,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         {
             var policy = RetryPolicy.Default;
             policy.SetServerBusy(Resources.DefaultServerBusyException);
-            Stopwatch watch = Stopwatch.StartNew();
+            var watch = Stopwatch.StartNew();
 
             await policy.RunOperation(
                 () => Task.CompletedTask, TimeSpan.FromMinutes(3))
@@ -163,12 +163,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async void RunOperationShouldWaitForAllOperationsToSucceed()
         {
             var policy = RetryPolicy.Default;
-            Stopwatch watch = Stopwatch.StartNew();
+            var watch = Stopwatch.StartNew();
             var tasks = new List<Task>();
             await policy.RunOperation(
                 async () =>
                 {
-                    for (int i = 0; i < 5; i++)
+                    for (var i = 0; i < 5; i++)
                     {
                         var task = Task.Delay(TimeSpan.FromSeconds(2));
                         tasks.Add(task);
