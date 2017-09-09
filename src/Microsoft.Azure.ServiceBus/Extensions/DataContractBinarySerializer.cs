@@ -47,7 +47,7 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            XmlDictionaryWriter writer = XmlDictionaryWriter.CreateBinaryWriter(stream, null, null, false);
+            var writer = XmlDictionaryWriter.CreateBinaryWriter(stream, null, null, false);
             this.WriteObject(writer, graph);
             writer.Flush();
         }

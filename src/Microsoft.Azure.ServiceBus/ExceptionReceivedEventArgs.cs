@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.ServiceBus.Core;
+
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
@@ -13,7 +15,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="action">The action associated with the event.</param>
         /// <param name="endpoint">The endpoint used when this exception occurred.</param>
         /// <param name="entityName">The entity path used when this exception occurred.</param>
-        /// <param name="clientId">The Client Id can be used to associate with the Queueclient, SubscriptionClient, MessageSender or MessageReceiver that encountered the exception.</param>
+        /// <param name="clientId">The Client Id can be used to associate with the <see cref="QueueClient"/>, <see cref="SubscriptionClient"/>, <see cref="MessageSender"/> or <see cref="MessageReceiver"/> that encountered the exception.</param>
         public ExceptionReceivedEventArgs(Exception exception, string action, string endpoint, string entityName, string clientId)
         {
             this.Exception = exception;

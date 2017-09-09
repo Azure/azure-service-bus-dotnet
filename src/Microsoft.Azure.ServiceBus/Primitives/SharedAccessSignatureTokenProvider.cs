@@ -245,7 +245,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     throw new ArgumentNullException(nameof(sharedAccessSignature));
                 }
 
-                IDictionary<string, string> parsedFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                var parsedFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 string[] tokenFields = tokenLines[1].Trim().Split(new[] { SasPairSeparator }, StringSplitOptions.None);
 
                 foreach (string tokenField in tokenFields)

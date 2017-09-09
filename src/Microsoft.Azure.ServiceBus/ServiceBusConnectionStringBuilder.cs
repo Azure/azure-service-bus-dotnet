@@ -32,7 +32,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Instatiates a new <see cref="ServiceBusConnectionStringBuilder"/>.
+        /// Instantiates a new <see cref="ServiceBusConnectionStringBuilder"/>.
         /// </summary>
         /// <param name="connectionString">Connection string for namespace or the entity.</param>
         public ServiceBusConnectionStringBuilder(string connectionString)

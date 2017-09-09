@@ -266,7 +266,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 }
             }
 
-            // Do applicaiton properties before message annotations, because the application properties
+            // Do application properties before message annotations, because the application properties
             // can be updated by entries from message annotation.
             if ((sections & SectionFlag.ApplicationProperties) != 0)
             {
@@ -284,7 +284,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 foreach (var pair in amqpMessage.MessageAnnotations.Map)
                 {
-                    string key = pair.Key.ToString();
+                    var key = pair.Key.ToString();
                     switch (key)
                     {
                         case EnqueuedTimeUtcName:

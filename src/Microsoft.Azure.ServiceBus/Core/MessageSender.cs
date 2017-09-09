@@ -321,7 +321,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         static int ValidateMessages(IList<Message> messageList)
         {
-            int count = 0;
+            var count = 0;
             if (messageList == null)
             {
                 throw Fx.Exception.ArgumentNull(nameof(messageList));
@@ -535,7 +535,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         async Task<RequestResponseAmqpLink> CreateRequestResponseLinkAsync(TimeSpan timeout)
         {
-            string entityPath = this.Path + '/' + AmqpClientConstants.ManagementAddress;
+            var entityPath = this.Path + '/' + AmqpClientConstants.ManagementAddress;
             AmqpLinkSettings linkSettings = new AmqpLinkSettings();
             linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, AmqpClientConstants.EntityTypeManagement);
 
@@ -567,7 +567,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         ArraySegment<byte> GetNextDeliveryTag()
         {
-            int deliveryId = Interlocked.Increment(ref this.deliveryCount);
+            var deliveryId = Interlocked.Increment(ref this.deliveryCount);
             return new ArraySegment<byte>(BitConverter.GetBytes(deliveryId));
         }
     }

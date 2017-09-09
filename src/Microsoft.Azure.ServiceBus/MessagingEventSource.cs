@@ -19,20 +19,20 @@ namespace Microsoft.Azure.ServiceBus
         public static MessagingEventSource Log { get; } = new MessagingEventSource();
 
         [Event(1, Level = EventLevel.Informational, Message = "Creating QueueClient (Namespace '{0}'; Queue '{1}'; ReceiveMode '{2}').")]
-        public void QueueClientCreateStart(string namespaceName, string queuename, string receiveMode)
+        public void QueueClientCreateStart(string namespaceName, string queueName, string receiveMode)
         {
             if (this.IsEnabled())
             {
-                this.WriteEvent(1, namespaceName ?? string.Empty, queuename, receiveMode);
+                this.WriteEvent(1, namespaceName ?? string.Empty, queueName, receiveMode);
             }
         }
 
         [Event(2, Level = EventLevel.Informational, Message = "QueueClient (Namespace '{0}'; Queue '{1}'; ClientId: '{2}' created).")]
-        public void QueueClientCreateStop(string namespaceName, string queuename, string clientId)
+        public void QueueClientCreateStop(string namespaceName, string queueName, string clientId)
         {
             if (this.IsEnabled())
             {
-                this.WriteEvent(2, namespaceName, queuename, clientId);
+                this.WriteEvent(2, namespaceName, queueName, clientId);
             }
         }
 
@@ -913,7 +913,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(81, Level = EventLevel.Error, Message = "{0}: Exception while Receving a session: SessionId: {1}")]
+        [Event(81, Level = EventLevel.Error, Message = "{0}: Exception while Receiving a session: SessionId: {1}")]
         void SessionReceivePumpSessionReceiveException(string clientId, string exception)
         {
             this.WriteEvent(81, clientId, exception);
@@ -977,16 +977,16 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void SessionReceivePumpSessionRenewLockExeption(string clientId, string sessionId, Exception exception)
+        public void SessionReceivePumpSessionRenewLockException(string clientId, string sessionId, Exception exception)
         {
             if (this.IsEnabled())
             {
-                this.SessionReceivePumpSessionRenewLockExeption(clientId, sessionId, exception.ToString());
+                this.SessionReceivePumpSessionRenewLockException(clientId, sessionId, exception.ToString());
             }
         }
 
         [Event(87, Level = EventLevel.Error, Message = "{0}: Exception while renewing session lock: SessionId: {1}, Exception: {2}")]
-        void SessionReceivePumpSessionRenewLockExeption(string clientId, string sessionId, string exception)
+        void SessionReceivePumpSessionRenewLockException(string clientId, string sessionId, string exception)
         {
             this.WriteEvent(87, clientId, sessionId, exception);
         }
