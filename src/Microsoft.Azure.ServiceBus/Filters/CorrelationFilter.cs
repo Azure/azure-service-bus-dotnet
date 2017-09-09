@@ -159,7 +159,7 @@ namespace Microsoft.Azure.ServiceBus
 
             builder.Append("CorrelationFilter: ");
 
-            bool firstExpression = true;
+            var firstExpression = true;
 
             AppendPropertyExpression(ref firstExpression, builder, "sys.CorrelationId", CorrelationId);
             AppendPropertyExpression(ref firstExpression, builder, "sys.MessageId", MessageId);
