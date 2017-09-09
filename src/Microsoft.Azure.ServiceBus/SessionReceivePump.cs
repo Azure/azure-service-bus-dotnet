@@ -45,7 +45,7 @@ namespace Microsoft.Azure.ServiceBus
         public void StartPump()
         {
             // Schedule Tasks for doing PendingAcceptSession calls
-            for (int i = 0; i < sessionHandlerOptions.MaxConcurrentAcceptSessionCalls; i++)
+            for (var i = 0; i < sessionHandlerOptions.MaxConcurrentAcceptSessionCalls; i++)
             {
                 TaskExtensionHelper.Schedule(SessionPumpTaskAsync);
             }
@@ -112,7 +112,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             while (!pumpCancellationToken.IsCancellationRequested)
             {
-                bool concurrentSessionSemaphoreAcquired = false;
+                var concurrentSessionSemaphoreAcquired = false;
                 try
                 {
                     await maxConcurrentSessionsSemaphoreSlim.WaitAsync(pumpCancellationToken).ConfigureAwait(false);
@@ -209,7 +209,7 @@ namespace Microsoft.Azure.ServiceBus
 
                     // Set the timer
                     userCallbackTimer.Change(sessionHandlerOptions.MaxAutoRenewDuration, TimeSpan.FromMilliseconds(-1));
-                    bool callbackExceptionOccurred = false;
+                    var callbackExceptionOccurred = false;
                     try
                     {
                         await userOnSessionCallback(session, message, pumpCancellationToken).ConfigureAwait(false);

@@ -103,7 +103,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         void RetryExponentialServerBusyShouldSelfResetTest()
         {
             var policy1 = (RetryExponential)RetryPolicy.Default;
-            int retryCount = 0;
+            var retryCount = 0;
             TimeSpan duration = Constants.DefaultOperationTimeout;
             var exception = new ServerBusyException(string.Empty);
             TimeSpan retryInterval;
