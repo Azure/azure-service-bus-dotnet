@@ -911,8 +911,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                         var payload = (ArraySegment<byte>)entry[ManagementConstants.Properties.Message];
                         AmqpMessage amqpMessage = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(new[] { payload }), true);
                         Message message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
-                        Guid lockToken;
-                        if (entry.TryGetValue(ManagementConstants.Properties.LockToken, out lockToken))
+                        if (entry.TryGetValue(ManagementConstants.Properties.LockToken, out Guid lockToken))
                         {
                             message.SystemProperties.LockTokenGuid = lockToken;
                             requestResponseLockedMessages.AddOrUpdate(lockToken, message.SystemProperties.LockedUntilUtc);
