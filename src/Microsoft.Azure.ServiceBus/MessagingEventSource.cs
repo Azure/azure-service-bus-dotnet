@@ -314,8 +314,8 @@ namespace Microsoft.Azure.ServiceBus
         {
             if (IsEnabled())
             {
-                string formattedsequenceNumbers = StringUtility.GetFormattedSequenceNumbers(sequenceNumbers);
-                MessageReceiveDeferredMessageStart(clientId, messageCount, formattedsequenceNumbers);
+                string formattedSequenceNumbers = StringUtility.GetFormattedSequenceNumbers(sequenceNumbers);
+                MessageReceiveDeferredMessageStart(clientId, messageCount, formattedSequenceNumbers);
             }
         }
 
