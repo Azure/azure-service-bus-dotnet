@@ -5,12 +5,10 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 {
     using System;
     using System.Diagnostics;
-    using System.Threading;
 
     [DebuggerStepThrough]
     struct TimeoutHelper
     {
-        public static readonly TimeSpan MaxWait = TimeSpan.FromMilliseconds(int.MaxValue);
         DateTime deadline;
         bool deadlineSet;
         TimeSpan originalTimeout;
@@ -32,94 +30,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             {
                 SetDeadline();
             }
-        }
-
-        public TimeSpan OriginalTimeout
-        {
-            get { return originalTimeout; }
-        }
-
-        public static bool IsTooLarge(TimeSpan timeout)
-        {
-            return (timeout > MaxWait) && (timeout != TimeSpan.MaxValue);
-        }
-
-        public static TimeSpan FromMilliseconds(int milliseconds)
-        {
-            if (milliseconds == Timeout.Infinite)
-            {
-                return TimeSpan.MaxValue;
-            }
-
-            return TimeSpan.FromMilliseconds(milliseconds);
-        }
-
-        public static int ToMilliseconds(TimeSpan timeout)
-        {
-            if (timeout == TimeSpan.MaxValue)
-            {
-                return Timeout.Infinite;
-            }
-
-            var ticks = Ticks.FromTimeSpan(timeout);
-            if (ticks / TimeSpan.TicksPerMillisecond > int.MaxValue)
-            {
-                return int.MaxValue;
-            }
-            return Ticks.ToMilliseconds(ticks);
-        }
-
-        public static TimeSpan Min(TimeSpan val1, TimeSpan val2)
-        {
-            if (val1 > val2)
-            {
-                return val2;
-            }
-
-            return val1;
-        }
-
-        public static DateTime Min(DateTime val1, DateTime val2)
-        {
-            if (val1 > val2)
-            {
-                return val2;
-            }
-
-            return val1;
-        }
-
-        public static TimeSpan Add(TimeSpan timeout1, TimeSpan timeout2)
-        {
-            return Ticks.ToTimeSpan(Ticks.Add(Ticks.FromTimeSpan(timeout1), Ticks.FromTimeSpan(timeout2)));
-        }
-
-        public static DateTime Add(DateTime time, TimeSpan timeout)
-        {
-            if (timeout >= TimeSpan.Zero && DateTime.MaxValue - time <= timeout)
-            {
-                return DateTime.MaxValue;
-            }
-            if (timeout <= TimeSpan.Zero && DateTime.MinValue - time >= timeout)
-            {
-                return DateTime.MinValue;
-            }
-            return time + timeout;
-        }
-
-        public static DateTime Subtract(DateTime time, TimeSpan timeout)
-        {
-            return Add(time, TimeSpan.Zero - timeout);
-        }
-
-        public static TimeSpan Divide(TimeSpan timeout, int factor)
-        {
-            if (timeout == TimeSpan.MaxValue)
-            {
-                return TimeSpan.MaxValue;
-            }
-
-            return Ticks.ToTimeSpan((Ticks.FromTimeSpan(timeout) / factor) + 1);
         }
 
         public static void ThrowIfNegativeArgument(TimeSpan timeout)
@@ -148,18 +58,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             }
         }
 
-        public static bool WaitOne(WaitHandle waitHandle, TimeSpan timeout)
-        {
-            ThrowIfNegativeArgument(timeout);
-            if (timeout == TimeSpan.MaxValue)
-            {
-                waitHandle.WaitOne();
-                return true;
-            }
-
-            return waitHandle.WaitOne(timeout);
-        }
-
         public TimeSpan RemainingTime()
         {
             if (!deadlineSet)
@@ -173,18 +71,13 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 return TimeSpan.MaxValue;
             }
 
-            TimeSpan remaining = deadline - DateTime.UtcNow;
+            var remaining = deadline - DateTime.UtcNow;
             if (remaining <= TimeSpan.Zero)
             {
                 return TimeSpan.Zero;
             }
 
             return remaining;
-        }
-
-        public TimeSpan ElapsedTime()
-        {
-            return originalTimeout - RemainingTime();
         }
 
         void SetDeadline()
