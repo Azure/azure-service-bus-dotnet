@@ -9,7 +9,6 @@ namespace Microsoft.Azure.ServiceBus
     using System.Reflection;
     using System.Threading.Tasks;
     using Azure.Amqp;
-    using Azure.Amqp.Framing;
     using Amqp;
     using Primitives;
 
