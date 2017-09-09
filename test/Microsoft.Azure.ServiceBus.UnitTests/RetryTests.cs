@@ -63,8 +63,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var exception = new ServiceBusException(true, string.Empty);
             while (retry)
             {
-                TimeSpan retryInterval;
-                retry = policy.ShouldRetry(duration, retryCount, exception, out retryInterval);
+                retry = policy.ShouldRetry(duration, retryCount, exception, out var retryInterval);
                 if (retry)
                 {
                     Assert.True(retryInterval >= lastRetryInterval, $"Retry sleep should not decrease. Retry = [{retryInterval}]");
@@ -86,10 +85,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var retryMatchingInstances = 0;
             for (var i = 0; i < 10; i++)
             {
-                TimeSpan retryInterval1;
-                policy1.ShouldRetry(Constants.DefaultOperationTimeout, retryCount, exception, out retryInterval1);
-                TimeSpan retryInterval2;
-                policy2.ShouldRetry(Constants.DefaultOperationTimeout, retryCount, exception, out retryInterval2);
+                policy1.ShouldRetry(Constants.DefaultOperationTimeout, retryCount, exception, out var retryInterval1);
+                policy2.ShouldRetry(Constants.DefaultOperationTimeout, retryCount, exception, out var retryInterval2);
                 if (retryInterval1 == retryInterval2)
                 {
                     retryMatchingInstances++;

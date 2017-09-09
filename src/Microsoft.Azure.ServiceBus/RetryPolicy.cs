@@ -84,7 +84,6 @@ namespace Microsoft.Azure.ServiceBus
                 }
                 catch (Exception exception)
                 {
-                    TimeSpan retryInterval;
                     currentRetryCount++;
                     if (exceptions == null)
                     {
@@ -93,7 +92,7 @@ namespace Microsoft.Azure.ServiceBus
                     exceptions.Add(exception);
 
                     if (ShouldRetry(
-                        timeoutHelper.RemainingTime(), currentRetryCount, exception, out retryInterval)
+                        timeoutHelper.RemainingTime(), currentRetryCount, exception, out var retryInterval)
                         && retryInterval < timeoutHelper.RemainingTime())
                     {
                         // Log intermediate exceptions.

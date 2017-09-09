@@ -201,9 +201,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static string GetTrackingId(this AmqpLink link)
         {
-            string trackingContext = null;
-            if (link.Settings.Properties != null &&
-                link.Settings.Properties.TryGetValue<string>(AmqpClientConstants.TrackingIdName, out trackingContext))
+            var fields = link.Settings.Properties;
+            if (fields != null &&
+                fields.TryGetValue<string>(AmqpClientConstants.TrackingIdName, out var trackingContext))
             {
                 return trackingContext;
             }
