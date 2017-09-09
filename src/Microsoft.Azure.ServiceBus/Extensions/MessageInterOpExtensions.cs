@@ -87,7 +87,7 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
 
             if(message.Body == null || message.Body.Length == 0)
             {
-                return default(T);
+                return default;
             }
 
             if(serializer == null)

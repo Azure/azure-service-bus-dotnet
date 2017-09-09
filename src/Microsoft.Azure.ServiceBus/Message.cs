@@ -293,7 +293,7 @@ namespace Microsoft.Azure.ServiceBus
             /// Specifies whether or not there is a lock token set on the current message.
             /// </summary>
             /// <remarks>A lock token will only be specified if the message was received using <see cref="ReceiveMode.PeekLock"/></remarks>
-            public bool IsLockTokenSet => lockTokenGuid != default(Guid);
+            public bool IsLockTokenSet => lockTokenGuid != default;
 
             /// <summary>
             /// Gets the lock token for the current message.
