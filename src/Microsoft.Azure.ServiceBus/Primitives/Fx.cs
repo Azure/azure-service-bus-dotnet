@@ -118,21 +118,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     this.description = description;
                 }
 
-                public Location Location
-                {
-                    get
-                    {
-                        return location;
-                    }
-                }
+                public Location Location => location;
 
-                public string Description
-                {
-                    get
-                    {
-                        return description;
-                    }
-                }
+                public string Description => description;
             }
 
             [AttributeUsage(AttributeTargets.Field)]
@@ -157,21 +145,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     this.cacheAttrition = cacheAttrition;
                 }
 
-                public Type ElementType
-                {
-                    get
-                    {
-                        return elementType;
-                    }
-                }
+                public Type ElementType => elementType;
 
-                public CacheAttrition CacheAttrition
-                {
-                    get
-                    {
-                        return cacheAttrition;
-                    }
-                }
+                public CacheAttrition CacheAttrition => cacheAttrition;
 
                 public string Scope { get; set; }
 
@@ -199,13 +175,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     this.elementType = elementType;
                 }
 
-                public Type ElementType
-                {
-                    get
-                    {
-                        return elementType;
-                    }
-                }
+                public Type ElementType => elementType;
 
                 public string Scope { get; set; }
 
@@ -247,13 +217,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     this.blocksUsing = blocksUsing;
                 }
 
-                public BlocksUsing BlocksUsing
-                {
-                    get
-                    {
-                        return blocksUsing;
-                    }
-                }
+                public BlocksUsing BlocksUsing => blocksUsing;
 
                 public bool SupportsAsync { get; set; }
 
@@ -319,21 +283,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                         this.diagnosis = diagnosis;
                     }
 
-                    public Type ExceptionType
-                    {
-                        get
-                        {
-                            return exceptionType;
-                        }
-                    }
+                    public Type ExceptionType => exceptionType;
 
-                    public string Diagnosis
-                    {
-                        get
-                        {
-                            return diagnosis;
-                        }
-                    }
+                    public string Diagnosis => diagnosis;
                 }
 
                 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = false)]

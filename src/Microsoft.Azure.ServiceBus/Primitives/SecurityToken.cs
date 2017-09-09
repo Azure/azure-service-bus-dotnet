@@ -82,64 +82,25 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <summary>
         /// Gets the audience of this token.
         /// </summary>
-        public string Audience
-        {
-            get
-            {
-                return audience;
-            }
-        }
+        public string Audience => audience;
 
         /// <summary>
         /// Gets the expiration time of this token.
         /// </summary>
-        public DateTime ExpiresAtUtc
-        {
-            get
-            {
-                return expiresAtUtc;
-            }
-        }
+        public DateTime ExpiresAtUtc => expiresAtUtc;
 
         /// <summary>
         /// Gets the actual token.
         /// </summary>
-        public object TokenValue
-        {
-            get { return token; }
-        }
+        public object TokenValue => token;
 
-        protected virtual string ExpiresOnFieldName
-        {
-            get
-            {
-                return InternalExpiresOnFieldName;
-            }
-        }
+        protected virtual string ExpiresOnFieldName => InternalExpiresOnFieldName;
 
-        protected virtual string AudienceFieldName
-        {
-            get
-            {
-                return InternalAudienceFieldName;
-            }
-        }
+        protected virtual string AudienceFieldName => InternalAudienceFieldName;
 
-        protected virtual string KeyValueSeparator
-        {
-            get
-            {
-                return InternalKeyValueSeparator;
-            }
-        }
+        protected virtual string KeyValueSeparator => InternalKeyValueSeparator;
 
-        protected virtual string PairSeparator
-        {
-            get
-            {
-                return InternalPairSeparator;
-            }
-        }
+        protected virtual string PairSeparator => InternalPairSeparator;
 
         static IDictionary<string, string> Decode(string encodedString, Func<string, string> keyDecoder, Func<string, string> valueDecoder, string keyValueSeparator, string pairSeparator)
         {

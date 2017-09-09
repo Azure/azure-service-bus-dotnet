@@ -30,10 +30,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        public AmqpMessage AmqpMessage
-        {
-            get { return responseMessage; }
-        }
+        public AmqpMessage AmqpMessage => responseMessage;
 
         public AmqpResponseStatusCode StatusCode { get; }
 

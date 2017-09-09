@@ -32,11 +32,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         public object this[string key]
         {
-            get
-            {
-                return inner[key];
-            }
-
+            get => inner[key];
             set
             {
                 if (IsSupportedObject(value))
