@@ -17,7 +17,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Uses AMQP over WebSockets
         /// </summary>
-        /// <remarks>This runs on port 443 with wss URI scheme. This could be used in scenarios where traffic through port 5671 is blocked. 
+        /// <remarks>This runs on port 443 with wss URI scheme. This could be used in scenarios where traffic to port 5671 is blocked. 
         /// To setup a proxy connection, please configure system default proxy. Proxy currently is supported only in net451+ framework.</remarks>
         AmqpWebSockets = 1
     }
