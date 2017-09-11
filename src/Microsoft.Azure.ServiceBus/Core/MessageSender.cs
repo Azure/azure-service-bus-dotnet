@@ -442,7 +442,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     null);
 
                 ArraySegment<byte>[] payload = amqpMessage.GetPayload();
-                BufferListStream buffer = new BufferListStream(payload);
+                var buffer = new BufferListStream(payload);
                 ArraySegment<byte> value = buffer.ReadBytes((int)buffer.Length);
 
                 var entry = new AmqpMap();

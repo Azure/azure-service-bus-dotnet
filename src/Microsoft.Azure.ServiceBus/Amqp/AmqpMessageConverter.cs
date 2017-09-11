@@ -630,7 +630,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         private static Data ToData(AmqpMessage message)
         {
             ArraySegment<byte>[] payload = message.GetPayload();
-            BufferListStream buffer = new BufferListStream(payload);
+            var buffer = new BufferListStream(payload);
             ArraySegment<byte> value = buffer.ReadBytes((int)buffer.Length);
             return new Data { Value = value };
         }

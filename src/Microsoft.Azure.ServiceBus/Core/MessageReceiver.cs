@@ -923,7 +923,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     var amqpMapList = response.GetListValue<AmqpMap>(ManagementConstants.Properties.Messages);
                     foreach (var entry in amqpMapList)
                     {
-                        ArraySegment<byte> payload = (ArraySegment<byte>)entry[ManagementConstants.Properties.Message];
+                        var payload = (ArraySegment<byte>)entry[ManagementConstants.Properties.Message];
                         var amqpMessage = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(new[] { payload }), true);
                         var message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
                         if (entry.TryGetValue<Guid>(ManagementConstants.Properties.LockToken, out var lockToken))
@@ -1149,7 +1149,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
                 }
 
-                Task<Outcome>[] disposeMessageTasks = new Task<Outcome>[deliveryTags.Count];
+                var disposeMessageTasks = new Task<Outcome>[deliveryTags.Count];
                 var i = 0;
                 foreach (ArraySegment<byte> deliveryTag in deliveryTags)
                 {
