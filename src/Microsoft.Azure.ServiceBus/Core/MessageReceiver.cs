@@ -948,56 +948,44 @@ namespace Microsoft.Azure.ServiceBus.Core
             return messages;
         }
 
-        protected virtual async Task OnCompleteAsync(IEnumerable<string> lockTokens)
+        protected virtual Task OnCompleteAsync(IEnumerable<string> lockTokens)
         {
             var lockTokenGuids = lockTokens.Select(lt => new Guid(lt));
             if (lockTokenGuids.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
-                await this.DisposeMessageRequestResponseAsync(lockTokenGuids, DispositionStatus.Completed).ConfigureAwait(false);
+                return this.DisposeMessageRequestResponseAsync(lockTokenGuids, DispositionStatus.Completed);
             }
-            else
-            {
-                await this.DisposeMessagesAsync(lockTokenGuids, AmqpConstants.AcceptedOutcome).ConfigureAwait(false);
-            }
+            return this.DisposeMessagesAsync(lockTokenGuids, AmqpConstants.AcceptedOutcome);
         }
 
-        protected virtual async Task OnAbandonAsync(string lockToken)
+        protected virtual Task OnAbandonAsync(string lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
             if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
-                await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Abandoned).ConfigureAwait(false);
+                return this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Abandoned);
             }
-            else
-            {
-                await this.DisposeMessagesAsync(lockTokens, new Modified()).ConfigureAwait(false);
-            }
+            return this.DisposeMessagesAsync(lockTokens, new Modified());
         }
 
-        protected virtual async Task OnDeferAsync(string lockToken)
+        protected virtual Task OnDeferAsync(string lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
             if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
-                await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Deferred).ConfigureAwait(false);
+                return this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Deferred);
             }
-            else
-            {
-                await this.DisposeMessagesAsync(lockTokens, new Modified { UndeliverableHere = true }).ConfigureAwait(false);
-            }
+            return this.DisposeMessagesAsync(lockTokens, new Modified { UndeliverableHere = true });
         }
 
-        protected virtual async Task OnDeadLetterAsync(string lockToken)
+        protected virtual Task OnDeadLetterAsync(string lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
             if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
-                await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended).ConfigureAwait(false);
+                return this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended);
             }
-            else
-            {
-                await this.DisposeMessagesAsync(lockTokens, AmqpConstants.RejectedOutcome).ConfigureAwait(false);
-            }
+            return this.DisposeMessagesAsync(lockTokens, AmqpConstants.RejectedOutcome);
         }
 
         protected virtual async Task<DateTime> OnRenewLockAsync(string lockToken)
