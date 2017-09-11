@@ -246,18 +246,12 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class GuaranteeNonBlockingAttribute : Attribute
                 {
-                    public GuaranteeNonBlockingAttribute()
-                    {
-                    }
                 }
 
                 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = false)]
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class NonThrowingAttribute : Attribute
                 {
-                    public NonThrowingAttribute()
-                    {
-                    }
                 }
 
                 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, AllowMultiple = true, Inherited = false)]
@@ -292,10 +286,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class InheritThrowsAttribute : Attribute
                 {
-                    public InheritThrowsAttribute()
-                    {
-                    }
-
                     public Type FromDeclaringType { get; set; }
 
                     public string From { get; set; }
@@ -310,10 +300,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class SecurityNoteAttribute : Attribute
                 {
-                    public SecurityNoteAttribute()
-                    {
-                    }
-
                     public string Critical { get; set; }
 
                     public string Safe { get; set; }
