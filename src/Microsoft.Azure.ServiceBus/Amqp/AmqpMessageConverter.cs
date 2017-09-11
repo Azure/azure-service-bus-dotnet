@@ -264,7 +264,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 }
             }
 
-            // Do applicaiton properties before message annotations, because the application properties
+            // Do application properties before message annotations, because the application properties
             // can be updated by entries from message annotation.
             if ((sections & SectionFlag.ApplicationProperties) != 0)
             {
