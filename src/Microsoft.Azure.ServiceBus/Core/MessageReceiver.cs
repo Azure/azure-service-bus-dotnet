@@ -730,8 +730,8 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             receivingAmqpLink.Closed += this.OnSessionReceiverLinkClosed;
             this.SessionIdInternal = tempSessionId;
-            this.LockedUntilUtcInternal = receivingAmqpLink.Settings.Properties.TryGetValue<long>(AmqpClientConstants.LockedUntilUtc, out var lockedUntilUtcTicks) 
-                ? new DateTime(lockedUntilUtcTicks, DateTimeKind.Utc) 
+            this.LockedUntilUtcInternal = receivingAmqpLink.Settings.Properties.TryGetValue<long>(AmqpClientConstants.LockedUntilUtc, out var lockedUntilUtcTicks)
+                ? new DateTime(lockedUntilUtcTicks, DateTimeKind.Utc)
                 : DateTime.MinValue;
         }
 
@@ -830,15 +830,12 @@ namespace Microsoft.Azure.ServiceBus.Core
                                 receiveLink.ReleaseMessage(amqpMessage);
                                 continue;
                             }
-                            else
+                            if (brokeredMessages == null)
                             {
-                                if (brokeredMessages == null)
-                                {
-                                    brokeredMessages = new List<Message>();
-                                }
-
-                                brokeredMessages.Add(message);
+                                brokeredMessages = new List<Message>();
                             }
+
+                            brokeredMessages.Add(message);
                         }
 
                         if(brokeredMessages != null)
