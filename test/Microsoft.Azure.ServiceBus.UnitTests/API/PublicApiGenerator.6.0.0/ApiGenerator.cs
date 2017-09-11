@@ -21,10 +21,10 @@ namespace PublicApiGenerator
 {
     public static class ApiGenerator
     {
-        public static string GeneratePublicApi(Assembly assemby, Type[] includeTypes = null, bool shouldIncludeAssemblyAttributes = true)
+        public static string GeneratePublicApi(Assembly assembly, Type[] includeTypes = null, bool shouldIncludeAssemblyAttributes = true)
         {
             var assemblyResolver = new DefaultAssemblyResolver();
-            var assemblyPath = assemby.Location;
+            var assemblyPath = assembly.Location;
             assemblyResolver.AddSearchDirectory(Path.GetDirectoryName(assemblyPath));
 
             var readSymbols = File.Exists(Path.ChangeExtension(assemblyPath, ".pdb"));
@@ -323,7 +323,7 @@ namespace PublicApiGenerator
         static void PopulateCustomAttributes(ICustomAttributeProvider type,
             CodeAttributeDeclarationCollection attributes, Func<CodeTypeReference, CodeTypeReference> codeTypeModifier)
         {
-            foreach (var customAttribute in type.CustomAttributes.Where(ShouldIncludeAttribute).OrderBy(a => a.AttributeType.FullName).ThenBy(a => ConvertAttrbuteToCode(codeTypeModifier, a)))
+            foreach (var customAttribute in type.CustomAttributes.Where(ShouldIncludeAttribute).OrderBy(a => a.AttributeType.FullName).ThenBy(a => ConvertAttributeToCode(codeTypeModifier, a)))
             {
                 var attribute = GenerateCodeAttributeDeclaration(codeTypeModifier, customAttribute);
                 attributes.Add(attribute);
@@ -349,7 +349,7 @@ namespace PublicApiGenerator
         }
 
         // Litee: This method is used for additional sorting of custom attributes when multiple values are allowed
-        static object ConvertAttrbuteToCode(Func<CodeTypeReference, CodeTypeReference> codeTypeModifier, CustomAttribute customAttribute)
+        static object ConvertAttributeToCode(Func<CodeTypeReference, CodeTypeReference> codeTypeModifier, CustomAttribute customAttribute)
         {
             using (var provider = new CSharpCodeProvider())
             {
