@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp1.0;net46</TargetFrameworks>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AssemblyOriginatorKeyFile>../../build/keyfile.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
