@@ -118,8 +118,7 @@ namespace PublicApiGenerator
 
         static void AddMemberToTypeDeclaration(CodeTypeDeclaration typeDeclaration, IMemberDefinition memberInfo)
         {
-            var methodDefinition = memberInfo as MethodDefinition;
-            if (methodDefinition != null)
+            if (memberInfo is MethodDefinition methodDefinition)
             {
                 if (methodDefinition.IsConstructor)
                     AddCtorToTypeDeclaration(typeDeclaration, methodDefinition);
@@ -773,8 +772,10 @@ namespace PublicApiGenerator
 
         static CodeTypeReference[] CreateGenericArguments(TypeReference type)
         {
-            var genericInstance = type as IGenericInstance;
-            if (genericInstance == null) return null;
+            if (!(type is IGenericInstance genericInstance))
+            {
+                return null;
+            }
 
             var genericArguments = new List<CodeTypeReference>();
             foreach (var argument in genericInstance.GenericArguments)
