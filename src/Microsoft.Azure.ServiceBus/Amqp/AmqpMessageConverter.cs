@@ -613,7 +613,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             ArraySegment<byte> buffer;
             if (stream == null || stream.Length < 1)
             {
-                buffer = default(ArraySegment<byte>);
+                buffer = default;
             }
             else
             {
