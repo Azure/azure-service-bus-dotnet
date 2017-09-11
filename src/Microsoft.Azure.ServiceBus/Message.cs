@@ -202,11 +202,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Gets the total size of the message body in bytes.
         /// </summary>
-        public long Size
-        {
-            get => Body.Length;
-            //internal set;
-        }
+        public long Size => Body.Length;
 
         /// <summary>
         /// Gets the user property bag, which can be used for custom message properties.
@@ -316,10 +312,7 @@ namespace Microsoft.Azure.ServiceBus
                     return this.deliveryCount;
                 }
 
-                internal set
-                {
-                    this.deliveryCount = value;
-                }
+                internal set => this.deliveryCount = value;
             }
 
             /// <summary>Gets the date and time in UTC until which the message will be locked in the queue/subscription.</summary>
@@ -332,10 +325,7 @@ namespace Microsoft.Azure.ServiceBus
                     return this.lockedUntilUtc;
                 }
 
-                internal set
-                {
-                    this.lockedUntilUtc = value;
-                }
+                internal set => this.lockedUntilUtc = value;
             }
 
             /// <summary>Gets the unique number assigned to a message by Service Bus, for this entity.</summary>
@@ -347,10 +337,7 @@ namespace Microsoft.Azure.ServiceBus
                     return this.sequenceNumber;
                 }
 
-                internal set
-                {
-                    this.sequenceNumber = value;
-                }
+                internal set => this.sequenceNumber = value;
             }
 
             /// <summary>
@@ -364,10 +351,7 @@ namespace Microsoft.Azure.ServiceBus
                     return this.deadLetterSource;
                 }
 
-                internal set
-                {
-                    this.deadLetterSource = value;
-                }
+                internal set => this.deadLetterSource = value;
             }
 
             internal short PartitionId
@@ -378,10 +362,7 @@ namespace Microsoft.Azure.ServiceBus
                     return this.partitionId;
                 }
 
-                set
-                {
-                    this.partitionId = value;
-                }
+                set => this.partitionId = value;
             }
 
             /// <summary>Gets or sets the enqueued sequence number of the message.</summary>
@@ -396,10 +377,7 @@ namespace Microsoft.Azure.ServiceBus
                     return this.enqueuedSequenceNumber;
                 }
 
-                internal set
-                {
-                    this.enqueuedSequenceNumber = value;
-                }
+                internal set => this.enqueuedSequenceNumber = value;
             }
 
             /// <summary>Gets or sets the date and time of the sent time in UTC.</summary>
@@ -412,10 +390,7 @@ namespace Microsoft.Azure.ServiceBus
                     return this.enqueuedTimeUtc;
                 }
 
-                internal set
-                {
-                    this.enqueuedTimeUtc = value;
-                }
+                internal set => this.enqueuedTimeUtc = value;
             }
 
             internal Guid LockTokenGuid
@@ -426,10 +401,7 @@ namespace Microsoft.Azure.ServiceBus
                     return this.lockTokenGuid;
                 }
 
-                set
-                {
-                    this.lockTokenGuid = value;
-                }
+                set => this.lockTokenGuid = value;
             }
 
             internal object BodyObject

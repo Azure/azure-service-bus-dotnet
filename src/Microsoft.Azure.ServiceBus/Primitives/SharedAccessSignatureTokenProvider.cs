@@ -170,37 +170,13 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             {
             }
 
-            protected override string AudienceFieldName
-            {
-                get
-                {
-                    return SignedResourceFullFieldName;
-                }
-            }
+            protected override string AudienceFieldName => SignedResourceFullFieldName;
 
-            protected override string ExpiresOnFieldName
-            {
-                get
-                {
-                    return SignedExpiry;
-                }
-            }
+            protected override string ExpiresOnFieldName => SignedExpiry;
 
-            protected override string KeyValueSeparator
-            {
-                get
-                {
-                    return SasKeyValueSeparator;
-                }
-            }
+            protected override string KeyValueSeparator => SasKeyValueSeparator;
 
-            protected override string PairSeparator
-            {
-                get
-                {
-                    return SasPairSeparator;
-                }
-            }
+            protected override string PairSeparator => SasPairSeparator;
 
             internal static void Validate(string sharedAccessSignature)
             {
