@@ -203,7 +203,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>The path of the entity for this receiver. For Queues this will be the name, but for Subscriptions this will be the path.</summary>
-        public virtual string Path { get; private set; }
+        public virtual string Path { get; }
 
         /// <summary>
         /// Duration after which individual operations will timeout.
@@ -223,7 +223,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         internal string SessionIdInternal { get; set; }
 
-        internal MessagingEntityType? EntityType { get; private set; }
+        internal MessagingEntityType? EntityType { get; }
 
         Exception LinkException { get; set; }
 
