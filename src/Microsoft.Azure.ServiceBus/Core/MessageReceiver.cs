@@ -982,7 +982,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
             if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
-                return this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Deferred);
+                return this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Defered);
             }
             return this.DisposeMessagesAsync(lockTokens, new Modified { UndeliverableHere = true });
         }

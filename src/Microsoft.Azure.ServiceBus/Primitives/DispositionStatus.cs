@@ -6,7 +6,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
     enum DispositionStatus
     {
         Completed = 1,
-        Deferred = 2,
+        Defered = 2,
         Suspended = 3,
         Abandoned = 4,
         Renewed = 5,
