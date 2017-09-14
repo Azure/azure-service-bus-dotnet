@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
-    using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
     using Amqp;
@@ -44,16 +43,19 @@ namespace Microsoft.Azure.ServiceBus
 
         public Task<byte[]> GetStateAsync()
         {
+            this.ThrowIfClosed();
             return this.OnGetStateAsync();
         }
 
         public Task SetStateAsync(byte[] sessionState)
         {
+            this.ThrowIfClosed();
             return this.OnSetStateAsync(sessionState);
         }
 
         public Task RenewSessionLockAsync()
         {
+            this.ThrowIfClosed();
             return this.OnRenewSessionLockAsync();
         }
 
@@ -71,10 +73,10 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                AmqpRequestMessage amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.GetSessionStateOperation, this.OperationTimeout, null);
+                var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.GetSessionStateOperation, this.OperationTimeout, null);
                 amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionIdInternal;
 
-                AmqpResponseMessage amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                var amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 byte[] sessionState = null;
                 if (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.OK)
@@ -101,7 +103,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                AmqpRequestMessage amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.SetSessionStateOperation, this.OperationTimeout, null);
+                var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.SetSessionStateOperation, this.OperationTimeout, null);
                 amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionIdInternal;
 
                 if (sessionState != null)
@@ -114,7 +116,7 @@ namespace Microsoft.Azure.ServiceBus
                     amqpRequestMessage.Map[ManagementConstants.Properties.SessionState] = null;
                 }
 
-                AmqpResponseMessage amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                var amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
                 if (amqpResponseMessage.StatusCode != AmqpResponseStatusCode.OK)
                 {
                     throw amqpResponseMessage.ToMessagingContractException();
@@ -130,10 +132,10 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                AmqpRequestMessage amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewSessionLockOperation, this.OperationTimeout, null);
+                var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewSessionLockOperation, this.OperationTimeout, null);
                 amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionIdInternal;
 
-                AmqpResponseMessage amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                var amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 if (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.OK)
                 {
@@ -147,6 +149,17 @@ namespace Microsoft.Azure.ServiceBus
             catch (Exception exception)
             {
                 throw AmqpExceptionHelper.GetClientException(exception);
+            }
+        }
+
+        /// <summary>
+        /// Throw an OperationCanceledException if the object is Closing.
+        /// </summary>
+        protected override void ThrowIfClosed()
+        {
+            if (this.IsClosedOrClosing)
+            {
+                throw new ObjectDisposedException($"MessageSession with Id '{this.ClientId}' has already been closed. Please accept a new MessageSession.");
             }
         }
     }

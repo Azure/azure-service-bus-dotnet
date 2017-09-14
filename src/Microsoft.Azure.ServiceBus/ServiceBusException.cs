@@ -61,7 +61,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             get
             {
-                string baseMessage = base.Message;
+                var baseMessage = base.Message;
                 if (string.IsNullOrEmpty(this.ServiceBusNamespace))
                 {
                     return baseMessage;
@@ -78,7 +78,7 @@ namespace Microsoft.Azure.ServiceBus
         public bool IsTransient { get; }
 
         /// <summary>
-        /// Gets the Service Bus namespace from which the exception occured, if available.
+        /// Gets the Service Bus namespace from which the exception occurred, if available.
         /// </summary>
         public string ServiceBusNamespace { get; internal set; }
     }

@@ -34,10 +34,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             }
         }
 
-        public TimeSpan OriginalTimeout
-        {
-            get { return this.originalTimeout; }
-        }
+        public TimeSpan OriginalTimeout => this.originalTimeout;
 
         public static bool IsTooLarge(TimeSpan timeout)
         {
@@ -61,7 +58,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 return Timeout.Infinite;
             }
 
-            long ticks = Ticks.FromTimeSpan(timeout);
+            var ticks = Ticks.FromTimeSpan(timeout);
             if (ticks / TimeSpan.TicksPerMillisecond > int.MaxValue)
             {
                 return int.MaxValue;
@@ -173,7 +170,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 return TimeSpan.MaxValue;
             }
 
-            TimeSpan remaining = this.deadline - DateTime.UtcNow;
+            var remaining = this.deadline - DateTime.UtcNow;
             if (remaining <= TimeSpan.Zero)
             {
                 return TimeSpan.Zero;
