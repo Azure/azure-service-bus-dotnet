@@ -43,12 +43,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         {
         }
 
-        /// <summary></summary>
-        /// <param name="keyName"></param>
-        /// <param name="sharedAccessKey"></param>
-        /// <param name="customKeyEncoder"></param>
-        /// <param name="tokenTimeToLive"></param>
-        /// <param name="tokenScope"></param>
         protected SharedAccessSignatureTokenProvider(string keyName, string sharedAccessKey, Func<string, byte[]> customKeyEncoder, TimeSpan tokenTimeToLive, TokenScope tokenScope)
             : base(tokenScope)
         {
@@ -83,21 +77,13 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 TokenProvider.MessagingTokenProviderKeyEncoder(sharedAccessKey);
         }
 
-        /// <summary></summary>
-        /// <param name="appliesTo"></param>
-        /// <param name="action"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
         protected override Task<SecurityToken> OnGetTokenAsync(string appliesTo, string action, TimeSpan timeout)
         {
-            string tokenString = this.BuildSignature(appliesTo);
-            SharedAccessSignatureToken securityToken = new SharedAccessSignatureToken(tokenString);
-            return Task.FromResult<SecurityToken>(securityToken);
+            var tokenString = this.BuildSignature(appliesTo);
+            var sharedAccessSignatureToken = new SharedAccessSignatureToken(tokenString);
+            return Task.FromResult<SecurityToken>(sharedAccessSignatureToken);
         }
 
-        /// <summary></summary>
-        /// <param name="targetUri"></param>
-        /// <returns></returns>
         protected virtual string BuildSignature(string targetUri)
         {
             return string.IsNullOrWhiteSpace(this.sharedAccessSignature)
@@ -122,12 +108,12 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 // is case sensitive.
                 string expiresOn = BuildExpiresOn(timeToLive);
                 string audienceUri = WebUtility.UrlEncode(targetUri);
-                List<string> fields = new List<string> { audienceUri, expiresOn };
+                var fields = new List<string> { audienceUri, expiresOn };
 
                 // Example string to be signed:
                 // http://mynamespace.servicebus.windows.net/a/b/c?myvalue1=a
                 // <Value for ExpiresOn>
-                string signature = Sign(string.Join("\n", fields), encodedSharedAccessKey);
+                var signature = Sign(string.Join("\n", fields), encodedSharedAccessKey);
 
                 // Example returned string:
                 // SharedAccessKeySignature
@@ -148,15 +134,15 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
             static string BuildExpiresOn(TimeSpan timeToLive)
             {
-                DateTime expiresOn = DateTime.UtcNow.Add(timeToLive);
-                TimeSpan secondsFromBaseTime = expiresOn.Subtract(EpochTime);
-                long seconds = Convert.ToInt64(secondsFromBaseTime.TotalSeconds, CultureInfo.InvariantCulture);
+                var expiresOn = DateTime.UtcNow.Add(timeToLive);
+                var secondsFromBaseTime = expiresOn.Subtract(EpochTime);
+                var seconds = Convert.ToInt64(secondsFromBaseTime.TotalSeconds, CultureInfo.InvariantCulture);
                 return Convert.ToString(seconds, CultureInfo.InvariantCulture);
             }
 
             static string Sign(string requestString, byte[] encodedSharedAccessKey)
             {
-                using (HMACSHA256 hmac = new HMACSHA256(encodedSharedAccessKey))
+                using (var hmac = new HMACSHA256(encodedSharedAccessKey))
                 {
                     return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(requestString)));
                 }
@@ -184,37 +170,13 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             {
             }
 
-            protected override string AudienceFieldName
-            {
-                get
-                {
-                    return SignedResourceFullFieldName;
-                }
-            }
+            protected override string AudienceFieldName => SignedResourceFullFieldName;
 
-            protected override string ExpiresOnFieldName
-            {
-                get
-                {
-                    return SignedExpiry;
-                }
-            }
+            protected override string ExpiresOnFieldName => SignedExpiry;
 
-            protected override string KeyValueSeparator
-            {
-                get
-                {
-                    return SasKeyValueSeparator;
-                }
-            }
+            protected override string KeyValueSeparator => SasKeyValueSeparator;
 
-            protected override string PairSeparator
-            {
-                get
-                {
-                    return SasPairSeparator;
-                }
-            }
+            protected override string PairSeparator => SasPairSeparator;
 
             internal static void Validate(string sharedAccessSignature)
             {
@@ -225,26 +187,22 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
                 IDictionary<string, string> parsedFields = ExtractFieldValues(sharedAccessSignature);
 
-                string signature;
-                if (!parsedFields.TryGetValue(Signature, out signature))
+                if (!parsedFields.TryGetValue(Signature, out _))
                 {
                     throw new ArgumentNullException(Signature);
                 }
 
-                string expiry;
-                if (!parsedFields.TryGetValue(SignedExpiry, out expiry))
+                if (!parsedFields.TryGetValue(SignedExpiry, out _))
                 {
                     throw new ArgumentNullException(SignedExpiry);
                 }
 
-                string keyName;
-                if (!parsedFields.TryGetValue(SignedKeyName, out keyName))
+                if (!parsedFields.TryGetValue(SignedKeyName, out _))
                 {
                     throw new ArgumentNullException(SignedKeyName);
                 }
 
-                string encodedAudience;
-                if (!parsedFields.TryGetValue(SignedResource, out encodedAudience))
+                if (!parsedFields.TryGetValue(SignedResource, out _))
                 {
                     throw new ArgumentNullException(SignedResource);
                 }
@@ -252,21 +210,21 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
             static IDictionary<string, string> ExtractFieldValues(string sharedAccessSignature)
             {
-                string[] tokenLines = sharedAccessSignature.Split();
+                var tokenLines = sharedAccessSignature.Split();
 
                 if (!string.Equals(tokenLines[0].Trim(), SharedAccessSignature, StringComparison.OrdinalIgnoreCase) || tokenLines.Length != 2)
                 {
                     throw new ArgumentNullException(nameof(sharedAccessSignature));
                 }
 
-                IDictionary<string, string> parsedFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                string[] tokenFields = tokenLines[1].Trim().Split(new[] { SasPairSeparator }, StringSplitOptions.None);
+                var parsedFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                var tokenFields = tokenLines[1].Trim().Split(new[] { SasPairSeparator }, StringSplitOptions.None);
 
-                foreach (string tokenField in tokenFields)
+                foreach (var tokenField in tokenFields)
                 {
                     if (tokenField != string.Empty)
                     {
-                        string[] fieldParts = tokenField.Split(new[] { SasKeyValueSeparator }, StringSplitOptions.None);
+                        var fieldParts = tokenField.Split(new[] { SasKeyValueSeparator }, StringSplitOptions.None);
                         if (string.Equals(fieldParts[0], SignedResource, StringComparison.OrdinalIgnoreCase))
                         {
                             // We need to preserve the casing of the escape characters in the audience,

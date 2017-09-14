@@ -12,11 +12,11 @@ namespace Microsoft.Azure.ServiceBus
     using Core;
     using Primitives;
 
-    /// <summary> 
-    /// A session client can be used to accept session objects which can be used to interact with all messages with the same sessionId. 
-    /// </summary> 
-    /// <remarks> 
-    /// You can accept any session or a given session (identified by <see cref="IMessageSession.SessionId"/> using a session client. 
+    /// <summary>
+    /// A session client can be used to accept session objects which can be used to interact with all messages with the same sessionId.
+    /// </summary>
+    /// <remarks>
+    /// You can accept any session or a given session (identified by <see cref="IMessageSession.SessionId"/> using a session client.
     /// Once you accept a session, you can use it as a <see cref="MessageReceiver"/> which receives only messages having the same session id.
     /// See <see cref="IMessageSession"/> for usage of session object.
     /// This uses AMQP protocol to communicate with the service.
@@ -29,12 +29,12 @@ namespace Microsoft.Azure.ServiceBus
     ///     queueName,
     ///     ReceiveMode.PeekLock);
     /// </code>
-    /// 
+    ///
     /// To receive a session object for a given sessionId
     /// <code>
     /// IMessageSession session = await sessionClient.AcceptMessageSessionAsync(sessionId);
     /// </code>
-    /// 
+    ///
     /// To receive any session
     /// <code>
     /// IMessageSession session = await sessionClient.AcceptMessageSessionAsync();
@@ -61,14 +61,14 @@ namespace Microsoft.Azure.ServiceBus
             RetryPolicy retryPolicy = null,
             int prefetchCount = DefaultPrefetchCount)
             : this(connectionStringBuilder?.GetNamespaceConnectionString(), connectionStringBuilder?.EntityPath, receiveMode, retryPolicy, prefetchCount)
-        {   
+        {
         }
 
         /// <summary>
         /// Creates a new SessionClient from a specified connection string and entity path.
         /// </summary>
         /// <param name="connectionString">Namespace connection string used to communicate with Service Bus. Must not contain entity details.</param>
-        /// <param name="entityPath">The path of the entity for this receiver. For Queues this will be the anme, but for Subscriptions this will be the full path.</param>
+        /// <param name="entityPath">The path of the entity for this receiver. For Queues this will be the name, but for Subscriptions this will be the full path.</param>
         /// <param name="receiveMode">The <see cref="ReceiveMode"/> used to specify how messages are received. Defaults to PeekLock mode.</param>
         /// <param name="retryPolicy">The <see cref="RetryPolicy"/> that will be used when communicating with ServiceBus. Defaults to <see cref="RetryPolicy.Default"/></param>
         /// <param name="prefetchCount">The <see cref="PrefetchCount"/> that specifies the upper limit of messages the session object
@@ -80,7 +80,7 @@ namespace Microsoft.Azure.ServiceBus
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null,
             int prefetchCount = DefaultPrefetchCount)
-            : this(ClientEntity.GenerateClientId(nameof(SessionClient), entityPath),
+            : this(nameof(SessionClient),
                   entityPath,
                   null,
                   receiveMode,
@@ -105,7 +105,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         internal SessionClient(
-            string clientId,
+            string clientTypeName,
             string entityPath,
             MessagingEntityType? entityType,
             ReceiveMode receiveMode,
@@ -114,7 +114,7 @@ namespace Microsoft.Azure.ServiceBus
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
             IList<ServiceBusPlugin> registeredPlugins)
-            : base(clientId, retryPolicy ?? RetryPolicy.Default)
+            : base(clientTypeName, entityPath, retryPolicy ?? RetryPolicy.Default)
         {
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
             this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
@@ -130,7 +130,7 @@ namespace Microsoft.Azure.ServiceBus
                 foreach (var serviceBusPlugin in registeredPlugins)
                 {
                     this.RegisterPlugin(serviceBusPlugin);
-                } 
+                }
             }
         }
 
@@ -162,16 +162,6 @@ namespace Microsoft.Azure.ServiceBus
         /// Gets a list of currently registered plugins.
         /// </summary>
         public override IList<ServiceBusPlugin> RegisteredPlugins { get; } = new List<ServiceBusPlugin>();
-
-        /// <summary></summary>
-        /// <returns>The asynchronous operation.</returns>
-        protected override async Task OnClosingAsync()
-        {
-            if (this.ownsConnection)
-            {
-                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
-            }
-        }
 
         /// <summary>
         /// Gets a session object of any <see cref="IMessageSession.SessionId"/> that can be used to receive messages for that sessionId.
@@ -218,6 +208,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>A session object.</returns>
         public async Task<IMessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
+            this.ThrowIfClosed();
+
             MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionStart(
                 this.ClientId,
                 this.EntityPath,
@@ -255,7 +247,7 @@ namespace Microsoft.Azure.ServiceBus
                 await session.CloseAsync().ConfigureAwait(false);
                 throw AmqpExceptionHelper.GetClientException(exception);
             }
-            
+
             MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionStop(
                 this.ClientId,
                 this.EntityPath,
@@ -267,7 +259,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 session.RegisterPlugin(serviceBusPlugin);
             }
-            
+
             return session;
         }
 
@@ -277,11 +269,13 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register.</param>
         public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
+            this.ThrowIfClosed();
+
             if (serviceBusPlugin == null)
             {
                 throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
             }
-            else if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
+            if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
             {
                 throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
             }
@@ -294,6 +288,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="serviceBusPluginName">The <see cref="ServiceBusPlugin.Name"/> of the plugin to be unregistered.</param>
         public override void UnregisterPlugin(string serviceBusPluginName)
         {
+            this.ThrowIfClosed();
+
             if (this.RegisteredPlugins == null)
             {
                 return;
@@ -306,6 +302,14 @@ namespace Microsoft.Azure.ServiceBus
             {
                 var plugin = this.RegisteredPlugins.First(p => p.Name == serviceBusPluginName);
                 this.RegisteredPlugins.Remove(plugin);
+            }
+        }
+
+        protected override async Task OnClosingAsync()
+        {
+            if (this.ownsConnection)
+            {
+                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
             }
         }
     }

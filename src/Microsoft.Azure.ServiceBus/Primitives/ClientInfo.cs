@@ -18,7 +18,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         {
             try
             {
-                Assembly assembly = typeof(ClientInfo).GetTypeInfo().Assembly;
+                var assembly = typeof(ClientInfo).GetTypeInfo().Assembly;
                 Product = GetAssemblyAttributeValue<AssemblyProductAttribute>(assembly, p => p.Product);
                 Version = GetAssemblyAttributeValue<AssemblyFileVersionAttribute>(assembly, v => v.Version);
                 Framework = GetAssemblyAttributeValue<TargetFrameworkAttribute>(assembly, f => f.FrameworkName);
@@ -40,8 +40,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         static string GetAssemblyAttributeValue<T>(Assembly assembly, Func<T, string> getter) where T : Attribute
         {
-            var attribute = assembly.GetCustomAttribute(typeof(T)) as T;
-            return attribute == null ? null : getter(attribute);
+            return !(assembly.GetCustomAttribute(typeof(T)) is T attribute) ? null : getter(attribute);
         }
     }
 }

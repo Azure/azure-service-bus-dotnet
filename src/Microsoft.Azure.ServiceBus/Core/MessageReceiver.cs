@@ -25,7 +25,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     ///     EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName),
     ///     ReceiveMode.PeekLock);
     /// </code>
-    /// 
+    ///
     /// Receive a message from the Subscription.
     /// <code>
     /// var message = await messageReceiver.ReceiveAsync();
@@ -33,8 +33,8 @@ namespace Microsoft.Azure.ServiceBus.Core
     /// </code>
     /// </example>
     /// <remarks>
-    /// The MessageReceiver provides advanced functionality that is not found in the 
-    /// <see cref="QueueClient" /> or <see cref="SubscriptionClient" />. For instance, 
+    /// The MessageReceiver provides advanced functionality that is not found in the
+    /// <see cref="QueueClient" /> or <see cref="SubscriptionClient" />. For instance,
     /// <see cref="ReceiveAsync()"/>, which allows you to receive messages on demand, but also requires
     /// you to manually renew locks using <see cref="RenewLockAsync(Message)"/>.
     /// It uses AMQP protocol to communicate with service.
@@ -60,7 +60,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <param name="connectionStringBuilder">The <see cref="ServiceBusConnectionStringBuilder"/> having entity level connection details.</param>
         /// <param name="receiveMode">The <see cref="ServiceBus.ReceiveMode"/> used to specify how messages are received. Defaults to PeekLock mode.</param>
         /// <param name="retryPolicy">The <see cref="RetryPolicy"/> that will be used when communicating with Service Bus. Defaults to <see cref="RetryPolicy.Default"/>.</param>
-        /// <param name="prefetchCount">The <see cref="PrefetchCount"/> that specifies the upper limit of messages this receiver 
+        /// <param name="prefetchCount">The <see cref="PrefetchCount"/> that specifies the upper limit of messages this receiver
         /// will actively receive regardless of whether a receive operation is pending. Defaults to 0.</param>
         /// <remarks>Creates a new connection to the entity, which is opened during the first operation.</remarks>
         public MessageReceiver(
@@ -76,11 +76,11 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Creates a new MessageReceiver from a specified connection string and entity path.
         /// </summary>
         /// <param name="connectionString">Namespace connection string used to communicate with Service Bus. Must not contain Entity details.</param>
-        /// <param name="entityPath">The path of the entity for this receiver. For Queues this will be the name, but for Subscriptions this will be the path. 
+        /// <param name="entityPath">The path of the entity for this receiver. For Queues this will be the name, but for Subscriptions this will be the path.
         /// You can use <see cref="EntityNameHelper.FormatSubscriptionPath(string, string)"/>, to help create this path.</param>
         /// <param name="receiveMode">The <see cref="ServiceBus.ReceiveMode"/> used to specify how messages are received. Defaults to PeekLock mode.</param>
         /// <param name="retryPolicy">The <see cref="RetryPolicy"/> that will be used when communicating with Service Bus. Defaults to <see cref="RetryPolicy.Default"/></param>
-        /// <param name="prefetchCount">The <see cref="PrefetchCount"/> that specifies the upper limit of messages this receiver 
+        /// <param name="prefetchCount">The <see cref="PrefetchCount"/> that specifies the upper limit of messages this receiver
         /// will actively receive regardless of whether a receive operation is pending. Defaults to 0.</param>
         /// <remarks>Creates a new connection to the entity, which is opened during the first operation.</remarks>
         public MessageReceiver(
@@ -115,7 +115,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             int prefetchCount = Constants.DefaultClientPrefetchCount,
             string sessionId = null,
             bool isSessionReceiver = false)
-            : base(ClientEntity.GenerateClientId(nameof(MessageReceiver), entityPath), retryPolicy ?? RetryPolicy.Default)
+            : base(nameof(MessageReceiver), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
             MessagingEventSource.Log.MessageReceiverCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath, receiveMode.ToString());
 
@@ -123,12 +123,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ReceiveMode = receiveMode;
             this.OperationTimeout = serviceBusConnection.OperationTimeout;
             this.Path = entityPath;
-            this.EntityType = entityType;   
+            this.EntityType = entityType;
             this.CbsTokenProvider = cbsTokenProvider;
             this.SessionIdInternal = sessionId;
             this.isSessionReceiver = isSessionReceiver;
-            this.ReceiveLinkManager = new FaultTolerantAmqpObject<ReceivingAmqpLink>(this.CreateLinkAsync, this.CloseSession);
-            this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, this.CloseRequestResponseSession);
+            this.ReceiveLinkManager = new FaultTolerantAmqpObject<ReceivingAmqpLink>(this.CreateLinkAsync, CloseSession);
+            this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, CloseRequestResponseSession);
             this.requestResponseLockedMessages = new ConcurrentExpiringSet<Guid>();
             this.PrefetchCount = prefetchCount;
             this.messageReceivePumpSyncLock = new object();
@@ -153,16 +153,16 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Setting the value to zero turns prefetch off.
         /// Defaults to 0.
         /// </summary>
-        /// <remarks> 
+        /// <remarks>
         /// <para>
-        /// When Prefetch is enabled, the receiver will quietly acquire more messages, up to the PrefetchCount limit, than what the application 
-        /// immediately asks for. A single initial Receive/ReceiveAsync call will therefore acquire a message for immediate consumption 
-        /// that will be returned as soon as available, and the client will proceed to acquire further messages to fill the prefetch buffer in the background. 
+        /// When Prefetch is enabled, the receiver will quietly acquire more messages, up to the PrefetchCount limit, than what the application
+        /// immediately asks for. A single initial Receive/ReceiveAsync call will therefore acquire a message for immediate consumption
+        /// that will be returned as soon as available, and the client will proceed to acquire further messages to fill the prefetch buffer in the background.
         /// </para>
         /// <para>
-        /// While messages are available in the prefetch buffer, any subsequent ReceiveAsync calls will be immediately satisfied from the buffer, and the buffer is 
-        /// replenished in the background as space becomes available.If there are no messages available for delivery, the receive operation will drain the 
-        /// buffer and then wait or block as expected. 
+        /// While messages are available in the prefetch buffer, any subsequent ReceiveAsync calls will be immediately satisfied from the buffer, and the buffer is
+        /// replenished in the background as space becomes available.If there are no messages available for delivery, the receive operation will drain the
+        /// buffer and then wait or block as expected.
         /// </para>
         /// <para>Prefetch also works equivalently with the <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, Func{ExceptionReceivedEventArgs, Task})"/> APIs.</para>
         /// <para>Updates to this value take effect on the next receive call to the service.</para>
@@ -203,7 +203,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>The path of the entity for this receiver. For Queues this will be the name, but for Subscriptions this will be the path.</summary>
-        public virtual string Path { get; private set; }
+        public virtual string Path { get; }
 
         /// <summary>
         /// Duration after which individual operations will timeout.
@@ -223,7 +223,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         internal string SessionIdInternal { get; set; }
 
-        internal MessagingEntityType? EntityType { get; private set; }
+        internal MessagingEntityType? EntityType { get; }
 
         Exception LinkException { get; set; }
 
@@ -234,46 +234,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         FaultTolerantAmqpObject<ReceivingAmqpLink> ReceiveLinkManager { get; }
 
         FaultTolerantAmqpObject<RequestResponseAmqpLink> RequestResponseLinkManager { get; }
-
-        private async Task<Message> ProcessMessage(Message message)
-        {
-            var processedMessage = message;
-            foreach (var plugin in this.RegisteredPlugins)
-            {
-                try
-                {
-                    MessagingEventSource.Log.PluginCallStarted(plugin.Name, message.MessageId);
-                    processedMessage = await plugin.AfterMessageReceive(message).ConfigureAwait(false);
-                    MessagingEventSource.Log.PluginCallCompleted(plugin.Name, message.MessageId);
-                }
-                catch (Exception ex)
-                {
-                    MessagingEventSource.Log.PluginCallFailed(plugin.Name, message.MessageId, ex);
-                    if (!plugin.ShouldContinueOnException)
-                    {
-                        throw;
-                    }
-                }
-            }
-            return processedMessage;
-        }
-
-        private async Task<IList<Message>> ProcessMessages(IList<Message> messageList)
-        {
-            if (this.RegisteredPlugins.Count < 1)
-            {
-                return messageList;
-            }
-
-            var processedMessageList = new List<Message>();
-            foreach (var message in messageList)
-            {
-                var processedMessage = await this.ProcessMessage(message).ConfigureAwait(false);
-                processedMessageList.Add(processedMessage);
-            }
-
-            return processedMessageList;
-        }
 
         /// <summary>
         /// Receive a message from the entity defined by <see cref="Path"/> using <see cref="ReceiveMode"/> mode.
@@ -290,9 +250,14 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         /// <param name="operationTimeout">The time span the client waits for receiving a message before it times out.</param>
         /// <returns>The message received. Returns null if no message is found.</returns>
+        /// <remarks>
+        /// The parameter <paramref name="operationTimeout"/> includes the time taken by the receiver to establish a connection
+        /// (either during the first receive or when connection needs to be re-established). If establishing the connection
+        /// times out, this will throw <see cref="ServiceBusTimeoutException"/>.
+        /// </remarks>
         public async Task<Message> ReceiveAsync(TimeSpan operationTimeout)
         {
-            IList<Message> messages = await this.ReceiveAsync(1, operationTimeout).ConfigureAwait(false);
+            var messages = await this.ReceiveAsync(1, operationTimeout).ConfigureAwait(false);
             if (messages != null && messages.Count > 0)
             {
                 return messages[0];
@@ -306,7 +271,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
         /// <returns>List of messages received. Returns null if no message is found.</returns>
-        /// <remarks> Receving less than <paramref name="maxMessageCount"/> messages is not an indication of empty entity.</remarks>
+        /// <remarks>Receiving less than <paramref name="maxMessageCount"/> messages is not an indication of empty entity.</remarks>
         public Task<IList<Message>> ReceiveAsync(int maxMessageCount)
         {
             return this.ReceiveAsync(maxMessageCount, this.OperationTimeout);
@@ -318,9 +283,20 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <param name="maxMessageCount">The maximum number of messages that will be received.</param>
         /// <param name="operationTimeout">The time span the client waits for receiving a message before it times out.</param>
         /// <returns>List of messages received. Returns null if no message is found.</returns>
-        /// <remarks> Receving less than <paramref name="maxMessageCount"/> messages is not an indication of empty entity.</remarks>
+        /// <remarks>Receiving less than <paramref name="maxMessageCount"/> messages is not an indication of empty entity.
+        /// The parameter <paramref name="operationTimeout"/> includes the time taken by the receiver to establish a connection
+        /// (either during the first receive or when connection needs to be re-established). If establishing the connection
+        /// times out, this will throw <see cref="ServiceBusTimeoutException"/>.
+        /// </remarks>
         public async Task<IList<Message>> ReceiveAsync(int maxMessageCount, TimeSpan operationTimeout)
         {
+            this.ThrowIfClosed();
+
+            if (operationTimeout <= TimeSpan.Zero)
+            {
+                throw Fx.Exception.ArgumentOutOfRange(nameof(operationTimeout), operationTimeout, Resources.TimeoutMustBePositiveNonZero.FormatForUser(nameof(operationTimeout), operationTimeout));
+            }
+
             MessagingEventSource.Log.MessageReceiveStart(this.ClientId, maxMessageCount);
 
             IList<Message> unprocessedMessageList = null;
@@ -353,12 +329,12 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Receives a specific deferred message identified by <paramref name="sequenceNumber"/>.
         /// </summary>
         /// <param name="sequenceNumber">The sequence number of the message that will be received.</param>
-        /// <returns>Message identified by sequence number <paramref name="sequenceNumber"/>. Returns null if no such message is found. 
+        /// <returns>Message identified by sequence number <paramref name="sequenceNumber"/>. Returns null if no such message is found.
         /// Throws if the message has not been deferred.</returns>
         /// <seealso cref="DeferAsync"/>
         public async Task<Message> ReceiveDeferredMessageAsync(long sequenceNumber)
         {
-            IList<Message> messages = await this.ReceiveDeferredMessageAsync(new long[] { sequenceNumber }).ConfigureAwait(false);
+            var messages = await this.ReceiveDeferredMessageAsync(new[] { sequenceNumber }).ConfigureAwait(false);
             if (messages != null && messages.Count > 0)
             {
                 return messages[0];
@@ -376,8 +352,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <seealso cref="DeferAsync"/>
         public async Task<IList<Message>> ReceiveDeferredMessageAsync(IEnumerable<long> sequenceNumbers)
         {
+            this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
-            int count = MessageReceiver.ValidateSequenceNumbers(sequenceNumbers);
+
+            var count = MessageReceiver.ValidateSequenceNumbers(sequenceNumbers);
 
             MessagingEventSource.Log.MessageReceiveDeferredMessageStart(this.ClientId, count, sequenceNumbers);
 
@@ -407,10 +385,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         /// <param name="lockToken">The lock token of the corresponding message to complete.</param>
         /// <remarks>
-        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
+        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
+        /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         public Task CompleteAsync(string lockToken)
         {
             return this.CompleteAsync(new[] { lockToken });
@@ -420,15 +398,16 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Completes a series of <see cref="Message"/> using a list of lock tokens. This will delete the message from the service.
         /// </summary>
         /// <remarks>
-        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
+        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
+        /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
         /// <param name="lockTokens">An <see cref="IEnumerable{T}"/> containing the lock tokens of the corresponding messages to complete.</param>
-        /// <returns>The asynchronous operation.</returns>
         public async Task CompleteAsync(IEnumerable<string> lockTokens)
         {
+            this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
-            int count = MessageReceiver.ValidateLockTokens(lockTokens);
+            var count = MessageReceiver.ValidateLockTokens(lockTokens);
 
             MessagingEventSource.Log.MessageCompleteStart(this.ClientId, count, lockTokens);
 
@@ -454,12 +433,14 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Abandons a <see cref="Message"/> using a lock token. This will make the message available again for processing.
         /// </summary>
         /// <param name="lockToken">The lock token of the corresponding message to abandon.</param>
-        /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
-        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
-        /// Abandoning a message will increase the delivery count on the message.</remarks>
-        /// <returns>The asynchronous operation.</returns>
+        /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
+        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
+        /// Abandoning a message will increase the delivery count on the message.
+        /// This operation can only be performed on messages that were received by this receiver.
+        /// </remarks>
         public async Task AbandonAsync(string lockToken)
         {
+            this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
 
             MessagingEventSource.Log.MessageAbandonStart(this.ClientId, 1, lockToken);
@@ -484,15 +465,16 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>Indicates that the receiver wants to defer the processing for the message.</summary>
         /// <param name="lockToken">The lock token of the <see cref="Message" />.</param>
         /// <remarks>
-        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
-        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
+        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
+        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
         /// In order to receive this message again in the future, you will need to save the <see cref="Message.SystemPropertiesCollection.SequenceNumber"/>
         /// and receive it using <see cref="ReceiveDeferredMessageAsync(long)"/>.
         /// Deferring messages does not impact message's expiration, meaning that deferred messages can still expire.
+        /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         public async Task DeferAsync(string lockToken)
         {
+            this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
 
             MessagingEventSource.Log.MessageDeferStart(this.ClientId, 1, lockToken);
@@ -520,13 +502,15 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         /// <param name="lockToken">The lock token of the corresponding message to deadletter.</param>
         /// <remarks>
-        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>, 
-        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>. 
-        /// In order to receive a message from the deadletter queue, you will need a new <see cref="IMessageReceiver"/>, with the corresponding path. 
-        /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.</remarks>
-        /// <returns>The asynchronous operation.</returns>
+        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
+        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
+        /// In order to receive a message from the deadletter queue, you will need a new <see cref="IMessageReceiver"/>, with the corresponding path.
+        /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
+        /// This operation can only be performed on messages that were received by this receiver.
+        /// </remarks>
         public async Task DeadLetterAsync(string lockToken)
         {
+            this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
 
             MessagingEventSource.Log.MessageDeadLetterStart(this.ClientId, 1, lockToken);
@@ -554,25 +538,40 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         /// <param name="message"> <see cref="Message" />.</param>
         /// <remarks>
-        /// When a message is received in <see cref="ServiceBus.ReceiveMode.PeekLock"/> mode, the message is locked on the server for this 
+        /// When a message is received in <see cref="ServiceBus.ReceiveMode.PeekLock"/> mode, the message is locked on the server for this
         /// receiver instance for a duration as specified during the Queue/Subscription creation (LockDuration).
-        /// If processing of the message requires longer than this duration, the lock needs to be renewed. For each renewal, the lock is renewed by 
-        /// the entity's LockDuration. 
+        /// If processing of the message requires longer than this duration, the lock needs to be renewed. 
+        /// For each renewal, it resets the time the message is locked by the LockDuration set on the Entity.
         /// </remarks>
-        /// <returns>The asynchronous operation.</returns>
         public async Task RenewLockAsync(Message message)
         {
+            message.SystemProperties.LockedUntilUtc = await RenewLockAsync(message.SystemProperties.LockToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Renews the lock on the message. The lock will be renewed based on the setting specified on the queue.
+        /// <returns>New lock token expiry date and time in UTC format.</returns>
+        /// </summary>
+        /// <param name="lockToken">Lock token associated with the message.</param>
+        /// <remarks>
+        /// When a message is received in <see cref="ServiceBus.ReceiveMode.PeekLock"/> mode, the message is locked on the server for this
+        /// receiver instance for a duration as specified during the Queue/Subscription creation (LockDuration).
+        /// If processing of the message requires longer than this duration, the lock needs to be renewed. 
+        /// For each renewal, it resets the time the message is locked by the LockDuration set on the Entity.
+        /// </remarks>
+        public async Task<DateTime> RenewLockAsync(string lockToken)
+        {
+            this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
 
-            MessagingEventSource.Log.MessageRenewLockStart(this.ClientId, 1, message.SystemProperties.LockToken);
+            MessagingEventSource.Log.MessageRenewLockStart(this.ClientId, 1, lockToken);
+
+            var lockedUntilUtc = DateTime.MinValue;
 
             try
             {
                 await this.RetryPolicy.RunOperation(
-                    async () =>
-                    {
-                        message.SystemProperties.LockedUntilUtc = await this.OnRenewLockAsync(message.SystemProperties.LockToken).ConfigureAwait(false);
-                    }, this.OperationTimeout)
+                    async () => lockedUntilUtc = await this.OnRenewLockAsync(lockToken).ConfigureAwait(false), this.OperationTimeout)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -582,15 +581,17 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             MessagingEventSource.Log.MessageRenewLockStop(this.ClientId);
+
+            return lockedUntilUtc;
         }
 
         /// <summary>
         /// Fetches the next active message without changing the state of the receiver or the message source.
         /// </summary>
         /// <remarks>
-        /// The first call to <see cref="PeekAsync()"/> fetches the first active message for this receiver. Each subsequent call 
+        /// The first call to <see cref="PeekAsync()"/> fetches the first active message for this receiver. Each subsequent call
         /// fetches the subsequent message in the entity.
-        /// Unliked a received messaged, peeked message will not have lock token associated with it, and hence it cannot be Completed/Abandoned/Defered/Deadlettered/Renewed.
+        /// Unlike a received message, peeked message will not have lock token associated with it, and hence it cannot be Completed/Abandoned/Deferred/Deadlettered/Renewed.
         /// Also, unlike <see cref="ReceiveAsync()"/>, this method will fetch even Deferred messages (but not Deadlettered message)
         /// </remarks>
         /// <returns>The <see cref="Message" /> that represents the next message to be read. Returns null when nothing to peek.</returns>
@@ -603,9 +604,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Fetches the next batch of active messages without changing the state of the receiver or the message source.
         /// </summary>
         /// <remarks>
-        /// The first call to <see cref="PeekAsync()"/> fetches the first active message for this receiver. Each subsequent call 
+        /// The first call to <see cref="PeekAsync()"/> fetches the first active message for this receiver. Each subsequent call
         /// fetches the subsequent message in the entity.
-        /// Unliked a received messaged, peeked message will not have lock token associated with it, and hence it cannot be Completed/Abandoned/Defered/Deadlettered/Renewed.
+        /// Unlike a received message, peeked message will not have lock token associated with it, and hence it cannot be Completed/Abandoned/Deferred/Deadlettered/Renewed.
         /// Also, unlike <see cref="ReceiveAsync()"/>, this method will fetch even Deferred messages (but not Deadlettered message)
         /// </remarks>
         /// <returns>List of <see cref="Message" /> that represents the next message to be read. Returns null when nothing to peek.</returns>
@@ -631,6 +632,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <returns>A batch of messages peeked.</returns>
         public async Task<IList<Message>> PeekBySequenceNumberAsync(long fromSequenceNumber, int messageCount)
         {
+            this.ThrowIfClosed();
             IList<Message> messages = null;
 
             MessagingEventSource.Log.MessagePeekStart(this.ClientId, fromSequenceNumber, messageCount);
@@ -654,7 +656,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>
-        /// Receive messages continously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
         /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
         /// <param name="handler">A <see cref="Func{T1, T2, TResult}"/> that processes messages.</param>
@@ -665,19 +667,106 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>
-        /// Receive messages continously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
         /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
         /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
         /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
-        /// <remarks>Enable prefetch to speeden up the receive rate.</remarks>
+        /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
         public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
         {
+            this.ThrowIfClosed();
             this.OnMessageHandler(messageHandlerOptions, handler);
         }
 
-        /// <summary></summary>
-        /// <returns>The asynchronous operation.</returns>
+        /// <summary>
+        /// Registers a <see cref="ServiceBusPlugin"/> to be used with this receiver.
+        /// </summary>
+        /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register.</param>
+        public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
+        {
+            this.ThrowIfClosed();
+            if (serviceBusPlugin == null)
+            {
+                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
+            }
+            if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
+            {
+                throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
+            }
+            this.RegisteredPlugins.Add(serviceBusPlugin);
+        }
+
+        /// <summary>
+        /// Unregisters a <see cref="ServiceBusPlugin"/>.
+        /// </summary>
+        /// <param name="serviceBusPluginName">The <see cref="ServiceBusPlugin.Name"/> of the plugin to be unregistered.</param>
+        public override void UnregisterPlugin(string serviceBusPluginName)
+        {
+            this.ThrowIfClosed();
+            if (this.RegisteredPlugins == null)
+            {
+                return;
+            }
+            if (serviceBusPluginName == null)
+            {
+                throw new ArgumentNullException(nameof(serviceBusPluginName), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginName)));
+            }
+            if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPluginName))
+            {
+                var plugin = this.RegisteredPlugins.First(p => p.Name == serviceBusPluginName);
+                this.RegisteredPlugins.Remove(plugin);
+            }
+        }
+
+        internal async Task GetSessionReceiverLinkAsync(TimeSpan serverWaitTime)
+        {
+            var timeoutHelper = new TimeoutHelper(serverWaitTime, true);
+            var receivingAmqpLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+
+            var source = (Source)receivingAmqpLink.Settings.Source;
+            if (!source.FilterSet.TryGetValue<string>(AmqpClientConstants.SessionFilterName, out var tempSessionId))
+            {
+                receivingAmqpLink.Session.SafeClose();
+                throw new ServiceBusException(true, Resources.SessionFilterMissing);
+            }
+
+            if (string.IsNullOrWhiteSpace(tempSessionId))
+            {
+                receivingAmqpLink.Session.SafeClose();
+                throw new ServiceBusException(true, Resources.AmqpFieldSessionId);
+            }
+
+            receivingAmqpLink.Closed += this.OnSessionReceiverLinkClosed;
+            this.SessionIdInternal = tempSessionId;
+            this.LockedUntilUtcInternal = receivingAmqpLink.Settings.Properties.TryGetValue<long>(AmqpClientConstants.LockedUntilUtc, out var lockedUntilUtcTicks)
+                ? new DateTime(lockedUntilUtcTicks, DateTimeKind.Utc)
+                : DateTime.MinValue;
+        }
+
+        internal async Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
+        {
+            var amqpMessage = amqpRequestMessage.AmqpMessage;
+            if (this.isSessionReceiver)
+            {
+                this.ThrowIfSessionLockLost();
+            }
+
+            var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
+            if (!this.RequestResponseLinkManager.TryGetOpenedObject(out var requestResponseAmqpLink))
+            {
+                MessagingEventSource.Log.CreatingNewLink(this.ClientId, this.isSessionReceiver, this.SessionIdInternal, true, this.LinkException);
+                requestResponseAmqpLink = await this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+            }
+
+            var responseAmqpMessage = await Task.Factory.FromAsync(
+                (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, timeoutHelper.RemainingTime(), c, s),
+                (a) => requestResponseAmqpLink.EndRequest(a),
+                this).ConfigureAwait(false);
+
+            return AmqpResponseMessage.CreateResponse(responseAmqpMessage);
+        }
+
         protected override async Task OnClosingAsync()
         {
             this.clientLinkManager.Close();
@@ -699,76 +788,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        internal async Task GetSessionReceiverLinkAsync(TimeSpan serverWaitTime)
-        {
-            TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);
-            ReceivingAmqpLink receivingAmqpLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
-            
-            Source source = (Source)receivingAmqpLink.Settings.Source;
-            string tempSessionId;
-            if (!source.FilterSet.TryGetValue(AmqpClientConstants.SessionFilterName, out tempSessionId))
-            {
-                receivingAmqpLink.Session.SafeClose();
-                throw new ServiceBusException(true, Resources.SessionFilterMissing);
-            }
-
-            if (string.IsNullOrWhiteSpace(tempSessionId))
-            {
-                receivingAmqpLink.Session.SafeClose();
-                throw new ServiceBusException(true, Resources.AmqpFieldSessionId);
-            }
-
-            receivingAmqpLink.Closed += this.OnSessionReceiverLinkClosed;
-            this.SessionIdInternal = tempSessionId;
-            long lockedUntilUtcTicks;
-            this.LockedUntilUtcInternal = receivingAmqpLink.Settings.Properties.TryGetValue(AmqpClientConstants.LockedUntilUtc, out lockedUntilUtcTicks) ? new DateTime(lockedUntilUtcTicks, DateTimeKind.Utc) : DateTime.MinValue;
-        }
-
-        void OnSessionReceiverLinkClosed(object sender, EventArgs e)
-        {
-            ReceivingAmqpLink amqpLink = (ReceivingAmqpLink)sender;
-            if (amqpLink != null)
-            {
-                var exception = amqpLink.GetInnerException();
-                if (!(exception is SessionLockLostException))
-                {
-                    exception = new SessionLockLostException("Session lock lost. Accept a new session", exception);
-                }
-
-                this.LinkException = exception;
-                MessagingEventSource.Log.SessionReceiverLinkClosed(this.ClientId, this.SessionIdInternal, this.LinkException);
-            }
-        }
-
-        internal async Task<AmqpResponseMessage> ExecuteRequestResponseAsync(AmqpRequestMessage amqpRequestMessage)
-        {
-            AmqpMessage amqpMessage = amqpRequestMessage.AmqpMessage;
-            if (this.isSessionReceiver)
-            {
-                this.ThrowIfSessionLockLost();
-            }
-
-            TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-            RequestResponseAmqpLink requestResponseAmqpLink = null;
-            if (!this.RequestResponseLinkManager.TryGetOpenedObject(out requestResponseAmqpLink))
-            {
-                MessagingEventSource.Log.CreatingNewLink(this.ClientId, this.isSessionReceiver, this.SessionIdInternal, true, this.LinkException);
-                requestResponseAmqpLink = await this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false); 
-            }
-
-            AmqpMessage responseAmqpMessage = await Task.Factory.FromAsync(
-                (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, timeoutHelper.RemainingTime(), c, s),
-                (a) => requestResponseAmqpLink.EndRequest(a),
-                this).ConfigureAwait(false);
-
-            AmqpResponseMessage responseMessage = AmqpResponseMessage.CreateResponse(responseAmqpMessage);
-            return responseMessage;
-        }
-
-        /// <summary></summary>
-        /// <param name="maxMessageCount"></param>
-        /// <param name="serverWaitTime"></param>
-        /// <returns>The asynchronous operation.</returns>
         protected virtual async Task<IList<Message>> OnReceiveAsync(int maxMessageCount, TimeSpan serverWaitTime)
         {
             ReceivingAmqpLink receiveLink = null;
@@ -780,7 +799,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                TimeoutHelper timeoutHelper = new TimeoutHelper(serverWaitTime, true);              
+                var timeoutHelper = new TimeoutHelper(serverWaitTime, true);
                 if(!this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
                 {
                     MessagingEventSource.Log.CreatingNewLink(this.ClientId, this.isSessionReceiver, this.SessionIdInternal, false, this.LinkException);
@@ -792,10 +811,10 @@ namespace Microsoft.Azure.ServiceBus.Core
 
                 while (timeoutHelper.RemainingTime() > TimeSpan.Zero)
                 {
-                    bool hasMessages = await Task.Factory.FromAsync(
-                    (c, s) => receiveLink.BeginReceiveRemoteMessages(maxMessageCount, DefaultBatchFlushInterval, timeoutHelper.RemainingTime(), c, s),
-                    a => receiveLink.EndReceiveMessages(a, out amqpMessages),
-                    this).ConfigureAwait(false);
+                    var hasMessages = await Task.Factory.FromAsync(
+                        (c, s) => receiveLink.BeginReceiveRemoteMessages(maxMessageCount, DefaultBatchFlushInterval, timeoutHelper.RemainingTime(), c, s),
+                        a => receiveLink.EndReceiveMessages(a, out amqpMessages),
+                        this).ConfigureAwait(false);
 
                     Exception exception;
                     if ((exception = receiveLink.GetInnerException()) != null)
@@ -812,7 +831,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                                 receiveLink.DisposeDelivery(amqpMessage, true, AmqpConstants.AcceptedOutcome);
                             }
 
-                            Message message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
+                            var message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
 
                             if (this.ReceiveMode == ReceiveMode.PeekLock &&
                                message.SystemProperties.LockedUntilUtc <= DateTime.UtcNow)
@@ -820,17 +839,14 @@ namespace Microsoft.Azure.ServiceBus.Core
                                 receiveLink.ReleaseMessage(amqpMessage);
                                 continue;
                             }
-                            else
+                            if (brokeredMessages == null)
                             {
-                                if (brokeredMessages == null)
-                                {
-                                    brokeredMessages = new List<Message>();
-                                }
-
-                                brokeredMessages.Add(message);
+                                brokeredMessages = new List<Message>();
                             }
+
+                            brokeredMessages.Add(message);
                         }
-                        
+
                         if(brokeredMessages != null)
                         {
                             break;
@@ -846,40 +862,34 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        /// <summary></summary>
-        /// <param name="fromSequenceNumber"></param>
-        /// <param name="messageCount"></param>
-        /// <returns>The asynchronous operation.</returns>
         protected virtual async Task<IList<Message>> OnPeekAsync(long fromSequenceNumber, int messageCount = 1)
         {
             try
             {
-                AmqpRequestMessage requestMessage =
-                    AmqpRequestMessage.CreateRequest(
+                var amqpRequestMessage = AmqpRequestMessage.CreateRequest(
                         ManagementConstants.Operations.PeekMessageOperation,
                         this.OperationTimeout,
                         null);
 
-                requestMessage.Map[ManagementConstants.Properties.FromSequenceNumber] = fromSequenceNumber;
-                requestMessage.Map[ManagementConstants.Properties.MessageCount] = messageCount;
+                amqpRequestMessage.Map[ManagementConstants.Properties.FromSequenceNumber] = fromSequenceNumber;
+                amqpRequestMessage.Map[ManagementConstants.Properties.MessageCount] = messageCount;
 
                 if (!string.IsNullOrWhiteSpace(this.SessionIdInternal))
                 {
-                    requestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionIdInternal;
+                    amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionIdInternal;
                 }
 
-                List<Message> messages = new List<Message>();
+                var messages = new List<Message>();
 
-                AmqpResponseMessage response = await this.ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
-                if (response.StatusCode == AmqpResponseStatusCode.OK)
+                var amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                if (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.OK)
                 {
                     Message message = null;
-                    var messageList = response.GetListValue<AmqpMap>(ManagementConstants.Properties.Messages);
+                    var messageList = amqpResponseMessage.GetListValue<AmqpMap>(ManagementConstants.Properties.Messages);
                     foreach (AmqpMap entry in messageList)
                     {
                         var payload = (ArraySegment<byte>)entry[ManagementConstants.Properties.Message];
-                        AmqpMessage amqpMessage =
-                            AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(new[] { payload }), true);
+                        var amqpMessage = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(new[] { payload }), true);
                         message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
                         messages.Add(message);
                     }
@@ -891,15 +901,14 @@ namespace Microsoft.Azure.ServiceBus.Core
 
                     return messages;
                 }
-                else if (response.StatusCode == AmqpResponseStatusCode.NoContent ||
-                        (response.StatusCode == AmqpResponseStatusCode.NotFound && Equals(AmqpClientConstants.MessageNotFoundError, response.GetResponseErrorCondition())))
+
+                if (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.NoContent ||
+                    (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.NotFound && Equals(AmqpClientConstants.MessageNotFoundError, amqpResponseMessage.GetResponseErrorCondition())))
                 {
                     return messages;
                 }
-                else
-                {
-                    throw response.ToMessagingContractException();
-                }
+
+                throw amqpResponseMessage.ToMessagingContractException();
             }
             catch (Exception exception)
             {
@@ -907,30 +916,26 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        /// <summary></summary>
-        /// <param name="sequenceNumbers"></param>
-        /// <returns>The asynchronous operation.</returns>
         protected virtual async Task<IList<Message>> OnReceiveDeferredMessageAsync(IEnumerable<long> sequenceNumbers)
         {
-            List<Message> messages = new List<Message>();
+            var messages = new List<Message>();
             try
             {
-                AmqpRequestMessage requestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.ReceiveBySequenceNumberOperation, this.OperationTimeout, null);
-                requestMessage.Map[ManagementConstants.Properties.SequenceNumbers] = sequenceNumbers.ToArray();
-                requestMessage.Map[ManagementConstants.Properties.ReceiverSettleMode] = (uint)(this.ReceiveMode == ReceiveMode.ReceiveAndDelete ? 0 : 1);
+                var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.ReceiveBySequenceNumberOperation, this.OperationTimeout, null);
+                amqpRequestMessage.Map[ManagementConstants.Properties.SequenceNumbers] = sequenceNumbers.ToArray();
+                amqpRequestMessage.Map[ManagementConstants.Properties.ReceiverSettleMode] = (uint)(this.ReceiveMode == ReceiveMode.ReceiveAndDelete ? 0 : 1);
 
-                AmqpResponseMessage response = await this.ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
+                var response = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
                 if (response.StatusCode == AmqpResponseStatusCode.OK)
                 {
-                    IEnumerable<AmqpMap> amqpMapList = response.GetListValue<AmqpMap>(ManagementConstants.Properties.Messages);
-                    foreach (AmqpMap entry in amqpMapList)
+                    var amqpMapList = response.GetListValue<AmqpMap>(ManagementConstants.Properties.Messages);
+                    foreach (var entry in amqpMapList)
                     {
-                        ArraySegment<byte> payload = (ArraySegment<byte>)entry[ManagementConstants.Properties.Message];
-                        AmqpMessage amqpMessage = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(new[] { payload }), true);
-                        Message message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
-                        Guid lockToken;
-                        if (entry.TryGetValue(ManagementConstants.Properties.LockToken, out lockToken))
+                        var payload = (ArraySegment<byte>)entry[ManagementConstants.Properties.Message];
+                        var amqpMessage = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(new[] { payload }), true);
+                        var message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
+                        if (entry.TryGetValue<Guid>(ManagementConstants.Properties.LockToken, out var lockToken))
                         {
                             message.SystemProperties.LockTokenGuid = lockToken;
                             this.requestResponseLockedMessages.AddOrUpdate(lockToken, message.SystemProperties.LockedUntilUtc);
@@ -952,184 +957,63 @@ namespace Microsoft.Azure.ServiceBus.Core
             return messages;
         }
 
-        /// <summary></summary>
-        /// <param name="lockTokens"></param>
-        /// <returns>The asynchronous operation.</returns>
-        protected virtual async Task OnCompleteAsync(IEnumerable<string> lockTokens)
+        protected virtual Task OnCompleteAsync(IEnumerable<string> lockTokens)
         {
             var lockTokenGuids = lockTokens.Select(lt => new Guid(lt));
             if (lockTokenGuids.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
-                await this.DisposeMessageRequestResponseAsync(lockTokenGuids, DispositionStatus.Completed).ConfigureAwait(false);
+                return this.DisposeMessageRequestResponseAsync(lockTokenGuids, DispositionStatus.Completed);
             }
-            else
-            {
-                await this.DisposeMessagesAsync(lockTokenGuids, AmqpConstants.AcceptedOutcome).ConfigureAwait(false);
-            }
+            return this.DisposeMessagesAsync(lockTokenGuids, AmqpConstants.AcceptedOutcome);
         }
 
-        /// <summary></summary>
-        /// <param name="lockToken"></param>
-        /// <returns>The asynchronous operation.</returns>
-        protected virtual async Task OnAbandonAsync(string lockToken)
+        protected virtual Task OnAbandonAsync(string lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
-            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
+            if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
-                await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Abandoned).ConfigureAwait(false);
+                return this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Abandoned);
             }
-            else
-            {
-                await this.DisposeMessagesAsync(lockTokens, new Modified()).ConfigureAwait(false);
-            }
+            return this.DisposeMessagesAsync(lockTokens, new Modified());
         }
 
-        /// <summary></summary>
-        /// <param name="lockToken"></param>
-        /// <returns>The asynchronous operation.</returns>
-        protected virtual async Task OnDeferAsync(string lockToken)
+        protected virtual Task OnDeferAsync(string lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
-            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
+            if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
-                await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Defered).ConfigureAwait(false);
+                return this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Defered);
             }
-            else
-            {
-                await this.DisposeMessagesAsync(lockTokens, new Modified() { UndeliverableHere = true }).ConfigureAwait(false);
-            }
+            return this.DisposeMessagesAsync(lockTokens, new Modified { UndeliverableHere = true });
         }
 
-        /// <summary></summary>
-        /// <param name="lockToken"></param>
-        /// <returns>The asynchronous operation.</returns>
-        protected virtual async Task OnDeadLetterAsync(string lockToken)
+        protected virtual Task OnDeadLetterAsync(string lockToken)
         {
             IEnumerable<Guid> lockTokens = new[] { new Guid(lockToken) };
-            if (lockTokens.Any((lt) => this.requestResponseLockedMessages.Contains(lt)))
+            if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
-                await this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended).ConfigureAwait(false);
+                return this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended);
             }
-            else
-            {
-                await this.DisposeMessagesAsync(lockTokens, AmqpConstants.RejectedOutcome).ConfigureAwait(false);
-            }
+            return this.DisposeMessagesAsync(lockTokens, AmqpConstants.RejectedOutcome);
         }
 
-        /// <summary></summary>
-        /// <param name="lockToken"></param>
-        /// <returns>The asynchronour operation.</returns>
         protected virtual async Task<DateTime> OnRenewLockAsync(string lockToken)
         {
-            DateTime lockedUntilUtc = DateTime.MinValue;
+            var lockedUntilUtc = DateTime.MinValue;
             try
             {
                 // Create an AmqpRequest Message to renew  lock
-                AmqpRequestMessage requestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewLockOperation, this.OperationTimeout, null);
-                requestMessage.Map[ManagementConstants.Properties.LockTokens] = new[] { new Guid(lockToken) };
+                var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewLockOperation, this.OperationTimeout, null);
+                amqpRequestMessage.Map[ManagementConstants.Properties.LockTokens] = new[] { new Guid(lockToken) };
 
-                AmqpResponseMessage response = await this.ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
+                var amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
-                if (response.StatusCode == AmqpResponseStatusCode.OK)
+                if (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.OK)
                 {
-                    IEnumerable<DateTime> lockedUntilUtcTimes = response.GetValue<IEnumerable<DateTime>>(ManagementConstants.Properties.Expirations);
+                    var lockedUntilUtcTimes = amqpResponseMessage.GetValue<IEnumerable<DateTime>>(ManagementConstants.Properties.Expirations);
                     lockedUntilUtc = lockedUntilUtcTimes.First();
                 }
                 else
-                {
-                    throw response.ToMessagingContractException();
-                }
-            }
-            catch (Exception exception)
-            {
-                throw AmqpExceptionHelper.GetClientException(exception);
-            }
-
-            return lockedUntilUtc;
-        }
-
-        async Task DisposeMessagesAsync(IEnumerable<Guid> lockTokens, Outcome outcome)
-        {
-            if(this.isSessionReceiver)
-            {
-                this.ThrowIfSessionLockLost();
-            }
-
-            TimeoutHelper timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-            IList<ArraySegment<byte>> deliveryTags = this.ConvertLockTokensToDeliveryTags(lockTokens);
-
-            ReceivingAmqpLink receiveLink = null;
-            try
-            {
-                if (!this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
-                {
-                    MessagingEventSource.Log.CreatingNewLink(this.ClientId, this.isSessionReceiver, this.SessionIdInternal, false, this.LinkException);
-                    receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false); 
-                }
-
-                Task<Outcome>[] disposeMessageTasks = new Task<Outcome>[deliveryTags.Count];
-                int i = 0;
-                foreach (ArraySegment<byte> deliveryTag in deliveryTags)
-                {
-                    disposeMessageTasks[i++] = Task.Factory.FromAsync(
-                        (c, s) => receiveLink.BeginDisposeMessage(deliveryTag, outcome, true, timeoutHelper.RemainingTime(), c, s),
-                        a => receiveLink.EndDisposeMessage(a),
-                        this);
-                }
-
-                Outcome[] outcomes = await Task.WhenAll(disposeMessageTasks).ConfigureAwait(false);
-                Error error = null;
-                foreach (Outcome item in outcomes)
-                {
-                    var disposedOutcome = item.DescriptorCode == Rejected.Code && ((error = ((Rejected)item).Error) != null) ? item : null;
-                    if (disposedOutcome != null)
-                    {
-                        if (error.Condition.Equals(AmqpErrorCode.NotFound))
-                        {
-                            if (this.isSessionReceiver)
-                            {
-                                throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
-                            }
-                            else
-                            {
-                                throw new MessageLockLostException(Resources.MessageLockLost);
-                            }
-                        }
-
-                        throw error.ToMessagingContractException();
-                    }
-                }
-            }
-            catch (Exception exception)
-            {
-                if (exception is OperationCanceledException &&
-                    receiveLink != null && receiveLink.State != AmqpObjectState.Opened)
-                {
-                    // The link state is lost, We need to return a non-retriable error.
-                    MessagingEventSource.Log.LinkStateLost(this.ClientId, receiveLink.Name, receiveLink.State, this.isSessionReceiver, exception);
-                    if (this.isSessionReceiver)
-                    {
-                        throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
-                    }
-
-                    throw new MessageLockLostException(Resources.MessageLockLost);
-                }
-
-                throw AmqpExceptionHelper.GetClientException(exception);
-            }
-        }
-
-        async Task DisposeMessageRequestResponseAsync(IEnumerable<Guid> lockTokens, DispositionStatus dispositionStatus)
-        {
-            try
-            {
-                // Create an AmqpRequest Message to update disposition
-                AmqpRequestMessage requestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.UpdateDispositionOperation, this.OperationTimeout, null);
-                requestMessage.Map[ManagementConstants.Properties.LockTokens] = lockTokens.ToArray();
-                requestMessage.Map[ManagementConstants.Properties.DispositionStatus] = dispositionStatus.ToString().ToLowerInvariant();
-
-                AmqpResponseMessage amqpResponseMessage = await this.ExecuteRequestResponseAsync(requestMessage).ConfigureAwait(false);
-                if (amqpResponseMessage.StatusCode != AmqpResponseStatusCode.OK)
                 {
                     throw amqpResponseMessage.ToMessagingContractException();
                 }
@@ -1138,134 +1022,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 throw AmqpExceptionHelper.GetClientException(exception);
             }
-        }
 
-        IList<ArraySegment<byte>> ConvertLockTokensToDeliveryTags(IEnumerable<Guid> lockTokens)
-        {
-            return lockTokens.Select(lockToken => new ArraySegment<byte>(lockToken.ToByteArray())).ToList();
-        }
-
-        async Task<ReceivingAmqpLink> CreateLinkAsync(TimeSpan timeout)
-        {
-            FilterSet filterMap = null;
-
-            MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, false, this.EntityType, this.Path);
-
-            if (this.isSessionReceiver)
-            {
-                filterMap = new FilterSet { { AmqpClientConstants.SessionFilterName, this.SessionIdInternal } };
-            }
-
-            AmqpLinkSettings linkSettings = new AmqpLinkSettings
-            {
-                Role = true,
-                TotalLinkCredit = (uint)this.PrefetchCount,
-                AutoSendFlow = this.PrefetchCount > 0,
-                Source = new Source { Address = this.Path, FilterSet = filterMap },
-                SettleType = (this.ReceiveMode == ReceiveMode.PeekLock) ? SettleMode.SettleOnDispose : SettleMode.SettleOnSend
-            };
-
-            if (this.EntityType != null)
-            {
-                linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)this.EntityType);
-            }
-
-            linkSettings.AddProperty(AmqpClientConstants.TimeoutName, (uint)timeout.TotalMilliseconds);
-
-            Uri endPointAddress = new Uri(this.ServiceBusConnection.Endpoint, this.Path);
-            string[] claims = new[] { ClaimConstants.Listen };
-            AmqpSendReceiveLinkCreator sendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, endPointAddress, claims, this.CbsTokenProvider, linkSettings, this.ClientId);
-            Tuple<AmqpObject, DateTime> linkDetails = await sendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
-
-            var receivingAmqpLink = (ReceivingAmqpLink) linkDetails.Item1;
-            var activeSendReceiveClientLink = new ActiveSendReceiveClientLink(
-                receivingAmqpLink,
-                endPointAddress,
-                endPointAddress.AbsoluteUri,
-                claims,
-                linkDetails.Item2,
-                this.ClientId);
-
-            this.clientLinkManager.SetActiveSendReceiveLink(activeSendReceiveClientLink);
-
-            MessagingEventSource.Log.AmqpReceiveLinkCreateStop(this.ClientId);
-
-            return receivingAmqpLink;
-        }
-
-        // TODO: Consolidate the link creation paths
-        async Task<RequestResponseAmqpLink> CreateRequestResponseLinkAsync(TimeSpan timeout)
-        {
-            string entityPath = this.Path + '/' + AmqpClientConstants.ManagementAddress;
-
-            MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, true, this.EntityType, entityPath);
-            AmqpLinkSettings linkSettings = new AmqpLinkSettings();
-            linkSettings.AddProperty(AmqpClientConstants.EntityTypeName, AmqpClientConstants.EntityTypeManagement);
-
-            Uri endPointAddress = new Uri(this.ServiceBusConnection.Endpoint, entityPath);
-            string[] claims = new[] { ClaimConstants.Manage, ClaimConstants.Listen };
-            AmqpRequestResponseLinkCreator requestResponseLinkCreator = new AmqpRequestResponseLinkCreator(entityPath, this.ServiceBusConnection, endPointAddress, claims, this.CbsTokenProvider, linkSettings, this.ClientId);
-            Tuple<AmqpObject, DateTime> linkDetails = await requestResponseLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
-
-            var requestResponseAmqpLink = (RequestResponseAmqpLink)linkDetails.Item1;
-            var activeRequestResponseClientLink = new ActiveRequestResponseLink(
-                requestResponseAmqpLink,
-                endPointAddress,
-                endPointAddress.AbsoluteUri,
-                claims,
-                linkDetails.Item2);
-            this.clientLinkManager.SetActiveRequestResponseLink(activeRequestResponseClientLink);
-
-            MessagingEventSource.Log.AmqpReceiveLinkCreateStop(this.ClientId);
-            return requestResponseAmqpLink;
-        }
-
-        void CloseSession(ReceivingAmqpLink link)
-        {
-            link.Session.SafeClose();
-        }
-
-        void CloseRequestResponseSession(RequestResponseAmqpLink requestResponseAmqpLink)
-        {
-            requestResponseAmqpLink.Session.SafeClose();
-        }
-
-        static int ValidateLockTokens(IEnumerable<string> lockTokens)
-        {
-            int count;
-            if (lockTokens == null || (count = lockTokens.Count()) == 0)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(lockTokens));
-            }
-
-            return count;
-        }
-
-        static int ValidateSequenceNumbers(IEnumerable<long> sequenceNumbers)
-        {
-            int count;
-            if (sequenceNumbers == null || (count = sequenceNumbers.Count()) == 0)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(sequenceNumbers));
-            }
-
-            return count;
-        }
-
-        void ThrowIfNotPeekLockMode()
-        {
-            if (this.ReceiveMode != ReceiveMode.PeekLock)
-            {
-                throw Fx.Exception.AsError(new InvalidOperationException("The operation is only supported in 'PeekLock' receive mode."));
-            }
-        }
-
-        void ThrowIfSessionLockLost()
-        {
-            if (this.LinkException != null)
-            {
-                throw this.LinkException;
-            }
+            return lockedUntilUtc;
         }
 
         /// <summary> </summary>
@@ -1309,41 +1067,276 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.RegisterOnMessageHandlerStop(this.ClientId);
         }
 
-        /// <summary>
-        /// Registers a <see cref="ServiceBusPlugin"/> to be used with this receiver.
-        /// </summary>
-        /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register.</param>
-        public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
+        static int ValidateLockTokens(IEnumerable<string> lockTokens)
         {
-            if (serviceBusPlugin == null)
+            int count;
+            if (lockTokens == null || (count = lockTokens.Count()) == 0)
             {
-                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
+                throw Fx.Exception.ArgumentNull(nameof(lockTokens));
             }
-            else if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
-            {
-                throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
-            }
-            this.RegisteredPlugins.Add(serviceBusPlugin);
+
+            return count;
         }
 
-        /// <summary>
-        /// Unregisters a <see cref="ServiceBusPlugin"/>.
-        /// </summary>
-        /// <param name="serviceBusPluginName">The <see cref="ServiceBusPlugin.Name"/> of the plugin to be unregistered.</param>
-        public override void UnregisterPlugin(string serviceBusPluginName)
+        static int ValidateSequenceNumbers(IEnumerable<long> sequenceNumbers)
         {
-            if (this.RegisteredPlugins == null)
+            int count;
+            if (sequenceNumbers == null || (count = sequenceNumbers.Count()) == 0)
             {
-                return;
+                throw Fx.Exception.ArgumentNull(nameof(sequenceNumbers));
             }
-            if (serviceBusPluginName == null)
+
+            return count;
+        }
+
+        static void CloseSession(ReceivingAmqpLink link)
+        {
+            link.Session.SafeClose();
+        }
+
+        static void CloseRequestResponseSession(RequestResponseAmqpLink requestResponseAmqpLink)
+        {
+            requestResponseAmqpLink.Session.SafeClose();
+        }
+
+        async Task<Message> ProcessMessage(Message message)
+        {
+            var processedMessage = message;
+            foreach (var plugin in this.RegisteredPlugins)
             {
-                throw new ArgumentNullException(nameof(serviceBusPluginName), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginName)));
+                try
+                {
+                    MessagingEventSource.Log.PluginCallStarted(plugin.Name, message.MessageId);
+                    processedMessage = await plugin.AfterMessageReceive(message).ConfigureAwait(false);
+                    MessagingEventSource.Log.PluginCallCompleted(plugin.Name, message.MessageId);
+                }
+                catch (Exception ex)
+                {
+                    MessagingEventSource.Log.PluginCallFailed(plugin.Name, message.MessageId, ex);
+                    if (!plugin.ShouldContinueOnException)
+                    {
+                        throw;
+                    }
+                }
             }
-            if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPluginName))
+            return processedMessage;
+        }
+
+        async Task<IList<Message>> ProcessMessages(IList<Message> messageList)
+        {
+            if (this.RegisteredPlugins.Count < 1)
             {
-                var plugin = this.RegisteredPlugins.First(p => p.Name == serviceBusPluginName);
-                this.RegisteredPlugins.Remove(plugin);
+                return messageList;
+            }
+
+            var processedMessageList = new List<Message>();
+            foreach (var message in messageList)
+            {
+                var processedMessage = await this.ProcessMessage(message).ConfigureAwait(false);
+                processedMessageList.Add(processedMessage);
+            }
+
+            return processedMessageList;
+        }
+
+        async Task DisposeMessagesAsync(IEnumerable<Guid> lockTokens, Outcome outcome)
+        {
+            if(this.isSessionReceiver)
+            {
+                this.ThrowIfSessionLockLost();
+            }
+
+            var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
+            List<ArraySegment<byte>> deliveryTags = this.ConvertLockTokensToDeliveryTags(lockTokens);
+
+            ReceivingAmqpLink receiveLink = null;
+            try
+            {
+                if (!this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+                {
+                    MessagingEventSource.Log.CreatingNewLink(this.ClientId, this.isSessionReceiver, this.SessionIdInternal, false, this.LinkException);
+                    receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                }
+
+                var disposeMessageTasks = new Task<Outcome>[deliveryTags.Count];
+                var i = 0;
+                foreach (ArraySegment<byte> deliveryTag in deliveryTags)
+                {
+                    disposeMessageTasks[i++] = Task.Factory.FromAsync(
+                        (c, s) => receiveLink.BeginDisposeMessage(deliveryTag, outcome, true, timeoutHelper.RemainingTime(), c, s),
+                        a => receiveLink.EndDisposeMessage(a),
+                        this);
+                }
+
+                var outcomes = await Task.WhenAll(disposeMessageTasks).ConfigureAwait(false);
+                Error error = null;
+                foreach (var item in outcomes)
+                {
+                    var disposedOutcome = item.DescriptorCode == Rejected.Code && ((error = ((Rejected)item).Error) != null) ? item : null;
+                    if (disposedOutcome != null)
+                    {
+                        if (error.Condition.Equals(AmqpErrorCode.NotFound))
+                        {
+                            if (this.isSessionReceiver)
+                            {
+                                throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
+                            }
+
+                            throw new MessageLockLostException(Resources.MessageLockLost);
+                        }
+
+                        throw error.ToMessagingContractException();
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                if (exception is OperationCanceledException &&
+                    receiveLink != null && receiveLink.State != AmqpObjectState.Opened)
+                {
+                    // The link state is lost, We need to return a non-retriable error.
+                    MessagingEventSource.Log.LinkStateLost(this.ClientId, receiveLink.Name, receiveLink.State, this.isSessionReceiver, exception);
+                    if (this.isSessionReceiver)
+                    {
+                        throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
+                    }
+
+                    throw new MessageLockLostException(Resources.MessageLockLost);
+                }
+
+                throw AmqpExceptionHelper.GetClientException(exception);
+            }
+        }
+
+        async Task DisposeMessageRequestResponseAsync(IEnumerable<Guid> lockTokens, DispositionStatus dispositionStatus)
+        {
+            try
+            {
+                // Create an AmqpRequest Message to update disposition
+                var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.UpdateDispositionOperation, this.OperationTimeout, null);
+                amqpRequestMessage.Map[ManagementConstants.Properties.LockTokens] = lockTokens.ToArray();
+                amqpRequestMessage.Map[ManagementConstants.Properties.DispositionStatus] = dispositionStatus.ToString().ToLowerInvariant();
+
+                var amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+                if (amqpResponseMessage.StatusCode != AmqpResponseStatusCode.OK)
+                {
+                    throw amqpResponseMessage.ToMessagingContractException();
+                }
+            }
+            catch (Exception exception)
+            {
+                throw AmqpExceptionHelper.GetClientException(exception);
+            }
+        }
+
+        async Task<ReceivingAmqpLink> CreateLinkAsync(TimeSpan timeout)
+        {
+            FilterSet filterMap = null;
+
+            MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, false, this.EntityType, this.Path);
+
+            if (this.isSessionReceiver)
+            {
+                filterMap = new FilterSet { { AmqpClientConstants.SessionFilterName, this.SessionIdInternal } };
+            }
+
+            var amqpLinkSettings = new AmqpLinkSettings
+            {
+                Role = true,
+                TotalLinkCredit = (uint)this.PrefetchCount,
+                AutoSendFlow = this.PrefetchCount > 0,
+                Source = new Source { Address = this.Path, FilterSet = filterMap },
+                SettleType = (this.ReceiveMode == ReceiveMode.PeekLock) ? SettleMode.SettleOnDispose : SettleMode.SettleOnSend
+            };
+
+            if (this.EntityType != null)
+            {
+                amqpLinkSettings.AddProperty(AmqpClientConstants.EntityTypeName, (int)this.EntityType);
+            }
+
+            amqpLinkSettings.AddProperty(AmqpClientConstants.TimeoutName, (uint)timeout.TotalMilliseconds);
+
+            var endpointUri = new Uri(this.ServiceBusConnection.Endpoint, this.Path);
+            var claims = new[] { ClaimConstants.Listen };
+            var amqpSendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, endpointUri, claims, this.CbsTokenProvider, amqpLinkSettings, this.ClientId);
+            Tuple<AmqpObject, DateTime> linkDetails = await amqpSendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
+
+            var receivingAmqpLink = (ReceivingAmqpLink) linkDetails.Item1;
+            var activeSendReceiveClientLink = new ActiveSendReceiveClientLink(
+                receivingAmqpLink,
+                endpointUri,
+                endpointUri.AbsoluteUri,
+                claims,
+                linkDetails.Item2);
+
+            this.clientLinkManager.SetActiveSendReceiveLink(activeSendReceiveClientLink);
+
+            MessagingEventSource.Log.AmqpReceiveLinkCreateStop(this.ClientId);
+
+            return receivingAmqpLink;
+        }
+
+        // TODO: Consolidate the link creation paths
+        async Task<RequestResponseAmqpLink> CreateRequestResponseLinkAsync(TimeSpan timeout)
+        {
+            var entityPath = this.Path + '/' + AmqpClientConstants.ManagementAddress;
+
+            MessagingEventSource.Log.AmqpReceiveLinkCreateStart(this.ClientId, true, this.EntityType, entityPath);
+            var amqpLinkSettings = new AmqpLinkSettings();
+            amqpLinkSettings.AddProperty(AmqpClientConstants.EntityTypeName, AmqpClientConstants.EntityTypeManagement);
+
+            var endpointUri = new Uri(this.ServiceBusConnection.Endpoint, entityPath);
+            string[] claims = { ClaimConstants.Manage, ClaimConstants.Listen };
+            var amqpRequestResponseLinkCreator = new AmqpRequestResponseLinkCreator(entityPath, this.ServiceBusConnection, endpointUri, claims, this.CbsTokenProvider, amqpLinkSettings, this.ClientId);
+            var linkDetails = await amqpRequestResponseLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
+
+            var requestResponseAmqpLink = (RequestResponseAmqpLink)linkDetails.Item1;
+            var activeRequestResponseClientLink = new ActiveRequestResponseLink(
+                requestResponseAmqpLink,
+                endpointUri,
+                endpointUri.AbsoluteUri,
+                claims,
+                linkDetails.Item2);
+            this.clientLinkManager.SetActiveRequestResponseLink(activeRequestResponseClientLink);
+
+            MessagingEventSource.Log.AmqpReceiveLinkCreateStop(this.ClientId);
+            return requestResponseAmqpLink;
+        }
+
+        void OnSessionReceiverLinkClosed(object sender, EventArgs e)
+        {
+            var receivingAmqpLink = (ReceivingAmqpLink)sender;
+            if (receivingAmqpLink != null)
+            {
+                var exception = receivingAmqpLink.GetInnerException();
+                if (!(exception is SessionLockLostException))
+                {
+                    exception = new SessionLockLostException("Session lock lost. Accept a new session", exception);
+                }
+
+                this.LinkException = exception;
+                MessagingEventSource.Log.SessionReceiverLinkClosed(this.ClientId, this.SessionIdInternal, this.LinkException);
+            }
+        }
+
+        List<ArraySegment<byte>> ConvertLockTokensToDeliveryTags(IEnumerable<Guid> lockTokens)
+        {
+            return lockTokens.Select(lockToken => new ArraySegment<byte>(lockToken.ToByteArray())).ToList();
+        }
+
+        void ThrowIfNotPeekLockMode()
+        {
+            if (this.ReceiveMode != ReceiveMode.PeekLock)
+            {
+                throw Fx.Exception.AsError(new InvalidOperationException("The operation is only supported in 'PeekLock' receive mode."));
+            }
+        }
+
+        void ThrowIfSessionLockLost()
+        {
+            if (this.LinkException != null)
+            {
+                throw this.LinkException;
             }
         }
     }

@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Gets the name of the default rule on the subscription.
         /// </summary>
         /// <remarks>
-        /// Whenever a new subscription is created, a default rule is always added. 
+        /// Whenever a new subscription is created, a default rule is always added.
         /// The default rule is a <see cref="TrueFilter"/> which will enable all messages in the topic to reach subscription.
         /// </remarks>
         public const string DefaultRuleName = "$Default";
@@ -76,10 +76,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <exception cref="System.ArgumentNullException">null (Nothing in Visual Basic) is assigned.</exception>
         public Filter Filter
         {
-            get
-            {
-                return this.filter;
-            }
+            get => this.filter;
 
             set
             {
@@ -105,10 +102,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>Max allowed length of rule name is 50 chars.</remarks>
         public string Name
         {
-            get
-            {
-                return this.name;
-            }
+            get => this.name;
 
             set
             {
