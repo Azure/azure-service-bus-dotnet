@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 namespace Microsoft.Azure.ServiceBus.Primitives
 {
     using System;
@@ -18,7 +20,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         public TokenProviderAdapter(TokenProvider tokenProvider, TimeSpan operationTimeout)
         {
-            Fx.Assert(tokenProvider != null, "tokenProvider cannot be null");
+            Debug.Assert(tokenProvider != null, "tokenProvider cannot be null");
             this.tokenProvider = tokenProvider;
             this.operationTimeout = operationTimeout;
         }
