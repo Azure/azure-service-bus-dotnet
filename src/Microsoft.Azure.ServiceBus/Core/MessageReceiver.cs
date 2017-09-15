@@ -552,7 +552,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         /// Renews the lock on the message specified by the lock token. The lock will be renewed based on the setting specified on the queue.
         /// </summary>
-        /// <param name="message"> <see cref="Message" />.</param>
         /// <remarks>
         /// When a message is received in <see cref="ServiceBus.ReceiveMode.PeekLock"/> mode, the message is locked on the server for this
         /// receiver instance for a duration as specified during the Queue/Subscription creation (LockDuration).
@@ -644,7 +643,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         /// <summary>Peeks a batch of messages.</summary>
         /// <param name="fromSequenceNumber">The starting point from which to browse a batch of messages.</param>
-        /// <param name="messageCount">The number of messages.</param>
+        /// <param name="messageCount">The number of messages to retrieve.</param>
         /// <returns>A batch of messages peeked.</returns>
         public async Task<IList<Message>> PeekBySequenceNumberAsync(long fromSequenceNumber, int messageCount)
         {
@@ -698,7 +697,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         /// Registers a <see cref="ServiceBusPlugin"/> to be used with this receiver.
         /// </summary>
-        /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register.</param>
         public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             this.ThrowIfClosed();

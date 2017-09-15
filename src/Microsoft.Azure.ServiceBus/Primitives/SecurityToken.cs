@@ -32,9 +32,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <summary>
         /// Creates a new instance of the <see cref="SecurityToken"/> class.
         /// </summary>
-        /// <param name="tokenString">The token</param>
         /// <param name="expiresAtUtc">The expiration time</param>
-        /// <param name="audience">The audience</param>
         public SecurityToken(string tokenString, DateTime expiresAtUtc, string audience)
         {
             if (string.IsNullOrWhiteSpace(tokenString))
@@ -54,7 +52,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <summary>
         /// Creates a new instance of the <see cref="SecurityToken"/> class.
         /// </summary>
-        /// <param name="tokenString">The token</param>
         /// <param name="expiresAtUtc">The expiration time</param>
         public SecurityToken(string tokenString, DateTime expiresAtUtc)
         {
@@ -71,7 +68,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <summary>
         /// Creates a new instance of the <see cref="SecurityToken"/> class.
         /// </summary>
-        /// <param name="tokenString">The token</param>
         public SecurityToken(string tokenString)
         {
             if (string.IsNullOrWhiteSpace(tokenString))

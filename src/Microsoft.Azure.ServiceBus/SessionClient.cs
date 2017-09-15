@@ -168,7 +168,6 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         /// <remarks>All plugins registered on <see cref="SessionClient"/> will be applied to each <see cref="MessageSession"/> that is accepted.
         /// Individual sessions can further register additional plugins.</remarks>
-        /// <returns>A session object.</returns>
         public Task<IMessageSession> AcceptMessageSessionAsync()
         {
             return this.AcceptMessageSessionAsync(this.ServiceBusConnection.OperationTimeout);
@@ -180,7 +179,6 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="serverWaitTime">Amount of time for which the call should wait to fetch the next session.</param>
         /// <remarks>All plugins registered on <see cref="SessionClient"/> will be applied to each <see cref="MessageSession"/> that is accepted.
         /// Individual sessions can further register additional plugins.</remarks>
-        /// <returns>A session object.</returns>
         public Task<IMessageSession> AcceptMessageSessionAsync(TimeSpan serverWaitTime)
         {
             return this.AcceptMessageSessionAsync(null, serverWaitTime);
@@ -192,7 +190,6 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="sessionId">The sessionId present in all its messages.</param>
         /// <remarks>All plugins registered on <see cref="SessionClient"/> will be applied to each <see cref="MessageSession"/> that is accepted.
         /// Individual sessions can further register additional plugins.</remarks>
-        /// <returns>A session object.</returns>
         public Task<IMessageSession> AcceptMessageSessionAsync(string sessionId)
         {
             return this.AcceptMessageSessionAsync(sessionId, this.ServiceBusConnection.OperationTimeout);
@@ -205,7 +202,6 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="serverWaitTime">Amount of time for which the call should wait to fetch the next session.</param>
         /// <remarks>All plugins registered on <see cref="SessionClient"/> will be applied to each <see cref="MessageSession"/> that is accepted.
         /// Individual sessions can further register additional plugins.</remarks>
-        /// <returns>A session object.</returns>
         public async Task<IMessageSession> AcceptMessageSessionAsync(string sessionId, TimeSpan serverWaitTime)
         {
             this.ThrowIfClosed();

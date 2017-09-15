@@ -135,8 +135,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         /// Sends a message to the entity as described by <see cref="Path"/>.
         /// </summary>
-        /// <param name="message">The <see cref="Message"/> to send</param>
-        /// <returns>An asynchronous operation</returns>
         public Task SendAsync(Message message)
         {
             return this.SendAsync(new[] { message });
@@ -145,8 +143,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         /// Sends a list of messages to the entity as described by <see cref="Path"/>.
         /// </summary>
-        /// <param name="messageList">The <see cref="IList{Message}"/> to send</param>
-        /// <returns>An asynchronous operation</returns>
         public async Task SendAsync(IList<Message> messageList)
         {
             this.ThrowIfClosed();
@@ -225,7 +221,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Cancels a message that was scheduled.
         /// </summary>
         /// <param name="sequenceNumber">The <see cref="Message.SystemPropertiesCollection.SequenceNumber"/> of the message to be cancelled.</param>
-        /// <returns>An asynchronous operation</returns>
         public async Task CancelScheduledMessageAsync(long sequenceNumber)
         {
             this.ThrowIfClosed();
