@@ -153,11 +153,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.RetryPolicy.RunOperation(
-                    async () =>
-                    {
-                        await this.OnSendAsync(processedMessages).ConfigureAwait(false);
-                    }, this.OperationTimeout)
+                await this.RetryPolicy.RunOperation(() => this.OnSendAsync(processedMessages), this.OperationTimeout)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -228,11 +224,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.RetryPolicy.RunOperation(
-                    async () =>
-                    {
-                        await this.OnCancelScheduledMessageAsync(sequenceNumber).ConfigureAwait(false);
-                    }, this.OperationTimeout)
+                await this.RetryPolicy.RunOperation(() => this.OnCancelScheduledMessageAsync(sequenceNumber), this.OperationTimeout)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)

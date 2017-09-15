@@ -429,11 +429,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.RetryPolicy.RunOperation(
-                    async () =>
-                    {
-                        await this.OnCompleteAsync(lockTokenList).ConfigureAwait(false);
-                    }, this.OperationTimeout)
+                await this.RetryPolicy.RunOperation(() => this.OnCompleteAsync(lockTokenList), this.OperationTimeout)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -462,11 +458,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessageAbandonStart(this.ClientId, 1, lockToken);
             try
             {
-                await this.RetryPolicy.RunOperation(
-                    async () =>
-                    {
-                        await this.OnAbandonAsync(lockToken).ConfigureAwait(false);
-                    }, this.OperationTimeout)
+                await this.RetryPolicy.RunOperation(() => this.OnAbandonAsync(lockToken), this.OperationTimeout)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -497,11 +489,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.RetryPolicy.RunOperation(
-                    async () =>
-                    {
-                        await this.OnDeferAsync(lockToken).ConfigureAwait(false);
-                    }, this.OperationTimeout)
+                await this.RetryPolicy.RunOperation(() => this.OnDeferAsync(lockToken), this.OperationTimeout)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -533,11 +521,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.RetryPolicy.RunOperation(
-                    async () =>
-                    {
-                        await this.OnDeadLetterAsync(lockToken).ConfigureAwait(false);
-                    }, this.OperationTimeout)
+                await this.RetryPolicy.RunOperation(() => this.OnDeadLetterAsync(lockToken), this.OperationTimeout)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)

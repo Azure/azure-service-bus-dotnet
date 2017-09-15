@@ -226,11 +226,7 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
-                await this.RetryPolicy.RunOperation(
-                    async () =>
-                    {
-                        await session.GetSessionReceiverLinkAsync(serverWaitTime).ConfigureAwait(false);
-                    }, serverWaitTime)
+                await this.RetryPolicy.RunOperation(() => session.GetSessionReceiverLinkAsync(serverWaitTime), serverWaitTime)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)
