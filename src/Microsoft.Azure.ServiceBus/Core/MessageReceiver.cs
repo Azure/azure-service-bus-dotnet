@@ -724,7 +724,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 return;
             }
-            if (serviceBusPluginName == null)
+            if (string.IsNullOrWhiteSpace(serviceBusPluginName))
             {
                 throw new ArgumentNullException(nameof(serviceBusPluginName), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginName)));
             }
