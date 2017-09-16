@@ -78,6 +78,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     amqpConnection,
                     exception);
 
+                session.Abort();
                 throw AmqpExceptionHelper.GetClientException(exception, null, link?.GetInnerException(), session.IsClosing());
             }
         }
