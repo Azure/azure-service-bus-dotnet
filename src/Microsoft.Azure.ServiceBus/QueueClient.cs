@@ -78,6 +78,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Instantiates a new <see cref="QueueClient"/> to perform operations on a queue.
         /// </summary>
         /// <param name="connectionString">Namespace connection string. Must not contain queue information.</param>
+        /// <param name="entityPath">Name of the queue</param>
         /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
         /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
         /// <remarks>Creates a new connection to the queue, which is opened during the first send/receive operation.</remarks>
