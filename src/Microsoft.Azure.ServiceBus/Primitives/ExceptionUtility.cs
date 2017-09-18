@@ -7,11 +7,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
     class ExceptionUtility
     {
-        public ArgumentException Argument(string paramName, string message)
-        {
-            return new ArgumentException(message, paramName);
-        }
-
         public Exception AsError(Exception exception)
         {
             return exception;

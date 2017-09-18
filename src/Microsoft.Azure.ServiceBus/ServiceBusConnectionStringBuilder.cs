@@ -106,7 +106,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (!value.Contains("."))
                 {
-                    throw Fx.Exception.Argument(nameof(Endpoint), "Endpoint should be fully qualified endpoint");
+                    throw new ArgumentException("Endpoint should be fully qualified endpoint", nameof(Endpoint));
                 }
 
                 var uriBuilder = new UriBuilder(value.Trim());
@@ -215,7 +215,7 @@ namespace Microsoft.Azure.ServiceBus
                 var key = keyAndValue[0];
                 if (keyAndValue.Length != 2)
                 {
-                    throw Fx.Exception.Argument(nameof(connectionString), $"Value for the connection string parameter name '{key}' was not found.");
+                    throw new ArgumentException($"Value for the connection string parameter name '{key}' was not found.", nameof(connectionString));
                 }
 
                 var value = keyAndValue[1].Trim();

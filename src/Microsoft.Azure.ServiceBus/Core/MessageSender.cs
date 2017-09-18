@@ -303,7 +303,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             if (message.SystemProperties.IsLockTokenSet)
             {
-                throw Fx.Exception.Argument(nameof(message), "Cannot send a message that was already received.");
+                throw new ArgumentException("Cannot send a message that was already received.", nameof(message));
             }
         }
 

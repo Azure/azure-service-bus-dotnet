@@ -20,7 +20,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             var serviceBusConnectionStringBuilder = new ServiceBusConnectionStringBuilder(namespaceConnectionString);
             if (!string.IsNullOrWhiteSpace(serviceBusConnectionStringBuilder.EntityPath))
             {
-                throw Fx.Exception.Argument(nameof(namespaceConnectionString), "NamespaceConnectionString should not contain EntityPath.");
+                throw new ArgumentException("NamespaceConnectionString should not contain EntityPath.", nameof(namespaceConnectionString));
             }
 
             this.InitializeConnection(serviceBusConnectionStringBuilder);
