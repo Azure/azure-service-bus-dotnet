@@ -44,10 +44,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="filter">The filter expression used to match messages.</param>
         public RuleDescription(Filter filter)
         {
-            if (filter == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(filter));
-            }
+            Guard.AgainstNull(nameof(filter), filter);
 
             this.Filter = filter;
         }
@@ -58,10 +55,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="filter">The filter expression used to match messages.</param>
         public RuleDescription(string name, Filter filter)
         {
-            if (filter == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(filter));
-            }
+            Guard.AgainstNull(nameof(filter), filter);
 
             this.Filter = filter;
             this.Name = name;
@@ -78,11 +72,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                if (value == null)
-                {
-                    throw Fx.Exception.ArgumentNull(nameof(this.Filter));
-                }
-
+                Guard.AgainstNull(nameof(this.Filter), value);
                 this.filter = value;
             }
         }

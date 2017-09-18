@@ -111,10 +111,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>A bool indicating whether or not the operation can be retried.</returns>
         public virtual bool IsRetryableException(Exception exception)
         {
-            if (exception == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(exception));
-            }
+            Guard.AgainstNull(nameof(exception), exception);
 
             var serviceBusException = exception as ServiceBusException;
             return serviceBusException?.IsTransient == true;

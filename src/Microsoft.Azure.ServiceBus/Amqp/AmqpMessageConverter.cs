@@ -33,10 +33,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static AmqpMessage BatchSBMessagesAsAmqpMessage(IEnumerable<SBMessage> sbMessages, bool batchable)
         {
-            if (sbMessages == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(sbMessages));
-            }
+            Guard.AgainstNull(nameof(sbMessages), sbMessages);
 
             AmqpMessage amqpMessage;
             AmqpMessage firstAmqpMessage = null;
@@ -154,10 +151,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static SBMessage AmqpMessageToSBMessage(AmqpMessage amqpMessage)
         {
-            if (amqpMessage == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(amqpMessage));
-            }
+            Guard.AgainstNull(nameof(amqpMessage), amqpMessage);
 
             SBMessage sbMessage;
 

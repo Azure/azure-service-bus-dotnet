@@ -400,10 +400,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ThrowIfClosed();
 
-            if (description == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(description));
-            }
+            Guard.AgainstNull(nameof(description), description);
 
             description.ValidateDescriptionName();
             MessagingEventSource.Log.AddRuleStart(this.ClientId, description.Name);

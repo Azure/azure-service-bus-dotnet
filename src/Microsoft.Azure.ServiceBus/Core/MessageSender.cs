@@ -174,10 +174,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         public async Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
             this.ThrowIfClosed();
-            if (message == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(message));
-            }
+            Guard.AgainstNull(nameof(message), message);
 
             if (scheduleEnqueueTimeUtc.CompareTo(DateTimeOffset.UtcNow) < 0)
             {
@@ -307,10 +304,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         static int ValidateMessages(IList<Message> messageList)
         {
             var count = 0;
-            if (messageList == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(messageList));
-            }
+            Guard.AgainstNull(nameof(messageList), messageList);
 
             foreach (var message in messageList)
             {

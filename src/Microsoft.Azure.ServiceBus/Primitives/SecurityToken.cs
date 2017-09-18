@@ -35,14 +35,8 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <param name="expiresAtUtc">The expiration time</param>
         public SecurityToken(string tokenString, DateTime expiresAtUtc, string audience)
         {
-            if (string.IsNullOrWhiteSpace(tokenString))
-            {
-                throw Fx.Exception.ArgumentNull(nameof(tokenString));
-            }
-            if (string.IsNullOrWhiteSpace(audience))
-            {
-                throw Fx.Exception.ArgumentNull(nameof(audience));
-            }
+            Guard.AgainstNullAndEmpty(nameof(tokenString), tokenString);
+            Guard.AgainstNullAndEmpty(nameof(audience), audience);
 
             this.token = tokenString;
             this.expiresAtUtc = expiresAtUtc;
@@ -55,10 +49,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <param name="expiresAtUtc">The expiration time</param>
         public SecurityToken(string tokenString, DateTime expiresAtUtc)
         {
-            if (string.IsNullOrWhiteSpace(tokenString))
-            {
-                throw Fx.Exception.ArgumentNull(nameof(tokenString));
-            }
+            Guard.AgainstNullAndEmpty(nameof(tokenString), tokenString);
 
             this.token = tokenString;
             this.expiresAtUtc = expiresAtUtc;
@@ -70,10 +61,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// </summary>
         public SecurityToken(string tokenString)
         {
-            if (string.IsNullOrWhiteSpace(tokenString))
-            {
-                throw Fx.Exception.ArgumentNull(nameof(tokenString));
-            }
+            Guard.AgainstNullAndEmpty(nameof(tokenString), tokenString);
 
             this.token = tokenString;
             this.GetExpirationDateAndAudienceFromToken(tokenString, out this.expiresAtUtc, out this.audience);

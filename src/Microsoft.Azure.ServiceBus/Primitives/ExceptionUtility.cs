@@ -12,11 +12,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             return new ArgumentException(message, paramName);
         }
 
-        public Exception ArgumentNull(string paramName)
-        {
-            return new ArgumentNullException(paramName);
-        }
-
         public ArgumentException ArgumentNullOrWhiteSpace(string paramName)
         {
             return this.Argument(paramName, Resources.ArgumentNullOrWhiteSpace.FormatForUser(paramName));

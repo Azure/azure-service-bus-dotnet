@@ -355,15 +355,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
 
-            if (sequenceNumbers == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(sequenceNumbers));
-            }
+            Guard.AgainstNull(nameof(sequenceNumbers), sequenceNumbers);
             var sequenceNumberList = sequenceNumbers.ToArray();
-            if (sequenceNumberList.Length == 0)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(sequenceNumbers));
-            }
+            Guard.AgainstEmpty(nameof(sequenceNumbers), sequenceNumberList);
 
             MessagingEventSource.Log.MessageReceiveDeferredMessageStart(this.ClientId, sequenceNumberList.Length, sequenceNumberList);
 
@@ -415,15 +409,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
-            if (lockTokens == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(lockTokens));
-            }
+
+            Guard.AgainstNull(nameof(lockTokens), lockTokens);
             var lockTokenList = lockTokens.ToList();
-            if (lockTokenList.Count == 0)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(lockTokens));
-            }
+            Guard.AgainstEmpty(nameof(lockTokens), lockTokenList);
 
             MessagingEventSource.Log.MessageCompleteStart(this.ClientId, lockTokenList.Count, lockTokenList);
 
