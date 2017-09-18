@@ -8,21 +8,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
     static class Fx
     {
-        static ExceptionUtility exceptionUtility;
-
-        public static ExceptionUtility Exception
-        {
-            get
-            {
-                if (exceptionUtility == null)
-                {
-                    exceptionUtility = new ExceptionUtility();
-                }
-
-                return exceptionUtility;
-            }
-        }
-
         public static class Tag
         {
             public enum CacheAttrition
