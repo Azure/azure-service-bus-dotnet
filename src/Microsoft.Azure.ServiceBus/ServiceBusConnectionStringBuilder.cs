@@ -59,14 +59,10 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="endpoint">Fully qualified endpoint.</param>
         public ServiceBusConnectionStringBuilder(string endpoint, string entityPath, string sharedAccessKeyName, string sharedAccessKey)
         {
-            if (string.IsNullOrWhiteSpace(endpoint))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(endpoint));
-            }
-            if (string.IsNullOrWhiteSpace(sharedAccessKeyName) || string.IsNullOrWhiteSpace(sharedAccessKey))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(string.IsNullOrWhiteSpace(sharedAccessKeyName) ? nameof(sharedAccessKeyName) : nameof(sharedAccessKey));
-            }
+            Guard.AgainstNullAndEmpty(nameof(endpoint), endpoint);
+            Guard.AgainstNullAndEmpty(nameof(sharedAccessKeyName), sharedAccessKeyName);
+            Guard.AgainstNullAndEmpty(nameof(sharedAccessKey), sharedAccessKey);
+            Guard.AgainstNullAndEmpty(nameof(entityPath), entityPath);
 
             this.Endpoint = endpoint;
             this.EntityPath = entityPath;
@@ -189,10 +185,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>Entity connection string</returns>
         public string GetEntityConnectionString()
         {
-            if (string.IsNullOrWhiteSpace(this.EntityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.EntityPath));
-            }
+            Guard.AgainstNullAndEmpty(nameof(this.EntityPath), this.EntityPath);
 
             return $"{this.GetNamespaceConnectionString()}{KeyValuePairDelimiter}{EntityPathConfigName}{KeyValueSeparator}{this.EntityPath}";
         }

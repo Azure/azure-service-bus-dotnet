@@ -78,19 +78,9 @@ namespace Microsoft.Azure.ServiceBus
         public SubscriptionClient(string connectionString, string topicPath, string subscriptionName, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), topicPath, subscriptionName, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
-            if (string.IsNullOrWhiteSpace(topicPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(topicPath);
-            }
-            if (string.IsNullOrWhiteSpace(subscriptionName))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(subscriptionName);
-            }
-
+            Guard.AgainstNullAndEmpty(nameof(connectionString), connectionString);
+            Guard.AgainstNullAndEmpty(nameof(topicPath), topicPath);
+            Guard.AgainstNullAndEmpty(nameof(subscriptionName), subscriptionName);
             this.ownsConnection = true;
         }
 
@@ -426,10 +416,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ThrowIfClosed();
 
-            if (string.IsNullOrWhiteSpace(ruleName))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(ruleName));
-            }
+            Guard.AgainstNullAndEmpty(nameof(ruleName), ruleName);
 
             MessagingEventSource.Log.RemoveRuleStart(this.ClientId, ruleName);
 

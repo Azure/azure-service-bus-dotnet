@@ -46,10 +46,7 @@ namespace Microsoft.Azure.ServiceBus
         public CorrelationFilter(string correlationId)
             : this()
         {
-            if (string.IsNullOrWhiteSpace(correlationId))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(correlationId));
-            }
+            Guard.AgainstNullAndEmpty(nameof(correlationId), correlationId);
 
             this.CorrelationId = correlationId;
         }

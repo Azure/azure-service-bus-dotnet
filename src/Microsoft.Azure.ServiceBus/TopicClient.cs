@@ -56,15 +56,8 @@ namespace Microsoft.Azure.ServiceBus
         public TopicClient(string connectionString, string entityPath, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
-
+            Guard.AgainstNullAndEmpty(nameof(connectionString), connectionString);
+            Guard.AgainstNullAndEmpty(nameof(entityPath), entityPath);
             this.ownsConnection = true;
         }
 

@@ -91,14 +91,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             int prefetchCount = Constants.DefaultClientPrefetchCount)
             : this(entityPath, null, receiveMode, new ServiceBusNamespaceConnection(connectionString), null, retryPolicy, prefetchCount)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
+            Guard.AgainstNullAndEmpty(nameof(connectionString), connectionString);
+            Guard.AgainstNullAndEmpty(nameof(entityPath), entityPath);
 
             this.ownsConnection = true;
             var tokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(this.ServiceBusConnection.SasKeyName, this.ServiceBusConnection.SasKey);
@@ -695,10 +689,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 return;
             }
-            if (string.IsNullOrWhiteSpace(serviceBusPluginName))
-            {
-                throw new ArgumentNullException(nameof(serviceBusPluginName), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginName)));
-            }
+            Guard.AgainstNullAndEmpty(nameof(serviceBusPluginName), serviceBusPluginName);
             if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPluginName))
             {
                 var plugin = this.RegisteredPlugins.First(p => p.Name == serviceBusPluginName);

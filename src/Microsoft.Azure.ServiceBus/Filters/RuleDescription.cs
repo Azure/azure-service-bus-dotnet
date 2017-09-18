@@ -94,21 +94,14 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.Name));
-                }
-
+                Guard.AgainstNullAndEmpty(nameof(this.name), value);
                 this.name = value;
             }
         }
 
         internal void ValidateDescriptionName()
         {
-            if (string.IsNullOrWhiteSpace(this.name))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.name));
-            }
+            Guard.AgainstNullAndEmpty(nameof(this.name), this.name);
 
             if (this.name.Length > Constants.RuleNameMaximumLength)
             {

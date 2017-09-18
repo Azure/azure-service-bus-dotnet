@@ -85,14 +85,8 @@ namespace Microsoft.Azure.ServiceBus
         public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
+            Guard.AgainstNullAndEmpty(nameof(connectionString), connectionString);
+            Guard.AgainstNullAndEmpty(nameof(entityPath), entityPath);
 
             this.ownsConnection = true;
         }

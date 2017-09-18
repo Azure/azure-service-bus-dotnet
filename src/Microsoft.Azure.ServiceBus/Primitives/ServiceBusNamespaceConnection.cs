@@ -15,10 +15,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public ServiceBusNamespaceConnection(string namespaceConnectionString, TimeSpan operationTimeout, RetryPolicy retryPolicy)
             : base(operationTimeout, retryPolicy)
         {
-            if (string.IsNullOrWhiteSpace(namespaceConnectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(namespaceConnectionString));
-            }
+            Guard.AgainstNullAndEmpty(nameof(namespaceConnectionString), namespaceConnectionString);
 
             var serviceBusConnectionStringBuilder = new ServiceBusConnectionStringBuilder(namespaceConnectionString);
             if (!string.IsNullOrWhiteSpace(serviceBusConnectionStringBuilder.EntityPath))
