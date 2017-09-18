@@ -167,10 +167,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             set
             {
-                if (value < 0)
-                {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
-                }
+                Guard.AgainstNegative(nameof(this.PrefetchCount), value);
                 this.prefetchCount = value;
                 if (this.ReceiveLinkManager.TryGetOpenedObject(out var link))
                 {
@@ -187,11 +184,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             internal set
             {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(this.LastPeekedSequenceNumber), value.ToString());
-                }
-
+                Guard.AgainstNegative(nameof(this.LastPeekedSequenceNumber), value);
                 this.lastPeekedSequenceNumber = value;
             }
         }
@@ -286,10 +279,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             this.ThrowIfClosed();
 
-            if (operationTimeout <= TimeSpan.Zero)
-            {
-                throw Fx.Exception.ArgumentOutOfRange(nameof(operationTimeout), operationTimeout, Resources.TimeoutMustBePositiveNonZero.FormatForUser(nameof(operationTimeout), operationTimeout));
-            }
+            Guard.AgainstNegativeAndZero(nameof(operationTimeout), operationTimeout);
 
             MessagingEventSource.Log.MessageReceiveStart(this.ClientId, maxMessageCount);
 

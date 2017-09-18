@@ -12,11 +12,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             return new ArgumentException(message, paramName);
         }
 
-        public ArgumentOutOfRangeException ArgumentOutOfRange(string paramName, object actualValue, string message)
-        {
-            return new ArgumentOutOfRangeException(paramName, actualValue, message);
-        }
-
         public Exception AsError(Exception exception)
         {
             return exception;

@@ -157,10 +157,7 @@ namespace Microsoft.Azure.ServiceBus
             get => this.prefetchCount;
             set
             {
-                if (value < 0)
-                {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
-                }
+                Guard.AgainstNegative(nameof(this.PrefetchCount), value);
                 this.prefetchCount = value;
                 if (this.innerReceiver != null)
                 {

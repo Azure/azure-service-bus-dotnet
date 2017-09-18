@@ -13,7 +13,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public const int MaxSessionIdLength = 128;
 
-        public const string PathDelimiter = @"/";
+        public const char PathDelimiter = '/';
 
         public const int RuleNameMaximumLength = 50;
 

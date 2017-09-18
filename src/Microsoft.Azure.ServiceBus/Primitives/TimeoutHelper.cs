@@ -126,10 +126,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         public static void ThrowIfNegativeArgument(TimeSpan timeout, string argumentName)
         {
-            if (timeout < TimeSpan.Zero)
-            {
-                throw Fx.Exception.ArgumentOutOfRange(argumentName, timeout, Resources.TimeoutMustBeNonNegative.FormatForUser(argumentName, timeout));
-            }
+            Guard.AgainstNegative(argumentName, timeout);
         }
 
         public static void ThrowIfNonPositiveArgument(TimeSpan timeout)
@@ -139,10 +136,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         public static void ThrowIfNonPositiveArgument(TimeSpan timeout, string argumentName)
         {
-            if (timeout <= TimeSpan.Zero)
-            {
-                throw Fx.Exception.ArgumentOutOfRange(argumentName, timeout, Resources.TimeoutMustBePositive.FormatForUser(argumentName, timeout));
-            }
+            Guard.AgainstNegativeAndZero(argumentName, timeout);
         }
 
         public static bool WaitOne(WaitHandle waitHandle, TimeSpan timeout)

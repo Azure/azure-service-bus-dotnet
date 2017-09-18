@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Primitives;
-
 namespace Microsoft.Azure.ServiceBus
 {
     /// <summary>
@@ -102,32 +100,10 @@ namespace Microsoft.Azure.ServiceBus
         internal void ValidateDescriptionName()
         {
             Guard.AgainstNullAndEmpty(nameof(this.name), this.name);
-
-            if (this.name.Length > Constants.RuleNameMaximumLength)
-            {
-                throw Fx.Exception.ArgumentOutOfRange(
-                    nameof(this.name),
-                    this.name,
-                    Resources.EntityNameLengthExceedsLimit.FormatForUser(this.name, Constants.RuleNameMaximumLength));
-            }
-
-            if (this.name.Contains(Constants.PathDelimiter) || this.name.Contains(@"\"))
-            {
-                throw Fx.Exception.Argument(
-                    nameof(this.name),
-                    Resources.InvalidCharacterInEntityName.FormatForUser(Constants.PathDelimiter, this.name));
-            }
-
-            string[] uriSchemeKeys = { "@", "?", "#" };
-            foreach (var uriSchemeKey in uriSchemeKeys)
-            {
-                if (this.name.Contains(uriSchemeKey))
-                {
-                    throw Fx.Exception.Argument(
-                        nameof(this.name),
-                        Resources.CharacterReservedForUriScheme.FormatForUser(nameof(this.name), uriSchemeKey));
-                }
-            }
+            Guard.AgainstTooLong(nameof(this.name), this.name, Constants.RuleNameMaximumLength);
+            Guard.AgainstInvalidCharacters(nameof(this.name), this.name, new[] { Constants.PathDelimiter, '\\' });
+            var uriSchemeKeys = new[] { '@','?', '#' };
+            Guard.AgainstInvalidCharacters(nameof(this.name), this.name, "Reserved in the Uri scheme", uriSchemeKeys);
         }
     }
 }
