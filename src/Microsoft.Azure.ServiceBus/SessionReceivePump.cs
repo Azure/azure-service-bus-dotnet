@@ -28,7 +28,8 @@ namespace Microsoft.Azure.ServiceBus
             string endpoint,
             CancellationToken token)
         {
-            this.client = client ?? throw new ArgumentException(nameof(client));
+            Guard.AgainstNull(nameof(client), client);
+            this.client = client;
             this.clientId = clientId;
             this.ReceiveMode = receiveMode;
             this.sessionHandlerOptions = sessionHandlerOptions;
