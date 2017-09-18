@@ -28,16 +28,7 @@ namespace Microsoft.Azure.ServiceBus
         public SqlFilter(string sqlExpression)
         {
             Guard.AgainstNullAndEmpty(nameof(sqlExpression), sqlExpression);
-
-            if (sqlExpression.Length > Constants.MaximumSqlFilterStatementLength)
-            {
-                throw Fx.Exception.Argument(
-                    nameof(sqlExpression),
-                    Resources.SqlFilterStatmentTooLong.FormatForUser(
-                        sqlExpression.Length,
-                        Constants.MaximumSqlFilterStatementLength));
-            }
-
+            Guard.AgainstTooLong(nameof(sqlExpression), sqlExpression, Constants.MaximumSqlFilterStatementLength);
             this.SqlExpression = sqlExpression;
         }
 

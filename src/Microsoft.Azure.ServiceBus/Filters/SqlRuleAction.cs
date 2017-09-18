@@ -22,16 +22,7 @@ namespace Microsoft.Azure.ServiceBus
         public SqlRuleAction(string sqlExpression)
         {
             Guard.AgainstNullAndEmpty(nameof(sqlExpression), sqlExpression);
-
-            if (sqlExpression.Length > Constants.MaximumSqlRuleActionStatementLength)
-            {
-                throw Fx.Exception.Argument(
-                    nameof(sqlExpression),
-                    Resources.SqlFilterActionStatmentTooLong.FormatForUser(
-                        sqlExpression.Length,
-                        Constants.MaximumSqlRuleActionStatementLength));
-            }
-
+            Guard.AgainstTooLong(nameof(sqlExpression), sqlExpression, Constants.MaximumSqlRuleActionStatementLength);
             this.SqlExpression = sqlExpression;
         }
 

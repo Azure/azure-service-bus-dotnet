@@ -1,11 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Microsoft.Azure.ServiceBus
 {
+    using System.Linq;
     using System;
     using System.Collections;
 
@@ -27,13 +25,22 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        public static void AgainstTooLong(string argumentName, string value, int maximumLength)
+        public static void AgainstTooLongWithValue(string argumentName, string value, int maximumLength)
         {
             if (value.Length > maximumLength)
             {
                 throw new ArgumentOutOfRangeException(argumentName, value, $"Exceeds the '{maximumLength}' character limit.");
             }
         }
+
+        public static void AgainstTooLong(string argumentName, string value, int maximumLength)
+        {
+            if (value.Length > maximumLength)
+            {
+                throw new ArgumentOutOfRangeException(argumentName, message: $"Exceeds the '{maximumLength}' character limit.");
+            }
+        }
+
         public static void AgainstNegative(string argumentName, int value)
         {
             if (value < 0)

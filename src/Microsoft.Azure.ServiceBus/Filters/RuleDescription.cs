@@ -100,7 +100,7 @@ namespace Microsoft.Azure.ServiceBus
         internal void ValidateDescriptionName()
         {
             Guard.AgainstNullAndEmpty(nameof(this.name), this.name);
-            Guard.AgainstTooLong(nameof(this.name), this.name, Constants.RuleNameMaximumLength);
+            Guard.AgainstTooLongWithValue(nameof(this.name), this.name, Constants.RuleNameMaximumLength);
             Guard.AgainstInvalidCharacters(nameof(this.name), this.name, new[] { Constants.PathDelimiter, '\\' });
             var uriSchemeKeys = new[] { '@','?', '#' };
             Guard.AgainstInvalidCharacters(nameof(this.name), this.name, "Reserved in the Uri scheme", uriSchemeKeys);
