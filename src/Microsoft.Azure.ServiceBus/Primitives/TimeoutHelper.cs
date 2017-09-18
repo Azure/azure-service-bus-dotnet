@@ -119,29 +119,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             return Ticks.ToTimeSpan((Ticks.FromTimeSpan(timeout) / factor) + 1);
         }
 
-        public static void ThrowIfNegativeArgument(TimeSpan timeout)
-        {
-            ThrowIfNegativeArgument(timeout, nameof(timeout));
-        }
-
-        public static void ThrowIfNegativeArgument(TimeSpan timeout, string argumentName)
-        {
-            Guard.AgainstNegative(argumentName, timeout);
-        }
-
-        public static void ThrowIfNonPositiveArgument(TimeSpan timeout)
-        {
-            ThrowIfNonPositiveArgument(timeout, nameof(timeout));
-        }
-
-        public static void ThrowIfNonPositiveArgument(TimeSpan timeout, string argumentName)
-        {
-            Guard.AgainstNegativeAndZero(argumentName, timeout);
-        }
-
         public static bool WaitOne(WaitHandle waitHandle, TimeSpan timeout)
         {
-            ThrowIfNegativeArgument(timeout);
+            Guard.AgainstNegative(nameof(timeout), timeout);
             if (timeout == TimeSpan.MaxValue)
             {
                 waitHandle.WaitOne();

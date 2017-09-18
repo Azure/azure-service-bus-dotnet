@@ -70,7 +70,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                TimeoutHelper.ThrowIfNegativeArgument(value, nameof(value));
+                Guard.AgainstNegative(nameof(this.MaxAutoRenewDuration), value);
                 this.maxAutoRenewDuration = value;
             }
         }

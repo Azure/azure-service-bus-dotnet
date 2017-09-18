@@ -163,7 +163,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                TimeoutHelper.ThrowIfNonPositiveArgument(value);
+                Guard.AgainstNegativeAndZero(nameof(this.TimeToLive), value);
                 this.timeToLive = value;
             }
         }

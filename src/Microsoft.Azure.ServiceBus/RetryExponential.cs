@@ -24,9 +24,9 @@ namespace Microsoft.Azure.ServiceBus
 
         internal RetryExponential(TimeSpan minBackoff, TimeSpan maxBackoff, TimeSpan deltaBackoff, int maxRetryCount)
         {
-            TimeoutHelper.ThrowIfNonPositiveArgument(deltaBackoff, nameof(deltaBackoff));
-            TimeoutHelper.ThrowIfNegativeArgument(minBackoff, nameof(minBackoff));
-            TimeoutHelper.ThrowIfNonPositiveArgument(maxBackoff, nameof(maxBackoff));
+            Guard.AgainstNegativeAndZero(nameof(deltaBackoff), deltaBackoff);
+            Guard.AgainstNegative(nameof(minBackoff), minBackoff);
+            Guard.AgainstNegativeAndZero(nameof(maxBackoff), maxBackoff);
 
             if (maxRetryCount <= 0)
             {
