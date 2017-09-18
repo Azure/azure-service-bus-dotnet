@@ -386,7 +386,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     if (outcome.DescriptorCode != Accepted.Code)
                     {
                         var rejected = (Rejected)outcome;
-                        throw Fx.Exception.AsError(rejected.Error.ToMessagingContractException());
+                        throw rejected.Error.ToMessagingContractException();
                     }
                 }
                 catch (Exception exception)

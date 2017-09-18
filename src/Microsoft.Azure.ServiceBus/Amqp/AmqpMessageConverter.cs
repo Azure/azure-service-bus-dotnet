@@ -491,7 +491,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                     else if (mappingType == MappingType.ApplicationProperty)
                     {
-                        throw Fx.Exception.AsError(new SerializationException(Resources.FailedToSerializeUnsupportedType.FormatForUser(netObject.GetType().FullName)));
+                        throw new SerializationException(Resources.FailedToSerializeUnsupportedType.FormatForUser(netObject.GetType().FullName));
                     }
                     else if (netObject is byte[] netObjectAsByteArray)
                     {
@@ -580,7 +580,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                     else if (mappingType == MappingType.ApplicationProperty)
                     {
-                        throw Fx.Exception.AsError(new SerializationException(Resources.FailedToSerializeUnsupportedType.FormatForUser(amqpObject.GetType().FullName)));
+                        throw new SerializationException(Resources.FailedToSerializeUnsupportedType.FormatForUser(amqpObject.GetType().FullName));
                     }
                     else if (amqpObject is AmqpMap map)
                     {

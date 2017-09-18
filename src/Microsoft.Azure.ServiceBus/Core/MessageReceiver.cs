@@ -1273,7 +1273,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             if (this.ReceiveMode != ReceiveMode.PeekLock)
             {
-                throw Fx.Exception.AsError(new InvalidOperationException("The operation is only supported in 'PeekLock' receive mode."));
+                throw new InvalidOperationException("The operation is only supported in 'PeekLock' receive mode.");
             }
         }
 

@@ -414,7 +414,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (!this.IsReceived)
                 {
-                    throw Fx.Exception.AsError(new InvalidOperationException());
+                    throw new InvalidOperationException();
                 }
             }
         }
