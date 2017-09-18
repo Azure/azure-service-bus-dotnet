@@ -82,9 +82,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             RetryPolicy retryPolicy)
             : base(nameof(MessageSender), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
-            MessagingEventSource.Log.MessageSenderCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath);
-
-            this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            Guard.AgainstNull(nameof(serviceBusConnection), serviceBusConnection);
+            MessagingEventSource.Log.MessageSenderCreateStart(serviceBusConnection.Endpoint.Authority, entityPath);
+            this.ServiceBusConnection = serviceBusConnection;
             this.OperationTimeout = serviceBusConnection.OperationTimeout;
             this.Path = entityPath;
             this.EntityType = entityType;
@@ -227,10 +227,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             this.ThrowIfClosed();
-            if (serviceBusPlugin == null)
-            {
-                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
-            }
+            Guard.AgainstNull(nameof(serviceBusPlugin), serviceBusPlugin);
 
             if (this.RegisteredPlugins.Any(p => p.GetType() == serviceBusPlugin.GetType()))
             {

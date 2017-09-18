@@ -28,12 +28,13 @@ namespace Microsoft.Azure.ServiceBus
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
         public SessionHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
+            Guard.AgainstNull(nameof(exceptionReceivedHandler), exceptionReceivedHandler);
             // These are default values
             this.AutoComplete = true;
             this.MaxConcurrentSessions = 2000;
             this.MessageWaitTimeout = TimeSpan.FromMinutes(1);
             this.MaxAutoRenewDuration = Constants.ClientPumpRenewLockTimeout;
-            this.ExceptionReceivedHandler = exceptionReceivedHandler ?? throw new ArgumentNullException(nameof(exceptionReceivedHandler));
+            this.ExceptionReceivedHandler = exceptionReceivedHandler;
         }
 
         /// <summary>Occurs when an exception is received. Enables you to be notified of any errors encountered by the session pump.

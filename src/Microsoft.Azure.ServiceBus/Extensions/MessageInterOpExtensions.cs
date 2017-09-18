@@ -75,10 +75,7 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
         /// </summary>
         public static T GetBody<T>(this Message message, XmlObjectSerializer serializer = null)
         {
-            if(message == null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
+            Guard.AgainstNull(nameof(message), message);
 
             if(message.SystemProperties.BodyObject != null)
             {

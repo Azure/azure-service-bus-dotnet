@@ -31,7 +31,8 @@ namespace Microsoft.Azure.ServiceBus
             this.AutoComplete = true;
             this.ReceiveTimeOut = Constants.DefaultOperationTimeout;
             this.MaxAutoRenewDuration = Constants.ClientPumpRenewLockTimeout;
-            this.ExceptionReceivedHandler = exceptionReceivedHandler ?? throw new ArgumentNullException(nameof(exceptionReceivedHandler));
+            Guard.AgainstNull(nameof(exceptionReceivedHandler), exceptionReceivedHandler);
+            this.ExceptionReceivedHandler = exceptionReceivedHandler;
         }
 
         /// <summary>Occurs when an exception is received. Enables you to be notified of any errors encountered by the message pump.

@@ -42,10 +42,7 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
         /// <remarks>Override the default (Text) and use Binary Xml Reader instead</remarks>
         public override void WriteObject(Stream stream, object graph)
         {
-            if (stream == null)
-            {
-                throw new ArgumentNullException(nameof(stream));
-            }
+            Guard.AgainstNull(nameof(stream), stream);
 
             var xmlDictionaryWriter = XmlDictionaryWriter.CreateBinaryWriter(stream, null, null, false);
             this.WriteObject(xmlDictionaryWriter, graph);
@@ -57,11 +54,7 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
         /// </summary>
         public override void WriteObject(XmlDictionaryWriter writer, object graph)
         {
-            if (writer == null)
-            {
-                throw new ArgumentNullException(nameof(writer));
-            }
-
+            Guard.AgainstNull(nameof(writer), writer);
             this.dataContractSerializer.WriteObject(writer, graph);
         }
 
