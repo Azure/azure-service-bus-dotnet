@@ -659,10 +659,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             this.ThrowIfClosed();
             Guard.AgainstNull(nameof(serviceBusPlugin), serviceBusPlugin);
-            if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
-            {
-                throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
-            }
+            Guard.AgainstPluginRegistered(nameof(serviceBusPlugin), this.RegisteredPlugins, serviceBusPlugin);
             this.RegisteredPlugins.Add(serviceBusPlugin);
         }
 
@@ -694,13 +691,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             if (!source.FilterSet.TryGetValue<string>(AmqpClientConstants.SessionFilterName, out var tempSessionId))
             {
                 receivingAmqpLink.Session.SafeClose();
-                throw new ServiceBusException(true, Resources.SessionFilterMissing);
+                throw new ServiceBusException(true, "Session filter is missing on the link.");
             }
 
             if (string.IsNullOrWhiteSpace(tempSessionId))
             {
                 receivingAmqpLink.Session.SafeClose();
-                throw new ServiceBusException(true, Resources.AmqpFieldSessionId);
+                throw new ServiceBusException(true, "No session-id was specified for a session receiver.");
             }
 
             receivingAmqpLink.Closed += this.OnSessionReceiverLinkClosed;
@@ -1002,7 +999,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 if (this.receivePump != null)
                 {
-                    throw new InvalidOperationException(Resources.MessageHandlerAlreadyRegistered);
+                    throw new InvalidOperationException("A message handler has already been registered.");
                 }
 
                 this.receivePumpCancellationTokenSource = new CancellationTokenSource();
@@ -1120,12 +1117,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                     {
                         if (error.Condition.Equals(AmqpErrorCode.NotFound))
                         {
-                            if (this.isSessionReceiver)
-                            {
-                                throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
-                            }
+                            ThrowIfSessionReceiver();
 
-                            throw new MessageLockLostException(Resources.MessageLockLost);
+                            throw new MessageLockLostException(MessageLockLost);
                         }
 
                         throw error.ToMessagingContractException();
@@ -1139,15 +1133,23 @@ namespace Microsoft.Azure.ServiceBus.Core
                 {
                     // The link state is lost, We need to return a non-retriable error.
                     MessagingEventSource.Log.LinkStateLost(this.ClientId, receiveLink.Name, receiveLink.State, this.isSessionReceiver, exception);
-                    if (this.isSessionReceiver)
-                    {
-                        throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
-                    }
 
-                    throw new MessageLockLostException(Resources.MessageLockLost);
+                    ThrowIfSessionReceiver();
+
+                    throw new MessageLockLostException(MessageLockLost);
                 }
 
                 throw AmqpExceptionHelper.GetClientException(exception);
+            }
+        }
+
+        private const string MessageLockLost = "The lock supplied is invalid. Either the lock expired, or the message has already been removed from the queue, or was received by a different receiver instance.";
+
+        private void ThrowIfSessionReceiver()
+        {
+            if (this.isSessionReceiver)
+            {
+                throw new SessionLockLostException("The session lock has expired on the MessageSession. Accept a new MessageSession.");
             }
         }
 

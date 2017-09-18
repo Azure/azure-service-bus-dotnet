@@ -25,19 +25,12 @@ namespace Microsoft.Azure.ServiceBus
         internal RetryExponential(TimeSpan minBackoff, TimeSpan maxBackoff, TimeSpan deltaBackoff, int maxRetryCount)
         {
             Guard.AgainstNegativeAndZero(nameof(deltaBackoff), deltaBackoff);
-            Guard.AgainstNegative(nameof(minBackoff), minBackoff);
             Guard.AgainstNegativeAndZero(nameof(maxBackoff), maxBackoff);
-
-            if (maxRetryCount <= 0)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(maxRetryCount),
-                    Resources.ArgumentMustBePositive.FormatForUser(nameof(maxRetryCount)));
-            }
+            Guard.AgainstNegativeAndZero(nameof(maxRetryCount), maxRetryCount);
 
             if (minBackoff >= maxBackoff)
             {
-                throw new ArgumentException(Resources.ExponentialRetryBackoffRange.FormatForUser(minBackoff, maxBackoff));
+                throw new ArgumentException($"The minimum back off period '{minBackoff}' cannot exceed the maximum back off period of '{maxBackoff}'.");
             }
 
             this.MinimalBackoff = minBackoff;

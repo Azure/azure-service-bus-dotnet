@@ -49,7 +49,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (this.sessionReceivePump != null)
                 {
-                    throw new InvalidOperationException(Resources.SessionHandlerAlreadyRegistered);
+                    throw new InvalidOperationException("A session handler has already been registered.");
                 }
 
                 this.sessionPumpCancellationTokenSource = new CancellationTokenSource();

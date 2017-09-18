@@ -6,7 +6,6 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Primitives;
 
     /// <summary>Provides options associated with session pump processing using
     /// <see cref="QueueClient.RegisterSessionHandler(Func{IMessageSession, Message, CancellationToken, Task}, SessionHandlerOptions)" /> and
@@ -75,11 +74,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                if (value <= 0)
-                {
-                    throw new ArgumentOutOfRangeException(Resources.MaxConcurrentCallsMustBeGreaterThanZero.FormatForUser(value));
-                }
-
+                Guard.AgainstNegativeAndZero(nameof(this.MaxConcurrentSessions), value);
                 this.maxConcurrentSessions = value;
                 this.MaxConcurrentAcceptSessionCalls = Math.Min(value, 2 * Environment.ProcessorCount);
             }

@@ -154,12 +154,14 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     this.encounteredServerBusy = true;
                     this.ServerBusyExceptionMessage = string.IsNullOrWhiteSpace(exceptionMessage) ?
-                        Resources.DefaultServerBusyException : exceptionMessage;
+                        DefaultServerBusyException : exceptionMessage;
                     this.IsServerBusy = true;
                     this.serverBusyResetTimer.Change(RetryPolicy.ServerBusyBaseSleepTime, TimeSpan.FromMilliseconds(-1));
                 }
             }
         }
+
+        internal const string DefaultServerBusyException = "This request has been blocked because the entity or namespace is being throttled. Please retry the operation, and if condition continues, please slow down your rate of request.";
 
         internal void ResetServerBusy()
         {
@@ -173,7 +175,7 @@ namespace Microsoft.Azure.ServiceBus
                 if (this.encounteredServerBusy)
                 {
                     this.encounteredServerBusy = false;
-                    this.ServerBusyExceptionMessage = Resources.DefaultServerBusyException;
+                    this.ServerBusyExceptionMessage = DefaultServerBusyException;
                     this.IsServerBusy = false;
                     this.serverBusyResetTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
                 }

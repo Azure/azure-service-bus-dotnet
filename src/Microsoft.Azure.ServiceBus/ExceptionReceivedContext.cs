@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Core;
 
 namespace Microsoft.Azure.ServiceBus
 {
-    using System;
+    using Microsoft.Azure.ServiceBus.Core;
 
     /// <summary>Context provided for <see cref="ExceptionReceivedEventArgs"/> exception raised by the client.</summary>
     public class ExceptionReceivedContext

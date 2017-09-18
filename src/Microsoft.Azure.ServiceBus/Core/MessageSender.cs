@@ -228,11 +228,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             this.ThrowIfClosed();
             Guard.AgainstNull(nameof(serviceBusPlugin), serviceBusPlugin);
-
-            if (this.RegisteredPlugins.Any(p => p.GetType() == serviceBusPlugin.GetType()))
-            {
-                throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
-            }
+            Guard.AgainstPluginRegistered(nameof(serviceBusPlugin), this.RegisteredPlugins, serviceBusPlugin);
             this.RegisteredPlugins.Add(serviceBusPlugin);
         }
 
@@ -372,10 +368,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                         var size = (ulong)amqpMessage.SerializedMessageSize;
                         if (size > amqpLink.Settings.MaxMessageSize.Value)
                         {
-                            // TODO: Add MessageSizeExceededException
-                            throw new NotImplementedException("MessageSizeExceededException: " + Resources.AmqpMessageSizeExceeded.FormatForUser(amqpMessage.DeliveryId.Value, size, amqpLink.Settings.MaxMessageSize.Value));
-                            ////throw Fx.Exception.AsError(new MessageSizeExceededException(
-                            ////Resources.AmqpMessageSizeExceeded.FormatForUser(amqpMessage.DeliveryId.Value, size, amqpLink.Settings.MaxMessageSize.Value)));
+                            throw new NotImplementedException($"The received message (delivery-id:{amqpMessage.DeliveryId.Value}, size:{size} bytes) exceeds the limit ({amqpLink.Settings.MaxMessageSize.Value} bytes) currently allowed on the link.");
                         }
                     }
 

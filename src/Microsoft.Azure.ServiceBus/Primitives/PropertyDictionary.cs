@@ -109,7 +109,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
                 if (!SerializationUtilities.IsSupportedPropertyType(type))
                 {
-                    throw new ArgumentException(Resources.NotSupportedPropertyType.FormatForUser(type), nameof(value));
+                    throw new ArgumentException($"'{type}' is not a supported type.", nameof(value));
                 }
             }
 

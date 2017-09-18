@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+using Microsoft.Azure.ServiceBus.Core;
+
 namespace Microsoft.Azure.ServiceBus
 {
     using System.Linq;
@@ -60,6 +63,22 @@ namespace Microsoft.Azure.ServiceBus
         public static void AgainstNegativeAndZero(string argumentName, TimeSpan value)
         {
             if (value <= TimeSpan.Zero)
+            {
+                throw new ArgumentOutOfRangeException(argumentName, value, "Value must be positive.");
+            }
+        }
+
+        public static void AgainstPluginRegistered(string argumentName, IList<ServiceBusPlugin> registeredPlugins, ServiceBusPlugin newPlugin)
+        {
+            if (registeredPlugins.Any(p => p.Name == newPlugin.Name))
+            {
+                throw new ArgumentException(argumentName, $"The {newPlugin} plugin has already been registered.");
+            }
+        }
+
+        public static void AgainstNegativeAndZero(string argumentName, int value)
+        {
+            if (value <= 0)
             {
                 throw new ArgumentOutOfRangeException(argumentName, value, "Value must be positive.");
             }

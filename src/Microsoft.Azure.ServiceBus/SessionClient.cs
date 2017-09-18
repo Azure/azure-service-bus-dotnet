@@ -258,10 +258,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ThrowIfClosed();
             Guard.AgainstNull(nameof(serviceBusPlugin), serviceBusPlugin);
-            if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
-            {
-                throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
-            }
+            Guard.AgainstPluginRegistered(nameof(serviceBusPlugin), this.RegisteredPlugins, serviceBusPlugin);
             this.RegisteredPlugins.Add(serviceBusPlugin);
         }
 

@@ -141,7 +141,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async void RunOperationShouldWaitFor10SecondsForOperationIfServerBusy()
         {
             var policy = RetryPolicy.Default;
-            policy.SetServerBusy(Resources.DefaultServerBusyException);
+            policy.SetServerBusy(RetryPolicy.DefaultServerBusyException);
             var watch = Stopwatch.StartNew();
 
             await policy.RunOperation(

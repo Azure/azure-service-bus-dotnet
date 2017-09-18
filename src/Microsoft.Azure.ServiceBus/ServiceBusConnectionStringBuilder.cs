@@ -6,7 +6,6 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Text;
-    using Primitives;
 
     /// <summary>
     /// Used to generate Service Bus connection strings.
