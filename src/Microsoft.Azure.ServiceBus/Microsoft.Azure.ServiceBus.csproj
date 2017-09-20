@@ -14,7 +14,6 @@
     <PackageProjectUrl>https://github.com/Azure/azure-service-bus-dotnet</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/Azure/azure-service-bus-dotnet/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.3' ">$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
     <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.3' ">1.6.1</NetStandardImplicitPackageVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludePDBsInPackage</TargetsForTfmSpecificContentInPackage>
@@ -23,7 +22,6 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>CS1591;CS1573</NoWarn>
-    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <Target Name="IncludePDBsInPackage">
