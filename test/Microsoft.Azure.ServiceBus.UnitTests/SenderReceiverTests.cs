@@ -211,6 +211,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                                 exceptionReceived = true; 
                             }
                         }
+                        else
+                        {
+                            TestUtility.Log("Unexpected exception: " + e);
+                        }
                     }
                 });
                 throwingTask.Start();
@@ -223,11 +227,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log("Closed Receiver");
             }
 
+            TestUtility.Log("Waiting for 4 Secs");
             await Task.Delay(4000);
-            Assert.True(throwingTask.IsCompleted);
+            Assert.True(throwingTask.IsCompleted, "ReceiveAsync did not return immediately after closing connection");
             lock (syncLock)
             {
-                Assert.True(exceptionReceived); 
+                Assert.True(exceptionReceived, "Did not receive ObjectDisposedException"); 
             }
         }
     }
