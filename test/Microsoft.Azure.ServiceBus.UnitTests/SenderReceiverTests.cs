@@ -202,19 +202,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     {
                         await receiver.ReceiveAsync(TimeSpan.FromSeconds(40));
                     }
-                    catch (Exception e)
+                    catch (ObjectDisposedException)
                     {
-                        if (e is ObjectDisposedException)
+                        lock (syncLock)
                         {
-                            lock (syncLock)
-                            {
-                                exceptionReceived = true; 
-                            }
+                            exceptionReceived = true;
                         }
-                        else
-                        {
-                            TestUtility.Log("Unexpected exception: " + e);
-                        }
+                    }
+                    catch(Exception e)
+                    {
+                        TestUtility.Log("Unexpected exception: " + e);
                     }
                 });
                 throwingTask.Start();
