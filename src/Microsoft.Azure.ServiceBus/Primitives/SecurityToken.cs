@@ -11,7 +11,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
     /// <summary>
     /// Provides information about a security token such as audience, expiry time, and the string token value.
     /// </summary>
-    internal class SecurityToken
+    public class SecurityToken
     {
         // per Simple Web Token draft specification
         private const string TokenAudience = "Audience";

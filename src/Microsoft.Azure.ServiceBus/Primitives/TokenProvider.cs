@@ -10,7 +10,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
     /// <summary>
     /// This abstract base class can be extended to implement additional token providers.
     /// </summary>
-    internal abstract class TokenProvider
+    public abstract class TokenProvider
     {
         internal static readonly TimeSpan DefaultTokenTimeout = TimeSpan.FromMinutes(60);
         internal static readonly Func<string, byte[]> MessagingTokenProviderKeyEncoder = Encoding.UTF8.GetBytes;
