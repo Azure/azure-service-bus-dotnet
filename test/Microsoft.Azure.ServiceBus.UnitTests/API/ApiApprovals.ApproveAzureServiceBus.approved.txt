@@ -247,11 +247,14 @@ namespace Microsoft.Azure.ServiceBus
         public ServiceBusConnectionStringBuilder() { }
         public ServiceBusConnectionStringBuilder(string connectionString) { }
         public ServiceBusConnectionStringBuilder(string endpoint, string entityPath, string sharedAccessKeyName, string sharedAccessKey) { }
+        public ServiceBusConnectionStringBuilder(string endpoint, string entityPath, string sharedAccessSignature) { }
         public ServiceBusConnectionStringBuilder(string endpoint, string entityPath, string sharedAccessKeyName, string sharedAccessKey, Microsoft.Azure.ServiceBus.TransportType transportType) { }
+        public ServiceBusConnectionStringBuilder(string endpoint, string entityPath, string sharedAccessSignature, Microsoft.Azure.ServiceBus.TransportType transportType) { }
         public string Endpoint { get; set; }
         public string EntityPath { get; set; }
         public string SasKey { get; set; }
         public string SasKeyName { get; set; }
+        public string SasToken { get; set; }
         public Microsoft.Azure.ServiceBus.TransportType TransportType { get; set; }
         public string GetEntityConnectionString() { }
         public string GetNamespaceConnectionString() { }
