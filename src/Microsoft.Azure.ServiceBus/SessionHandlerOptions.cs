@@ -6,7 +6,6 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Primitives;
 
     /// <summary>Provides options associated with session pump processing using
     /// <see cref="QueueClient.RegisterSessionHandler(Func{IMessageSession, Message, CancellationToken, Task}, SessionHandlerOptions)" /> and
@@ -28,12 +27,13 @@ namespace Microsoft.Azure.ServiceBus
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
         public SessionHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
+            Guard.AgainstNull(nameof(exceptionReceivedHandler), exceptionReceivedHandler);
             // These are default values
             this.AutoComplete = true;
             this.MaxConcurrentSessions = 2000;
             this.MessageWaitTimeout = TimeSpan.FromMinutes(1);
             this.MaxAutoRenewDuration = Constants.ClientPumpRenewLockTimeout;
-            this.ExceptionReceivedHandler = exceptionReceivedHandler ?? throw new ArgumentNullException(nameof(exceptionReceivedHandler));
+            this.ExceptionReceivedHandler = exceptionReceivedHandler;
         }
 
         /// <summary>Occurs when an exception is received. Enables you to be notified of any errors encountered by the session pump.
@@ -48,7 +48,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                TimeoutHelper.ThrowIfNegativeArgument(value, nameof(value));
+                Guard.AgainstNegative(nameof(this.MaxAutoRenewDuration), value);
                 this.maxAutoRenewDuration = value;
             }
         }
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                TimeoutHelper.ThrowIfNegativeArgument(value, nameof(value));
+                Guard.AgainstNegative(nameof(this.MessageWaitTimeout), value);
                 this.messageWaitTimeout = value;
             }
         }
@@ -74,11 +74,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                if (value <= 0)
-                {
-                    throw new ArgumentOutOfRangeException(Resources.MaxConcurrentCallsMustBeGreaterThanZero.FormatForUser(value));
-                }
-
+                Guard.AgainstNegativeAndZero(nameof(this.MaxConcurrentSessions), value);
                 this.maxConcurrentSessions = value;
                 this.MaxConcurrentAcceptSessionCalls = Math.Min(value, 2 * Environment.ProcessorCount);
             }

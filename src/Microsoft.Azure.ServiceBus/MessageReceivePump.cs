@@ -24,7 +24,8 @@ namespace Microsoft.Azure.ServiceBus
             string endpoint,
             CancellationToken pumpCancellationToken)
         {
-            this.messageReceiver = messageReceiver ?? throw new ArgumentNullException(nameof(messageReceiver));
+            Guard.AgainstNull(nameof(messageReceiver), messageReceiver);
+            this.messageReceiver = messageReceiver;
             this.registerHandlerOptions = registerHandlerOptions;
             this.onMessageCallback = callback;
             this.endpoint = endpoint;

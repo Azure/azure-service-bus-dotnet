@@ -21,20 +21,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>Max allowed length of sql expression is 1024 chars.</remarks>
         public SqlRuleAction(string sqlExpression)
         {
-            if (string.IsNullOrEmpty(sqlExpression))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(sqlExpression));
-            }
-
-            if (sqlExpression.Length > Constants.MaximumSqlRuleActionStatementLength)
-            {
-                throw Fx.Exception.Argument(
-                    nameof(sqlExpression),
-                    Resources.SqlFilterActionStatmentTooLong.FormatForUser(
-                        sqlExpression.Length,
-                        Constants.MaximumSqlRuleActionStatementLength));
-            }
-
+            Guard.AgainstNullAndEmpty(nameof(sqlExpression), sqlExpression);
+            Guard.AgainstTooLong(nameof(sqlExpression), sqlExpression, Constants.MaximumSqlRuleActionStatementLength);
             this.SqlExpression = sqlExpression;
         }
 

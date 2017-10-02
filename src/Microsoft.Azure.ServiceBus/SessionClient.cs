@@ -90,14 +90,8 @@ namespace Microsoft.Azure.ServiceBus
                   retryPolicy,
                   null)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
+            Guard.AgainstNullAndEmpty(nameof(entityPath), entityPath);
+            Guard.AgainstNullAndEmpty(nameof(connectionString), connectionString);
 
             this.ownsConnection = true;
             var tokenProvider = this.ServiceBusConnection.CreateTokenProvider();
@@ -116,7 +110,8 @@ namespace Microsoft.Azure.ServiceBus
             IList<ServiceBusPlugin> registeredPlugins)
             : base(clientTypeName, entityPath, retryPolicy ?? RetryPolicy.Default)
         {
-            this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            Guard.AgainstNull(nameof(serviceBusConnection), serviceBusConnection);
+            this.ServiceBusConnection = serviceBusConnection;
             this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.EntityPath = entityPath;
             this.EntityType = entityType;
@@ -262,15 +257,8 @@ namespace Microsoft.Azure.ServiceBus
         public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             this.ThrowIfClosed();
-
-            if (serviceBusPlugin == null)
-            {
-                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
-            }
-            if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
-            {
-                throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
-            }
+            Guard.AgainstNull(nameof(serviceBusPlugin), serviceBusPlugin);
+            Guard.AgainstPluginRegistered(nameof(serviceBusPlugin), this.RegisteredPlugins, serviceBusPlugin);
             this.RegisteredPlugins.Add(serviceBusPlugin);
         }
 
@@ -286,10 +274,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 return;
             }
-            if (string.IsNullOrWhiteSpace(serviceBusPluginName))
-            {
-                throw new ArgumentNullException(nameof(serviceBusPluginName), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginName)));
-            }
+            Guard.AgainstNullAndEmpty(nameof(serviceBusPluginName), serviceBusPluginName);
             if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPluginName))
             {
                 var plugin = this.RegisteredPlugins.First(p => p.Name == serviceBusPluginName);

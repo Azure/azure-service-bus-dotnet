@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus
     /// </summary>
     public static class EntityNameHelper
     {
-        private const string PathDelimiter = @"/";
+        private const string PathDelimiter = "/";
         private const string Subscriptions = "Subscriptions";
         private const string SubQueuePrefix = "$";
         private const string DeadLetterQueueSuffix = "DeadLetterQueue";

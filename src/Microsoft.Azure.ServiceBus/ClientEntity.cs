@@ -24,7 +24,8 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.clientTypeName = clientTypeName;
             this.ClientId = GenerateClientId(clientTypeName, postfix);
-            this.RetryPolicy = retryPolicy ?? throw new ArgumentNullException(nameof(retryPolicy));
+            Guard.AgainstNull(nameof(retryPolicy), retryPolicy);
+            this.RetryPolicy = retryPolicy;
             this.syncLock = new object();
         }
 

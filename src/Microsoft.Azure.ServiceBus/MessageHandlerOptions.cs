@@ -6,7 +6,6 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Primitives;
 
     /// <summary>Provides options associated with message pump processing using
     /// <see cref="QueueClient.RegisterMessageHandler(Func{Message, CancellationToken, Task}, MessageHandlerOptions)" /> and
@@ -31,7 +30,8 @@ namespace Microsoft.Azure.ServiceBus
             this.AutoComplete = true;
             this.ReceiveTimeOut = Constants.DefaultOperationTimeout;
             this.MaxAutoRenewDuration = Constants.ClientPumpRenewLockTimeout;
-            this.ExceptionReceivedHandler = exceptionReceivedHandler ?? throw new ArgumentNullException(nameof(exceptionReceivedHandler));
+            Guard.AgainstNull(nameof(exceptionReceivedHandler), exceptionReceivedHandler);
+            this.ExceptionReceivedHandler = exceptionReceivedHandler;
         }
 
         /// <summary>Occurs when an exception is received. Enables you to be notified of any errors encountered by the message pump.
@@ -46,11 +46,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                if (value <= 0)
-                {
-                    throw new ArgumentOutOfRangeException(Resources.MaxConcurrentCallsMustBeGreaterThanZero.FormatForUser(value));
-                }
-
+                Guard.AgainstNegativeAndZero(nameof(MaxConcurrentCalls), value);
                 this.maxConcurrentCalls = value;
             }
         }
@@ -70,7 +66,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                TimeoutHelper.ThrowIfNegativeArgument(value, nameof(value));
+                Guard.AgainstNegative(nameof(this.MaxAutoRenewDuration), value);
                 this.maxAutoRenewDuration = value;
             }
         }

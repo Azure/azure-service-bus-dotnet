@@ -56,24 +56,18 @@ namespace Microsoft.Azure.ServiceBus
         public TopicClient(string connectionString, string entityPath, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
-
+            Guard.AgainstNullAndEmpty(nameof(connectionString), connectionString);
+            Guard.AgainstNullAndEmpty(nameof(entityPath), entityPath);
             this.ownsConnection = true;
         }
 
         TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, RetryPolicy retryPolicy)
             : base(nameof(TopicClient), entityPath, retryPolicy)
         {
-            MessagingEventSource.Log.TopicClientCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath);
+            Guard.AgainstNull(nameof(serviceBusConnection), serviceBusConnection);
+            MessagingEventSource.Log.TopicClientCreateStart(serviceBusConnection.Endpoint.Authority, entityPath);
 
-            this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            this.ServiceBusConnection = serviceBusConnection;
             this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
             this.TopicName = entityPath;

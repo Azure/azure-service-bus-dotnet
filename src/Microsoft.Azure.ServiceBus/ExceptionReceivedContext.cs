@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Core;
 
 namespace Microsoft.Azure.ServiceBus
 {
-    using System;
+    using Microsoft.Azure.ServiceBus.Core;
 
     /// <summary>Context provided for <see cref="ExceptionReceivedEventArgs"/> exception raised by the client.</summary>
     public class ExceptionReceivedContext
@@ -17,10 +16,14 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="clientId">The Client Id can be used to associate with the <see cref="QueueClient"/>, <see cref="SubscriptionClient"/>, <see cref="MessageSender"/> or <see cref="MessageReceiver"/> that encountered the exception.</param>
         public ExceptionReceivedContext(string action, string endpoint, string entityPath, string clientId)
         {
-            Action = action ?? throw new ArgumentNullException(nameof(action));
-            Endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
-            EntityPath = entityPath ?? throw new ArgumentNullException(nameof(entityPath));
-            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            Guard.AgainstNull(nameof(action), action);
+            Guard.AgainstNull(nameof(endpoint), endpoint);
+            Guard.AgainstNull(nameof(entityPath), entityPath);
+            Guard.AgainstNull(nameof(clientId), clientId);
+            Action = action;
+            Endpoint = endpoint;
+            EntityPath = entityPath;
+            ClientId = clientId;
         }
 
         /// <summary>Gets the action associated with the event.</summary>

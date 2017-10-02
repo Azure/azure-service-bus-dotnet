@@ -85,14 +85,8 @@ namespace Microsoft.Azure.ServiceBus
         public QueueClient(string connectionString, string entityPath, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), entityPath, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
+            Guard.AgainstNullAndEmpty(nameof(connectionString), connectionString);
+            Guard.AgainstNullAndEmpty(nameof(entityPath), entityPath);
 
             this.ownsConnection = true;
         }
@@ -100,9 +94,10 @@ namespace Microsoft.Azure.ServiceBus
         QueueClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode, RetryPolicy retryPolicy)
             : base(nameof(QueueClient), entityPath, retryPolicy)
         {
-            MessagingEventSource.Log.QueueClientCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath, receiveMode.ToString());
+            Guard.AgainstNull(nameof(serviceBusConnection), serviceBusConnection);
+            MessagingEventSource.Log.QueueClientCreateStart(serviceBusConnection.Endpoint.Authority, entityPath, receiveMode.ToString());
 
-            this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            this.ServiceBusConnection = serviceBusConnection;
             this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
             this.QueueName = entityPath;
@@ -161,10 +156,7 @@ namespace Microsoft.Azure.ServiceBus
             get => this.prefetchCount;
             set
             {
-                if (value < 0)
-                {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
-                }
+                Guard.AgainstNegative(nameof(this.PrefetchCount), value);
                 this.prefetchCount = value;
                 if (this.innerReceiver != null)
                 {

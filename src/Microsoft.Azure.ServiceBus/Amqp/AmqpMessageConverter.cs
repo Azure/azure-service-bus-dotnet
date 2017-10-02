@@ -12,7 +12,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using Azure.Amqp.Encoding;
     using Azure.Amqp.Framing;
     using Framing;
-    using Primitives;
     using SBMessage = Message;
 
     static class AmqpMessageConverter
@@ -33,10 +32,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static AmqpMessage BatchSBMessagesAsAmqpMessage(IEnumerable<SBMessage> sbMessages, bool batchable)
         {
-            if (sbMessages == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(sbMessages));
-            }
+            Guard.AgainstNull(nameof(sbMessages), sbMessages);
 
             AmqpMessage amqpMessage;
             AmqpMessage firstAmqpMessage = null;
@@ -144,7 +140,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                     else
                     {
-                        throw new NotSupportedException(Resources.InvalidAmqpMessageProperty.FormatForUser(pair.Key.GetType()));
+                        throw new NotSupportedException($"{pair.Key.GetType()} is not a supported user property type.");
                     }
                 }
             }
@@ -154,10 +150,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static SBMessage AmqpMessageToSBMessage(AmqpMessage amqpMessage)
         {
-            if (amqpMessage == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(amqpMessage));
-            }
+            Guard.AgainstNull(nameof(amqpMessage), amqpMessage);
 
             SBMessage sbMessage;
 
@@ -345,11 +338,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     ruleDescriptionMap[ManagementConstants.Properties.CorrelationFilter] = correlationFilterMap;
                     break;
                 default:
-                    throw new NotSupportedException(
-                        Resources.RuleFilterNotSupported.FormatForUser(
-                            description.Filter.GetType(),
-                            nameof(SqlFilter),
-                            nameof(CorrelationFilter)));
+                    throw new NotSupportedException($"Provided rule filter {description.Filter.GetType()} is not supported. Supported values are: {nameof(SqlFilter)}, {nameof(CorrelationFilter)}");
             }
 
             var amqpAction = GetRuleActionMap(description.Action as SqlRuleAction);
@@ -497,7 +486,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                     else if (mappingType == MappingType.ApplicationProperty)
                     {
-                        throw Fx.Exception.AsError(new SerializationException(Resources.FailedToSerializeUnsupportedType.FormatForUser(netObject.GetType().FullName)));
+                        ThrowSerializationException(netObject);
                     }
                     else if (netObject is byte[] netObjectAsByteArray)
                     {
@@ -516,6 +505,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
 
             return amqpObject != null;
+        }
+
+        static void ThrowSerializationException(object target)
+        {
+            throw new SerializationException($"Serialization operation failed due to unsupported type {target.GetType().FullName}.");
         }
 
         static bool TryGetNetObjectFromAmqpObject(object amqpObject, MappingType mappingType, out object netObject)
@@ -586,7 +580,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                     else if (mappingType == MappingType.ApplicationProperty)
                     {
-                        throw Fx.Exception.AsError(new SerializationException(Resources.FailedToSerializeUnsupportedType.FormatForUser(amqpObject.GetType().FullName)));
+                        ThrowSerializationException(amqpObject);
                     }
                     else if (amqpObject is AmqpMap map)
                     {

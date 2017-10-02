@@ -64,14 +64,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             RetryPolicy retryPolicy = null)
             : this(entityPath, null, new ServiceBusNamespaceConnection(connectionString), null, retryPolicy)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
+            Guard.AgainstNullAndEmpty(nameof(connectionString), connectionString);
+            Guard.AgainstNullAndEmpty(nameof(entityPath), entityPath);
 
             this.ownsConnection = true;
             var tokenProvider = this.ServiceBusConnection.CreateTokenProvider();
@@ -86,9 +80,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             RetryPolicy retryPolicy)
             : base(nameof(MessageSender), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
-            MessagingEventSource.Log.MessageSenderCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath);
-
-            this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            Guard.AgainstNull(nameof(serviceBusConnection), serviceBusConnection);
+            MessagingEventSource.Log.MessageSenderCreateStart(serviceBusConnection.Endpoint.Authority, entityPath);
+            this.ServiceBusConnection = serviceBusConnection;
             this.OperationTimeout = serviceBusConnection.OperationTimeout;
             this.Path = entityPath;
             this.EntityType = entityType;
@@ -172,18 +166,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         public async Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
             this.ThrowIfClosed();
-            if (message == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(message));
-            }
-
-            if (scheduleEnqueueTimeUtc.CompareTo(DateTimeOffset.UtcNow) < 0)
-            {
-                throw Fx.Exception.ArgumentOutOfRange(
-                    nameof(scheduleEnqueueTimeUtc),
-                    scheduleEnqueueTimeUtc.ToString(),
-                    "Cannot schedule messages in the past");
-            }
+            Guard.AgainstNull(nameof(message), message);
+            Guard.AgainstInThePast(nameof(scheduleEnqueueTimeUtc), scheduleEnqueueTimeUtc);
 
             message.ScheduledEnqueueTimeUtc = scheduleEnqueueTimeUtc.UtcDateTime;
             MessageSender.ValidateMessage(message);
@@ -241,15 +225,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             this.ThrowIfClosed();
-            if (serviceBusPlugin == null)
-            {
-                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
-            }
-
-            if (this.RegisteredPlugins.Any(p => p.GetType() == serviceBusPlugin.GetType()))
-            {
-                throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
-            }
+            Guard.AgainstNull(nameof(serviceBusPlugin), serviceBusPlugin);
+            Guard.AgainstPluginRegistered(nameof(serviceBusPlugin), this.RegisteredPlugins, serviceBusPlugin);
             this.RegisteredPlugins.Add(serviceBusPlugin);
         }
 
@@ -260,10 +237,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         public override void UnregisterPlugin(string serviceBusPluginName)
         {
             this.ThrowIfClosed();
-            if (string.IsNullOrWhiteSpace(serviceBusPluginName))
-            {
-                throw new ArgumentNullException(nameof(serviceBusPluginName), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginName)));
-            }
+            Guard.AgainstNullAndEmpty(nameof(serviceBusPluginName), serviceBusPluginName);
             if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPluginName))
             {
                 var plugin = this.RegisteredPlugins.First(p => p.Name == serviceBusPluginName);
@@ -305,10 +279,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         static int ValidateMessages(IList<Message> messageList)
         {
             var count = 0;
-            if (messageList == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(messageList));
-            }
+            Guard.AgainstNull(nameof(messageList), messageList);
 
             foreach (var message in messageList)
             {
@@ -323,7 +294,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             if (message.SystemProperties.IsLockTokenSet)
             {
-                throw Fx.Exception.Argument(nameof(message), "Cannot send a message that was already received.");
+                throw new ArgumentException("Cannot send a message that was already received.", nameof(message));
             }
         }
 
@@ -395,10 +366,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                         var size = (ulong)amqpMessage.SerializedMessageSize;
                         if (size > amqpLink.Settings.MaxMessageSize.Value)
                         {
-                            // TODO: Add MessageSizeExceededException
-                            throw new NotImplementedException("MessageSizeExceededException: " + Resources.AmqpMessageSizeExceeded.FormatForUser(amqpMessage.DeliveryId.Value, size, amqpLink.Settings.MaxMessageSize.Value));
-                            ////throw Fx.Exception.AsError(new MessageSizeExceededException(
-                            ////Resources.AmqpMessageSizeExceeded.FormatForUser(amqpMessage.DeliveryId.Value, size, amqpLink.Settings.MaxMessageSize.Value)));
+                            throw new NotImplementedException($"The received message (delivery-id:{amqpMessage.DeliveryId.Value}, size:{size} bytes) exceeds the limit ({amqpLink.Settings.MaxMessageSize.Value} bytes) currently allowed on the link.");
                         }
                     }
 
@@ -406,7 +374,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     if (outcome.DescriptorCode != Accepted.Code)
                     {
                         var rejected = (Rejected)outcome;
-                        throw Fx.Exception.AsError(rejected.Error.ToMessagingContractException());
+                        throw rejected.Error.ToMessagingContractException();
                     }
                 }
                 catch (Exception exception)

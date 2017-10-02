@@ -102,7 +102,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <param name="timeout">The time span that specifies the timeout value for the message that gets the security token</param>
         public Task<SecurityToken> GetTokenAsync(string appliesTo, string action, TimeSpan timeout)
         {
-            TimeoutHelper.ThrowIfNegativeArgument(timeout);
+            Guard.AgainstNegative(nameof(timeout), timeout);
             appliesTo = this.NormalizeAppliesTo(appliesTo);
             return this.OnGetTokenAsync(appliesTo, action, timeout);
         }

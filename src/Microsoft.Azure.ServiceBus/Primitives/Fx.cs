@@ -8,21 +8,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
     static class Fx
     {
-        static ExceptionUtility exceptionUtility;
-
-        public static ExceptionUtility Exception
-        {
-            get
-            {
-                if (exceptionUtility == null)
-                {
-                    exceptionUtility = new ExceptionUtility();
-                }
-
-                return exceptionUtility;
-            }
-        }
-
         public static class Tag
         {
             public enum CacheAttrition
@@ -130,10 +115,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     this.SizeLimit = Strings.Unbounded;
                     this.Timeout = Strings.Infinite;
 
-                    if (elementType == null)
-                    {
-                        throw Fx.Exception.ArgumentNull(nameof(elementType));
-                    }
+                    Guard.AgainstNull(nameof(elementType), elementType);
 
                     this.elementType = elementType;
                     this.cacheAttrition = cacheAttrition;
@@ -161,10 +143,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     this.Scope = Strings.DeclaringInstance;
                     this.SizeLimit = Strings.Unbounded;
 
-                    if (elementType == null)
-                    {
-                        throw Fx.Exception.ArgumentNull(nameof(elementType));
-                    }
+                    Guard.AgainstNull(nameof(elementType), elementType);
 
                     this.elementType = elementType;
                 }
@@ -257,15 +236,8 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
                     public ThrowsAttribute(Type exceptionType, string diagnosis)
                     {
-                        if (exceptionType == null)
-                        {
-                            throw Fx.Exception.ArgumentNull(nameof(exceptionType));
-                        }
-                        if (string.IsNullOrEmpty(diagnosis))
-                        {
-                            ////throw Fx.Exception.ArgumentNullOrEmpty("diagnosis");
-                            throw new ArgumentNullException(nameof(diagnosis));
-                        }
+                        Guard.AgainstNull(nameof(exceptionType), exceptionType);
+                        Guard.AgainstNullAndEmpty(nameof(diagnosis), diagnosis);
 
                         this.exceptionType = exceptionType;
                         this.diagnosis = diagnosis;

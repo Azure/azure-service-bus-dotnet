@@ -6,7 +6,6 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using Primitives;
 
     /// <summary>
     /// The object used to communicate and transfer data with Service Bus.
@@ -61,7 +60,8 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                Message.ValidateMessageId(value);
+                Guard.AgainstNullAndEmpty(nameof(MessageId), value);
+                Guard.AgainstTooLong(nameof(MessageId), value, Constants.MaxMessageIdLength);
                 this.messageId = value;
             }
         }
@@ -76,7 +76,8 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                Message.ValidatePartitionKey(nameof(this.PartitionKey), value);
+                Guard.AgainstNullAndEmpty(nameof(PartitionKey), value);
+                Guard.AgainstTooLong(nameof(PartitionKey), value, Constants.MaxPartitionKeyLength);
                 this.partitionKey = value;
             }
         }
@@ -90,7 +91,8 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                Message.ValidatePartitionKey(nameof(this.ViaPartitionKey), value);
+                Guard.AgainstNullAndEmpty(nameof(ViaPartitionKey), value);
+                Guard.AgainstTooLong(nameof(ViaPartitionKey), value, Constants.MaxPartitionKeyLength);
                 this.viaPartitionKey = value;
             }
         }
@@ -104,7 +106,8 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                Message.ValidateSessionId(nameof(this.SessionId), value);
+                Guard.AgainstNullAndEmpty(nameof(SessionId), value);
+                Guard.AgainstTooLong(nameof(SessionId), value, Constants.MaxSessionIdLength);
                 this.sessionId = value;
             }
         }
@@ -118,7 +121,8 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                Message.ValidateSessionId(nameof(this.ReplyToSessionId), value);
+                Guard.AgainstNullAndEmpty(nameof(ReplyToSessionId), value);
+                Guard.AgainstTooLong(nameof(ReplyToSessionId), value, Constants.MaxSessionIdLength);
                 this.replyToSessionId = value;
             }
         }
@@ -163,7 +167,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                TimeoutHelper.ThrowIfNonPositiveArgument(value);
+                Guard.AgainstNegativeAndZero(nameof(this.TimeToLive), value);
                 this.timeToLive = value;
             }
         }
@@ -241,34 +245,6 @@ namespace Microsoft.Azure.ServiceBus
                 clone.Body = clonedBody;
             }
             return clone;
-        }
-
-        private static void ValidateMessageId(string messageId)
-        {
-            if (string.IsNullOrEmpty(messageId) ||
-                messageId.Length > Constants.MaxMessageIdLength)
-            {
-                // TODO: throw FxTrace.Exception.Argument("messageId", SRClient.MessageIdIsNullOrEmptyOrOverMaxValue(Constants.MaxMessageIdLength));
-                throw new ArgumentException("MessageIdIsNullOrEmptyOrOverMaxValue");
-            }
-        }
-
-        private static void ValidateSessionId(string sessionIdPropertyName, string sessionId)
-        {
-            if (sessionId != null && sessionId.Length > Constants.MaxSessionIdLength)
-            {
-                // TODO: throw FxTrace.Exception.Argument("sessionId", SRClient.SessionIdIsOverMaxValue(Constants.MaxSessionIdLength));
-                throw new ArgumentException("SessionIdIsOverMaxValue");
-            }
-        }
-
-        private static void ValidatePartitionKey(string partitionKeyPropertyName, string partitionKey)
-        {
-            if (partitionKey != null && partitionKey.Length > Constants.MaxPartitionKeyLength)
-            {
-                // TODO: throw FxTrace.Exception.Argument(partitionKeyPropertyName, SRClient.PropertyOverMaxValue(partitionKeyPropertyName, Constants.MaxPartitionKeyLength));
-                throw new ArgumentException("PropertyValueOverMaxValue");
-            }
         }
 
         /// <summary>
@@ -414,7 +390,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (!this.IsReceived)
                 {
-                    throw Fx.Exception.AsError(new InvalidOperationException());
+                    throw new InvalidOperationException();
                 }
             }
         }

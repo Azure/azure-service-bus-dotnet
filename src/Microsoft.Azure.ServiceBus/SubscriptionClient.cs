@@ -78,28 +78,19 @@ namespace Microsoft.Azure.ServiceBus
         public SubscriptionClient(string connectionString, string topicPath, string subscriptionName, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
             : this(new ServiceBusNamespaceConnection(connectionString), topicPath, subscriptionName, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
-            if (string.IsNullOrWhiteSpace(topicPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(topicPath);
-            }
-            if (string.IsNullOrWhiteSpace(subscriptionName))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(subscriptionName);
-            }
-
+            Guard.AgainstNullAndEmpty(nameof(connectionString), connectionString);
+            Guard.AgainstNullAndEmpty(nameof(topicPath), topicPath);
+            Guard.AgainstNullAndEmpty(nameof(subscriptionName), subscriptionName);
             this.ownsConnection = true;
         }
 
         SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode, RetryPolicy retryPolicy)
             : base(nameof(SubscriptionClient), $"{topicPath}/{subscriptionName}", retryPolicy)
         {
-            MessagingEventSource.Log.SubscriptionClientCreateStart(serviceBusConnection?.Endpoint.Authority, topicPath, subscriptionName, receiveMode.ToString());
+            Guard.AgainstNull(nameof(serviceBusConnection), serviceBusConnection);
+            MessagingEventSource.Log.SubscriptionClientCreateStart(serviceBusConnection.Endpoint.Authority, topicPath, subscriptionName, receiveMode.ToString());
 
-            this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            this.ServiceBusConnection = serviceBusConnection;
             this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
             this.TopicPath = topicPath;
@@ -166,10 +157,7 @@ namespace Microsoft.Azure.ServiceBus
             get => this.prefetchCount;
             set
             {
-                if (value < 0)
-                {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
-                }
+                Guard.AgainstNegative(nameof(this.PrefetchCount), value);
                 this.prefetchCount = value;
                 if (this.innerSubscriptionClient != null)
                 {
@@ -398,10 +386,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ThrowIfClosed();
 
-            if (description == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(description));
-            }
+            Guard.AgainstNull(nameof(description), description);
 
             description.ValidateDescriptionName();
             MessagingEventSource.Log.AddRuleStart(this.ClientId, description.Name);
@@ -427,10 +412,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.ThrowIfClosed();
 
-            if (string.IsNullOrWhiteSpace(ruleName))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(ruleName));
-            }
+            Guard.AgainstNullAndEmpty(nameof(ruleName), ruleName);
 
             MessagingEventSource.Log.RemoveRuleStart(this.ClientId, ruleName);
 

@@ -35,14 +35,8 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <param name="expiresAtUtc">The expiration time</param>
         public SecurityToken(string tokenString, DateTime expiresAtUtc, string audience)
         {
-            if (string.IsNullOrWhiteSpace(tokenString))
-            {
-                throw Fx.Exception.ArgumentNull(nameof(tokenString));
-            }
-            if (string.IsNullOrWhiteSpace(audience))
-            {
-                throw Fx.Exception.ArgumentNull(nameof(audience));
-            }
+            Guard.AgainstNullAndEmpty(nameof(tokenString), tokenString);
+            Guard.AgainstNullAndEmpty(nameof(audience), audience);
 
             this.token = tokenString;
             this.expiresAtUtc = expiresAtUtc;
@@ -55,10 +49,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <param name="expiresAtUtc">The expiration time</param>
         public SecurityToken(string tokenString, DateTime expiresAtUtc)
         {
-            if (string.IsNullOrWhiteSpace(tokenString))
-            {
-                throw Fx.Exception.ArgumentNull(nameof(tokenString));
-            }
+            Guard.AgainstNullAndEmpty(nameof(tokenString), tokenString);
 
             this.token = tokenString;
             this.expiresAtUtc = expiresAtUtc;
@@ -70,10 +61,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// </summary>
         public SecurityToken(string tokenString)
         {
-            if (string.IsNullOrWhiteSpace(tokenString))
-            {
-                throw Fx.Exception.ArgumentNull(nameof(tokenString));
-            }
+            Guard.AgainstNullAndEmpty(nameof(tokenString), tokenString);
 
             this.token = tokenString;
             this.GetExpirationDateAndAudienceFromToken(tokenString, out this.expiresAtUtc, out this.audience);
@@ -111,7 +99,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 var pair = valueEncodedPairAsString.Split(new[] { keyValueSeparator }, StringSplitOptions.None);
                 if (pair.Length != 2)
                 {
-                    throw new FormatException(Resources.InvalidEncoding);
+                    throw new FormatException("The string has an invalid encoding format.");
                 }
 
                 dictionary.Add(keyDecoder(pair[0]), valueDecoder(pair[1]));
@@ -125,23 +113,25 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             var decodedToken = Decode(token, Decoder, Decoder, this.KeyValueSeparator, this.PairSeparator);
             if (!decodedToken.TryGetValue(this.AudienceFieldName, out var audience))
             {
-                throw new FormatException(Resources.TokenMissingAudience);
+                throw new FormatException(TokenMissingAudience);
             }
 
             return audience;
         }
+
+        private const string TokenMissingAudience = "The provided token does not specify the 'Audience' value.";
 
         void GetExpirationDateAndAudienceFromToken(string token, out DateTime expiresOn, out string audience)
         {
             IDictionary<string, string> decodedToken = Decode(token, Decoder, Decoder, this.KeyValueSeparator, this.PairSeparator);
             if (!decodedToken.TryGetValue(this.ExpiresOnFieldName, out var expiresIn))
             {
-                throw new FormatException(Resources.TokenMissingExpiresOn);
+                throw new FormatException("The provided token does not specify the 'ExpiresOn' value.");
             }
 
             if (!decodedToken.TryGetValue(this.AudienceFieldName, out audience))
             {
-                throw new FormatException(Resources.TokenMissingAudience);
+                throw new FormatException(TokenMissingAudience);
             }
 
             expiresOn = (EpochTime + TimeSpan.FromSeconds(double.Parse(expiresIn, CultureInfo.InvariantCulture)));

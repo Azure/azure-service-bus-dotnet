@@ -91,14 +91,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             int prefetchCount = Constants.DefaultClientPrefetchCount)
             : this(entityPath, null, receiveMode, new ServiceBusNamespaceConnection(connectionString), null, retryPolicy, prefetchCount)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
+            Guard.AgainstNullAndEmpty(nameof(connectionString), connectionString);
+            Guard.AgainstNullAndEmpty(nameof(entityPath), entityPath);
 
             this.ownsConnection = true;
             var tokenProvider = this.ServiceBusConnection.CreateTokenProvider();
@@ -117,9 +111,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             bool isSessionReceiver = false)
             : base(nameof(MessageReceiver), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
-            MessagingEventSource.Log.MessageReceiverCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath, receiveMode.ToString());
+            Guard.AgainstNull(nameof(serviceBusConnection), serviceBusConnection);
+            MessagingEventSource.Log.MessageReceiverCreateStart(serviceBusConnection.Endpoint.Authority, entityPath, receiveMode.ToString());
 
-            this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
+            this.ServiceBusConnection = serviceBusConnection;
             this.ReceiveMode = receiveMode;
             this.OperationTimeout = serviceBusConnection.OperationTimeout;
             this.Path = entityPath;
@@ -173,10 +168,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             set
             {
-                if (value < 0)
-                {
-                    throw Fx.Exception.ArgumentOutOfRange(nameof(this.PrefetchCount), value, "Value cannot be less than 0.");
-                }
+                Guard.AgainstNegative(nameof(this.PrefetchCount), value);
                 this.prefetchCount = value;
                 if (this.ReceiveLinkManager.TryGetOpenedObject(out var link))
                 {
@@ -193,11 +185,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             internal set
             {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(this.LastPeekedSequenceNumber), value.ToString());
-                }
-
+                Guard.AgainstNegative(nameof(this.LastPeekedSequenceNumber), value);
                 this.lastPeekedSequenceNumber = value;
             }
         }
@@ -292,10 +280,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             this.ThrowIfClosed();
 
-            if (operationTimeout <= TimeSpan.Zero)
-            {
-                throw Fx.Exception.ArgumentOutOfRange(nameof(operationTimeout), operationTimeout, Resources.TimeoutMustBePositiveNonZero.FormatForUser(nameof(operationTimeout), operationTimeout));
-            }
+            Guard.AgainstNegativeAndZero(nameof(operationTimeout), operationTimeout);
 
             MessagingEventSource.Log.MessageReceiveStart(this.ClientId, maxMessageCount);
 
@@ -355,15 +340,9 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
 
-            if (sequenceNumbers == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(sequenceNumbers));
-            }
+            Guard.AgainstNull(nameof(sequenceNumbers), sequenceNumbers);
             var sequenceNumberList = sequenceNumbers.ToArray();
-            if (sequenceNumberList.Length == 0)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(sequenceNumbers));
-            }
+            Guard.AgainstEmpty(nameof(sequenceNumbers), sequenceNumberList);
 
             MessagingEventSource.Log.MessageReceiveDeferredMessageStart(this.ClientId, sequenceNumberList.Length, sequenceNumberList);
 
@@ -415,15 +394,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
-            if (lockTokens == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(lockTokens));
-            }
+
+            Guard.AgainstNull(nameof(lockTokens), lockTokens);
             var lockTokenList = lockTokens.ToList();
-            if (lockTokenList.Count == 0)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(lockTokens));
-            }
+            Guard.AgainstEmpty(nameof(lockTokens), lockTokenList);
 
             MessagingEventSource.Log.MessageCompleteStart(this.ClientId, lockTokenList.Count, lockTokenList);
 
@@ -684,14 +658,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
             this.ThrowIfClosed();
-            if (serviceBusPlugin == null)
-            {
-                throw new ArgumentNullException(nameof(serviceBusPlugin), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPlugin)));
-            }
-            if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
-            {
-                throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
-            }
+            Guard.AgainstNull(nameof(serviceBusPlugin), serviceBusPlugin);
+            Guard.AgainstPluginRegistered(nameof(serviceBusPlugin), this.RegisteredPlugins, serviceBusPlugin);
             this.RegisteredPlugins.Add(serviceBusPlugin);
         }
 
@@ -706,10 +674,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 return;
             }
-            if (string.IsNullOrWhiteSpace(serviceBusPluginName))
-            {
-                throw new ArgumentNullException(nameof(serviceBusPluginName), Resources.ArgumentNullOrWhiteSpace.FormatForUser(nameof(serviceBusPluginName)));
-            }
+            Guard.AgainstNullAndEmpty(nameof(serviceBusPluginName), serviceBusPluginName);
             if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPluginName))
             {
                 var plugin = this.RegisteredPlugins.First(p => p.Name == serviceBusPluginName);
@@ -726,13 +691,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             if (!source.FilterSet.TryGetValue<string>(AmqpClientConstants.SessionFilterName, out var tempSessionId))
             {
                 receivingAmqpLink.Session.SafeClose();
-                throw new ServiceBusException(true, Resources.SessionFilterMissing);
+                throw new ServiceBusException(true, "Session filter is missing on the link.");
             }
 
             if (string.IsNullOrWhiteSpace(tempSessionId))
             {
                 receivingAmqpLink.Session.SafeClose();
-                throw new ServiceBusException(true, Resources.AmqpFieldSessionId);
+                throw new ServiceBusException(true, "No session-id was specified for a session receiver.");
             }
 
             receivingAmqpLink.Closed += this.OnSessionReceiverLinkClosed;
@@ -1036,7 +1001,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 if (this.receivePump != null)
                 {
-                    throw new InvalidOperationException(Resources.MessageHandlerAlreadyRegistered);
+                    throw new InvalidOperationException("A message handler has already been registered.");
                 }
 
                 this.receivePumpCancellationTokenSource = new CancellationTokenSource();
@@ -1154,12 +1119,9 @@ namespace Microsoft.Azure.ServiceBus.Core
                     {
                         if (error.Condition.Equals(AmqpErrorCode.NotFound))
                         {
-                            if (this.isSessionReceiver)
-                            {
-                                throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
-                            }
+                            ThrowIfSessionReceiver();
 
-                            throw new MessageLockLostException(Resources.MessageLockLost);
+                            throw new MessageLockLostException(MessageLockLost);
                         }
 
                         throw error.ToMessagingContractException();
@@ -1173,15 +1135,23 @@ namespace Microsoft.Azure.ServiceBus.Core
                 {
                     // The link state is lost, We need to return a non-retriable error.
                     MessagingEventSource.Log.LinkStateLost(this.ClientId, receiveLink.Name, receiveLink.State, this.isSessionReceiver, exception);
-                    if (this.isSessionReceiver)
-                    {
-                        throw new SessionLockLostException(Resources.SessionLockExpiredOnMessageSession);
-                    }
 
-                    throw new MessageLockLostException(Resources.MessageLockLost);
+                    ThrowIfSessionReceiver();
+
+                    throw new MessageLockLostException(MessageLockLost);
                 }
 
                 throw AmqpExceptionHelper.GetClientException(exception);
+            }
+        }
+
+        private const string MessageLockLost = "The lock supplied is invalid. Either the lock expired, or the message has already been removed from the queue, or was received by a different receiver instance.";
+
+        private void ThrowIfSessionReceiver()
+        {
+            if (this.isSessionReceiver)
+            {
+                throw new SessionLockLostException("The session lock has expired on the MessageSession. Accept a new MessageSession.");
             }
         }
 
@@ -1305,7 +1275,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             if (this.ReceiveMode != ReceiveMode.PeekLock)
             {
-                throw Fx.Exception.AsError(new InvalidOperationException("The operation is only supported in 'PeekLock' receive mode."));
+                throw new InvalidOperationException("The operation is only supported in 'PeekLock' receive mode.");
             }
         }
 

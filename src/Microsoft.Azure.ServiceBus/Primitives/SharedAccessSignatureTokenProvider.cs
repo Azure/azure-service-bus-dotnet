@@ -46,30 +46,10 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         protected SharedAccessSignatureTokenProvider(string keyName, string sharedAccessKey, Func<string, byte[]> customKeyEncoder, TimeSpan tokenTimeToLive, TokenScope tokenScope)
             : base(tokenScope)
         {
-            if (string.IsNullOrEmpty(keyName))
-            {
-                throw new ArgumentNullException(nameof(keyName));
-            }
-
-            if (keyName.Length > SharedAccessSignatureToken.MaxKeyNameLength)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(keyName),
-                    Resources.ArgumentStringTooBig.FormatForUser(nameof(keyName), SharedAccessSignatureToken.MaxKeyNameLength));
-            }
-
-            if (string.IsNullOrEmpty(sharedAccessKey))
-            {
-                throw new ArgumentNullException(nameof(sharedAccessKey));
-            }
-
-            if (sharedAccessKey.Length > SharedAccessSignatureToken.MaxKeyLength)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(sharedAccessKey),
-                    Resources.ArgumentStringTooBig.FormatForUser(nameof(sharedAccessKey), SharedAccessSignatureToken.MaxKeyLength));
-            }
-
+            Guard.AgainstNullAndEmpty(nameof(keyName), keyName);
+            Guard.AgainstTooLong(nameof(keyName), keyName, SharedAccessSignatureToken.MaxKeyNameLength);
+            Guard.AgainstNullAndEmpty(nameof(sharedAccessKey), sharedAccessKey);
+            Guard.AgainstTooLong(nameof(sharedAccessKey), sharedAccessKey, SharedAccessSignatureToken.MaxKeyLength);
             this.keyName = keyName;
             this.tokenTimeToLive = tokenTimeToLive;
             this.encodedSharedAccessKey = customKeyEncoder != null ?
@@ -180,10 +160,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
             internal static void Validate(string sharedAccessSignature)
             {
-                if (string.IsNullOrEmpty(sharedAccessSignature))
-                {
-                    throw new ArgumentNullException(nameof(sharedAccessSignature));
-                }
+                Guard.AgainstNullAndEmpty(nameof(sharedAccessSignature), sharedAccessSignature);
 
                 IDictionary<string, string> parsedFields = ExtractFieldValues(sharedAccessSignature);
 

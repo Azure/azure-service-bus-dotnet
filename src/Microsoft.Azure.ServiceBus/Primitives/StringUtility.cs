@@ -33,27 +33,11 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         }
 
         /// <summary>
-        /// Formats a string+parameters using CurrentCulture.
-        /// </summary>
-        public static string FormatForUser(this string format, params object[] args)
-        {
-            return string.Format(CultureInfo.CurrentCulture, format, args);
-        }
-
-        /// <summary>
         /// Formats a string+parameter using InvariantCulture.  This overload avoids allocating an array when there's only one replacement parameter
         /// </summary>
         public static string FormatInvariant(this string format, object arg0)
         {
             return string.Format(CultureInfo.InvariantCulture, format, arg0);
-        }
-
-        /// <summary>
-        /// Formats a string+parameters using InvariantCulture.
-        /// </summary>
-        public static string FormatInvariant(this string format, params object[] args)
-        {
-            return string.Format(CultureInfo.InvariantCulture, format, args);
         }
     }
 }
