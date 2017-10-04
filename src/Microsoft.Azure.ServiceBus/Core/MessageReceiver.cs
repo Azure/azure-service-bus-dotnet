@@ -1033,17 +1033,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 throw new ArgumentOutOfRangeException(nameof(deadLetterErrorDescription), $"Max permitted length is {Constants.MaxDeadLetterReasonLength}");
             }
-
-            if (deadLetterReason != null && propertiesToModify != null && propertiesToModify.ContainsKey(Message.DeadLetterReasonHeader))
-            {
-                throw new ArgumentException(nameof(propertiesToModify), $"Cannot provide {nameof(deadLetterReason)} param and modify property {Message.DeadLetterReasonHeader} at the same time");
-            }
-
-            if (deadLetterErrorDescription != null && propertiesToModify != null && propertiesToModify.ContainsKey(Message.DeadLetterErrorDescriptionHeader))
-            {
-                throw new ArgumentException(nameof(propertiesToModify), $"Cannot provide {nameof(deadLetterErrorDescription)} param and modify property {Message.DeadLetterErrorDescriptionHeader} at the same time");
-            }
-
+            
             var lockTokens = new[] { new Guid(lockToken) };
             if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
