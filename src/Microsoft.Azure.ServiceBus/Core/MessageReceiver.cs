@@ -121,7 +121,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
             this.ReceiveMode = receiveMode;
-            this.OperationTimeout = serviceBusConnection.OperationTimeout;
             this.Path = entityPath;
             this.EntityType = entityType;
             this.CbsTokenProvider = cbsTokenProvider;
@@ -512,7 +511,26 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        public async Task DeadLetterAsync(string lockToken)
+        public Task DeadLetterAsync(string lockToken)
+        {
+            return DeadLetterAsync(lockToken, null);
+        }
+
+        /// <summary>
+        /// Moves a message to the deadletter sub-queue.
+        /// </summary>
+        /// <param name="lockToken">The lock token of the corresponding message to deadletter.</param>
+        /// <param name="deadLetterReason">The reason for deadlettering the message.</param>
+        /// <param name="deadLetterErrorDescription">The error description for deadlettering the message.</param>
+        /// <param name="propertiesToModify">The properties of the message to modify while moving to sub-queue.</param>
+        /// <remarks>
+        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
+        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
+        /// In order to receive a message from the deadletter queue, you will need a new <see cref="IMessageReceiver"/>, with the corresponding path.
+        /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
+        /// This operation can only be performed on messages that were received by this receiver.
+        /// </remarks>
+        public async Task DeadLetterAsync(string lockToken, string deadLetterReason, string deadLetterErrorDescription = null, IDictionary<string, object> propertiesToModify = null)
         {
             this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
@@ -521,7 +539,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                await this.RetryPolicy.RunOperation(() => this.OnDeadLetterAsync(lockToken), this.OperationTimeout)
+                await this.RetryPolicy.RunOperation(() => this.OnDeadLetterAsync(lockToken, propertiesToModify, deadLetterReason, deadLetterErrorDescription), this.OperationTimeout)
                     .ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -986,19 +1004,40 @@ namespace Microsoft.Azure.ServiceBus.Core
             return this.DisposeMessagesAsync(lockTokens, new Modified { UndeliverableHere = true });
         }
 
-        protected virtual Task OnDeadLetterAsync(string lockToken)
+        protected virtual Task OnDeadLetterAsync(string lockToken, IDictionary<string, object> propertiesToModify = null, string deadLetterReason = null, string deadLetterErrorDescription = null)
         {
+            if (deadLetterReason != null && deadLetterReason.Length > Constants.MaxDeadLetterReasonLength)
+            {
+                throw new ArgumentOutOfRangeException(nameof(deadLetterReason), $"Max permitted length is {Constants.MaxDeadLetterReasonLength}");
+            }
+
+            if (deadLetterErrorDescription != null && deadLetterErrorDescription.Length > Constants.MaxDeadLetterReasonLength)
+            {
+                throw new ArgumentOutOfRangeException(nameof(deadLetterErrorDescription), $"Max permitted length is {Constants.MaxDeadLetterReasonLength}");
+            }
+
+            if (deadLetterReason != null && propertiesToModify.ContainsKey(Message.DeadLetterReasonHeader))
+            {
+                throw new ArgumentException(nameof(propertiesToModify), $"Cannot provide {nameof(deadLetterReason)} param and modify property {Message.DeadLetterReasonHeader} at the same time");
+            }
+
+            if (deadLetterErrorDescription != null && propertiesToModify.ContainsKey(Message.DeadLetterErrorDescriptionHeader))
+            {
+                throw new ArgumentException(nameof(propertiesToModify), $"Cannot provide {nameof(deadLetterErrorDescription)} param and modify property {Message.DeadLetterErrorDescriptionHeader} at the same time");
+            }
+
             var lockTokens = new[] { new Guid(lockToken) };
             if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
-                return this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended);
+                return this.DisposeMessageRequestResponseAsync(lockTokens, DispositionStatus.Suspended, propertiesToModify, deadLetterReason, deadLetterErrorDescription);
             }
-            return this.DisposeMessagesAsync(lockTokens, AmqpConstants.RejectedOutcome);
+
+            return this.DisposeMessagesAsync(lockTokens, GetRejectedOutcome(propertiesToModify, deadLetterReason, deadLetterErrorDescription));
         }
 
         protected virtual async Task<DateTime> OnRenewLockAsync(string lockToken)
         {
-            var lockedUntilUtc = DateTime.MinValue;
+            DateTime lockedUntilUtc;
             try
             {
                 // Create an AmqpRequest Message to renew  lock
@@ -1185,7 +1224,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        async Task DisposeMessageRequestResponseAsync(Guid[] lockTokens, DispositionStatus dispositionStatus)
+        async Task DisposeMessageRequestResponseAsync(Guid[] lockTokens, DispositionStatus dispositionStatus, IDictionary<string, object> propertiesToModify = null, string deadLetterReason = null, string deadLetterDescription = null)
         {
             try
             {
@@ -1193,6 +1232,39 @@ namespace Microsoft.Azure.ServiceBus.Core
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.UpdateDispositionOperation, this.OperationTimeout, null);
                 amqpRequestMessage.Map[ManagementConstants.Properties.LockTokens] = lockTokens;
                 amqpRequestMessage.Map[ManagementConstants.Properties.DispositionStatus] = dispositionStatus.ToString().ToLowerInvariant();
+
+                if (deadLetterReason != null)
+                {
+                    amqpRequestMessage.Map[ManagementConstants.Properties.DeadLetterReason] = deadLetterReason;
+                }
+
+                if (deadLetterDescription != null)
+                {
+                    amqpRequestMessage.Map[ManagementConstants.Properties.DeadLetterDescription] = deadLetterDescription;
+                }
+
+                if (propertiesToModify != null)
+                {
+                    var amqpPropertiesToModify = new AmqpMap();
+                    foreach (var pair in propertiesToModify)
+                    {
+                        object amqpObject;
+                        if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
+                        {
+                            amqpPropertiesToModify[new MapKey(pair.Key)] = amqpObject;
+                        }
+                    }
+
+                    if (amqpPropertiesToModify.Count > 0)
+                    {
+                        amqpRequestMessage.Map[ManagementConstants.Properties.PropertiesToModify] = amqpPropertiesToModify;
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(this.SessionIdInternal))
+                {
+                    amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionIdInternal;
+                }
 
                 var amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
                 if (amqpResponseMessage.StatusCode != AmqpResponseStatusCode.OK)
@@ -1315,6 +1387,38 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 throw this.LinkException;
             }
+        }
+
+        Rejected GetRejectedOutcome(IDictionary<string, object> propertiesToModify, string deadLetterReason, string deadLetterErrorDescription)
+        {
+            var rejected = AmqpConstants.RejectedOutcome;
+            if (deadLetterReason != null || deadLetterErrorDescription != null || propertiesToModify != null)
+            {
+                rejected = new Rejected { Error = new Error { Condition = AmqpClientConstants.DeadLetterName, Info = new Fields() } };
+                if (deadLetterReason != null)
+                {
+                    rejected.Error.Info.Add(Message.DeadLetterReasonHeader, deadLetterReason);
+                }
+
+                if (deadLetterErrorDescription != null)
+                {
+                    rejected.Error.Info.Add(Message.DeadLetterErrorDescriptionHeader, deadLetterErrorDescription);
+                }
+
+                if (propertiesToModify != null)
+                {
+                    foreach (var pair in propertiesToModify)
+                    {
+                        object amqpObject;
+                        if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
+                        {
+                            rejected.Error.Info.Add(pair.Key, amqpObject);
+                        }
+                    }
+                }
+            }
+
+            return rejected;
         }
     }
 }

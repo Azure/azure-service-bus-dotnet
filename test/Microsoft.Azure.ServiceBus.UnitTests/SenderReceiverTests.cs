@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.Amqp;
+using Microsoft.Azure.ServiceBus.Amqp;
+
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
@@ -230,6 +233,45 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             lock (syncLock)
             {
                 Assert.True(exceptionReceived, "Did not receive ObjectDisposedException"); 
+            }
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task DeadLetterReasonShouldPropagateToTheReceivedMessage()
+        {
+            var queueName = TestConstants.NonPartitionedQueueName;
+
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName);
+            var dlqReceiver = new MessageReceiver(TestUtility.NamespaceConnectionString, EntityNameHelper.FormatDeadLetterPath(queueName), ReceiveMode.ReceiveAndDelete);
+
+            try
+            {
+                await sender.SendAsync(new Message(Encoding.UTF8.GetBytes("deadLetterTest2")));
+                var message = await receiver.ReceiveAsync();
+                await receiver.DeadLetterAsync(
+                    message.SystemProperties.LockToken,
+                    "deadLetterReason",
+                    "deadLetterDescription",
+                    new Dictionary<string, object>
+                    {
+                        {"key1", "value1"}
+                    });
+                var dlqMessage = await dlqReceiver.ReceiveAsync();
+
+                Assert.True(dlqMessage.UserProperties.ContainsKey(Message.DeadLetterReasonHeader));
+                Assert.True(dlqMessage.UserProperties.ContainsKey(Message.DeadLetterErrorDescriptionHeader));
+                Assert.True(dlqMessage.UserProperties.ContainsKey("key1"));
+                Assert.Equal(dlqMessage.UserProperties[Message.DeadLetterReasonHeader], "deadLetterReason");
+                Assert.Equal(dlqMessage.UserProperties[Message.DeadLetterErrorDescriptionHeader], "deadLetterDescription");
+                Assert.Equal(dlqMessage.UserProperties["key1"], "value1");
+            }
+            finally
+            {
+                await sender.CloseAsync();
+                await receiver.CloseAsync();
+                await dlqReceiver.CloseAsync();
             }
         }
     }

@@ -357,6 +357,26 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
+        /// Moves a message to the deadletter sub-queue.
+        /// </summary>
+        /// <param name="lockToken">The lock token of the corresponding message to deadletter.</param>
+        /// <param name="deadLetterReason">The reason for deadlettering the message.</param>
+        /// <param name="deadLetterErrorDescription">The error description for deadlettering the message.</param>
+        /// <param name="propertiesToModify">The properties of the message to modify while moving to sub-queue.</param>
+        /// <remarks>
+        /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
+        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
+        /// In order to receive a message from the deadletter queue, you will need a new <see cref="IMessageReceiver"/>, with the corresponding path.
+        /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
+        /// This operation can only be performed on messages that were received by this receiver.
+        /// </remarks>
+        public Task DeadLetterAsync(string lockToken, string deadLetterReason, string deadLetterErrorDescription = null, IDictionary<string, object> propertiesToModify = null)
+        {
+            this.ThrowIfClosed();
+            return this.InnerReceiver.DeadLetterAsync(lockToken, deadLetterReason, deadLetterErrorDescription, propertiesToModify);
+        }
+
+        /// <summary>
         /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
         /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
