@@ -14,12 +14,12 @@ namespace Microsoft.Azure.ServiceBus
     public class Message
     {
         /// <summary>
-        /// User property key representing dead letter reason, when a message is received from a dead-letter subqueue of an entity.
+        /// User property key representing deadletter reason, when a message is received from a deadletter subqueue of an entity.
         /// </summary>
         public static string DeadLetterReasonHeader = "DeadLetterReason";
 
         /// <summary>
-        /// User property key representing detailed error description, when a message is received from a dead-letter subqueue of an entity.
+        /// User property key representing detailed error description, when a message is received from a deadletter subqueue of an entity.
         /// </summary>
         public static string DeadLetterErrorDescriptionHeader = "DeadLetterErrorDescription";
 
