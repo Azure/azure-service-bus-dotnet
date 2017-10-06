@@ -1256,8 +1256,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     var amqpPropertiesToModify = new AmqpMap();
                     foreach (var pair in propertiesToModify)
                     {
-                        object amqpObject;
-                        if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
+                        if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out var amqpObject))
                         {
                             amqpPropertiesToModify[new MapKey(pair.Key)] = amqpObject;
                         }
@@ -1420,8 +1419,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 modified.MessageAnnotations = new Fields();
                 foreach (var pair in propertiesToModify)
                 {
-                    object amqpObject;
-                    if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
+                    if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out var amqpObject))
                     {
                         modified.MessageAnnotations.Add(pair.Key, amqpObject);
                     }
@@ -1447,15 +1445,11 @@ namespace Microsoft.Azure.ServiceBus.Core
                     rejected.Error.Info.Add(Message.DeadLetterErrorDescriptionHeader, deadLetterErrorDescription);
                 }
 
-                if (propertiesToModify != null)
+                foreach (var pair in propertiesToModify)
                 {
-                    foreach (var pair in propertiesToModify)
+                    if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out var amqpObject))
                     {
-                        object amqpObject;
-                        if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
-                        {
-                            rejected.Error.Info.Add(pair.Key, amqpObject);
-                        }
+                        rejected.Error.Info.Add(pair.Key, amqpObject);
                     }
                 }
             }
