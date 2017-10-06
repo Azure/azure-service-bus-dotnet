@@ -192,15 +192,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             TestUtility.Log("Begin to receive from an empty queue.");
             Task throwingTask;
-            bool exceptionReceived = false;
-            object syncLock = new object();
+            var exceptionReceived = false;
+            var syncLock = new object();
             try
             {
                 throwingTask = new Task(async () =>
                 {
                     try
                     {
-                        await receiver.ReceiveAsync(TimeSpan.FromSeconds(40));
+                        var message = await receiver.ReceiveAsync(TimeSpan.FromSeconds(40));
+                        throw new Exception($"Received unexpected message: {Encoding.ASCII.GetString(message.Body)}");
                     }
                     catch (ObjectDisposedException)
                     {
@@ -224,8 +225,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 TestUtility.Log("Closed Receiver");
             }
 
-            TestUtility.Log("Waiting for 4 Secs");
-            await Task.Delay(4000);
+            TestUtility.Log("Waiting for maximum 10 Secs");
+            var waitingTask = Task.Delay(10000);
+            await Task.WhenAny(throwingTask, waitingTask);
+
             Assert.True(throwingTask.IsCompleted, "ReceiveAsync did not return immediately after closing connection");
             lock (syncLock)
             {
