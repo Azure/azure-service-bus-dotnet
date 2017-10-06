@@ -247,12 +247,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 await sender.SendAsync(new Message(Encoding.UTF8.GetBytes("deadLetterTest2")));
                 var message = await receiver.ReceiveAsync();
+                Assert.NotNull(message);
+
                 await receiver.DeadLetterAsync(
                     message.SystemProperties.LockToken,
                     "deadLetterReason",
                     "deadLetterDescription");
                 var dlqMessage = await dlqReceiver.ReceiveAsync();
 
+                Assert.NotNull(dlqMessage);
                 Assert.True(dlqMessage.UserProperties.ContainsKey(Message.DeadLetterReasonHeader));
                 Assert.True(dlqMessage.UserProperties.ContainsKey(Message.DeadLetterErrorDescriptionHeader));
                 Assert.Equal(dlqMessage.UserProperties[Message.DeadLetterReasonHeader], "deadLetterReason");
@@ -280,12 +283,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await sender.SendAsync(new Message(Encoding.UTF8.GetBytes("propertiesToUpdate")));
 
                 var message = await receiver.ReceiveAsync();
+                Assert.NotNull(message);
                 await receiver.AbandonAsync(message.SystemProperties.LockToken, new Dictionary<string, object>
                 {
                     {"key", "value1"}
                 });
 
                 message = await receiver.ReceiveAsync();
+                Assert.NotNull(message);
                 Assert.True(message.UserProperties.ContainsKey("key"));
                 Assert.Equal(message.UserProperties["key"], "value1");
 
@@ -296,6 +301,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 });
 
                 message = await receiver.ReceiveDeferredMessageAsync(sequenceNumber);
+                Assert.NotNull(message);
                 Assert.True(message.UserProperties.ContainsKey("key"));
                 Assert.Equal(message.UserProperties["key"], "value2");
 
