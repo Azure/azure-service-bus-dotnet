@@ -200,7 +200,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     try
                     {
-                        await Task.Delay(10000);
                         var message = await receiver.ReceiveAsync(TimeSpan.FromSeconds(40));
                         throw new Exception($"Received unexpected message: {Encoding.ASCII.GetString(message.Body)}");
                     }
