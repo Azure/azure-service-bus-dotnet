@@ -218,17 +218,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 throwingTask.Start();
                 await Task.Delay(1000);
                 TestUtility.Log("Waited for 1 Sec");
+
+                TestUtility.Log("Waiting for maximum 10 Secs");
+                var waitingTask = Task.Delay(10000);
+                await Task.WhenAny(throwingTask, waitingTask);
             }
             finally
             {
                 await receiver.CloseAsync().ConfigureAwait(false);
                 TestUtility.Log("Closed Receiver");
             }
-
-            TestUtility.Log("Waiting for maximum 10 Secs");
-            var waitingTask = Task.Delay(10000);
-            await Task.WhenAny(throwingTask, waitingTask);
-
+            
             Assert.True(throwingTask.IsCompleted, "ReceiveAsync did not return immediately after closing connection");
             lock (syncLock)
             {
