@@ -1026,12 +1026,12 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             if (deadLetterReason != null && deadLetterReason.Length > Constants.MaxDeadLetterReasonLength)
             {
-                throw new ArgumentOutOfRangeException(nameof(deadLetterReason), $"Max permitted length is {Constants.MaxDeadLetterReasonLength}");
+                throw new ArgumentOutOfRangeException(nameof(deadLetterReason), $"Maximum permitted length is {Constants.MaxDeadLetterReasonLength}");
             }
 
             if (deadLetterErrorDescription != null && deadLetterErrorDescription.Length > Constants.MaxDeadLetterReasonLength)
             {
-                throw new ArgumentOutOfRangeException(nameof(deadLetterErrorDescription), $"Max permitted length is {Constants.MaxDeadLetterReasonLength}");
+                throw new ArgumentOutOfRangeException(nameof(deadLetterErrorDescription), $"Maximum permitted length is {Constants.MaxDeadLetterReasonLength}");
             }
             
             var lockTokens = new[] { new Guid(lockToken) };
@@ -1260,6 +1260,10 @@ namespace Microsoft.Azure.ServiceBus.Core
                         {
                             amqpPropertiesToModify[new MapKey(pair.Key)] = amqpObject;
                         }
+                        else
+                        {
+                            throw new NotSupportedException(Resources.InvalidAmqpMessageProperty.FormatForUser(pair.Key.GetType()));
+                        }
                     }
 
                     if (amqpPropertiesToModify.Count > 0)
@@ -1423,6 +1427,10 @@ namespace Microsoft.Azure.ServiceBus.Core
                     {
                         modified.MessageAnnotations.Add(pair.Key, amqpObject);
                     }
+                    else
+                    {
+                        throw new NotSupportedException(Resources.InvalidAmqpMessageProperty.FormatForUser(pair.Key.GetType()));
+                    }
                 }
             }
 
@@ -1450,6 +1458,10 @@ namespace Microsoft.Azure.ServiceBus.Core
                     if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out var amqpObject))
                     {
                         rejected.Error.Info.Add(pair.Key, amqpObject);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(Resources.InvalidAmqpMessageProperty.FormatForUser(pair.Key.GetType()));
                     }
                 }
             }
