@@ -196,10 +196,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var syncLock = new object();
             try
             {
-                throwingTask = new Task(async () =>
+                throwingTask = Task.Run(async () =>
                 {
                     try
                     {
+                        await Task.Delay(10000);
                         var message = await receiver.ReceiveAsync(TimeSpan.FromSeconds(40));
                         throw new Exception($"Received unexpected message: {Encoding.ASCII.GetString(message.Body)}");
                     }
@@ -210,25 +211,24 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                             exceptionReceived = true;
                         }
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         TestUtility.Log("Unexpected exception: " + e);
                     }
                 });
-                throwingTask.Start();
                 await Task.Delay(1000);
                 TestUtility.Log("Waited for 1 Sec");
-
-                TestUtility.Log("Waiting for maximum 10 Secs");
-                var waitingTask = Task.Delay(10000);
-                await Task.WhenAny(throwingTask, waitingTask);
             }
             finally
             {
                 await receiver.CloseAsync().ConfigureAwait(false);
                 TestUtility.Log("Closed Receiver");
             }
-            
+
+            TestUtility.Log("Waiting for maximum 10 Secs");
+            var waitingTask = Task.Delay(10000);
+            await Task.WhenAny(throwingTask, waitingTask);
+
             Assert.True(throwingTask.IsCompleted, "ReceiveAsync did not return immediately after closing connection");
             lock (syncLock)
             {
