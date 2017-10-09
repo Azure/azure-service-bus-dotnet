@@ -1453,15 +1453,18 @@ namespace Microsoft.Azure.ServiceBus.Core
                     rejected.Error.Info.Add(Message.DeadLetterErrorDescriptionHeader, deadLetterErrorDescription);
                 }
 
-                foreach (var pair in propertiesToModify)
+                if (propertiesToModify != null)
                 {
-                    if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out var amqpObject))
+                    foreach (var pair in propertiesToModify)
                     {
-                        rejected.Error.Info.Add(pair.Key, amqpObject);
-                    }
-                    else
-                    {
-                        throw new NotSupportedException(Resources.InvalidAmqpMessageProperty.FormatForUser(pair.Key.GetType()));
+                        if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out var amqpObject))
+                        {
+                            rejected.Error.Info.Add(pair.Key, amqpObject);
+                        }
+                        else
+                        {
+                            throw new NotSupportedException(Resources.InvalidAmqpMessageProperty.FormatForUser(pair.Key.GetType()));
+                        }
                     }
                 }
             }
