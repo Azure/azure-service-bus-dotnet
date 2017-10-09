@@ -215,8 +215,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                         TestUtility.Log("Unexpected exception: " + e);
                     }
                 });
-                await Task.Delay(1000);
-                TestUtility.Log("Waited for 1 Sec");
+                await Task.Delay(2000);
+                TestUtility.Log("Waited for 2 Seconds for the ReceiveAsync to establish connection.");
             }
             finally
             {
