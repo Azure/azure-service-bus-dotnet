@@ -9,8 +9,11 @@ namespace Microsoft.Azure.ServiceBus
     using Primitives;
 
     /// <summary>
-    /// The object used to communicate and transfer data with Service Bus.
+    /// The message object used to communicate and transfer data with Service Bus.
     /// </summary>
+    /// <remarks>
+    /// The message structure is discussed in detail in the <a href="https://docs.microsoft.com/azure/service-bus-messaging/service-bus-messages-payloads">product documentation.</a>
+    /// </remarks>
     public class Message
     {
         private string messageId;
@@ -57,7 +60,7 @@ namespace Microsoft.Azure.ServiceBus
         ///    The message identifier is an application-defined value that uniquely identifies the 
         ///    message and its payload. The identifier is a free-form string and can reflect a GUID 
         ///    or an identifier derived from the application context. If enabled, the 
-        ///    <a href="https://docs.microsoft.com/en-us/azure/service-bus-messaging/duplicate-detection">duplicate detection</a> 
+        ///    <a href="https://docs.microsoft.com/azure/service-bus-messaging/duplicate-detection">duplicate detection</a> 
         ///    feature identifies and removes second and further submissions of messages with the 
         ///    same MessageId.
         /// </remarks>
@@ -75,7 +78,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>Gets or sets a partition key for sending a message to a partitioned entity.</summary>
         /// <value>The partition key. Maximum length is 128 characters.</value>
         /// <remarks>
-        ///    For <a href="https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-partitioning">partitioned entities</a>, 
+        ///    For <a href="https://docs.microsoft.com/azure/service-bus-messaging/service-bus-partitioning">partitioned entities</a>, 
         ///    setting this value enables assigning related messages to the same internal partition, so that submission sequence 
         ///    order is correctly recorded. The partition is chosen by a hash function over this value and cannot be chosen 
         ///    directly. For session-aware entities, the <see cref="SessionId"/> property overrides this value.
@@ -97,7 +100,7 @@ namespace Microsoft.Azure.ServiceBus
         ///    If a message is sent via a transfer queue in the scope of a transaction, this value selects the 
         ///    transfer queue partition: This is functionally equivalent to <see cref="PartitionKey"/> and ensures that
         ///    messages are kept together and in order as they are transferred.
-        ///    See <a href="https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-transactions#transfers-and-send-via">Transfers and Send Via</a>.
+        ///    See <a href="https://docs.microsoft.com/azure/service-bus-messaging/service-bus-transactions#transfers-and-send-via">Transfers and Send Via</a>.
         /// </remarks>
         public string ViaPartitionKey
         {
@@ -117,7 +120,7 @@ namespace Microsoft.Azure.ServiceBus
         ///    affiliation of the message. Messages with the same session identifier are subject 
         ///    to summary locking and enable exact in-order processing and demultiplexing. 
         ///    For session-unaware entities, this value is ignored.
-        ///    See <a href="https://docs.microsoft.com/en-us/azure/service-bus-messaging/message-sessions">Message Sessions</a>.
+        ///    See <a href="https://docs.microsoft.com/azure/service-bus-messaging/message-sessions">Message Sessions</a>.
         /// </remarks>
         public string SessionId
         {
@@ -134,7 +137,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>Session identifier. Maximum length is 128 characters.</value>
         /// <remarks>
         ///    This value augments the ReplyTo information and specifies which SessionId should be set 
-        ///    for the reply when sent to the reply entity. See <a href="https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messages-payloads?#message-routing-and-correlation">Message Routing and Correlation</a>
+        ///    for the reply when sent to the reply entity. See <a href="https://docs.microsoft.com/azure/service-bus-messaging/service-bus-messages-payloads?#message-routing-and-correlation">Message Routing and Correlation</a>
         /// </remarks>
         public string ReplyToSessionId
         {
@@ -153,7 +156,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>
         ///  The UTC instant at which the message is marked for removal and no longer available for retrieval 
         ///  from the entity due to expiration. Expiry is controlled by the <see cref="TimeToLive"/> property 
-        ///  and this property is computed from <see cref="EnqueuedTimeUtc"/>+<see cref="TimeToLive"/></remarks>
+        ///  and this property is computed from <see cref="SystemPropertiesCollection.EnqueuedTimeUtc"/>+<see cref="TimeToLive"/></remarks>
         public DateTime ExpiresAtUtc
         {
             get
@@ -173,11 +176,11 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>The message’s time to live value.</value>
         /// <remarks>
         ///     This value is the relative duration after which the message expires, starting from the instant 
-        ///      the message has been accepted and stored by the broker, as captured in <see cref="EnqueueTimeUtc"/>. 
+        ///      the message has been accepted and stored by the broker, as captured in <see cref="SystemPropertiesCollection.EnqueuedTimeUtc"/>. 
         ///      When not set explicitly, the assumed value is the DefaultTimeToLive for the respective queue or topic. 
         ///      A message-level <see cref="TimeToLive"/> value cannot be longer than the entity's DefaultTimeToLive 
         ///      setting and it is silently adjusted if it does. 
-        ///      See <a href="https://docs.microsoft.com/en-us/azure/service-bus-messaging/message-expiration">Expiration</a>
+        ///      See <a href="https://docs.microsoft.com/azure/service-bus-messaging/message-expiration">Expiration</a>
         /// </remarks>
         public TimeSpan TimeToLive
         {
@@ -203,7 +206,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>
         ///    Allows an application to specify a context for the message for the purposes of correlation, 
         ///    for example reflecting the MessageId of a message that is being replied to.
-        ///    See <a href="https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messages-payloads?#message-routing-and-correlation">Message Routing and Correlation</a>.
+        ///    See <a href="https://docs.microsoft.com/azure/service-bus-messaging/service-bus-messages-payloads?#message-routing-and-correlation">Message Routing and Correlation</a>.
         /// </remarks>
         public string CorrelationId { get; set; }
 
@@ -220,7 +223,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>
         ///    This property is reserved for future use in routing scenarios and presently ignored by the broker itself. 
         ///     Applications can use this value in rule-driven 
-        ///     <a href="https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-auto-forwarding">auto-forward chaining</a> scenarios to indicate the 
+        ///     <a href="https://docs.microsoft.com/azure/service-bus-messaging/service-bus-auto-forwarding">auto-forward chaining</a> scenarios to indicate the 
         ///     intended logical destination of the message.
         /// </remarks>
         public string To { get; set; }
@@ -239,7 +242,7 @@ namespace Microsoft.Azure.ServiceBus
         ///    This optional and application-defined value is a standard way to express a reply path 
         ///    to the receiver of the message. When a sender expects a reply, it sets the value to the 
         ///    absolute or relative path of the queue or topic it expects the reply to be sent to.
-        ///    See <a href="https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messages-payloads?#message-routing-and-correlation">Message Routing and Correlation</a>.
+        ///    See <a href="https://docs.microsoft.com/azure/service-bus-messaging/service-bus-messages-payloads?#message-routing-and-correlation">Message Routing and Correlation</a>.
         /// </remarks>
         public string ReplyTo { get; set; }
 
@@ -280,7 +283,9 @@ namespace Microsoft.Azure.ServiceBus
             return string.Format(CultureInfo.CurrentCulture, $"{{MessageId:{this.MessageId}}}");
         }
 
-        /// <summary>Clones a message, so that it is possible to send a clone of an already received message as a new message.</summary>
+        /// <summary>Clones a message, so that it is possible to send a clone of an already received 
+        /// message as a new message. The system properties of original message 
+        /// are not copied.</summary>
         /// <returns>A cloned <see cref="Message" />.</returns>
         public Message Clone()
         {
@@ -349,7 +354,8 @@ namespace Microsoft.Azure.ServiceBus
             /// </summary>
             /// <remarks>
             ///   The lock token is a reference to the lock that is being held by the broker in <see cref="ReceiveMode.PeekLock"/> mode. 
-            ///   The token can be used to pin the lock permanently through the Deferral API and, with that, take the message out of the 
+            ///   Locks are used to explicitly settle messages as explained in the <a href="https://docs.microsoft.com/azure/service-bus-messaging/message-transfers-locks-settlement">product documentation in more detail</a>.
+            ///   The token can also be used to pin the lock permanently through the <a href="https://docs.microsoft.com/azure/service-bus-messaging/message-deferral">Deferral API</a> and, with that, take the message out of the 
             ///   regular delivery state flow. This property is read-only.
             /// </remarks>
             public string LockToken => this.LockTokenGuid.ToString();
