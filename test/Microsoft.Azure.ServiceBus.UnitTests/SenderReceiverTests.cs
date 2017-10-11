@@ -196,7 +196,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 quickTask = Task.Run(async () =>
                 {
-                    try
+                    await Assert.ThrowsAsync<ObjectDisposedException>(async () =>
                     {
                         await receiver.ReceiveAsync(TimeSpan.FromSeconds(40));
                     }
