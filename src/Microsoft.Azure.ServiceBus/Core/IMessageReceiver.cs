@@ -111,7 +111,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         /// <summary>Indicates that the receiver wants to defer the processing for the message.</summary>
         /// <param name="lockToken">The lock token of the <see cref="Message" />.</param>
-        /// <param name="propertiesToModify">The properties of the message to modify while deferring the message.</param>
         /// <remarks>
         /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
@@ -120,7 +119,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Deferring messages does not impact message's expiration, meaning that deferred messages can still expire.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        Task DeferAsync(string lockToken, IDictionary<string, object> propertiesToModify = null);
+        Task DeferAsync(string lockToken);
 
         /// <summary>
         /// Renews the lock on the message. The lock will be renewed based on the setting specified on the queue.
@@ -132,19 +131,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// For each renewal, it resets the time the message is locked by the LockDuration set on the Entity.
         /// </remarks>
         Task RenewLockAsync(Message message);
-
-        /// <summary>
-        /// Renews the lock on the message. The lock will be renewed based on the setting specified on the queue.
-        /// <returns>New lock token expiry date and time in UTC format.</returns>
-        /// </summary>
-        /// <param name="lockToken">Lock token associated with the message.</param>
-        /// <remarks>
-        /// When a message is received in <see cref="ServiceBus.ReceiveMode.PeekLock"/> mode, the message is locked on the server for this
-        /// receiver instance for a duration as specified during the Queue/Subscription creation (LockDuration).
-        /// If processing of the message requires longer than this duration, the lock needs to be renewed.
-        /// For each renewal, it resets the time the message is locked by the LockDuration set on the Entity.
-        /// </remarks>
-        Task<DateTime> RenewLockAsync(string lockToken);
 
         /// <summary>
         /// Fetches the next active message without changing the state of the receiver or the message source.
