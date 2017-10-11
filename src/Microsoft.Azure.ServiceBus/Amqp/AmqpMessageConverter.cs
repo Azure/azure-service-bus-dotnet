@@ -444,7 +444,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return action;
         }
 
-        internal static bool TryGetAmqpObjectFromNetObject(object netObject, MappingType mappingType, out object amqpObject)
+        static bool TryGetAmqpObjectFromNetObject(object netObject, MappingType mappingType, out object amqpObject)
         {
             amqpObject = null;
             if (netObject == null)
