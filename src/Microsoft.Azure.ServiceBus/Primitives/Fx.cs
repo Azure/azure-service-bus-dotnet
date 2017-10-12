@@ -23,12 +23,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             }
         }
 
-        [Conditional("DEBUG")]
-        public static void Assert(bool condition, string message)
-        {
-            Debug.Assert(condition, message);
-        }
-
         public static class Tag
         {
             public enum CacheAttrition
@@ -118,21 +112,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     this.description = description;
                 }
 
-                public Location Location
-                {
-                    get
-                    {
-                        return this.location;
-                    }
-                }
+                public Location Location => this.location;
 
-                public string Description
-                {
-                    get
-                    {
-                        return this.description;
-                    }
-                }
+                public string Description => this.description;
             }
 
             [AttributeUsage(AttributeTargets.Field)]
@@ -157,21 +139,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     this.cacheAttrition = cacheAttrition;
                 }
 
-                public Type ElementType
-                {
-                    get
-                    {
-                        return this.elementType;
-                    }
-                }
+                public Type ElementType => this.elementType;
 
-                public CacheAttrition CacheAttrition
-                {
-                    get
-                    {
-                        return this.cacheAttrition;
-                    }
-                }
+                public CacheAttrition CacheAttrition => this.cacheAttrition;
 
                 public string Scope { get; set; }
 
@@ -199,13 +169,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     this.elementType = elementType;
                 }
 
-                public Type ElementType
-                {
-                    get
-                    {
-                        return this.elementType;
-                    }
-                }
+                public Type ElementType => this.elementType;
 
                 public string Scope { get; set; }
 
@@ -247,13 +211,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     this.blocksUsing = blocksUsing;
                 }
 
-                public BlocksUsing BlocksUsing
-                {
-                    get
-                    {
-                        return this.blocksUsing;
-                    }
-                }
+                public BlocksUsing BlocksUsing => this.blocksUsing;
 
                 public bool SupportsAsync { get; set; }
 
@@ -282,18 +240,12 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class GuaranteeNonBlockingAttribute : Attribute
                 {
-                    public GuaranteeNonBlockingAttribute()
-                    {
-                    }
                 }
 
                 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = false)]
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class NonThrowingAttribute : Attribute
                 {
-                    public NonThrowingAttribute()
-                    {
-                    }
                 }
 
                 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, AllowMultiple = true, Inherited = false)]
@@ -319,31 +271,15 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                         this.diagnosis = diagnosis;
                     }
 
-                    public Type ExceptionType
-                    {
-                        get
-                        {
-                            return this.exceptionType;
-                        }
-                    }
+                    public Type ExceptionType => this.exceptionType;
 
-                    public string Diagnosis
-                    {
-                        get
-                        {
-                            return this.diagnosis;
-                        }
-                    }
+                    public string Diagnosis => this.diagnosis;
                 }
 
                 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = false)]
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class InheritThrowsAttribute : Attribute
                 {
-                    public InheritThrowsAttribute()
-                    {
-                    }
-
                     public Type FromDeclaringType { get; set; }
 
                     public string From { get; set; }
@@ -358,10 +294,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 [Conditional("CODE_ANALYSIS")]
                 public sealed class SecurityNoteAttribute : Attribute
                 {
-                    public SecurityNoteAttribute()
-                    {
-                    }
-
                     public string Critical { get; set; }
 
                     public string Safe { get; set; }

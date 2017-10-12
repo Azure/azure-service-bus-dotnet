@@ -42,7 +42,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             AmqpMessage firstAmqpMessage = null;
             SBMessage firstMessage = null;
             List<Data> dataList = null;
-            int messageCount = 0;
+            var messageCount = 0;
             foreach (var sbMessage in sbMessages)
             {
                 messageCount++;
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                 if (dataList == null)
                 {
-                    dataList = new List<Data>() { ToData(firstAmqpMessage) };
+                    dataList = new List<Data> { ToData(firstAmqpMessage) };
                 }
 
                 dataList.Add(ToData(amqpMessage));
@@ -93,7 +93,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static AmqpMessage SBMessageToAmqpMessage(SBMessage sbMessage)
         {
-            var amqpMessage = sbMessage.Body == null ? AmqpMessage.Create() : AmqpMessage.Create(new Data () { Value = new ArraySegment<byte>(sbMessage.Body) });
+            var amqpMessage = sbMessage.Body == null ? AmqpMessage.Create() : AmqpMessage.Create(new Data { Value = new ArraySegment<byte>(sbMessage.Body) });
 
             amqpMessage.Properties.MessageId = sbMessage.MessageId;
             amqpMessage.Properties.CorrelationId = sbMessage.CorrelationId;
@@ -123,7 +123,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 amqpMessage.MessageAnnotations.Map.Add(ScheduledEnqueueTimeUtcName, sbMessage.ScheduledEnqueueTimeUtc);
             }
-            
+
             if (sbMessage.PartitionKey != null)
             {
                 amqpMessage.MessageAnnotations.Map.Add(PartitionKeyName, sbMessage.PartitionKey);
@@ -138,8 +138,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                 foreach (var pair in sbMessage.UserProperties)
                 {
-                    object amqpObject;
-                    if (TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
+                    if (TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out var amqpObject))
                     {
                         amqpMessage.ApplicationProperties.Map.Add(pair.Key, amqpObject);
                     }
@@ -161,16 +160,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
 
             SBMessage sbMessage;
-            
+
             if ((amqpMessage.BodyType & SectionFlag.AmqpValue) != 0
                 && amqpMessage.ValueBody.Value != null)
             {
                 sbMessage = new SBMessage();
 
-                object dotNetObject = null;
-                if (TryGetNetObjectFromAmqpObject(amqpMessage.ValueBody.Value, MappingType.MessageBody, out dotNetObject))
+                if (TryGetNetObjectFromAmqpObject(amqpMessage.ValueBody.Value, MappingType.MessageBody, out var dotNetObject))
                 {
-                    sbMessage.SystemProperties.BodyObject = dotNetObject;                    
+                    sbMessage.SystemProperties.BodyObject = dotNetObject;
                 }
                 else
                 {
@@ -209,7 +207,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 sbMessage = new SBMessage();
             }
 
-            SectionFlag sections = amqpMessage.Sections;
+            var sections = amqpMessage.Sections;
             if ((sections & SectionFlag.Header) != 0)
             {
                 if (amqpMessage.Header.Ttl != null)
@@ -266,14 +264,13 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 }
             }
 
-            // Do applicaiton properties before message annotations, because the application properties
+            // Do application properties before message annotations, because the application properties
             // can be updated by entries from message annotation.
             if ((sections & SectionFlag.ApplicationProperties) != 0)
             {
                 foreach (var pair in amqpMessage.ApplicationProperties.Map)
                 {
-                    object netObject;
-                    if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out netObject))
+                    if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out var netObject))
                     {
                         sbMessage.UserProperties[pair.Key.ToString()] = netObject;
                     }
@@ -284,7 +281,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             {
                 foreach (var pair in amqpMessage.MessageAnnotations.Map)
                 {
-                    string key = pair.Key.ToString();
+                    var key = pair.Key.ToString();
                     switch (key)
                     {
                         case EnqueuedTimeUtcName:
@@ -312,8 +309,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             sbMessage.SystemProperties.DeadLetterSource = (string)pair.Value;
                             break;
                         default:
-                            object netObject;
-                            if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out netObject))
+                            if (TryGetNetObjectFromAmqpObject(pair.Value, MappingType.ApplicationProperty, out var netObject))
                             {
                                 sbMessage.UserProperties[key] = netObject;
                             }
@@ -324,7 +320,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             if (amqpMessage.DeliveryTag.Count == GuidSize)
             {
-                byte[] guidBuffer = new byte[GuidSize];
+                var guidBuffer = new byte[GuidSize];
                 Buffer.BlockCopy(amqpMessage.DeliveryTag.Array, amqpMessage.DeliveryTag.Offset, guidBuffer, 0, GuidSize);
                 sbMessage.SystemProperties.LockTokenGuid = new Guid(guidBuffer);
             }
@@ -336,16 +332,16 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static AmqpMap GetRuleDescriptionMap(RuleDescription description)
         {
-            AmqpMap ruleDescriptionMap = new AmqpMap();
+            var ruleDescriptionMap = new AmqpMap();
 
             switch (description.Filter)
             {
                 case SqlFilter sqlFilter:
-                    AmqpMap filterMap = GetSqlFilterMap(sqlFilter);
+                    var filterMap = GetSqlFilterMap(sqlFilter);
                     ruleDescriptionMap[ManagementConstants.Properties.SqlFilter] = filterMap;
                     break;
                 case CorrelationFilter correlationFilter:
-                    AmqpMap correlationFilterMap = GetCorrelationFilterMap(correlationFilter);
+                    var correlationFilterMap = GetCorrelationFilterMap(correlationFilter);
                     ruleDescriptionMap[ManagementConstants.Properties.CorrelationFilter] = correlationFilterMap;
                     break;
                 default:
@@ -356,7 +352,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             nameof(CorrelationFilter)));
             }
 
-            AmqpMap amqpAction = GetRuleActionMap(description.Action as SqlRuleAction);
+            var amqpAction = GetRuleActionMap(description.Action as SqlRuleAction);
             ruleDescriptionMap[ManagementConstants.Properties.SqlRuleAction] = amqpAction;
             ruleDescriptionMap[ManagementConstants.Properties.RuleName] = description.Name;
 
@@ -365,16 +361,16 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public static RuleDescription GetRuleDescription(AmqpRuleDescriptionCodec amqpDescription)
         {
-            Filter filter = GetFilter(amqpDescription.Filter);
-            RuleAction action = GetRuleAction(amqpDescription.Action);
+            var filter = GetFilter(amqpDescription.Filter);
+            var ruleAction = GetRuleAction(amqpDescription.Action);
 
-            RuleDescription description = new RuleDescription(filter)
+            var ruleDescription = new RuleDescription(filter)
             {
-                Action = action,
+                Action = ruleAction,
                 Name = amqpDescription.RuleName
             };
 
-            return description;
+            return ruleDescription;
         }
 
         public static Filter GetFilter(AmqpFilterCodec amqpFilter)
@@ -398,7 +394,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
                 case AmqpCorrelationFilterCodec.Code:
                     var amqpCorrelationFilter = (AmqpCorrelationFilterCodec)amqpFilter;
-                    var correlationFilter = new CorrelationFilter()
+                    var correlationFilter = new CorrelationFilter
                     {
                         CorrelationId = amqpCorrelationFilter.CorrelationId,
                         MessageId = amqpCorrelationFilter.MessageId,
@@ -435,8 +431,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
             else if (amqpAction.DescriptorCode == AmqpSqlRuleActionCodec.Code)
             {
-                AmqpSqlRuleActionCodec amqpSqlAction = (AmqpSqlRuleActionCodec)amqpAction;
-                SqlRuleAction sqlAction = new SqlRuleAction(amqpSqlAction.SqlExpression);
+                var amqpSqlAction = (AmqpSqlRuleActionCodec)amqpAction;
+                var sqlAction = new SqlRuleAction(amqpSqlAction.SqlExpression);
 
                 action = sqlAction;
             }
@@ -448,7 +444,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return action;
         }
 
-        static bool TryGetAmqpObjectFromNetObject(object netObject, MappingType mappingType, out object amqpObject)
+        internal static bool TryGetAmqpObjectFromNetObject(object netObject, MappingType mappingType, out object amqpObject)
         {
             amqpObject = null;
             if (netObject == null)
@@ -564,7 +560,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         }
                         else
                         {
-                            byte[] buffer = new byte[binValue.Count];
+                            var buffer = new byte[binValue.Count];
                             Buffer.BlockCopy(binValue.Array, binValue.Offset, buffer, 0, binValue.Count);
                             netObject = buffer;
                         }
@@ -573,16 +569,16 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     {
                         if (amqpObjectAsDescribedType.Descriptor is AmqpSymbol)
                         {
-                            AmqpSymbol symbol = (AmqpSymbol)amqpObjectAsDescribedType.Descriptor;
-                            if (symbol.Equals((AmqpSymbol)UriName))
+                            var amqpSymbol = (AmqpSymbol)amqpObjectAsDescribedType.Descriptor;
+                            if (amqpSymbol.Equals((AmqpSymbol)UriName))
                             {
                                 netObject = new Uri((string)amqpObjectAsDescribedType.Value);
                             }
-                            else if (symbol.Equals((AmqpSymbol)TimeSpanName))
+                            else if (amqpSymbol.Equals((AmqpSymbol)TimeSpanName))
                             {
                                 netObject = new TimeSpan((long)amqpObjectAsDescribedType.Value);
                             }
-                            else if (symbol.Equals((AmqpSymbol)DateTimeOffsetName))
+                            else if (amqpSymbol.Equals((AmqpSymbol)DateTimeOffsetName))
                             {
                                 netObject = new DateTimeOffset(new DateTime((long)amqpObjectAsDescribedType.Value, DateTimeKind.Utc));
                             }
@@ -594,7 +590,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     }
                     else if (amqpObject is AmqpMap map)
                     {
-                        Dictionary<string, object> dictionary = new Dictionary<string, object>();
+                        var dictionary = new Dictionary<string, object>();
                         foreach (var pair in map)
                         {
                             dictionary.Add(pair.Key.ToString(), pair.Value);
@@ -617,7 +613,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             ArraySegment<byte> buffer;
             if (stream == null || stream.Length < 1)
             {
-                buffer = default(ArraySegment<byte>);
+                buffer = default;
             }
             else
             {
@@ -634,14 +630,14 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         private static Data ToData(AmqpMessage message)
         {
             ArraySegment<byte>[] payload = message.GetPayload();
-            BufferListStream buffer = new BufferListStream(payload);
+            var buffer = new BufferListStream(payload);
             ArraySegment<byte> value = buffer.ReadBytes((int)buffer.Length);
             return new Data { Value = value };
         }
 
         static AmqpMap GetSqlFilterMap(SqlFilter sqlFilter)
         {
-            AmqpMap amqpFilterMap = new AmqpMap
+            var amqpFilterMap = new AmqpMap
             {
                 [ManagementConstants.Properties.Expression] = sqlFilter.SqlExpression
             };
@@ -650,7 +646,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         static AmqpMap GetCorrelationFilterMap(CorrelationFilter correlationFilter)
         {
-            AmqpMap correlationFilterMap = new AmqpMap
+            var correlationFilterMap = new AmqpMap
             {
                 [ManagementConstants.Properties.CorrelationId] = correlationFilter.CorrelationId,
                 [ManagementConstants.Properties.MessageId] = correlationFilter.MessageId,
@@ -672,7 +668,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             return correlationFilterMap;
         }
-        
+
         static AmqpMap GetRuleActionMap(SqlRuleAction sqlRuleAction)
         {
             AmqpMap ruleActionMap = null;
