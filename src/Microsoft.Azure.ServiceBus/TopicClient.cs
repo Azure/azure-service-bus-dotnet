@@ -21,7 +21,7 @@ namespace Microsoft.Azure.ServiceBus
     ///     topicName,
     ///     RetryExponential);
     /// </code>
-    /// 
+    ///
     /// Send a message to the topic:
     /// <code>
     /// byte[] data = GetData();
@@ -69,7 +69,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, RetryPolicy retryPolicy)
-            : base(ClientEntity.GenerateClientId(nameof(TopicClient), entityPath), retryPolicy)
+            : base(nameof(TopicClient), entityPath, retryPolicy)
         {
             MessagingEventSource.Log.TopicClientCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath);
 
@@ -77,9 +77,7 @@ namespace Microsoft.Azure.ServiceBus
             this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
             this.TopicName = entityPath;
-            this.TokenProvider = TokenProvider.CreateSharedAccessSignatureTokenProvider(
-                serviceBusConnection.SasKeyName,
-                serviceBusConnection.SasKey);
+            this.TokenProvider = this.ServiceBusConnection.CreateTokenProvider();
             this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
 
             MessagingEventSource.Log.TopicClientCreateStop(serviceBusConnection?.Endpoint.Authority, entityPath, this.ClientId);
@@ -134,26 +132,9 @@ namespace Microsoft.Azure.ServiceBus
 
         TokenProvider TokenProvider { get; }
 
-        /// <summary></summary>
-        /// <returns></returns>
-        protected override async Task OnClosingAsync()
-        {
-            if (this.innerSender != null)
-            {
-                await this.innerSender.CloseAsync().ConfigureAwait(false);
-            }
-
-            if (this.ownsConnection)
-            {
-                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
-            }
-        }
-
         /// <summary>
         /// Sends a message to Service Bus.
         /// </summary>
-        /// <param name="message">The <see cref="Message"/></param>
-        /// <returns>An asynchronous operation</returns>
         public Task SendAsync(Message message)
         {
             return this.SendAsync(new[] { message });
@@ -162,10 +143,9 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Sends a list of messages to Service Bus.
         /// </summary>
-        /// <param name="messageList">The list of messages</param>
-        /// <returns>An asynchronous operation</returns>
         public Task SendAsync(IList<Message> messageList)
         {
+            this.ThrowIfClosed();
             return this.InnerSender.SendAsync(messageList);
         }
 
@@ -177,6 +157,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <returns>The sequence number of the message that was scheduled.</returns>
         public Task<long> ScheduleMessageAsync(Message message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
+            this.ThrowIfClosed();
             return this.InnerSender.ScheduleMessageAsync(message, scheduleEnqueueTimeUtc);
         }
 
@@ -184,9 +165,9 @@ namespace Microsoft.Azure.ServiceBus
         /// Cancels a message that was scheduled.
         /// </summary>
         /// <param name="sequenceNumber">The <see cref="Message.SystemPropertiesCollection.SequenceNumber"/> of the message to be cancelled.</param>
-        /// <returns>An asynchronous operation</returns>
         public Task CancelScheduledMessageAsync(long sequenceNumber)
         {
+            this.ThrowIfClosed();
             return this.InnerSender.CancelScheduledMessageAsync(sequenceNumber);
         }
 
@@ -198,9 +179,9 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Registers a <see cref="ServiceBusPlugin"/> to be used with this topic client.
         /// </summary>
-        /// <param name="serviceBusPlugin">The <see cref="ServiceBusPlugin"/> to register.</param>
         public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
         {
+            this.ThrowIfClosed();
             this.InnerSender.RegisterPlugin(serviceBusPlugin);
         }
 
@@ -210,7 +191,21 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="serviceBusPluginName">The name <see cref="ServiceBusPlugin.Name"/> to be unregistered</param>
         public override void UnregisterPlugin(string serviceBusPluginName)
         {
+            this.ThrowIfClosed();
             this.InnerSender.UnregisterPlugin(serviceBusPluginName);
+        }
+
+        protected override async Task OnClosingAsync()
+        {
+            if (this.innerSender != null)
+            {
+                await this.innerSender.CloseAsync().ConfigureAwait(false);
+            }
+
+            if (this.ownsConnection)
+            {
+                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+            }
         }
     }
 }

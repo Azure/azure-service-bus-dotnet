@@ -32,14 +32,16 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <summary>
         /// Creates a new instance of the <see cref="SecurityToken"/> class.
         /// </summary>
-        /// <param name="tokenString">The token</param>
         /// <param name="expiresAtUtc">The expiration time</param>
-        /// <param name="audience">The audience</param>
         public SecurityToken(string tokenString, DateTime expiresAtUtc, string audience)
         {
-            if (tokenString == null || audience == null)
+            if (string.IsNullOrWhiteSpace(tokenString))
             {
-                throw Fx.Exception.ArgumentNull(tokenString == null ? nameof(tokenString) : nameof(audience));
+                throw Fx.Exception.ArgumentNull(nameof(tokenString));
+            }
+            if (string.IsNullOrWhiteSpace(audience))
+            {
+                throw Fx.Exception.ArgumentNull(nameof(audience));
             }
 
             this.token = tokenString;
@@ -50,11 +52,10 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <summary>
         /// Creates a new instance of the <see cref="SecurityToken"/> class.
         /// </summary>
-        /// <param name="tokenString">The token</param>
         /// <param name="expiresAtUtc">The expiration time</param>
         public SecurityToken(string tokenString, DateTime expiresAtUtc)
         {
-            if (tokenString == null)
+            if (string.IsNullOrWhiteSpace(tokenString))
             {
                 throw Fx.Exception.ArgumentNull(nameof(tokenString));
             }
@@ -67,10 +68,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <summary>
         /// Creates a new instance of the <see cref="SecurityToken"/> class.
         /// </summary>
-        /// <param name="tokenString">The token</param>
         public SecurityToken(string tokenString)
         {
-            if (tokenString == null)
+            if (string.IsNullOrWhiteSpace(tokenString))
             {
                 throw Fx.Exception.ArgumentNull(nameof(tokenString));
             }
@@ -82,76 +82,33 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <summary>
         /// Gets the audience of this token.
         /// </summary>
-        public string Audience
-        {
-            get
-            {
-                return this.audience;
-            }
-        }
+        public string Audience => this.audience;
 
         /// <summary>
         /// Gets the expiration time of this token.
         /// </summary>
-        public DateTime ExpiresAtUtc
-        {
-            get
-            {
-                return this.expiresAtUtc;
-            }
-        }
+        public DateTime ExpiresAtUtc => this.expiresAtUtc;
 
         /// <summary>
         /// Gets the actual token.
         /// </summary>
-        public object TokenValue
-        {
-            get { return this.token; }
-        }
+        public object TokenValue => this.token;
 
-        /// <summary></summary>
-        protected virtual string ExpiresOnFieldName
-        {
-            get
-            {
-                return InternalExpiresOnFieldName;
-            }
-        }
+        protected virtual string ExpiresOnFieldName => InternalExpiresOnFieldName;
 
-        /// <summary></summary>
-        protected virtual string AudienceFieldName
-        {
-            get
-            {
-                return InternalAudienceFieldName;
-            }
-        }
+        protected virtual string AudienceFieldName => InternalAudienceFieldName;
 
-        /// <summary></summary>
-        protected virtual string KeyValueSeparator
-        {
-            get
-            {
-                return InternalKeyValueSeparator;
-            }
-        }
+        protected virtual string KeyValueSeparator => InternalKeyValueSeparator;
 
-        /// <summary></summary>
-        protected virtual string PairSeparator
-        {
-            get
-            {
-                return InternalPairSeparator;
-            }
-        }
+        protected virtual string PairSeparator => InternalPairSeparator;
 
         static IDictionary<string, string> Decode(string encodedString, Func<string, string> keyDecoder, Func<string, string> valueDecoder, string keyValueSeparator, string pairSeparator)
         {
-            IDictionary<string, string> dictionary = new Dictionary<string, string>();
+            var dictionary = new Dictionary<string, string>();
             IEnumerable<string> valueEncodedPairs = encodedString.Split(new[] { pairSeparator }, StringSplitOptions.None);
-            foreach (string valueEncodedPair in valueEncodedPairs)
+            foreach (var valueEncodedPairAsString in valueEncodedPairs)
             {
-                string[] pair = valueEncodedPair.Split(new[] { keyValueSeparator }, StringSplitOptions.None);
+                var pair = valueEncodedPairAsString.Split(new[] { keyValueSeparator }, StringSplitOptions.None);
                 if (pair.Length != 2)
                 {
                     throw new FormatException(Resources.InvalidEncoding);
@@ -165,9 +122,8 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         string GetAudienceFromToken(string token)
         {
-            string audience;
-            IDictionary<string, string> decodedToken = Decode(token, Decoder, Decoder, this.KeyValueSeparator, this.PairSeparator);
-            if (!decodedToken.TryGetValue(this.AudienceFieldName, out audience))
+            var decodedToken = Decode(token, Decoder, Decoder, this.KeyValueSeparator, this.PairSeparator);
+            if (!decodedToken.TryGetValue(this.AudienceFieldName, out var audience))
             {
                 throw new FormatException(Resources.TokenMissingAudience);
             }
@@ -177,9 +133,8 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         void GetExpirationDateAndAudienceFromToken(string token, out DateTime expiresOn, out string audience)
         {
-            string expiresIn;
             IDictionary<string, string> decodedToken = Decode(token, Decoder, Decoder, this.KeyValueSeparator, this.PairSeparator);
-            if (!decodedToken.TryGetValue(this.ExpiresOnFieldName, out expiresIn))
+            if (!decodedToken.TryGetValue(this.ExpiresOnFieldName, out var expiresIn))
             {
                 throw new FormatException(Resources.TokenMissingExpiresOn);
             }

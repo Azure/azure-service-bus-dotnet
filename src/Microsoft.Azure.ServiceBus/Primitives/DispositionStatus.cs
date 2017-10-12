@@ -3,6 +3,8 @@
 
 namespace Microsoft.Azure.ServiceBus.Primitives
 {
+    // Enum.ToString() is used while serializing the AMQP disposition request.
+    // DO NOT rename the enums.
     enum DispositionStatus
     {
         Completed = 1,

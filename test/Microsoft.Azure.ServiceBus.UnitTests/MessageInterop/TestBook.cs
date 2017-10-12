@@ -16,19 +16,19 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
             this.Id = id;
         }
 
-        public override bool Equals(Object obj)
+        public override bool Equals(object obj)
         {
             if (obj == null || GetType() != obj.GetType())
             {
                 return false;
             }
 
-            TestBook book = (TestBook)obj;
+            var testBook = (TestBook)obj;
 
             return
-                this.Name.Equals(book.Name, StringComparison.OrdinalIgnoreCase) &&
-                this.Count == book.Count &&
-                this.Id == book.Id;
+                this.Name.Equals(testBook.Name, StringComparison.OrdinalIgnoreCase) &&
+                this.Count == testBook.Count &&
+                this.Id == testBook.Id;
         }
 
         public override int GetHashCode()
