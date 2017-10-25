@@ -841,51 +841,35 @@ namespace Microsoft.Azure.ServiceBus.Core
                 }
 
                 IList<Message> brokeredMessages = null;
+                this.ThrowIfClosed();
 
-                while (timeoutHelper.RemainingTime() > TimeSpan.Zero)
+                IEnumerable<AmqpMessage> amqpMessages = null;
+                var hasMessages = await Task.Factory.FromAsync(
+                    (c, s) => receiveLink.BeginReceiveRemoteMessages(maxMessageCount, DefaultBatchFlushInterval, timeoutHelper.RemainingTime(), c, s),
+                    a => receiveLink.EndReceiveMessages(a, out amqpMessages),
+                    this).ConfigureAwait(false);
+                Exception exception;
+                if ((exception = receiveLink.GetInnerException()) != null)
                 {
-                    this.ThrowIfClosed();
+                    throw exception;
+                }
 
-                    IEnumerable<AmqpMessage> amqpMessages = null;
-                    var hasMessages = await Task.Factory.FromAsync(
-                        (c, s) => receiveLink.BeginReceiveRemoteMessages(maxMessageCount, DefaultBatchFlushInterval, timeoutHelper.RemainingTime(), c, s),
-                        a => receiveLink.EndReceiveMessages(a, out amqpMessages),
-                        this).ConfigureAwait(false);
-                    Exception exception;
-                    if ((exception = receiveLink.GetInnerException()) != null)
+                if (hasMessages && amqpMessages != null)
+                {
+                    foreach (var amqpMessage in amqpMessages)
                     {
-                        throw exception;
-                    }
-
-                    if (hasMessages && amqpMessages != null)
-                    {
-                        foreach (var amqpMessage in amqpMessages)
+                        if (this.ReceiveMode == ReceiveMode.ReceiveAndDelete)
                         {
-                            if (this.ReceiveMode == ReceiveMode.ReceiveAndDelete)
-                            {
-                                receiveLink.DisposeDelivery(amqpMessage, true, AmqpConstants.AcceptedOutcome);
-                            }
-
-                            var message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
-
-                            if (this.ReceiveMode == ReceiveMode.PeekLock &&
-                               message.SystemProperties.LockedUntilUtc <= DateTime.UtcNow)
-                            {
-                                receiveLink.ReleaseMessage(amqpMessage);
-                                continue;
-                            }
-                            if (brokeredMessages == null)
-                            {
-                                brokeredMessages = new List<Message>();
-                            }
-
-                            brokeredMessages.Add(message);
+                            receiveLink.DisposeDelivery(amqpMessage, true, AmqpConstants.AcceptedOutcome);
                         }
 
-                        if(brokeredMessages != null)
+                        var message = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage);
+                        if (brokeredMessages == null)
                         {
-                            break;
+                            brokeredMessages = new List<Message>();
                         }
+
+                        brokeredMessages.Add(message);
                     }
                 }
 
@@ -1256,8 +1240,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     var amqpPropertiesToModify = new AmqpMap();
                     foreach (var pair in propertiesToModify)
                     {
-                        object amqpObject;
-                        if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
+                        if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out var amqpObject))
                         {
                             amqpPropertiesToModify[new MapKey(pair.Key)] = amqpObject;
                         }
@@ -1424,8 +1407,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 modified.MessageAnnotations = new Fields();
                 foreach (var pair in propertiesToModify)
                 {
-                    object amqpObject;
-                    if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
+                    if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out var amqpObject))
                     {
                         modified.MessageAnnotations.Add(pair.Key, amqpObject);
                     }
@@ -1459,8 +1441,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 {
                     foreach (var pair in propertiesToModify)
                     {
-                        object amqpObject;
-                        if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out amqpObject))
+                        if (AmqpMessageConverter.TryGetAmqpObjectFromNetObject(pair.Value, MappingType.ApplicationProperty, out var amqpObject))
                         {
                             rejected.Error.Info.Add(pair.Key, amqpObject);
                         }
