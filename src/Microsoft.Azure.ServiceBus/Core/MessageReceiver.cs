@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -48,6 +49,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         readonly object messageReceivePumpSyncLock;
         readonly bool ownsConnection;
         readonly ActiveClientLinkManager clientLinkManager;
+        readonly ServiceBusDiagnosticSource diagnosticSource;
 
         int prefetchCount;
         long lastPeekedSequenceNumber;
@@ -132,7 +134,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.PrefetchCount = prefetchCount;
             this.messageReceivePumpSyncLock = new object();
             this.clientLinkManager = new ActiveClientLinkManager(this.ClientId, this.CbsTokenProvider);
-
+            this.diagnosticSource = new ServiceBusDiagnosticSource(entityPath, serviceBusConnection.Endpoint);
             MessagingEventSource.Log.MessageReceiverCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
         }
 
@@ -298,30 +300,46 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             MessagingEventSource.Log.MessageReceiveStart(this.ClientId, maxMessageCount);
 
+            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.ReceiveStart(maxMessageCount) : null;
+            Task receiveTask = null;
+
             IList<Message> unprocessedMessageList = null;
+            IList<Message> processedMessageList = null;
             try
             {
-                await this.RetryPolicy.RunOperation(
+                receiveTask = this.RetryPolicy.RunOperation(
                     async () =>
                     {
-                        unprocessedMessageList = await this.OnReceiveAsync(maxMessageCount, operationTimeout).ConfigureAwait(false);
-                    }, operationTimeout)
-                    .ConfigureAwait(false);
+                        unprocessedMessageList = await this.OnReceiveAsync(maxMessageCount, operationTimeout)
+                            .ConfigureAwait(false);
+                    }, operationTimeout);
+                await receiveTask.ConfigureAwait(false);
+
+                MessagingEventSource.Log.MessageReceiveStop(this.ClientId, unprocessedMessageList?.Count ?? 0);
+
+                if (unprocessedMessageList == null)
+                {
+                    return unprocessedMessageList;
+                }
+
+                processedMessageList = await this.ProcessMessages(unprocessedMessageList).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.MessageReceiveException(this.ClientId, exception);
+                if (isDiagnosticsEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
                 throw;
             }
-
-            MessagingEventSource.Log.MessageReceiveStop(this.ClientId, unprocessedMessageList?.Count ?? 0);
-
-            if (unprocessedMessageList == null)
+            finally
             {
-                return unprocessedMessageList;
+                this.diagnosticSource.ReceiveStop(activity, maxMessageCount, receiveTask?.Status, processedMessageList);
             }
 
-            return await this.ProcessMessages(unprocessedMessageList).ConfigureAwait(false);
+            return processedMessageList;
         }
 
         /// <summary>
@@ -366,22 +384,33 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             MessagingEventSource.Log.MessageReceiveDeferredMessageStart(this.ClientId, sequenceNumberList.Length, sequenceNumberList);
 
+            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.ReceiveDefferedStart(sequenceNumberList) : null;
+            Task receiveTask = null;
+
             IList<Message> messages = null;
             try
             {
-                await this.RetryPolicy.RunOperation(
+                receiveTask = this.RetryPolicy.RunOperation(
                     async () =>
                     {
                         messages = await this.OnReceiveDeferredMessageAsync(sequenceNumberList).ConfigureAwait(false);
-                    }, this.OperationTimeout)
-                    .ConfigureAwait(false);
+                    }, this.OperationTimeout);
+                await receiveTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.MessageReceiveDeferredMessageException(this.ClientId, exception);
+                if (isDiagnosticsEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
                 throw;
             }
-
+            finally
+            {
+                this.diagnosticSource.ReceiveDefferedStop(activity, sequenceNumberList, receiveTask?.Status, messages);
+            }
             MessagingEventSource.Log.MessageReceiveDeferredMessageStop(this.ClientId, messages?.Count ?? 0);
 
             return messages;
@@ -425,16 +454,29 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             MessagingEventSource.Log.MessageCompleteStart(this.ClientId, lockTokenList.Count, lockTokenList);
+            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.CompleteStart(lockTokenList) : null;
+            Task completeTask = null;
 
             try
             {
-                await this.RetryPolicy.RunOperation(() => this.OnCompleteAsync(lockTokenList), this.OperationTimeout)
-                    .ConfigureAwait(false);
+                completeTask =
+                    this.RetryPolicy.RunOperation(() => this.OnCompleteAsync(lockTokenList), this.OperationTimeout);
+                await completeTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.MessageCompleteException(this.ClientId, exception);
+                if (isDiagnosticsEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
+
                 throw;
+            }
+            finally
+            {
+                this.diagnosticSource.CompleteStop(activity, lockTokenList, completeTask?.Status);
             }
 
             MessagingEventSource.Log.MessageCompleteStop(this.ClientId);
@@ -456,16 +498,30 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ThrowIfNotPeekLockMode();
 
             MessagingEventSource.Log.MessageAbandonStart(this.ClientId, 1, lockToken);
+            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.DisposeStart("Abandon", lockToken) : null;
+            Task abandonTask = null;
+
             try
             {
-                await this.RetryPolicy.RunOperation(() => this.OnAbandonAsync(lockToken, propertiesToModify), this.OperationTimeout)
-                    .ConfigureAwait(false);
+                abandonTask = this.RetryPolicy.RunOperation(() => this.OnAbandonAsync(lockToken, propertiesToModify),
+                    this.OperationTimeout);
+                await abandonTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.MessageAbandonException(this.ClientId, exception);
+                if (isDiagnosticsEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
                 throw;
             }
+            finally
+            {
+                this.diagnosticSource.DisposeStop(activity, lockToken, abandonTask?.Status);
+            }
+
 
             MessagingEventSource.Log.MessageAbandonStop(this.ClientId);
         }
@@ -487,18 +543,29 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ThrowIfNotPeekLockMode();
 
             MessagingEventSource.Log.MessageDeferStart(this.ClientId, 1, lockToken);
+            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.DisposeStart("Defer", lockToken) : null;
+            Task deferTask = null;
 
             try
             {
-                await this.RetryPolicy.RunOperation(() => this.OnDeferAsync(lockToken, propertiesToModify), this.OperationTimeout)
-                    .ConfigureAwait(false);
+                deferTask = this.RetryPolicy.RunOperation(() => this.OnDeferAsync(lockToken, propertiesToModify),
+                    this.OperationTimeout);
+                await deferTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.MessageDeferException(this.ClientId, exception);
+                if (isDiagnosticsEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
                 throw;
             }
-
+            finally
+            {
+                this.diagnosticSource.DisposeStop(activity, lockToken, deferTask?.Status);
+            }
             MessagingEventSource.Log.MessageDeferStop(this.ClientId);
         }
 
@@ -520,18 +587,29 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ThrowIfNotPeekLockMode();
 
             MessagingEventSource.Log.MessageDeadLetterStart(this.ClientId, 1, lockToken);
+            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.DisposeStart("DeadLetter", lockToken) : null;
+            Task deadLetterTask = null;
 
             try
             {
-                await this.RetryPolicy.RunOperation(() => this.OnDeadLetterAsync(lockToken, propertiesToModify), this.OperationTimeout)
-                    .ConfigureAwait(false);
+                deadLetterTask = this.RetryPolicy.RunOperation(() => this.OnDeadLetterAsync(lockToken, propertiesToModify),
+                    this.OperationTimeout);
+                await deadLetterTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.MessageDeadLetterException(this.ClientId, exception);
+                if (isDiagnosticsEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
                 throw;
             }
-
+            finally
+            {
+                this.diagnosticSource.DisposeStop(activity, lockToken, deadLetterTask?.Status);
+            }
             MessagingEventSource.Log.MessageDeadLetterStop(this.ClientId);
         }
 
@@ -554,16 +632,30 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ThrowIfNotPeekLockMode();
 
             MessagingEventSource.Log.MessageDeadLetterStart(this.ClientId, 1, lockToken);
+            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.DisposeStart("DeadLetter", lockToken) : null;
+            Task deadLetterTask = null;
 
             try
             {
-                await this.RetryPolicy.RunOperation(() => this.OnDeadLetterAsync(lockToken, null, deadLetterReason, deadLetterErrorDescription), this.OperationTimeout)
-                    .ConfigureAwait(false);
+                deadLetterTask =
+                    this.RetryPolicy.RunOperation(
+                        () => this.OnDeadLetterAsync(lockToken, null, deadLetterReason, deadLetterErrorDescription),
+                        this.OperationTimeout);
+                await deadLetterTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.MessageDeadLetterException(this.ClientId, exception);
+                if (isDiagnosticsEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
                 throw;
+            }
+            finally
+            {
+                this.diagnosticSource.DisposeStop(activity, lockToken, deadLetterTask?.Status);
             }
 
             MessagingEventSource.Log.MessageDeadLetterStop(this.ClientId);
@@ -600,21 +692,32 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ThrowIfNotPeekLockMode();
 
             MessagingEventSource.Log.MessageRenewLockStart(this.ClientId, 1, lockToken);
+            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.RenewLockStart(lockToken) : null;
+            Task renewTask = null;
 
             var lockedUntilUtc = DateTime.MinValue;
 
             try
             {
-                await this.RetryPolicy.RunOperation(
-                    async () => lockedUntilUtc = await this.OnRenewLockAsync(lockToken).ConfigureAwait(false), this.OperationTimeout)
-                    .ConfigureAwait(false);
+                renewTask = this.RetryPolicy.RunOperation(
+                    async () => lockedUntilUtc = await this.OnRenewLockAsync(lockToken).ConfigureAwait(false),
+                    this.OperationTimeout);
+                await renewTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.MessageRenewLockException(this.ClientId, exception);
+                if (isDiagnosticsEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
                 throw;
             }
-
+            finally
+            {
+                this.diagnosticSource.RenewLockStop(activity, lockToken, renewTask?.Status, lockedUntilUtc);
+            }
             MessagingEventSource.Log.MessageRenewLockStop(this.ClientId);
 
             return lockedUntilUtc;
@@ -671,19 +774,32 @@ namespace Microsoft.Azure.ServiceBus.Core
             IList<Message> messages = null;
 
             MessagingEventSource.Log.MessagePeekStart(this.ClientId, fromSequenceNumber, messageCount);
+            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.PeekStart(fromSequenceNumber, messageCount) : null;
+            Task peekTask = null;
+
             try
             {
-                await this.RetryPolicy.RunOperation(
+                peekTask = this.RetryPolicy.RunOperation(
                     async () =>
                     {
                         messages = await this.OnPeekAsync(fromSequenceNumber, messageCount).ConfigureAwait(false);
-                    }, this.OperationTimeout)
-                    .ConfigureAwait(false);
+                    }, this.OperationTimeout);
+
+                await peekTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 MessagingEventSource.Log.MessagePeekException(this.ClientId, exception);
+                if (isDiagnosticsEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
                 throw;
+            }
+            finally
+            {
+                this.diagnosticSource.PeekStop(activity, fromSequenceNumber, messageCount, peekTask?.Status, messages);
             }
 
             MessagingEventSource.Log.MessagePeekStop(this.ClientId, messages?.Count ?? 0);
@@ -1017,7 +1133,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 throw new ArgumentOutOfRangeException(nameof(deadLetterErrorDescription), $"Maximum permitted length is {Constants.MaxDeadLetterReasonLength}");
             }
-            
+
             var lockTokens = new[] { new Guid(lockToken) };
             if (lockTokens.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
             {
@@ -1071,7 +1187,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 }
 
                 this.receivePumpCancellationTokenSource = new CancellationTokenSource();
-                this.receivePump = new MessageReceivePump(this, registerHandlerOptions, callback, this.ServiceBusConnection.Endpoint.Authority, this.receivePumpCancellationTokenSource.Token);
+                this.receivePump = new MessageReceivePump(this, registerHandlerOptions, callback, this.ServiceBusConnection.Endpoint, this.receivePumpCancellationTokenSource.Token);
             }
 
             try
@@ -1146,6 +1262,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             return processedMessageList;
         }
+
 
         async Task DisposeMessagesAsync(IEnumerable<Guid> lockTokens, Outcome outcome)
         {
@@ -1246,7 +1363,8 @@ namespace Microsoft.Azure.ServiceBus.Core
                         }
                         else
                         {
-                            throw new NotSupportedException(Resources.InvalidAmqpMessageProperty.FormatForUser(pair.Key.GetType()));
+                            throw new NotSupportedException(
+                                Resources.InvalidAmqpMessageProperty.FormatForUser(pair.Key.GetType()));
                         }
                     }
 

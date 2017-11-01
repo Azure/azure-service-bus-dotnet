@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
+    using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
     using Primitives;
@@ -19,13 +20,14 @@ namespace Microsoft.Azure.ServiceBus
         readonly CancellationToken pumpCancellationToken;
         readonly SemaphoreSlim maxConcurrentSessionsSemaphoreSlim;
         readonly SemaphoreSlim maxPendingAcceptSessionsSemaphoreSlim;
+        private readonly ServiceBusDiagnosticSource diagnosticSource;
 
         public SessionReceivePump(string clientId,
             ISessionClient client,
             ReceiveMode receiveMode,
             SessionHandlerOptions sessionHandlerOptions,
             Func<IMessageSession, Message, CancellationToken, Task> callback,
-            string endpoint,
+            Uri endpoint,
             CancellationToken token)
         {
             this.client = client ?? throw new ArgumentException(nameof(client));
@@ -33,11 +35,12 @@ namespace Microsoft.Azure.ServiceBus
             this.ReceiveMode = receiveMode;
             this.sessionHandlerOptions = sessionHandlerOptions;
             this.userOnSessionCallback = callback;
-            this.endpoint = endpoint;
+            this.endpoint = endpoint.Authority;
             this.entityPath = client.EntityPath;
             this.pumpCancellationToken = token;
             this.maxConcurrentSessionsSemaphoreSlim = new SemaphoreSlim(this.sessionHandlerOptions.MaxConcurrentSessions);
             this.maxPendingAcceptSessionsSemaphoreSlim = new SemaphoreSlim(this.sessionHandlerOptions.MaxConcurrentAcceptSessionCalls);
+            this.diagnosticSource = new ServiceBusDiagnosticSource(client.EntityPath, endpoint);
         }
 
         ReceiveMode ReceiveMode { get; }
@@ -207,36 +210,55 @@ namespace Microsoft.Azure.ServiceBus
                         break;
                     }
 
-                    // Set the timer
-                    userCallbackTimer.Change(this.sessionHandlerOptions.MaxAutoRenewDuration, TimeSpan.FromMilliseconds(-1));
-                    var callbackExceptionOccurred = false;
+                    bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
+                    Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.ProcessSessionStart(session, message) : null;
+                    Task processTask = null;
+
                     try
                     {
-                        await this.userOnSessionCallback(session, message, this.pumpCancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception exception)
-                    {
-                        MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
-                        await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.UserCallback).ConfigureAwait(false);
-                        callbackExceptionOccurred = true;
-                        if (!(exception is MessageLockLostException || exception is SessionLockLostException))
+                        // Set the timer
+                        userCallbackTimer.Change(this.sessionHandlerOptions.MaxAutoRenewDuration,
+                            TimeSpan.FromMilliseconds(-1));
+                        var callbackExceptionOccurred = false;
+                        try
                         {
-                            await this.AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
+                            processTask = this.userOnSessionCallback(session, message, this.pumpCancellationToken);
+                            await processTask.ConfigureAwait(false);
+                        }
+                        catch (Exception exception)
+                        {
+                            MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId,
+                                exception);
+                            if (isDiagnosticsEnabled)
+                            {
+                                this.diagnosticSource.ReportException(exception);
+                            }
+                            await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.UserCallback)
+                                .ConfigureAwait(false);
+                            callbackExceptionOccurred = true;
+                            if (!(exception is MessageLockLostException || exception is SessionLockLostException))
+                            {
+                                await this.AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
+                            }
+                        }
+                        finally
+                        {
+                            userCallbackTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                        }
+
+                        if (!callbackExceptionOccurred)
+                        {
+                            await this.CompleteMessageIfNeededAsync(session, message).ConfigureAwait(false);
+                        }
+                        else if (session.IsClosedOrClosing)
+                        {
+                            // If User closed the session as part of the callback, break out of the loop
+                            break;
                         }
                     }
                     finally
                     {
-                        userCallbackTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                    }
-
-                    if (!callbackExceptionOccurred)
-                    {
-                        await this.CompleteMessageIfNeededAsync(session, message).ConfigureAwait(false);
-                    }
-                    else if (session.IsClosedOrClosing)
-                    {
-                        // If User closed the session as part of the callback, break out of the loop
-                        break;
+                        this.diagnosticSource.ProcessSessionStop(activity, session, message, processTask?.Status);
                     }
                 }
             }
