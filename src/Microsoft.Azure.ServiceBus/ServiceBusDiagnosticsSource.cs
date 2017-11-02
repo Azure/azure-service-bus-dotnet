@@ -23,7 +23,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public const string BaseActivityName = "Microsoft.Azure.ServiceBus.";
 
-        public const string RequestIdPropertyName = "Diagnostic-Id";
+        public const string ActivityIdPropertyName = "Diagnostic-Id";
         public const string CorrelationContextPropertyName = "Correlation-Context";
         public const string RelatedToTag = "RelatedTo";
 
@@ -675,10 +675,13 @@ namespace Microsoft.Azure.ServiceBus
 
         private void Inject(Message message, string id, string correlationContext)
         {
-            message.UserProperties[RequestIdPropertyName] = id;
-            if (correlationContext != null)
+            if (!message.UserProperties.ContainsKey(ActivityIdPropertyName))
             {
-                message.UserProperties[CorrelationContextPropertyName] = correlationContext;
+                message.UserProperties[ActivityIdPropertyName] = id;
+                if (correlationContext != null)
+                {
+                    message.UserProperties[CorrelationContextPropertyName] = correlationContext;
+                }
             }
         }
 

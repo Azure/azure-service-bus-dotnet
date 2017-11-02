@@ -94,7 +94,7 @@ namespace Microsoft.Azure.ServiceBus.Diagnostics
         internal static bool TryExtractId(this Message message, out string id)
         {
             id = null;
-            if (message.UserProperties.TryGetValue(ServiceBusDiagnosticSource.RequestIdPropertyName,
+            if (message.UserProperties.TryGetValue(ServiceBusDiagnosticSource.ActivityIdPropertyName,
                 out object requestId))
             {
                 var tmp = requestId as string;
