@@ -177,7 +177,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 getStateTask = this.OnGetStateAsync();
                 state = await getStateTask.ConfigureAwait(false);
-                return getStateTask.Result;
+                return state;
             }
             catch (Exception ex)
             {

@@ -305,7 +305,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             Task receiveTask = null;
 
             IList<Message> unprocessedMessageList = null;
-            IList<Message> processedMessageList = null;
             try
             {
                 receiveTask = this.RetryPolicy.RunOperation(
@@ -316,14 +315,6 @@ namespace Microsoft.Azure.ServiceBus.Core
                     }, operationTimeout);
                 await receiveTask.ConfigureAwait(false);
 
-                MessagingEventSource.Log.MessageReceiveStop(this.ClientId, unprocessedMessageList?.Count ?? 0);
-
-                if (unprocessedMessageList == null)
-                {
-                    return unprocessedMessageList;
-                }
-
-                processedMessageList = await this.ProcessMessages(unprocessedMessageList).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
@@ -336,10 +327,17 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
             finally
             {
-                this.diagnosticSource.ReceiveStop(activity, maxMessageCount, receiveTask?.Status, processedMessageList);
+                this.diagnosticSource.ReceiveStop(activity, maxMessageCount, receiveTask?.Status, unprocessedMessageList);
             }
 
-            return processedMessageList;
+            MessagingEventSource.Log.MessageReceiveStop(this.ClientId, unprocessedMessageList?.Count ?? 0);
+
+            if (unprocessedMessageList == null)
+            {
+                return unprocessedMessageList;
+            }
+
+            return await this.ProcessMessages(unprocessedMessageList).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -1262,7 +1260,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             return processedMessageList;
         }
-
 
         async Task DisposeMessagesAsync(IEnumerable<Guid> lockTokens, Outcome outcome)
         {

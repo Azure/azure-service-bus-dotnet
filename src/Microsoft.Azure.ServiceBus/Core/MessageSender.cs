@@ -179,7 +179,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessageSendStop(this.ClientId);
         }
 
-
         /// <summary>
         /// Schedules a message to appear on Service Bus at a later time.
         /// </summary>

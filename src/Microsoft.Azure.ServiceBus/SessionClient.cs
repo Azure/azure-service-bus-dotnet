@@ -255,7 +255,7 @@ namespace Microsoft.Azure.ServiceBus
             }
             finally
             {
-                this.diagnosticSource.AcceptMessageSessionStop(activity, sessionId, serverWaitTime, session, acceptMessageSessionTask?.Status);
+                this.diagnosticSource.AcceptMessageSessionStop(activity, session.SessionId, acceptMessageSessionTask?.Status);
             }
 
             MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionStop(

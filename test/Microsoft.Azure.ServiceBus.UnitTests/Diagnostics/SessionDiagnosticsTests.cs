@@ -208,7 +208,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             Assert.Equal("Microsoft.Azure.ServiceBus.AcceptMessageSession.Stop", name);
             this.AssertCommonStopPayloadProperties(payload);
             this.GetPropertyValueFromAnonymousTypeInstance<string>(payload, "SessionId");
-            this.GetPropertyValueFromAnonymousTypeInstance<IMessageSession>(payload, "Session");
 
             if (acceptActivity != null)
             {

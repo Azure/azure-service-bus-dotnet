@@ -11,7 +11,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
 
     public class SubscriptionClientDiagnosticsTests : DiagnosticsTests
     {
-        protected override string EntityName => $"{TestConstants.NonPartitionedTopicName}/{TestConstants.SubscriptionName}";
+        protected override string EntityName => $"{TestConstants.NonPartitionedTopicName}/Subscriptions/{TestConstants.SubscriptionName}";
         private SubscriptionClient subscriptionClient;
         private bool disposed;
 
