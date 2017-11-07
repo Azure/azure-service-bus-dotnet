@@ -121,7 +121,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             this.queueClient = new QueueClient(TestUtility.NamespaceConnectionString,
                 TestConstants.SessionNonPartitionedQueueName, ReceiveMode.ReceiveAndDelete)
             {
-                OperationTimeout = TimeSpan.FromSeconds(2)
+                OperationTimeout = TimeSpan.FromSeconds(5)
             };
 
             this.queueClient.ServiceBusConnection.OperationTimeout = TimeSpan.FromSeconds(maxWaitSec);
