@@ -179,7 +179,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             // So, let's wait for timeout and a bit more to make sure all created tasks are completed
             sw.Stop();
 
-            await Task.Delay((int)(timeout - sw.Elapsed).TotalMilliseconds + 1000);
+            var timeToWait = (timeout - sw.Elapsed).TotalMilliseconds + 1000;
+            if (timeToWait > 0)
+            {
+                await Task.Delay((int)timeToWait);
+            }
         }
 
         protected override void Dispose(bool disposing)
