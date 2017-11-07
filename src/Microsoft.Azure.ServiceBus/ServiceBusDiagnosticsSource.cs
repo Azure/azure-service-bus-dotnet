@@ -724,7 +724,7 @@ namespace Microsoft.Azure.ServiceBus
                 if (DiagnosticListener.IsEnabled(activityName, entityPath, tmpActivity))
                 {
                     activity = tmpActivity;
-                    if (DiagnosticListener.IsEnabled(activityName + "Start"))
+                    if (DiagnosticListener.IsEnabled(activityName + ".Start"))
                     {
                         DiagnosticListener.StartActivity(activity, getPayload());
                     }

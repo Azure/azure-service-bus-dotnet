@@ -151,8 +151,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             var count = MessageSender.ValidateMessages(messageList);
             MessagingEventSource.Log.MessageSendStart(this.ClientId, count);
 
-            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
-            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.SendStart(messageList) : null;
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.SendStart(messageList) : null;
             Task sendTask = null;
 
             try
@@ -164,11 +164,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.MessageSendException(this.ClientId, exception);
-                if (isDiagnosticsEnabled)
+                if (isDiagnosticSourceEnabled)
                 {
                     this.diagnosticSource.ReportException(exception);
                 }
+
+                MessagingEventSource.Log.MessageSendException(this.ClientId, exception);
                 throw;
             }
             finally
@@ -206,8 +207,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.ScheduleMessageStart(this.ClientId, scheduleEnqueueTimeUtc);
             long result = 0;
 
-            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
-            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.ScheduleStart(message, scheduleEnqueueTimeUtc) : null;
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.ScheduleStart(message, scheduleEnqueueTimeUtc) : null;
             Task scheduleTask = null;
 
             try
@@ -223,11 +224,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.ScheduleMessageException(this.ClientId, exception);
-                if (isDiagnosticsEnabled)
+                if (isDiagnosticSourceEnabled)
                 {
                     this.diagnosticSource.ReportException(exception);
                 }
+
+                MessagingEventSource.Log.ScheduleMessageException(this.ClientId, exception);
                 throw;
             }
             finally
@@ -248,8 +250,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ThrowIfClosed();
             MessagingEventSource.Log.CancelScheduledMessageStart(this.ClientId, sequenceNumber);
 
-            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
-            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.CancelStart(sequenceNumber) : null;
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.CancelStart(sequenceNumber) : null;
             Task cancelTask = null;
 
             try
@@ -260,11 +262,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.CancelScheduledMessageException(this.ClientId, exception);
-                if (isDiagnosticsEnabled)
+                if (isDiagnosticSourceEnabled)
                 {
                     this.diagnosticSource.ReportException(exception);
                 }
+
+                MessagingEventSource.Log.CancelScheduledMessageException(this.ClientId, exception);
                 throw;
             }
             finally

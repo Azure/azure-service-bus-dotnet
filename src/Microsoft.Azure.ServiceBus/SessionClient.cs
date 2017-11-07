@@ -216,8 +216,8 @@ namespace Microsoft.Azure.ServiceBus
                 this.PrefetchCount,
                 sessionId);
 
-            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
-            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.AcceptMessageSessionStart(sessionId) : null;
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.AcceptMessageSessionStart(sessionId) : null;
             Task acceptMessageSessionTask = null;
 
             var session = new MessageSession(
@@ -240,15 +240,15 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
+                if (isDiagnosticSourceEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
+
                 MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionException(
                     this.ClientId,
                     this.EntityPath,
                     exception);
-
-                if (isDiagnosticsEnabled)
-                {
-                    this.diagnosticSource.ReportException(exception);
-                }
 
                 await session.CloseAsync().ConfigureAwait(false);
                 throw AmqpExceptionHelper.GetClientException(exception);

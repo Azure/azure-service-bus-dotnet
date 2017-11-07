@@ -148,7 +148,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             ManualResetEvent processingDone = new ManualResetEvent(false);
             await TestUtility.SendMessagesAsync(this.queueClient.InnerSender, 1);
 
-            this.listener.Enable((name, queueName, arg) => !name.EndsWith("Start") && !name.Contains("Receive") );
+            this.listener.Enable((name, queueName, arg) => !name.EndsWith(".Start") && !name.Contains("Receive") );
 
             int count = 0;
             this.queueClient.RegisterMessageHandler((msg, ct) =>

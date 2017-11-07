@@ -210,8 +210,8 @@ namespace Microsoft.Azure.ServiceBus
                         break;
                     }
 
-                    bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
-                    Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.ProcessSessionStart(session, message) : null;
+                    bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+                    Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.ProcessSessionStart(session, message) : null;
                     Task processTask = null;
 
                     try
@@ -227,14 +227,13 @@ namespace Microsoft.Azure.ServiceBus
                         }
                         catch (Exception exception)
                         {
-                            MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId,
-                                exception);
-                            if (isDiagnosticsEnabled)
+                            if (isDiagnosticSourceEnabled)
                             {
                                 this.diagnosticSource.ReportException(exception);
                             }
-                            await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.UserCallback)
-                                .ConfigureAwait(false);
+
+                            MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
+                            await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.UserCallback).ConfigureAwait(false);
                             callbackExceptionOccurred = true;
                             if (!(exception is MessageLockLostException || exception is SessionLockLostException))
                             {

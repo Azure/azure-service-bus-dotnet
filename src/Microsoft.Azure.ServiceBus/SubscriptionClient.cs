@@ -448,8 +448,8 @@ namespace Microsoft.Azure.ServiceBus
             description.ValidateDescriptionName();
             MessagingEventSource.Log.AddRuleStart(this.ClientId, description.Name);
 
-            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
-            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.AddRuleStart(description) : null;
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.AddRuleStart(description) : null;
             Task addRuleTask = null;
 
             try
@@ -459,11 +459,12 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.AddRuleException(this.ClientId, exception);
-                if (isDiagnosticsEnabled)
+                if (isDiagnosticSourceEnabled)
                 {
                     this.diagnosticSource.ReportException(exception);
                 }
+
+                MessagingEventSource.Log.AddRuleException(this.ClientId, exception);
                 throw;
             }
             finally
@@ -488,8 +489,8 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             MessagingEventSource.Log.RemoveRuleStart(this.ClientId, ruleName);
-            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
-            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.RemoveRuleStart(ruleName) : null;
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.RemoveRuleStart(ruleName) : null;
             Task removeRuleTask = null;
 
             try
@@ -499,11 +500,12 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.RemoveRuleException(this.ClientId, exception);
-                if (isDiagnosticsEnabled)
+                if (isDiagnosticSourceEnabled)
                 {
                     this.diagnosticSource.ReportException(exception);
                 }
+
+                MessagingEventSource.Log.RemoveRuleException(this.ClientId, exception);
 
                 throw;
             }
@@ -523,8 +525,8 @@ namespace Microsoft.Azure.ServiceBus
             this.ThrowIfClosed();
 
             MessagingEventSource.Log.GetRulesStart(this.ClientId);
-            bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
-            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.GetRulesStart() : null;
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.GetRulesStart() : null;
             Task<IEnumerable<RuleDescription>> getRulesTask = null;
 
             var skip = 0;
@@ -538,11 +540,12 @@ namespace Microsoft.Azure.ServiceBus
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.GetRulesException(this.ClientId, exception);
-                if (isDiagnosticsEnabled)
+                if (isDiagnosticSourceEnabled)
                 {
                     this.diagnosticSource.ReportException(exception);
                 }
+
+                MessagingEventSource.Log.GetRulesException(this.ClientId, exception);
 
                 throw;
             }

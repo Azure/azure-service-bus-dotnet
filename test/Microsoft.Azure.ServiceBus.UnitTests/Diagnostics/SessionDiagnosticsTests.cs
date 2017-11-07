@@ -172,6 +172,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
 
             Assert.True(events.IsEmpty);
 
+            // workaround for https://github.com/Azure/azure-service-bus-dotnet/issues/372:
             // SessionPumpTaskAsync calls AcceptMessageSessionAsync() without cancellation token.
             // Even after SessionPump is stopped, this Task may still wait for session during operation timeout
             // It may interferee with other tests by acception it's sessions and throwing exceptions.
