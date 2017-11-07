@@ -118,21 +118,23 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
         [DisplayTestMethodName]
         async Task SessionHandlerFireEvents()
         {
+            TimeSpan timeout = TimeSpan.FromSeconds(5);
             this.queueClient = new QueueClient(TestUtility.NamespaceConnectionString,
-                TestConstants.SessionNonPartitionedQueueName, ReceiveMode.ReceiveAndDelete)
+                TestConstants.SessionNonPartitionedQueueName, ReceiveMode.ReceiveAndDelete, new NoRetry())
             {
-                OperationTimeout = TimeSpan.FromSeconds(5)
+                OperationTimeout = timeout
             };
 
-            this.queueClient.ServiceBusConnection.OperationTimeout = TimeSpan.FromSeconds(maxWaitSec);
-            this.queueClient.SessionClient.OperationTimeout = TimeSpan.FromSeconds(2);
+            this.queueClient.ServiceBusConnection.OperationTimeout = timeout;
+            this.queueClient.SessionClient.OperationTimeout = timeout;
 
+            Stopwatch sw = Stopwatch.StartNew();
             ManualResetEvent processingDone = new ManualResetEvent(false);
             this.listener.Enable((name, queueName, arg) => !name.Contains("AcceptMessageSession") &&
                                                       !name.Contains("Receive") &&
                                                       !name.Contains("Exception"));
             var sessionId = Guid.NewGuid().ToString();
-            var message = new Message()
+            var message = new Message
             {
                 MessageId = "messageId",
                 SessionId = sessionId
@@ -169,6 +171,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
                 processStart.activity);
 
             Assert.True(events.IsEmpty);
+
+            // SessionPumpTaskAsync calls AcceptMessageSessionAsync() without cancellation token.
+            // Even after SessionPump is stopped, this Task may still wait for session during operation timeout
+            // It may interferee with other tests by acception it's sessions and throwing exceptions.
+            // So, let's wait for timeout and a bit more to make sure all created tasks are completed
+            sw.Stop();
+
+            await Task.Delay((int)(timeout - sw.Elapsed).TotalMilliseconds + 1000);
         }
 
         protected override void Dispose(bool disposing)
