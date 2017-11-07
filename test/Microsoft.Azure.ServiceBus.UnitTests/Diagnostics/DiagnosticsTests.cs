@@ -283,11 +283,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
 
         #endregion
 
-        #region ReceiveDeffered
+        #region ReceiveDeferred
 
-        protected void AssertReceiveDefferedStart(string name, object payload, Activity activity)
+        protected void AssertReceiveDeferredStart(string name, object payload, Activity activity)
         {
-            Assert.Equal("Microsoft.Azure.ServiceBus.ReceiveDeffered.Start", name);
+            Assert.Equal("Microsoft.Azure.ServiceBus.ReceiveDeferred.Start", name);
             AssertCommonPayloadProperties(payload);
 
             Assert.Single(GetPropertyValueFromAnonymousTypeInstance<IEnumerable<long>>(payload, "SequenceNumbers"));
@@ -296,9 +296,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             Assert.Null(activity.Parent);
         }
 
-        protected void AssertReceiveDefferedStop(string name, object payload, Activity activity, Activity receiveActivity, Activity sendActivity)
+        protected void AssertReceiveDeferredStop(string name, object payload, Activity activity, Activity receiveActivity, Activity sendActivity)
         {
-            Assert.Equal("Microsoft.Azure.ServiceBus.ReceiveDeffered.Stop", name);
+            Assert.Equal("Microsoft.Azure.ServiceBus.ReceiveDeferred.Stop", name);
             AssertCommonStopPayloadProperties(payload);
 
             if (receiveActivity != null)

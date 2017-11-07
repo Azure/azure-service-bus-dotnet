@@ -375,7 +375,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
 
         [Fact]
         [DisplayTestMethodName]
-        async Task DeferReceiveDefferedFireEvents()
+        async Task DeferReceiveDeferredFireEvents()
         {
             this.queueClient = new QueueClient(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName,
                 ReceiveMode.PeekLock);
@@ -403,13 +403,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             Assert.True(this.events.TryDequeue(out var deferStop));
             AssertDeferStop(deferStop.eventName, deferStop.payload, deferStop.activity, deferStart.activity);
 
-            Assert.True(this.events.TryDequeue(out var receiveDefferedStart));
-            AssertReceiveDefferedStart(receiveDefferedStart.eventName, receiveDefferedStart.payload,
-                receiveDefferedStart.activity);
+            Assert.True(this.events.TryDequeue(out var receiveDeferredStart));
+            AssertReceiveDeferredStart(receiveDeferredStart.eventName, receiveDeferredStart.payload,
+                receiveDeferredStart.activity);
 
-            Assert.True(this.events.TryDequeue(out var receiveDefferedStop));
-            AssertReceiveDefferedStop(receiveDefferedStop.eventName, receiveDefferedStop.payload,
-                receiveDefferedStop.activity, receiveDefferedStart.activity, sendStart.activity);
+            Assert.True(this.events.TryDequeue(out var receiveDeferredStop));
+            AssertReceiveDeferredStop(receiveDeferredStop.eventName, receiveDeferredStop.payload,
+                receiveDeferredStop.activity, receiveDeferredStart.activity, sendStart.activity);
 
             Assert.True(this.events.IsEmpty);
         }

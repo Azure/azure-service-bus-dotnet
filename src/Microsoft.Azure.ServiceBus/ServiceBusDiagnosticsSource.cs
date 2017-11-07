@@ -274,11 +274,11 @@ namespace Microsoft.Azure.ServiceBus
         #endregion
 
 
-        #region ReceiveDeffered
+        #region ReceiveDeferred
 
-        internal Activity ReceiveDefferedStart(IEnumerable<long> sequenceNumbers)
+        internal Activity ReceiveDeferredStart(IEnumerable<long> sequenceNumbers)
         {
-            return Start("ReceiveDeffered", () => new
+            return Start("ReceiveDefered", () => new
             {
                 SequenceNumbers = sequenceNumbers,
                 Entity = this.entityPath,
@@ -287,7 +287,7 @@ namespace Microsoft.Azure.ServiceBus
             null);
         }
 
-        internal void ReceiveDefferedStop(Activity activity, IEnumerable<long> sequenceNumbers, TaskStatus? status, IList<Message> messageList)
+        internal void ReceiveDeferredStop(Activity activity, IEnumerable<long> sequenceNumbers, TaskStatus? status, IList<Message> messageList)
         {
             if (activity != null)
             {

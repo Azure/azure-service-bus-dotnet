@@ -383,7 +383,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessageReceiveDeferredMessageStart(this.ClientId, sequenceNumberList.Length, sequenceNumberList);
 
             bool isDiagnosticsEnabled = ServiceBusDiagnosticSource.IsEnabled();
-            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.ReceiveDefferedStart(sequenceNumberList) : null;
+            Activity activity = isDiagnosticsEnabled ? this.diagnosticSource.ReceiveDeferredStart(sequenceNumberList) : null;
             Task receiveTask = null;
 
             IList<Message> messages = null;
@@ -407,7 +407,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
             finally
             {
-                this.diagnosticSource.ReceiveDefferedStop(activity, sequenceNumberList, receiveTask?.Status, messages);
+                this.diagnosticSource.ReceiveDeferredStop(activity, sequenceNumberList, receiveTask?.Status, messages);
             }
             MessagingEventSource.Log.MessageReceiveDeferredMessageStop(this.ClientId, messages?.Count ?? 0);
 
