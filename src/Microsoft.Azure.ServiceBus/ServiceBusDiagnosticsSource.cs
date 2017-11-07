@@ -211,7 +211,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             return Start("Receive", () => new
             {
-                MessageCount = messageCount,
+                RequestedMessageCount = messageCount,
                 Entity = this.entityPath,
                 Endpoint = this.endpoint
             },
@@ -226,7 +226,7 @@ namespace Microsoft.Azure.ServiceBus
                 SetTags(activity, messageList);
                 DiagnosticListener.StopActivity(activity, new
                 {
-                    MessageCount = messageCount,
+                    RequestedMessageCount = messageCount,
                     Entity = this.entityPath,
                     Endpoint = this.endpoint,
                     Status = status ?? TaskStatus.Faulted,
@@ -245,7 +245,7 @@ namespace Microsoft.Azure.ServiceBus
             return Start("Peek", () => new
             {
                 FromSequenceNumber = fromSequenceNumber,
-                MessageCount = messageCount,
+                RequestedMessageCount = messageCount,
                 Entity = this.entityPath,
                 Endpoint = this.endpoint
             },
@@ -262,7 +262,7 @@ namespace Microsoft.Azure.ServiceBus
                 DiagnosticListener.StopActivity(activity, new
                 {
                     FromSequenceNumber = fromSequenceNumber,
-                    MessageCount = messageCount,
+                    RequestedMessageCount = messageCount,
                     Entity = this.entityPath,
                     Endpoint = this.endpoint,
                     Status = status ?? TaskStatus.Faulted,
@@ -278,7 +278,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal Activity ReceiveDeferredStart(IEnumerable<long> sequenceNumbers)
         {
-            return Start("ReceiveDefered", () => new
+            return Start("ReceiveDeferred", () => new
             {
                 SequenceNumbers = sequenceNumbers,
                 Entity = this.entityPath,

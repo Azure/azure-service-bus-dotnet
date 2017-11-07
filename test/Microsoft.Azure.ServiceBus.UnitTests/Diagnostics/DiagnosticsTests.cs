@@ -243,7 +243,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             Assert.Equal("Microsoft.Azure.ServiceBus.Receive.Start", name);
             AssertCommonPayloadProperties(payload);
 
-            var count = GetPropertyValueFromAnonymousTypeInstance<int>(payload, "MessageCount");
+            var count = GetPropertyValueFromAnonymousTypeInstance<int>(payload, "RequestedMessageCount");
             if (messagesCount != -1)
             {
                 Assert.Equal(messagesCount, count);
@@ -264,7 +264,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
                 Assert.Equal(receiveActivity, activity);
             }
 
-            Assert.Equal(sentMessagesCount, GetPropertyValueFromAnonymousTypeInstance<int>(payload, "MessageCount"));
+            Assert.Equal(sentMessagesCount, GetPropertyValueFromAnonymousTypeInstance<int>(payload, "RequestedMessageCount"));
             var messages = GetPropertyValueFromAnonymousTypeInstance<IList<Message>>(payload, "Messages");
 
             if (receivedMessagesCount != -1)
@@ -357,7 +357,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             AssertCommonPayloadProperties(payload);
 
             GetPropertyValueFromAnonymousTypeInstance<long>(payload, "FromSequenceNumber");
-            Assert.Equal(1, GetPropertyValueFromAnonymousTypeInstance<int>(payload, "MessageCount"));
+            Assert.Equal(1, GetPropertyValueFromAnonymousTypeInstance<int>(payload, "RequestedMessageCount"));
 
             Assert.NotNull(activity);
             Assert.Null(activity.Parent);
@@ -374,7 +374,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             }
 
             GetPropertyValueFromAnonymousTypeInstance<long>(payload, "FromSequenceNumber");
-            Assert.Equal(1, GetPropertyValueFromAnonymousTypeInstance<int>(payload, "MessageCount"));
+            Assert.Equal(1, GetPropertyValueFromAnonymousTypeInstance<int>(payload, "RequestedMessageCount"));
             var messages = GetPropertyValueFromAnonymousTypeInstance<IList<Message>>(payload, "Messages");
             AssertTags(messages, activity);
 
