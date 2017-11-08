@@ -56,6 +56,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         readonly bool ownsConnection;
         readonly object syncLock;
+
         int prefetchCount;
         MessageSender innerSender;
         MessageReceiver innerReceiver;
@@ -276,7 +277,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.ClientId,
                                 this.ReceiveMode,
                                 this.SessionClient,
-                                this.ServiceBusConnection.Endpoint.Authority);
+                                this.ServiceBusConnection.Endpoint);
                         }
                     }
                 }
@@ -305,6 +306,7 @@ namespace Microsoft.Azure.ServiceBus
         public Task SendAsync(IList<Message> messageList)
         {
             this.ThrowIfClosed();
+
             return this.InnerSender.SendAsync(messageList);
         }
 
