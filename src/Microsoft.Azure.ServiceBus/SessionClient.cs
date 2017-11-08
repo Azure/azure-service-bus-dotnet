@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
     using Amqp;
@@ -45,6 +46,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         const int DefaultPrefetchCount = 0;
         readonly bool ownsConnection;
+        readonly ServiceBusDiagnosticSource diagnosticSource;
 
         /// <summary>
         /// Creates a new SessionClient from a <see cref="ServiceBusConnectionStringBuilder"/>
@@ -123,6 +125,7 @@ namespace Microsoft.Azure.ServiceBus
             this.ReceiveMode = receiveMode;
             this.PrefetchCount = prefetchCount;
             this.CbsTokenProvider = cbsTokenProvider;
+            this.diagnosticSource = new ServiceBusDiagnosticSource(entityPath, serviceBusConnection.Endpoint);
 
             // Register plugins on the message session.
             if (registeredPlugins != null)
@@ -213,6 +216,10 @@ namespace Microsoft.Azure.ServiceBus
                 this.PrefetchCount,
                 sessionId);
 
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.AcceptMessageSessionStart(sessionId) : null;
+            Task acceptMessageSessionTask = null;
+
             var session = new MessageSession(
                 this.EntityPath,
                 this.EntityType,
@@ -226,11 +233,18 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
-                await this.RetryPolicy.RunOperation(() => session.GetSessionReceiverLinkAsync(serverWaitTime), serverWaitTime)
-                    .ConfigureAwait(false);
+                acceptMessageSessionTask = this.RetryPolicy.RunOperation(
+                    () => session.GetSessionReceiverLinkAsync(serverWaitTime),
+                    serverWaitTime);
+                await acceptMessageSessionTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
+                if (isDiagnosticSourceEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
+
                 MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionException(
                     this.ClientId,
                     this.EntityPath,
@@ -238,6 +252,10 @@ namespace Microsoft.Azure.ServiceBus
 
                 await session.CloseAsync().ConfigureAwait(false);
                 throw AmqpExceptionHelper.GetClientException(exception);
+            }
+            finally
+            {
+                this.diagnosticSource.AcceptMessageSessionStop(activity, session.SessionId, acceptMessageSessionTask?.Status);
             }
 
             MessagingEventSource.Log.AmqpSessionClientAcceptMessageSessionStop(
