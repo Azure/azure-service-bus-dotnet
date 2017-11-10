@@ -262,8 +262,8 @@ namespace Microsoft.Azure.ServiceBus
     }
     public class ServiceBusCommunicationException : Microsoft.Azure.ServiceBus.ServiceBusException
     {
-        protected internal ServiceBusCommunicationException(string message) { }
-        protected internal ServiceBusCommunicationException(string message, System.Exception innerException) { }
+        public ServiceBusCommunicationException(string message) { }
+        public ServiceBusCommunicationException(string message, System.Exception innerException) { }
     }
     public class ServiceBusConnectionStringBuilder
     {
