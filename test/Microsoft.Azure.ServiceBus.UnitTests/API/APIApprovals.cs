@@ -1,8 +1,7 @@
-﻿using System;
-using System.Linq;
-
-namespace Microsoft.Azure.ServiceBus.UnitTests.API
+﻿namespace Microsoft.Azure.ServiceBus.UnitTests.API
 {
+    using System;
+    using System.Linq;
     using ApprovalTests;
     using Xunit;
 
