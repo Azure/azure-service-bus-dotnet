@@ -1,7 +1,7 @@
 ﻿using ApprovalTests.Reporters;
 
 #if NET461
-[assembly: UseReporter(typeof(DiffReporter), typeof(AllFailingTestsClipboardReporter))]
+[assembly: UseReporter(typeof(XUnit2Reporter), typeof(AllFailingTestsClipboardReporter))]
 #else
-[assembly: UseReporter(typeof(DiffReporter))]
+[assembly: UseReporter(typeof(XUnit2Reporter))]
 #endif
