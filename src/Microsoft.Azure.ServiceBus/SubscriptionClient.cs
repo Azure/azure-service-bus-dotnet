@@ -12,6 +12,7 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.ServiceBus.Amqp;
     using Microsoft.Azure.ServiceBus.Core;
     using Microsoft.Azure.ServiceBus.Primitives;
+    using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
     /// <summary>
     /// SubscriptionClient can be used for all basic interactions with a Service Bus Subscription.
@@ -97,7 +98,148 @@ namespace Microsoft.Azure.ServiceBus
             this.ownsConnection = true;
         }
 
-        SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode, RetryPolicy retryPolicy)
+        /// <summary>
+        /// Creates a new instance of the Subscription client using the specified endpoint, entity path, and token provider.
+        /// </summary>
+        /// <param name="endpoint">Fully qualified domain name for Service Bus. Most likely, {yournamespace}.servicebus.windows.net</param>
+        /// <param name="topicPath">Topic path.</param>
+        /// <param name="subscriptionName">Subscription name.</param>
+        /// <param name="tokenProvider">Token provider which will generate security tokens for authorization.</param>
+        /// <param name="transportType">Transport type.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <returns></returns>
+        public SubscriptionClient(
+            string endpoint,
+            string topicPath,
+            string subscriptionName,
+            ITokenProvider tokenProvider,
+            TransportType transportType = TransportType.Amqp,
+            ReceiveMode receiveMode = ReceiveMode.PeekLock,
+            RetryPolicy retryPolicy = null)
+            : this(new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), topicPath, subscriptionName, receiveMode, retryPolicy, false)
+        {
+            if (tokenProvider == null)
+            {
+                throw Fx.Exception.ArgumentNull(nameof(tokenProvider));
+            }
+
+            this.InternalTokenProvider = tokenProvider;
+            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
+        }
+
+        /// <summary>
+        /// Creates a new instance of the Subscription client using the specified endpoint, entity path, and AAD authentication context.
+        /// </summary>
+        /// <param name="endpoint">Fully qualified domain name for Service Bus. Most likely, {yournamespace}.servicebus.windows.net</param>
+        /// <param name="topicPath">Topic path.</param>
+        /// <param name="subscriptionName">Subscription name.</param>
+        /// <param name="authContext">AuthenticationContext for AAD.</param>
+        /// <param name="clientCredential">The app credential.</param>
+        /// <param name="transportType">Transport type.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <returns></returns>
+        public SubscriptionClient(
+            string endpoint,
+            string topicPath,
+            string subscriptionName,
+            AuthenticationContext authContext,
+            ClientCredential clientCredential,
+            TransportType transportType = TransportType.Amqp,
+            ReceiveMode receiveMode = ReceiveMode.PeekLock,
+            RetryPolicy retryPolicy = null)
+            : this(endpoint, topicPath, subscriptionName, TokenProvider.CreateAadTokenProvider(authContext, clientCredential), transportType, receiveMode, retryPolicy)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the Subscription client using the specified endpoint, entity path, and AAD authentication context.
+        /// </summary>
+        /// <param name="endpoint">Fully qualified domain name for Service Bus. Most likely, {yournamespace}.servicebus.windows.net</param>
+        /// <param name="topicPath">Topic path.</param>
+        /// <param name="subscriptionName">Subscription name.</param>
+        /// <param name="authContext">AuthenticationContext for AAD.</param>
+        /// <param name="clientId">ClientId for AAD.</param>
+        /// <param name="redirectUri">The redrectUri on Client App.</param>
+        /// <param name="platformParameters">Platform parameters</param>
+        /// <param name="userIdentifier">User Identifier</param>
+        /// <param name="transportType">Transport type.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <returns></returns>
+        public SubscriptionClient(
+            string endpoint,
+            string topicPath,
+            string subscriptionName,
+            AuthenticationContext authContext,
+            string clientId,
+            Uri redirectUri,
+            IPlatformParameters platformParameters,
+            UserIdentifier userIdentifier = null,
+            TransportType transportType = TransportType.Amqp,
+            ReceiveMode receiveMode = ReceiveMode.PeekLock,
+            RetryPolicy retryPolicy = null)
+            : this(endpoint, topicPath, subscriptionName, TokenProvider.CreateAadTokenProvider(authContext, clientId, redirectUri, platformParameters, userIdentifier), transportType, receiveMode, retryPolicy)
+        {
+        }
+
+#if !UAP10_0
+        /// <summary>
+        /// Creates a new instance of the Subscription client using the specified endpoint, entity path, and AAD authentication context.
+        /// </summary>
+        /// <param name="endpoint">Fully qualified domain name for Service Bus. Most likely, {yournamespace}.servicebus.windows.net</param>
+        /// <param name="topicPath">Topic path.</param>
+        /// <param name="subscriptionName">Subscription name.</param>
+        /// <param name="authContext">AuthenticationContext for AAD.</param>
+        /// <param name="clientAssertionCertificate">The client assertion certificate credential.</param>
+        /// <param name="transportType">Transport type.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <returns></returns>
+        public SubscriptionClient(
+            string endpoint,
+            string topicPath,
+            string subscriptionName,
+            AuthenticationContext authContext,
+            ClientAssertionCertificate clientAssertionCertificate,
+            TransportType transportType = TransportType.Amqp,
+            ReceiveMode receiveMode = ReceiveMode.PeekLock,
+            RetryPolicy retryPolicy = null)
+            : this(endpoint, topicPath, subscriptionName, TokenProvider.CreateAadTokenProvider(authContext, clientAssertionCertificate), transportType, receiveMode, retryPolicy)
+        {
+        }
+#endif
+
+        /// <summary>
+        /// Creates a new instance of the Subscription client using the specified endpoint, entity path on Azure Managed Service Identity authentication.
+        /// </summary>
+        /// <param name="endpoint">Fully qualified domain name for Service Bus. Most likely, {yournamespace}.servicebus.windows.net</param>
+        /// <param name="topicPath">Topic path.</param>
+        /// <param name="subscriptionName">Subscription name.</param>
+        /// <param name="transportType">Transport type.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <returns></returns>
+        public static SubscriptionClient CreateByManagedServiceIdentity(
+            string endpoint,
+            string topicPath,
+            string subscriptionName,
+            TransportType transportType = TransportType.Amqp,
+            ReceiveMode receiveMode = ReceiveMode.PeekLock,
+            RetryPolicy retryPolicy = null)
+        {
+            return new SubscriptionClient(
+                endpoint,
+                topicPath,
+                subscriptionName,
+                TokenProvider.CreateManagedServiceIdentityTokenProvider(),
+                transportType,
+                receiveMode,
+                retryPolicy);
+        }
+
+        SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode, RetryPolicy retryPolicy, bool createTokenProvider = true)
             : base(nameof(SubscriptionClient), $"{topicPath}/{subscriptionName}", retryPolicy)
         {
             MessagingEventSource.Log.SubscriptionClientCreateStart(serviceBusConnection?.Endpoint.Authority, topicPath, subscriptionName, receiveMode.ToString());
@@ -109,9 +251,13 @@ namespace Microsoft.Azure.ServiceBus
             this.SubscriptionName = subscriptionName;
             this.Path = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
             this.ReceiveMode = receiveMode;
-            this.TokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
             this.diagnosticSource = new ServiceBusDiagnosticSource(this.Path, serviceBusConnection.Endpoint);
+
+            if (createTokenProvider)
+            {
+                this.InternalTokenProvider = this.ServiceBusConnection.CreateTokenProvider();
+                this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, serviceBusConnection.OperationTimeout);
+            }
 
             MessagingEventSource.Log.SubscriptionClientCreateStop(serviceBusConnection.Endpoint.Authority, topicPath, subscriptionName, this.ClientId);
         }
@@ -263,7 +409,7 @@ namespace Microsoft.Azure.ServiceBus
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
-        TokenProvider TokenProvider { get; }
+        ITokenProvider InternalTokenProvider { get; }
 
         /// <summary>
         /// Completes a <see cref="Message"/> using its lock token. This will delete the message from the subscription.
@@ -303,7 +449,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>
         /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
-        /// In order to receive a message from the deadletter sub-queue, you will need a new <see cref="IMessageReceiver"/> or <see cref="IQueueClient"/>, with the corresponding path.
+        /// In order to receive a message from the deadletter sub-queue, you will need a new <see cref="IMessageReceiver"/> or <see cref="ISubscriptionClient"/>, with the corresponding path.
         /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
         /// This operation can only be performed on messages that were received by this client.
         /// </remarks>
