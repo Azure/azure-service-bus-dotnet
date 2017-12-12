@@ -67,7 +67,7 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             this.InternalTokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, serviceBusConnection.OperationTimeout);
+            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
             this.ownsConnection = true;
         }
 
