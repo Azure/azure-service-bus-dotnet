@@ -95,6 +95,8 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(subscriptionName);
             }
 
+            this.InternalTokenProvider = this.ServiceBusConnection.CreateTokenProvider();
+            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
             this.ownsConnection = true;
         }
 
@@ -117,7 +119,7 @@ namespace Microsoft.Azure.ServiceBus
             TransportType transportType = TransportType.Amqp,
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null)
-            : this(new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), topicPath, subscriptionName, receiveMode, retryPolicy, false)
+            : this(new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), topicPath, subscriptionName, receiveMode, retryPolicy)
         {
             if (tokenProvider == null)
             {
@@ -126,6 +128,7 @@ namespace Microsoft.Azure.ServiceBus
 
             this.InternalTokenProvider = tokenProvider;
             this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
+            this.ownsConnection = true;
         }
 
         /// <summary>
@@ -161,7 +164,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="subscriptionName">Subscription name.</param>
         /// <param name="authContext">AuthenticationContext for AAD.</param>
         /// <param name="clientId">ClientId for AAD.</param>
-        /// <param name="redirectUri">The redrectUri on Client App.</param>
+        /// <param name="redirectUri">The redirectUri on Client App.</param>
         /// <param name="platformParameters">Platform parameters</param>
         /// <param name="userIdentifier">User Identifier</param>
         /// <param name="transportType">Transport type.</param>
@@ -221,7 +224,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
         /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
         /// <returns></returns>
-        public static SubscriptionClient CreateByManagedServiceIdentity(
+        public static SubscriptionClient CreateWithManagedServiceIdentity(
             string endpoint,
             string topicPath,
             string subscriptionName,
@@ -239,7 +242,7 @@ namespace Microsoft.Azure.ServiceBus
                 retryPolicy);
         }
 
-        SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode, RetryPolicy retryPolicy, bool createTokenProvider = true)
+        SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode, RetryPolicy retryPolicy)
             : base(nameof(SubscriptionClient), $"{topicPath}/{subscriptionName}", retryPolicy)
         {
             MessagingEventSource.Log.SubscriptionClientCreateStart(serviceBusConnection?.Endpoint.Authority, topicPath, subscriptionName, receiveMode.ToString());
@@ -252,12 +255,6 @@ namespace Microsoft.Azure.ServiceBus
             this.Path = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
             this.ReceiveMode = receiveMode;
             this.diagnosticSource = new ServiceBusDiagnosticSource(this.Path, serviceBusConnection.Endpoint);
-
-            if (createTokenProvider)
-            {
-                this.InternalTokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-                this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, serviceBusConnection.OperationTimeout);
-            }
 
             MessagingEventSource.Log.SubscriptionClientCreateStop(serviceBusConnection.Endpoint.Authority, topicPath, subscriptionName, this.ClientId);
         }

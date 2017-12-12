@@ -96,6 +96,8 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
             }
 
+            this.InternalTokenProvider = this.ServiceBusConnection.CreateTokenProvider();
+            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
             this.ownsConnection = true;
         }
 
@@ -116,7 +118,7 @@ namespace Microsoft.Azure.ServiceBus
             TransportType transportType = TransportType.Amqp,
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null)
-            : this(new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), entityPath, receiveMode, retryPolicy, false)
+            : this(new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), entityPath, receiveMode, retryPolicy)
         {
             if (tokenProvider == null)
             {
@@ -125,6 +127,7 @@ namespace Microsoft.Azure.ServiceBus
 
             this.InternalTokenProvider = tokenProvider;
             this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
+            this.ownsConnection = true;
         }
 
         /// <summary>
@@ -157,7 +160,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="entityPath">Queue path.</param>
         /// <param name="authContext">AuthenticationContext for AAD.</param>
         /// <param name="clientId">ClientId for AAD.</param>
-        /// <param name="redirectUri">The redrectUri on Client App.</param>
+        /// <param name="redirectUri">The redirectUri on Client App.</param>
         /// <param name="platformParameters">Platform parameters</param>
         /// <param name="userIdentifier">User Identifier</param>
         /// <param name="transportType">Transport type.</param>
@@ -213,7 +216,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
         /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
         /// <returns></returns>
-        public static QueueClient CreateByManagedServiceIdentity(
+        public static QueueClient CreateWithManagedServiceIdentity(
             string endpoint,
             string entityPath,
             TransportType transportType = TransportType.Amqp,
@@ -229,7 +232,7 @@ namespace Microsoft.Azure.ServiceBus
                 retryPolicy);
         }
 
-        QueueClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode, RetryPolicy retryPolicy, bool createTokenProvider = true)
+        QueueClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, ReceiveMode receiveMode, RetryPolicy retryPolicy)
             : base(nameof(QueueClient), entityPath, retryPolicy)
         {
             MessagingEventSource.Log.QueueClientCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath, receiveMode.ToString());
@@ -239,12 +242,6 @@ namespace Microsoft.Azure.ServiceBus
             this.syncLock = new object();
             this.QueueName = entityPath;
             this.ReceiveMode = receiveMode;
-
-            if (createTokenProvider)
-            {
-                this.InternalTokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-                this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, serviceBusConnection.OperationTimeout);
-            }
 
             MessagingEventSource.Log.QueueClientCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
         }

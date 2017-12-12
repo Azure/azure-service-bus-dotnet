@@ -8,7 +8,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
     /// <summary>
-    /// Represents the Azure Active Directory token provider for the Event Hubs.
+    /// Represents the Azure Active Directory token provider for the Service Bus.
     /// </summary>
     public class AzureActiveDirectoryTokenProvider : TokenProvider
     {

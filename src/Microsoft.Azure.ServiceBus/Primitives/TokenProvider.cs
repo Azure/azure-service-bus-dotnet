@@ -97,7 +97,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <summary>Creates an Azure Active Directory token provider.</summary>
         /// <param name="authContext">AuthenticationContext for AAD.</param>
         /// <param name="clientId">ClientId for AAD.</param>
-        /// <param name="redirectUri">The redrectUri on Client App.</param>
+        /// <param name="redirectUri">The redirectUri on Client App.</param>
         /// <param name="platformParameters">Platform parameters</param>
         /// <param name="userIdentifier">User Identifier</param>
         /// <returns>The <see cref="TokenProvider" /> for returning Json web token.</returns>

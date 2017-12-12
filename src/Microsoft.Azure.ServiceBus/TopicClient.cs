@@ -66,6 +66,8 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
             }
 
+            this.InternalTokenProvider = this.ServiceBusConnection.CreateTokenProvider();
+            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, serviceBusConnection.OperationTimeout);
             this.ownsConnection = true;
         }
 
@@ -84,7 +86,7 @@ namespace Microsoft.Azure.ServiceBus
             ITokenProvider tokenProvider,
             TransportType transportType = TransportType.Amqp,
             RetryPolicy retryPolicy = null)
-            : this(new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), entityPath, retryPolicy, false)
+            : this(new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), entityPath, retryPolicy)
         {
             if (tokenProvider == null)
             {
@@ -93,6 +95,7 @@ namespace Microsoft.Azure.ServiceBus
 
             this.InternalTokenProvider = tokenProvider;
             this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
+            this.ownsConnection = true;
         }
 
         /// <summary>
@@ -123,7 +126,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="entityPath">Topic path.</param>
         /// <param name="authContext">AuthenticationContext for AAD.</param>
         /// <param name="clientId">ClientId for AAD.</param>
-        /// <param name="redirectUri">The redrectUri on Client App.</param>
+        /// <param name="redirectUri">The redirectUri on Client App.</param>
         /// <param name="platformParameters">Platform parameters</param>
         /// <param name="userIdentifier">User Identifier</param>
         /// <param name="transportType">Transport type.</param>
@@ -174,7 +177,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="transportType">Transport type.</param>
         /// <param name="retryPolicy">Retry policy for topic operations. Defaults to <see cref="RetryPolicy.Default"/></param>
         /// <returns></returns>
-        public static TopicClient CreateByManagedServiceIdentity(
+        public static TopicClient CreateWithManagedServiceIdentity(
             string endpoint,
             string entityPath,
             TransportType transportType = TransportType.Amqp,
@@ -188,7 +191,7 @@ namespace Microsoft.Azure.ServiceBus
                 retryPolicy);
         }
 
-        TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, RetryPolicy retryPolicy, bool createTokenProvider = true)
+        TopicClient(ServiceBusNamespaceConnection serviceBusConnection, string entityPath, RetryPolicy retryPolicy)
             : base(nameof(TopicClient), entityPath, retryPolicy)
         {
             MessagingEventSource.Log.TopicClientCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath);
@@ -197,12 +200,6 @@ namespace Microsoft.Azure.ServiceBus
             this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
             this.TopicName = entityPath;
-
-            if (createTokenProvider)
-            {
-                this.InternalTokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-                this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, serviceBusConnection.OperationTimeout);
-            }
 
             MessagingEventSource.Log.TopicClientCreateStop(serviceBusConnection?.Endpoint.Authority, entityPath, this.ClientId);
         }

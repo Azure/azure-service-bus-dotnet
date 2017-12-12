@@ -38,7 +38,9 @@ namespace Microsoft.Azure.ServiceBus
         public static readonly TimeSpan NoMessageBackoffTimeSpan = TimeSpan.FromSeconds(5);
 
         public const string SasTokenType = "servicebus.windows.net:sastoken";
+
         public const string JsonWebTokenType = "jwt";
+
         public const string AadServiceBusAudience = "https://servicebus.azure.net/";
     }
 }
