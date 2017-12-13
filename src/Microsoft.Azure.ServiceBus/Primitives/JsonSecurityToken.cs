@@ -19,12 +19,11 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <param name="rawToken">Raw JSON Web Token string</param>
         /// <param name="audience">The audience</param>
         public JsonSecurityToken(string rawToken, string audience)
+            : base(rawToken, DateTime.MinValue, audience, Constants.JsonWebTokenType)
         {
+            // Extract expiresAtUtc from token and override it here.
             var jwtSecurityToken = new JwtSecurityToken(rawToken);
-            this.tokenType = Constants.JsonWebTokenType;
-            this.token = rawToken;
             this.expiresAtUtc = jwtSecurityToken.ValidTo;
-            this.audience = audience;
         }
     }
 }

@@ -30,10 +30,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// </summary>
         protected string tokenType;
 
-        internal SecurityToken()
-        {
-        }
-
         /// <summary>
         /// Creates a new instance of the <see cref="SecurityToken"/> class.
         /// </summary>
