@@ -32,7 +32,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// </summary>
         /// <param name="tokenString">The token</param>
         public SharedAccessSignatureToken(string tokenString)
-            : base(tokenString, GetExpirationDateFromToken(tokenString), GetAudienceFromToken(tokenString), Constants.SasTokenType)
+            : base(tokenString, GetExpirationDateTimeUtcFromToken(tokenString), GetAudienceFromToken(tokenString), Constants.SasTokenType)
         {
         }
 
@@ -115,7 +115,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             return audience;
         }
 
-        static DateTime GetExpirationDateFromToken(string token)
+        static DateTime GetExpirationDateTimeUtcFromToken(string token)
         {
             string expiresIn;
             IDictionary<string, string> decodedToken = Decode(token, Decoder, Decoder, SasKeyValueSeparator, SasPairSeparator);
