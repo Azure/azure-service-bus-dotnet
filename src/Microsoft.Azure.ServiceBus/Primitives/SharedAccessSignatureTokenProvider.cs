@@ -21,11 +21,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         internal static readonly TimeSpan DefaultTokenTimeout = TimeSpan.FromMinutes(60);
 
-        /// <summary>
-        /// Represents 00:00:00 UTC Thursday 1, January 1970.
-        /// </summary>
-        public static readonly DateTime EpochTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-
         readonly byte[] encodedSharedAccessKey;
         readonly string keyName;
         readonly TimeSpan tokenTimeToLive;
@@ -158,7 +153,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             static string BuildExpiresOn(TimeSpan timeToLive)
             {
                 DateTime expiresOn = DateTime.UtcNow.Add(timeToLive);
-                TimeSpan secondsFromBaseTime = expiresOn.Subtract(EpochTime);
+                TimeSpan secondsFromBaseTime = expiresOn.Subtract(Constants.EpochTime);
                 long seconds = Convert.ToInt64(secondsFromBaseTime.TotalSeconds, CultureInfo.InvariantCulture);
                 return Convert.ToString(seconds, CultureInfo.InvariantCulture);
             }

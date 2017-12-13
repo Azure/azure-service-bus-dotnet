@@ -42,5 +42,8 @@ namespace Microsoft.Azure.ServiceBus
         public const string JsonWebTokenType = "jwt";
 
         public const string AadServiceBusAudience = "https://servicebus.azure.net/";
+
+        /// Represents 00:00:00 UTC Thursday 1, January 1970.
+        public static readonly DateTime EpochTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
     }
 }
