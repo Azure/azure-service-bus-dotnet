@@ -550,10 +550,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
     }
     public class SecurityToken
     {
-        protected string audience;
-        protected System.DateTime expiresAtUtc;
-        protected string token;
-        protected string tokenType;
         public SecurityToken(string tokenString, System.DateTime expiresAtUtc, string audience, string tokenType) { }
         public string Audience { get; }
         public System.DateTime ExpiresAtUtc { get; }
