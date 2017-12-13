@@ -32,25 +32,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// </summary>
         /// <param name="tokenString">The token</param>
         public SharedAccessSignatureToken(string tokenString)
-            : base(tokenString, DateTime.MinValue, "tmp", Constants.SasTokenType)
-        {
-            if (tokenString == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(tokenString));
-            }
-
-            this.token = tokenString;
-            this.tokenType = Constants.SasTokenType;
-            GetExpirationDateAndAudienceFromToken(tokenString, out this.expiresAtUtc, out this.audience);
-        }
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="SharedAccessSignatureToken"/> class.
-        /// </summary>
-        /// <param name="tokenString">The token</param>
-        /// <param name="expiresAtUtc">The expiration time</param>
-        public SharedAccessSignatureToken(string tokenString, DateTime expiresAtUtc)
-            : base(tokenString, expiresAtUtc, GetAudienceFromToken(tokenString), Constants.SasTokenType)
+            : base(tokenString, GetExpirationDateFromToken(tokenString), GetAudienceFromToken(tokenString), Constants.SasTokenType)
         {
         }
 
@@ -133,7 +115,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             return audience;
         }
 
-        static void GetExpirationDateAndAudienceFromToken(string token, out DateTime expiresOn, out string audience)
+        static DateTime GetExpirationDateFromToken(string token)
         {
             string expiresIn;
             IDictionary<string, string> decodedToken = Decode(token, Decoder, Decoder, SasKeyValueSeparator, SasPairSeparator);
@@ -142,12 +124,9 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 throw new FormatException(Resources.TokenMissingExpiresOn);
             }
 
-            if (!decodedToken.TryGetValue(SignedResourceFullFieldName, out audience))
-            {
-                throw new FormatException(Resources.TokenMissingAudience);
-            }
+            var expiresOn = (SharedAccessSignatureTokenProvider.EpochTime + TimeSpan.FromSeconds(double.Parse(expiresIn, CultureInfo.InvariantCulture)));
 
-            expiresOn = (SharedAccessSignatureTokenProvider.EpochTime + TimeSpan.FromSeconds(double.Parse(expiresIn, CultureInfo.InvariantCulture)));
+            return expiresOn;
         }
 
         static IDictionary<string, string> Decode(string encodedString, Func<string, string> keyDecoder, Func<string, string> valueDecoder, string keyValueSeparator, string pairSeparator)
