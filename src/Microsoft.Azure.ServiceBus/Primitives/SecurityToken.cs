@@ -37,7 +37,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// <param name="expiresAtUtc">The expiration time</param>
         /// <param name="audience">The audience</param>
         /// <param name="tokenType">The type of the token</param>
-        public SecurityToken(string tokenString, DateTime expiresAtUtc, string audience, string tokenType = Constants.SasTokenType)
+        public SecurityToken(string tokenString, DateTime expiresAtUtc, string audience, string tokenType)
         {
             if (string.IsNullOrEmpty(tokenString))
             {

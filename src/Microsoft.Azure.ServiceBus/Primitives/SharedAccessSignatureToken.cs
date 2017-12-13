@@ -32,7 +32,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         /// </summary>
         /// <param name="tokenString">The token</param>
         public SharedAccessSignatureToken(string tokenString)
-            : base(tokenString, DateTime.MinValue, "tmp")
+            : base(tokenString, DateTime.MinValue, "tmp", Constants.SasTokenType)
         {
             if (tokenString == null)
             {
