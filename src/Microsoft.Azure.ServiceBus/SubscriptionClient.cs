@@ -12,7 +12,6 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.ServiceBus.Amqp;
     using Microsoft.Azure.ServiceBus.Core;
     using Microsoft.Azure.ServiceBus.Primitives;
-    using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
     /// <summary>
     /// SubscriptionClient can be used for all basic interactions with a Service Bus Subscription.

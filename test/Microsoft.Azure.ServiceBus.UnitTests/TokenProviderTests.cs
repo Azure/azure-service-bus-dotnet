@@ -4,8 +4,6 @@
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
-    using System.Collections.Generic;
-    using System.Text;
     using System.Threading.Tasks;
     using Microsoft.Azure.ServiceBus.Primitives;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;

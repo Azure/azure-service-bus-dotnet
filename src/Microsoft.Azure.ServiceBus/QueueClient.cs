@@ -10,7 +10,6 @@ namespace Microsoft.Azure.ServiceBus
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.ServiceBus.Core;
     using Microsoft.Azure.ServiceBus.Primitives;
-    using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
     /// <summary>
     /// QueueClient can be used for all basic interactions with a Service Bus Queue.
