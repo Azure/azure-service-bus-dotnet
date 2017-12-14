@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// We dont need this test to run on all flavors. To save build & execution times in checkin tests running this only on NetStandard version.
+#if NETSTANDARD2_0
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
@@ -178,3 +180,4 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
     }
 }
+#endif
