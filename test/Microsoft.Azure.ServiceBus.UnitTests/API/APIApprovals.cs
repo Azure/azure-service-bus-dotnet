@@ -1,23 +1,25 @@
-﻿#if NET461
-
-namespace Microsoft.Azure.ServiceBus.UnitTests.API
+﻿namespace Microsoft.Azure.ServiceBus.UnitTests.API
 {
-    using System.Runtime.CompilerServices;
+    using System;
+    using System.Linq;
     using ApprovalTests;
-    using ApprovalTests.Reporters;
     using Xunit;
 
     public class ApiApprovals
     {
         [Fact]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [UseReporter(typeof(DiffReporter), typeof(ClipboardReporter))]
         public void ApproveAzureServiceBus()
         {
             var assembly = typeof(Message).Assembly;
-            var publicApi = PublicApiGenerator.ApiGenerator.GeneratePublicApi(assembly, whitelistedNamespacePrefixes: new [] { "Microsoft.Azure.ServiceBus." });
+            var publicApi = Filter(PublicApiGenerator.ApiGenerator.GeneratePublicApi(assembly, whitelistedNamespacePrefixes: new[] { "Microsoft.Azure.ServiceBus." }));
             Approvals.Verify(publicApi);
+        }
+
+        string Filter(string text)
+        {
+            return string.Join(Environment.NewLine, text.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
+                .Where(l => !l.StartsWith("[assembly: System.Runtime.Versioning.TargetFrameworkAttribute"))
+            );
         }
     }
 }
-#endif
