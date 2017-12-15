@@ -18,15 +18,15 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
-    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\ExpectedMessagingExceptionTests.cs"/>
-    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\OnMessageQueueTests.cs"/>
-    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\OnSessionQueueTests.cs"/>
-    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\RetryTests.cs"/>
+    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\ExpectedMessagingExceptionTests.cs" />
+    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\OnMessageQueueTests.cs" />
+    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\OnSessionQueueTests.cs" />
+    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\RetryTests.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\OnMessageTopicSubscriptionTests.cs"/>
-    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\OnSessionTopicSubscriptionTests.cs"/>    
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\OnMessageTopicSubscriptionTests.cs" />
+    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\OnSessionTopicSubscriptionTests.cs" />    
   </ItemGroup>
 
   <ItemGroup>
