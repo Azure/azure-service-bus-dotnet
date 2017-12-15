@@ -22,6 +22,10 @@
     <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\OnMessageQueueTests.cs" />
     <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\OnSessionQueueTests.cs" />
     <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\RetryTests.cs" />
+    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\Diagnostics\ExtractActivityTests.cs" />
+    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\Diagnostics\QueueClientDiagnosticsTests.cs" />
+    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\Diagnostics\SubscriptionClientDiagnosticsTests.cs" />
+    <compile Remove="..\..\test\Microsoft.Azure.ServiceBus.UnitTests\Diagnostics\SessionDiagnosticsTests.cs" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
