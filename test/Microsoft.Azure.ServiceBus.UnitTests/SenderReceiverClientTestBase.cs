@@ -166,6 +166,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         internal async Task ReceiveShouldReturnNoLaterThanServerWaitTimeTestCase(IMessageSender messageSender, IMessageReceiver messageReceiver, int messageCount)
         {
             var timer = Stopwatch.StartNew();
+            TestUtility.Log($"starting Receive");
             var message = await messageReceiver.ReceiveAsync(TimeSpan.FromSeconds(2));
             timer.Stop();
 
@@ -175,6 +176,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             // Ensuring total time taken is less than 60 seconds, which is the default timeout for receive.
             // Keeping the value of 40 to avoid flakiness in test infrastructure which may lead to extended time taken.
             // Todo: Change this value to a lower number once test infra is performant.
+            TestUtility.Log($"Elapsed Milliseconds: {timer.Elapsed.TotalMilliseconds}");
             Assert.True(timer.Elapsed.TotalSeconds < 40);
         }
 

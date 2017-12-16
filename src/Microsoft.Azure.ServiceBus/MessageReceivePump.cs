@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
+    using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
     using Core;
@@ -17,19 +18,21 @@ namespace Microsoft.Azure.ServiceBus
         readonly IMessageReceiver messageReceiver;
         readonly CancellationToken pumpCancellationToken;
         readonly SemaphoreSlim maxConcurrentCallsSemaphoreSlim;
+        readonly ServiceBusDiagnosticSource diagnosticSource;
 
         public MessageReceivePump(IMessageReceiver messageReceiver,
             MessageHandlerOptions registerHandlerOptions,
             Func<Message, CancellationToken, Task> callback,
-            string endpoint,
+            Uri endpoint,
             CancellationToken pumpCancellationToken)
         {
             this.messageReceiver = messageReceiver ?? throw new ArgumentNullException(nameof(messageReceiver));
             this.registerHandlerOptions = registerHandlerOptions;
             this.onMessageCallback = callback;
-            this.endpoint = endpoint;
+            this.endpoint = endpoint.Authority;
             this.pumpCancellationToken = pumpCancellationToken;
             this.maxConcurrentCallsSemaphoreSlim = new SemaphoreSlim(this.registerHandlerOptions.MaxConcurrentCalls);
+            this.diagnosticSource = new ServiceBusDiagnosticSource(messageReceiver.Path, endpoint);
         }
 
         public void StartPump()
@@ -63,13 +66,28 @@ namespace Microsoft.Azure.ServiceBus
                     if (message != null)
                     {
                         MessagingEventSource.Log.MessageReceiverPumpTaskStart(this.messageReceiver.ClientId, message, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
-                        TaskExtensionHelper.Schedule(() => this.MessageDispatchTask(message));
+
+                        TaskExtensionHelper.Schedule(() =>
+                        {
+                            if (ServiceBusDiagnosticSource.IsEnabled())
+                            {
+                                return this.MessageDispatchTaskInstrumented(message);
+                            }
+                            else
+                            {
+                                return this.MessageDispatchTask(message);
+                            }
+                        });
                     }
                 }
                 catch (Exception exception)
                 {
-                    MessagingEventSource.Log.MessageReceivePumpTaskException(this.messageReceiver.ClientId, string.Empty, exception);
-                    await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Receive).ConfigureAwait(false);
+                    // Not reporting an ObjectDisposedException as we're stopping the pump
+                    if (!(exception is ObjectDisposedException && this.pumpCancellationToken.IsCancellationRequested))
+                    {
+                        MessagingEventSource.Log.MessageReceivePumpTaskException(this.messageReceiver.ClientId, string.Empty, exception);
+                        await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Receive).ConfigureAwait(false); 
+                    }
                 }
                 finally
                 {
@@ -80,6 +98,26 @@ namespace Microsoft.Azure.ServiceBus
                         MessagingEventSource.Log.MessageReceiverPumpTaskStop(this.messageReceiver.ClientId, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
                     }
                 }
+            }
+        }
+
+        async Task MessageDispatchTaskInstrumented(Message message)
+        {
+            Activity activity = this.diagnosticSource.ProcessStart(message);
+            Task processTask = null;
+            try
+            {
+                processTask = MessageDispatchTask(message);
+                await processTask.ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                this.diagnosticSource.ReportException(e);
+                throw;
+            }
+            finally
+            {
+                this.diagnosticSource.ProcessStop(activity, message, processTask?.Status);
             }
         }
 
@@ -103,6 +141,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 MessagingEventSource.Log.MessageReceiverPumpUserCallbackStart(this.messageReceiver.ClientId, message);
                 await this.onMessageCallback(message, this.pumpCancellationToken).ConfigureAwait(false);
+
                 MessagingEventSource.Log.MessageReceiverPumpUserCallbackStop(this.messageReceiver.ClientId, message);
             }
             catch (Exception exception)
@@ -116,8 +155,13 @@ namespace Microsoft.Azure.ServiceBus
                     await this.AbandonMessageIfNeededAsync(message).ConfigureAwait(false);
                 }
 
+                if (ServiceBusDiagnosticSource.IsEnabled())
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
                 // AbandonMessageIfNeededAsync should take care of not throwing exception
                 this.maxConcurrentCallsSemaphoreSlim.Release();
+
                 return;
             }
             finally
@@ -204,9 +248,10 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     MessagingEventSource.Log.MessageReceiverPumpRenewMessageException(this.messageReceiver.ClientId, message, exception);
 
-                    // TaskCancelled is expected here as renewTasks will be cancelled after the Complete call is made.
-                    // Lets not bother user with this exception.
-                    if (!(exception is TaskCanceledException))
+                    // TaskCanceled is expected here as renewTasks will be cancelled after the Complete call is made.
+                    // ObjectDisposedException should only happen here because the CancellationToken was disposed at which point 
+                    // this renew exception is not relevant anymore. Lets not bother user with this exception.
+                    if (!(exception is TaskCanceledException) && !(exception is ObjectDisposedException))
                     {
                         await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.RenewLock).ConfigureAwait(false);
                     }

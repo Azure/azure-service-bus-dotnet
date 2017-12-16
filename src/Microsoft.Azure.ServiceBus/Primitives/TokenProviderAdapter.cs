@@ -14,10 +14,10 @@ namespace Microsoft.Azure.ServiceBus.Primitives
     /// </summary>
     sealed class TokenProviderAdapter : ICbsTokenProvider
     {
-        readonly TokenProvider tokenProvider;
+        readonly ITokenProvider tokenProvider;
         readonly TimeSpan operationTimeout;
 
-        public TokenProviderAdapter(TokenProvider tokenProvider, TimeSpan operationTimeout)
+        public TokenProviderAdapter(ITokenProvider tokenProvider, TimeSpan operationTimeout)
         {
             Debug.Assert(tokenProvider != null, "tokenProvider cannot be null");
             this.tokenProvider = tokenProvider;
@@ -27,7 +27,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public async Task<CbsToken> GetTokenAsync(Uri namespaceAddress, string appliesTo, string[] requiredClaims)
         {
             var claim = requiredClaims?.FirstOrDefault();
-            var securityToken = await this.tokenProvider.GetTokenAsync(appliesTo, claim, this.operationTimeout).ConfigureAwait(false);
+            var securityToken = await this.tokenProvider.GetTokenAsync(appliesTo, this.operationTimeout).ConfigureAwait(false);
             return new CbsToken(securityToken.TokenValue, CbsConstants.ServiceBusSasTokenType, securityToken.ExpiresAtUtc);
         }
     }

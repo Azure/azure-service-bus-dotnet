@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
@@ -52,6 +53,8 @@ namespace Microsoft.Azure.ServiceBus
         int prefetchCount;
         readonly object syncLock;
         readonly bool ownsConnection;
+        readonly ServiceBusDiagnosticSource diagnosticSource;
+
         IInnerSubscriptionClient innerSubscriptionClient;
         SessionClient sessionClient;
         SessionPumpHost sessionPumpHost;
@@ -91,6 +94,39 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(subscriptionName);
             }
 
+            this.InternalTokenProvider = this.ServiceBusConnection.CreateTokenProvider();
+            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
+            this.ownsConnection = true;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the Subscription client using the specified endpoint, entity path, and token provider.
+        /// </summary>
+        /// <param name="endpoint">Fully qualified domain name for Service Bus. Most likely, {yournamespace}.servicebus.windows.net</param>
+        /// <param name="topicPath">Topic path.</param>
+        /// <param name="subscriptionName">Subscription name.</param>
+        /// <param name="tokenProvider">Token provider which will generate security tokens for authorization.</param>
+        /// <param name="transportType">Transport type.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <returns></returns>
+        public SubscriptionClient(
+            string endpoint,
+            string topicPath,
+            string subscriptionName,
+            ITokenProvider tokenProvider,
+            TransportType transportType = TransportType.Amqp,
+            ReceiveMode receiveMode = ReceiveMode.PeekLock,
+            RetryPolicy retryPolicy = null)
+            : this(new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), topicPath, subscriptionName, receiveMode, retryPolicy)
+        {
+            if (tokenProvider == null)
+            {
+                throw Fx.Exception.ArgumentNull(nameof(tokenProvider));
+            }
+
+            this.InternalTokenProvider = tokenProvider;
+            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
             this.ownsConnection = true;
         }
 
@@ -106,8 +142,7 @@ namespace Microsoft.Azure.ServiceBus
             this.SubscriptionName = subscriptionName;
             this.Path = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
             this.ReceiveMode = receiveMode;
-            this.TokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
+            this.diagnosticSource = new ServiceBusDiagnosticSource(this.Path, serviceBusConnection.Endpoint);
 
             MessagingEventSource.Log.SubscriptionClientCreateStop(serviceBusConnection.Endpoint.Authority, topicPath, subscriptionName, this.ClientId);
         }
@@ -246,7 +281,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.ClientId,
                                 this.ReceiveMode,
                                 this.SessionClient,
-                                this.ServiceBusConnection.Endpoint.Authority);
+                                this.ServiceBusConnection.Endpoint);
                         }
                     }
                 }
@@ -259,7 +294,7 @@ namespace Microsoft.Azure.ServiceBus
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
-        TokenProvider TokenProvider { get; }
+        ITokenProvider InternalTokenProvider { get; }
 
         /// <summary>
         /// Completes a <see cref="Message"/> using its lock token. This will delete the message from the subscription.
@@ -299,7 +334,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <remarks>
         /// A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
         /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
-        /// In order to receive a message from the deadletter sub-queue, you will need a new <see cref="IMessageReceiver"/> or <see cref="IQueueClient"/>, with the corresponding path.
+        /// In order to receive a message from the deadletter sub-queue, you will need a new <see cref="IMessageReceiver"/> or <see cref="ISubscriptionClient"/>, with the corresponding path.
         /// You can use <see cref="EntityNameHelper.FormatDeadLetterPath(string)"/> to help with this.
         /// This operation can only be performed on messages that were received by this client.
         /// </remarks>
@@ -444,14 +479,28 @@ namespace Microsoft.Azure.ServiceBus
             description.ValidateDescriptionName();
             MessagingEventSource.Log.AddRuleStart(this.ClientId, description.Name);
 
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.AddRuleStart(description) : null;
+            Task addRuleTask = null;
+
             try
             {
-                await this.InnerSubscriptionClient.OnAddRuleAsync(description).ConfigureAwait(false);
+                addRuleTask = this.InnerSubscriptionClient.OnAddRuleAsync(description);
+                await addRuleTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
+                if (isDiagnosticSourceEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
+
                 MessagingEventSource.Log.AddRuleException(this.ClientId, exception);
                 throw;
+            }
+            finally
+            {
+                this.diagnosticSource.AddRuleStop(activity, description, addRuleTask?.Status);
             }
 
             MessagingEventSource.Log.AddRuleStop(this.ClientId);
@@ -471,15 +520,29 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             MessagingEventSource.Log.RemoveRuleStart(this.ClientId, ruleName);
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.RemoveRuleStart(ruleName) : null;
+            Task removeRuleTask = null;
 
             try
             {
-                await this.InnerSubscriptionClient.OnRemoveRuleAsync(ruleName).ConfigureAwait(false);
+                removeRuleTask = this.InnerSubscriptionClient.OnRemoveRuleAsync(ruleName);
+                await removeRuleTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
+                if (isDiagnosticSourceEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
+
                 MessagingEventSource.Log.RemoveRuleException(this.ClientId, exception);
+
                 throw;
+            }
+            finally
+            {
+                this.diagnosticSource.RemoveRuleStop(activity, ruleName, removeRuleTask?.Status);
             }
 
             MessagingEventSource.Log.RemoveRuleStop(this.ClientId);
@@ -493,18 +556,33 @@ namespace Microsoft.Azure.ServiceBus
             this.ThrowIfClosed();
 
             MessagingEventSource.Log.GetRulesStart(this.ClientId);
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.GetRulesStart() : null;
+            Task<IEnumerable<RuleDescription>> getRulesTask = null;
+
             var skip = 0;
             var top = int.MaxValue;
-            IEnumerable<RuleDescription> rules;
+            IEnumerable<RuleDescription> rules = null;
 
             try
             {
-                rules = await this.InnerSubscriptionClient.OnGetRulesAsync(top, skip);
+                getRulesTask = this.InnerSubscriptionClient.OnGetRulesAsync(top, skip);
+                rules = await getRulesTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
+                if (isDiagnosticSourceEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
+
                 MessagingEventSource.Log.GetRulesException(this.ClientId, exception);
+
                 throw;
+            }
+            finally
+            {
+                this.diagnosticSource.GetRulesStop(activity, rules, getRulesTask?.Status);
             }
 
             MessagingEventSource.Log.GetRulesStop(this.ClientId);

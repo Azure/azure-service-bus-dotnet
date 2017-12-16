@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
+    using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
     using Primitives;
@@ -19,13 +20,14 @@ namespace Microsoft.Azure.ServiceBus
         readonly CancellationToken pumpCancellationToken;
         readonly SemaphoreSlim maxConcurrentSessionsSemaphoreSlim;
         readonly SemaphoreSlim maxPendingAcceptSessionsSemaphoreSlim;
+        private readonly ServiceBusDiagnosticSource diagnosticSource;
 
         public SessionReceivePump(string clientId,
             ISessionClient client,
             ReceiveMode receiveMode,
             SessionHandlerOptions sessionHandlerOptions,
             Func<IMessageSession, Message, CancellationToken, Task> callback,
-            string endpoint,
+            Uri endpoint,
             CancellationToken token)
         {
             this.client = client ?? throw new ArgumentException(nameof(client));
@@ -33,11 +35,12 @@ namespace Microsoft.Azure.ServiceBus
             this.ReceiveMode = receiveMode;
             this.sessionHandlerOptions = sessionHandlerOptions;
             this.userOnSessionCallback = callback;
-            this.endpoint = endpoint;
+            this.endpoint = endpoint.Authority;
             this.entityPath = client.EntityPath;
             this.pumpCancellationToken = token;
             this.maxConcurrentSessionsSemaphoreSlim = new SemaphoreSlim(this.sessionHandlerOptions.MaxConcurrentSessions);
             this.maxPendingAcceptSessionsSemaphoreSlim = new SemaphoreSlim(this.sessionHandlerOptions.MaxConcurrentAcceptSessionCalls);
+            this.diagnosticSource = new ServiceBusDiagnosticSource(client.EntityPath, endpoint);
         }
 
         ReceiveMode ReceiveMode { get; }
@@ -146,7 +149,10 @@ namespace Microsoft.Azure.ServiceBus
                     }
                     else
                     {
-                        await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.AcceptMessageSession).ConfigureAwait(false);
+                        if (!(exception is ObjectDisposedException && this.pumpCancellationToken.IsCancellationRequested))
+                        {
+                            await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.AcceptMessageSession).ConfigureAwait(false); 
+                        }
                         if (!MessagingUtilities.ShouldRetry(exception))
                         {
                             break;
@@ -197,7 +203,10 @@ namespace Microsoft.Azure.ServiceBus
                             continue;
                         }
 
-                        await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Receive).ConfigureAwait(false);
+                        if (!(exception is ObjectDisposedException && this.pumpCancellationToken.IsCancellationRequested))
+                        {
+                            await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Receive).ConfigureAwait(false); 
+                        }
                         break;
                     }
 
@@ -207,36 +216,54 @@ namespace Microsoft.Azure.ServiceBus
                         break;
                     }
 
-                    // Set the timer
-                    userCallbackTimer.Change(this.sessionHandlerOptions.MaxAutoRenewDuration, TimeSpan.FromMilliseconds(-1));
-                    var callbackExceptionOccurred = false;
+                    bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+                    Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.ProcessSessionStart(session, message) : null;
+                    Task processTask = null;
+
                     try
                     {
-                        await this.userOnSessionCallback(session, message, this.pumpCancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception exception)
-                    {
-                        MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
-                        await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.UserCallback).ConfigureAwait(false);
-                        callbackExceptionOccurred = true;
-                        if (!(exception is MessageLockLostException || exception is SessionLockLostException))
+                        // Set the timer
+                        userCallbackTimer.Change(this.sessionHandlerOptions.MaxAutoRenewDuration,
+                            TimeSpan.FromMilliseconds(-1));
+                        var callbackExceptionOccurred = false;
+                        try
                         {
-                            await this.AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
+                            processTask = this.userOnSessionCallback(session, message, this.pumpCancellationToken);
+                            await processTask.ConfigureAwait(false);
+                        }
+                        catch (Exception exception)
+                        {
+                            if (isDiagnosticSourceEnabled)
+                            {
+                                this.diagnosticSource.ReportException(exception);
+                            }
+
+                            MessagingEventSource.Log.MessageReceivePumpTaskException(this.clientId, session.SessionId, exception);
+                            await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.UserCallback).ConfigureAwait(false);
+                            callbackExceptionOccurred = true;
+                            if (!(exception is MessageLockLostException || exception is SessionLockLostException))
+                            {
+                                await this.AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
+                            }
+                        }
+                        finally
+                        {
+                            userCallbackTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                        }
+
+                        if (!callbackExceptionOccurred)
+                        {
+                            await this.CompleteMessageIfNeededAsync(session, message).ConfigureAwait(false);
+                        }
+                        else if (session.IsClosedOrClosing)
+                        {
+                            // If User closed the session as part of the callback, break out of the loop
+                            break;
                         }
                     }
                     finally
                     {
-                        userCallbackTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                    }
-
-                    if (!callbackExceptionOccurred)
-                    {
-                        await this.CompleteMessageIfNeededAsync(session, message).ConfigureAwait(false);
-                    }
-                    else if (session.IsClosedOrClosing)
-                    {
-                        // If User closed the session as part of the callback, break out of the loop
-                        break;
+                        this.diagnosticSource.ProcessSessionStop(activity, session, message, processTask?.Status);
                     }
                 }
             }
@@ -293,9 +320,10 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     MessagingEventSource.Log.SessionReceivePumpSessionRenewLockException(this.clientId, session.SessionId, exception);
 
-                    // TaskCancelled is expected here as renewTasks will be cancelled after the Complete call is made.
-                    // Lets not bother user with this exception.
-                    if (!(exception is TaskCanceledException))
+                    // TaskCanceled is expected here as renewTasks will be cancelled after the Complete call is made.
+                    // ObjectDisposedException should only happen here because the CancellationToken was disposed at which point 
+                    // this renew exception is not relevant anymore. Lets not bother user with this exception.
+                    if (!(exception is TaskCanceledException) && !(exception is ObjectDisposedException))
                     {
                         await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.RenewLock).ConfigureAwait(false);
                     }

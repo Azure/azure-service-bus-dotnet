@@ -7,9 +7,9 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Core;
-    using Azure.Amqp;
-    using Primitives;
+    using Microsoft.Azure.Amqp;
+    using Microsoft.Azure.ServiceBus.Core;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>
     /// QueueClient can be used for all basic interactions with a Service Bus Queue.
@@ -56,6 +56,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         readonly bool ownsConnection;
         readonly object syncLock;
+
         int prefetchCount;
         MessageSender innerSender;
         MessageReceiver innerReceiver;
@@ -94,6 +95,37 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
             }
 
+            this.InternalTokenProvider = this.ServiceBusConnection.CreateTokenProvider();
+            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
+            this.ownsConnection = true;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the Queue client using the specified endpoint, entity path, and token provider.
+        /// </summary>
+        /// <param name="endpoint">Fully qualified domain name for Service Bus. Most likely, {yournamespace}.servicebus.windows.net</param>
+        /// <param name="entityPath">Queue path.</param>
+        /// <param name="tokenProvider">Token provider which will generate security tokens for authorization.</param>
+        /// <param name="transportType">Transport type.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <returns></returns>
+        public QueueClient(
+            string endpoint,
+            string entityPath,
+            ITokenProvider tokenProvider,
+            TransportType transportType = TransportType.Amqp,
+            ReceiveMode receiveMode = ReceiveMode.PeekLock,
+            RetryPolicy retryPolicy = null)
+            : this(new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), entityPath, receiveMode, retryPolicy)
+        {
+            if (tokenProvider == null)
+            {
+                throw Fx.Exception.ArgumentNull(nameof(tokenProvider));
+            }
+
+            this.InternalTokenProvider = tokenProvider;
+            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
             this.ownsConnection = true;
         }
 
@@ -107,8 +139,6 @@ namespace Microsoft.Azure.ServiceBus
             this.syncLock = new object();
             this.QueueName = entityPath;
             this.ReceiveMode = receiveMode;
-            this.TokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(this.TokenProvider, serviceBusConnection.OperationTimeout);
 
             MessagingEventSource.Log.QueueClientCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
         }
@@ -276,7 +306,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.ClientId,
                                 this.ReceiveMode,
                                 this.SessionClient,
-                                this.ServiceBusConnection.Endpoint.Authority);
+                                this.ServiceBusConnection.Endpoint);
                         }
                     }
                 }
@@ -289,7 +319,7 @@ namespace Microsoft.Azure.ServiceBus
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
-        TokenProvider TokenProvider { get; }
+        ITokenProvider InternalTokenProvider { get; }
 
         /// <summary>
         /// Sends a message to Service Bus.
@@ -305,6 +335,7 @@ namespace Microsoft.Azure.ServiceBus
         public Task SendAsync(IList<Message> messageList)
         {
             this.ThrowIfClosed();
+
             return this.InnerSender.SendAsync(messageList);
         }
 
