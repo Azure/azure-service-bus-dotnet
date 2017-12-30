@@ -8,9 +8,9 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-using System.Reflection;
-
 namespace Microsoft.Azure.ServiceBus {
+    using System;
+    
     
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
@@ -39,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.Azure.ServiceBus.Resources", typeof(Resources).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.Azure.ServiceBus.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No session-id was specified for a session receiver..
+        ///   Looks up a localized string similar to Failed to retreive session ID. Please retry..
         /// </summary>
         internal static string AmqpFieldSessionId {
             get {
@@ -259,7 +259,7 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Session filter is missing on the link. .
+        ///   Looks up a localized string similar to Failed to retreive session filter. Please retry..
         /// </summary>
         internal static string SessionFilterMissing {
             get {
