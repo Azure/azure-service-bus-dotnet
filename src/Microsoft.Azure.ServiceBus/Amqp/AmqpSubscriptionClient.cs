@@ -158,7 +158,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        public async Task<IEnumerable<RuleDescription>> OnGetRulesAsync(int top, int skip)
+        public async Task<IList<RuleDescription>> OnGetRulesAsync(int top, int skip)
         {
             try
             {

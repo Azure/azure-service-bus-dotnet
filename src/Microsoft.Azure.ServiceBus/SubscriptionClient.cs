@@ -555,11 +555,11 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.GetRulesStart(this.ClientId);
             bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
             Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.GetRulesStart() : null;
-            Task<IEnumerable<RuleDescription>> getRulesTask = null;
+            Task<IList<RuleDescription>> getRulesTask = null;
 
             var skip = 0;
             var top = int.MaxValue;
-            IEnumerable<RuleDescription> rules = null;
+            IList<RuleDescription> rules = null;
 
             try
             {
