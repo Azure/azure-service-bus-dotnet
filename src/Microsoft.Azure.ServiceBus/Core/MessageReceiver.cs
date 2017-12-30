@@ -91,7 +91,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null,
             int prefetchCount = Constants.DefaultClientPrefetchCount)
-            : this(entityPath, null, receiveMode, new ServiceBusNamespaceConnection(connectionString), null, retryPolicy, prefetchCount)
+            : this(entityPath, null, receiveMode, new ServiceBusNamespaceConnection(connectionString), null, null, retryPolicy, prefetchCount)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
@@ -105,11 +105,42 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ownsConnection = true;
         }
 
+        /// <summary>
+        /// Creates a new MessageReceiver from a specified endpoint, entity path, and token provider.
+        /// </summary>
+        /// <param name="endpoint">Fully qualified domain name for Service Bus. Most likely, {yournamespace}.servicebus.windows.net</param>
+        /// <param name="entityPath">Queue path.</param>
+        /// <param name="tokenProvider">Token provider which will generate security tokens for authorization.</param>
+        /// <param name="transportType">Transport type.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <param name="prefetchCount">The <see cref="PrefetchCount"/> that specifies the upper limit of messages this receiver
+        /// will actively receive regardless of whether a receive operation is pending. Defaults to 0.</param>
+        /// <remarks>Creates a new connection to the entity, which is opened during the first operation.</remarks>
+        public MessageReceiver(
+            string endpoint,
+            string entityPath,
+            ITokenProvider tokenProvider,
+            TransportType transportType = TransportType.Amqp,
+            ReceiveMode receiveMode = ReceiveMode.PeekLock,
+            RetryPolicy retryPolicy = null,
+            int prefetchCount = Constants.DefaultClientPrefetchCount)
+            : this(entityPath, null, receiveMode, new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), tokenProvider, null, retryPolicy, prefetchCount)
+        {
+            if (tokenProvider == null)
+            {
+                throw Fx.Exception.ArgumentNull(nameof(tokenProvider));
+            }
+
+            this.ownsConnection = true;
+        }
+
         internal MessageReceiver(
             string entityPath,
             MessagingEntityType? entityType,
             ReceiveMode receiveMode,
             ServiceBusConnection serviceBusConnection,
+            ITokenProvider tokenProvider,
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
             int prefetchCount = Constants.DefaultClientPrefetchCount,
@@ -123,7 +154,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ReceiveMode = receiveMode;
             this.Path = entityPath;
             this.EntityType = entityType;
-            this.CbsTokenProvider = cbsTokenProvider ?? new TokenProviderAdapter(this.ServiceBusConnection.CreateTokenProvider(), this.ServiceBusConnection.OperationTimeout);
+            tokenProvider = tokenProvider ?? this.ServiceBusConnection.CreateTokenProvider();
+            this.CbsTokenProvider = cbsTokenProvider ?? new TokenProviderAdapter(tokenProvider, this.ServiceBusConnection.OperationTimeout);
             this.SessionIdInternal = sessionId;
             this.isSessionReceiver = isSessionReceiver;
             this.ReceiveLinkManager = new FaultTolerantAmqpObject<ReceivingAmqpLink>(this.CreateLinkAsync, CloseSession);

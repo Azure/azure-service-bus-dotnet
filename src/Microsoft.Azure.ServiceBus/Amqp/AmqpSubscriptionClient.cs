@@ -61,6 +61,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                                 MessagingEntityType.Subscriber,
                                 this.ReceiveMode,
                                 this.ServiceBusConnection,
+                                null,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy,
                                 this.PrefetchCount);
