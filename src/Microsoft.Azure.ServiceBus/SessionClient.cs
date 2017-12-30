@@ -102,8 +102,6 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             this.ownsConnection = true;
-            var tokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.ServiceBusConnection.OperationTimeout);
         }
 
         internal SessionClient(
@@ -119,12 +117,11 @@ namespace Microsoft.Azure.ServiceBus
             : base(clientTypeName, entityPath, retryPolicy ?? RetryPolicy.Default)
         {
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
-            this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.EntityPath = entityPath;
             this.EntityType = entityType;
             this.ReceiveMode = receiveMode;
             this.PrefetchCount = prefetchCount;
-            this.CbsTokenProvider = cbsTokenProvider;
+            this.CbsTokenProvider = cbsTokenProvider ?? new TokenProviderAdapter(this.ServiceBusConnection.CreateTokenProvider(), this.ServiceBusConnection.OperationTimeout);
             this.diagnosticSource = new ServiceBusDiagnosticSource(entityPath, serviceBusConnection.Endpoint);
 
             // Register plugins on the message session.
