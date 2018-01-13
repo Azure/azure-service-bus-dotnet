@@ -140,6 +140,10 @@ namespace Microsoft.Azure.ServiceBus
             {
                 throw Fx.Exception.ArgumentNull(nameof(tokenProvider));
             }
+            if (string.IsNullOrWhiteSpace(entityPath))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
+            }
 
             this.ownsConnection = true;
         }

@@ -61,7 +61,7 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to retreive session ID. Please retry..
+        ///   Looks up a localized string similar to Failed to retreive session ID from broker. Please retry..
         /// </summary>
         internal static string AmqpFieldSessionId {
             get {
@@ -259,7 +259,7 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to retreive session filter. Please retry..
+        ///   Looks up a localized string similar to Failed to retreive session filter from broker. Please retry..
         /// </summary>
         internal static string SessionFilterMissing {
             get {
