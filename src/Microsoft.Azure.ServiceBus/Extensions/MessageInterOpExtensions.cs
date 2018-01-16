@@ -85,7 +85,9 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
                 return (T)message.SystemProperties.BodyObject;
             }
 
-            if(message.Body == null || message.Body.Length == 0)
+            var messageData = message.BackingData;
+
+            if(messageData.Count == 0)
             {
                 return default;
             }
@@ -95,9 +97,9 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
                 serializer = DataContractBinarySerializer<T>.Instance;
             }
 
-            using (var memoryStream = new MemoryStream(message.Body.Length))
+            using (var memoryStream = new MemoryStream(messageData.Count))
             {
-                memoryStream.Write(message.Body, 0, message.Body.Length);
+                memoryStream.Write(messageData.Array, messageData.Offset, messageData.Count);
                 memoryStream.Flush();
                 memoryStream.Position = 0;
                 return (T)serializer.ReadObject(memoryStream);
