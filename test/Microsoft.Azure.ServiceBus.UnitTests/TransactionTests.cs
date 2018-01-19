@@ -16,25 +16,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         static readonly TimeSpan ReceiveTimeout = TimeSpan.FromSeconds(5);
 
         [Fact]
-        public async Task CleanupQueue()
-        {
-            var receiver = new MessageReceiver(ConnectionString, QueueName, ReceiveMode.ReceiveAndDelete);
-
-            try
-            {
-                Message receivedMessage = null;
-                do
-                {
-                    receivedMessage = await receiver.ReceiveAsync(ReceiveTimeout); 
-                } while (receivedMessage != null);
-            }
-            finally
-            {
-                await receiver.CloseAsync();
-            }
-        }
-
-        [Fact]
         [DisplayTestMethodName]
         public async Task TransactionalSendCommitTest()
         {
