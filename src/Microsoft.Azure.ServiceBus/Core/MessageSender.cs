@@ -9,6 +9,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Transactions;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
@@ -319,13 +320,20 @@ namespace Microsoft.Azure.ServiceBus.Core
             var amqpMessage = amqpRequestMessage.AmqpMessage;
             var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
 
+            ArraySegment<byte> transactionId = AmqpConstants.NullBinary;
+            var ambientTransaction = Transaction.Current;
+            if (ambientTransaction != null)
+            {
+                transactionId = await AmqpTransactionManager.Instance.EnlistAsync(ambientTransaction, this.ServiceBusConnection).ConfigureAwait(false);
+            }
+
             if (!this.RequestResponseLinkManager.TryGetOpenedObject(out var requestResponseAmqpLink))
             {
                 requestResponseAmqpLink = await this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
             }
 
             var responseAmqpMessage = await Task.Factory.FromAsync(
-                (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, timeoutHelper.RemainingTime(), c, s),
+                (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, transactionId, timeoutHelper.RemainingTime(), c, s),
                 a => requestResponseAmqpLink.EndRequest(a),
                 this).ConfigureAwait(false);
 
@@ -429,6 +437,13 @@ namespace Microsoft.Azure.ServiceBus.Core
                 SendingAmqpLink amqpLink = null;
                 try
                 {
+                    ArraySegment<byte> transactionId = AmqpConstants.NullBinary;
+                    var ambientTransaction = Transaction.Current;
+                    if (ambientTransaction != null)
+                    {
+                        transactionId = await AmqpTransactionManager.Instance.EnlistAsync(ambientTransaction, this.ServiceBusConnection).ConfigureAwait(false);
+                    }
+
                     if (!this.SendLinkManager.TryGetOpenedObject(out amqpLink))
                     {
                         amqpLink = await this.SendLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
@@ -445,7 +460,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                         }
                     }
 
-                    var outcome = await amqpLink.SendMessageAsync(amqpMessage, this.GetNextDeliveryTag(), AmqpConstants.NullBinary, timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                    var outcome = await amqpLink.SendMessageAsync(amqpMessage, this.GetNextDeliveryTag(), transactionId, timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
                     if (outcome.DescriptorCode != Accepted.Code)
                     {
@@ -462,7 +477,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         async Task<long> OnScheduleMessageAsync(Message message)
         {
-            // TODO: Ensure System.Transactions.Transaction.Current is null. Transactions are not supported by 1.0.0 version of dotnet core.
             using (var amqpMessage = AmqpMessageConverter.SBMessageToAmqpMessage(message))
             {
                 var request = AmqpRequestMessage.CreateRequest(
@@ -509,7 +523,6 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         async Task OnCancelScheduledMessageAsync(long sequenceNumber)
         {
-            // TODO: Ensure System.Transactions.Transaction.Current is null. Transactions are not supported by 1.0.0 version of dotnet core.
             var request =
                 AmqpRequestMessage.CreateRequest(
                     ManagementConstants.Operations.CancelScheduledMessageOperation,

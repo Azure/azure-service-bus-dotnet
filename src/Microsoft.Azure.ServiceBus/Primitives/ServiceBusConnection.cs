@@ -6,9 +6,11 @@ namespace Microsoft.Azure.ServiceBus.Primitives
     using System;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
+    using Microsoft.Azure.Amqp.Framing;
+    using Microsoft.Azure.Amqp.Transaction;
     using Microsoft.Azure.Amqp.Transport;
     using Microsoft.Azure.ServiceBus.Amqp;
-
+    
     internal abstract class ServiceBusConnection
     {
         static readonly Version AmqpVersion = new Version(1, 0, 0, 0);
@@ -55,6 +57,8 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         internal FaultTolerantAmqpObject<AmqpConnection> ConnectionManager { get; set; }
 
+        internal FaultTolerantAmqpObject<Controller> TransactionController { get; set; }
+
         public Task CloseAsync()
         {
             return this.ConnectionManager.CloseAsync();
@@ -68,12 +72,18 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             this.SasToken = builder.SasToken;
             this.TransportType = builder.TransportType;
             this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, CloseConnection);
-        }
+            this.TransactionController = new FaultTolerantAmqpObject<Controller>(this.CreateControllerAsync, CloseController);
+        }        
 
         static void CloseConnection(AmqpConnection connection)
         {
             MessagingEventSource.Log.AmqpConnectionClosed(connection);
             connection.SafeClose();
+        }
+
+        static void CloseController(Controller controller)
+        {
+            controller.Close();
         }
 
         async Task<AmqpConnection> CreateConnectionAsync(TimeSpan timeout)
@@ -106,6 +116,37 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             MessagingEventSource.Log.AmqpConnectionCreated(hostName, connection);
 
             return connection;
+        }
+
+        async Task<Controller> CreateControllerAsync(TimeSpan timeout)
+        {
+            var timeoutHelper = new TimeoutHelper(timeout);
+            var connection = await this.ConnectionManager.GetOrCreateAsync(timeoutHelper.RemainingTime());
+
+            var sessionSettings = new AmqpSessionSettings { Properties = new Fields() };
+            AmqpSession amqpSession = null;
+            Controller controller;
+
+            try
+            {
+                amqpSession = connection.CreateSession(sessionSettings);
+                await amqpSession.OpenAsync(timeoutHelper.RemainingTime());
+
+                controller = new Controller(amqpSession, timeoutHelper.RemainingTime());
+                await controller.InitializeAsync(timeoutHelper.RemainingTime());
+            }
+            catch (Exception exception)
+            {
+                if (amqpSession != null)
+                {
+                    await amqpSession.CloseAsync(timeout);
+                }
+
+                MessagingEventSource.Log.AmqpCreateControllerException(this.ConnectionManager.ToString(), exception);
+                throw;
+            }
+
+            return controller;
         }
 
         private TransportSettings CreateTransportSettings()

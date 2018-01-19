@@ -190,5 +190,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 }
             }
         }
+
+        internal static string GetString(this byte[] bytes)
+        {
+            return Encoding.ASCII.GetString(bytes);
+        }
+
+        internal static byte[] GetBytes(this string str)
+        {
+            return Encoding.ASCII.GetBytes(str);
+        }
     }
 }

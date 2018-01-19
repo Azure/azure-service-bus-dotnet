@@ -9,6 +9,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Transactions;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
@@ -910,6 +911,14 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
+
+            ArraySegment<byte> transactionId = AmqpConstants.NullBinary;
+            var ambientTransaction = Transaction.Current;
+            if (ambientTransaction != null)
+            {
+                transactionId = await AmqpTransactionManager.Instance.EnlistAsync(ambientTransaction, this.ServiceBusConnection).ConfigureAwait(false);
+            }
+
             if (!this.RequestResponseLinkManager.TryGetOpenedObject(out var requestResponseAmqpLink))
             {
                 MessagingEventSource.Log.CreatingNewLink(this.ClientId, this.isSessionReceiver, this.SessionIdInternal, true, this.LinkException);
@@ -917,7 +926,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             var responseAmqpMessage = await Task.Factory.FromAsync(
-                (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, timeoutHelper.RemainingTime(), c, s),
+                (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, transactionId, timeoutHelper.RemainingTime(), c, s),
                 (a) => requestResponseAmqpLink.EndRequest(a),
                 this).ConfigureAwait(false);
 
@@ -1283,6 +1292,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceivingAmqpLink receiveLink = null;
             try
             {
+                ArraySegment<byte> transactionId = AmqpConstants.NullBinary;
+                var ambientTransaction = Transaction.Current;
+                if (ambientTransaction != null)
+                {
+                    transactionId = await AmqpTransactionManager.Instance.EnlistAsync(ambientTransaction, this.ServiceBusConnection).ConfigureAwait(false);
+                }
+
                 if (!this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
                 {
                     MessagingEventSource.Log.CreatingNewLink(this.ClientId, this.isSessionReceiver, this.SessionIdInternal, false, this.LinkException);
@@ -1294,7 +1310,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 foreach (ArraySegment<byte> deliveryTag in deliveryTags)
                 {
                     disposeMessageTasks[i++] = Task.Factory.FromAsync(
-                        (c, s) => receiveLink.BeginDisposeMessage(deliveryTag, outcome, true, timeoutHelper.RemainingTime(), c, s),
+                        (c, s) => receiveLink.BeginDisposeMessage(deliveryTag, transactionId, outcome, true, timeoutHelper.RemainingTime(), c, s),
                         a => receiveLink.EndDisposeMessage(a),
                         this);
                 }
