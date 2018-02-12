@@ -470,6 +470,12 @@ namespace Microsoft.Azure.ServiceBus.Core
                     this.OperationTimeout,
                     null);
 
+                SendingAmqpLink sendLink;
+                if(this.SendLinkManager.TryGetOpenedObject(out sendLink))
+                {
+                    request.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = sendLink.Name;
+                }
+
                 ArraySegment<byte>[] payload = amqpMessage.GetPayload();
                 var buffer = new BufferListStream(payload);
                 ArraySegment<byte> value = buffer.ReadBytes((int)buffer.Length);
@@ -515,6 +521,13 @@ namespace Microsoft.Azure.ServiceBus.Core
                     ManagementConstants.Operations.CancelScheduledMessageOperation,
                     this.OperationTimeout,
                     null);
+
+            SendingAmqpLink sendLink;
+            if (this.SendLinkManager.TryGetOpenedObject(out sendLink))
+            {
+                request.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = sendLink.Name;
+            }
+
             request.Map[ManagementConstants.Properties.SequenceNumbers] = new[] { sequenceNumber };
 
             var response = await this.ExecuteRequestResponseAsync(request).ConfigureAwait(false);
