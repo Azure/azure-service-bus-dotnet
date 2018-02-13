@@ -145,5 +145,21 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 }
             }
         }
+
+        [Theory]
+        [DisplayTestMethodName]
+        [InlineData(null)]
+        [InlineData("123")]
+        [InlineData("jøbber-nå")]
+        public void Should_return_string_representation_of_message(string id)
+        {
+            var message = new Message();
+            if (id != null)
+            {
+                message.MessageId = id;
+            }
+            var result = message.ToString();
+            Assert.Equal($"{{MessageId:{id}}}", result);
+        }
     }
 }
