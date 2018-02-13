@@ -11,11 +11,11 @@ namespace Microsoft.Azure.ServiceBus.Primitives
     using Microsoft.Azure.Amqp.Transport;
     using Microsoft.Azure.ServiceBus.Amqp;
     
-    internal abstract class ServiceBusConnection
+    public abstract class ServiceBusConnectionBase
     {
         static readonly Version AmqpVersion = new Version(1, 0, 0, 0);
 
-        protected ServiceBusConnection(TimeSpan operationTimeout, RetryPolicy retryPolicy)
+        protected ServiceBusConnectionBase(TimeSpan operationTimeout, RetryPolicy retryPolicy)
         {
             this.OperationTimeout = operationTimeout;
             this.RetryPolicy = retryPolicy;
@@ -34,29 +34,17 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         public RetryPolicy RetryPolicy { get; set; }
 
         /// <summary>
-        /// Get the shared access policy key value from the connection string
-        /// </summary>
-        /// <value>Shared Access Signature key</value>
-        public string SasKey { get; set; }
-
-        /// <summary>
-        /// Get the shared access policy name from the connection string
-        /// </summary>
-        public string SasKeyName { get; set; }
-
-        /// <summary>
-        /// Get the shared access signature token from the connection string
-        /// </summary>
-        public string SasToken { get; set; }
-
-        /// <summary>
         /// Get the transport type from the connection string.
         /// <remarks>Amqp and AmqpWebSockets are available.</remarks>
         /// </summary>
         public TransportType TransportType { get; set; }
 
+        public ITokenProvider TokenProvider { get; set; }
+
+        // TODO: Move to child class
         internal FaultTolerantAmqpObject<AmqpConnection> ConnectionManager { get; set; }
 
+        // TODO: Move to child class
         internal FaultTolerantAmqpObject<Controller> TransactionController { get; set; }
 
         public Task CloseAsync()
@@ -67,9 +55,16 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         protected void InitializeConnection(ServiceBusConnectionStringBuilder builder)
         {
             this.Endpoint = new Uri(builder.Endpoint);
-            this.SasKeyName = builder.SasKeyName;
-            this.SasKey = builder.SasKey;
-            this.SasToken = builder.SasToken;
+
+            if (builder.SasToken != null)
+            {
+                this.TokenProvider = new SharedAccessSignatureTokenProvider(builder.SasToken);
+            }
+            else if (builder.SasKeyName != null || builder.SasKey != null)
+            {
+                this.TokenProvider = new SharedAccessSignatureTokenProvider(builder.SasKeyName, builder.SasKey);
+            }
+
             this.TransportType = builder.TransportType;
             this.ConnectionManager = new FaultTolerantAmqpObject<AmqpConnection>(this.CreateConnectionAsync, CloseConnection);
             this.TransactionController = new FaultTolerantAmqpObject<Controller>(this.CreateControllerAsync, CloseController);
@@ -169,18 +164,5 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 port: port,
                 useSslStreamSecurity: true);
         }
-
-        internal TokenProvider CreateTokenProvider()
-        {
-            if (SasToken != null)
-            {
-                return TokenProvider.CreateSharedAccessSignatureTokenProvider(SasToken);
-            }
-            else
-            {
-                return TokenProvider.CreateSharedAccessSignatureTokenProvider(SasKeyName, SasKey);
-            }
-        }
-
     }
 }

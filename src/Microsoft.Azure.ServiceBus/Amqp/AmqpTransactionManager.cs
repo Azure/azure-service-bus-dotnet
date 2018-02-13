@@ -18,7 +18,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public async Task<ArraySegment<byte>> EnlistAsync(
             Transaction transaction,
-            ServiceBusConnection serviceBusConnection)
+            ServiceBusConnectionBase serviceBusConnection)
         {
             if (transaction.IsolationLevel != IsolationLevel.Serializable)
             {

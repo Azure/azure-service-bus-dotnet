@@ -1,18 +1,24 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Azure.ServiceBus.Primitives
+namespace Microsoft.Azure.ServiceBus
 {
     using System;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
-    internal class ServiceBusNamespaceConnection : ServiceBusConnection
+    public class ServiceBusConnection : ServiceBusConnectionBase
     {
-        public ServiceBusNamespaceConnection(string namespaceConnectionString)
+        public ServiceBusConnection(ServiceBusConnectionStringBuilder connectionStringBuilder)
+            : this(connectionStringBuilder?.GetNamespaceConnectionString())
+        {
+        }
+
+        public ServiceBusConnection(string namespaceConnectionString)
             : this(namespaceConnectionString, Constants.DefaultOperationTimeout, RetryPolicy.Default)
         {
         }
 
-        public ServiceBusNamespaceConnection(string namespaceConnectionString, TimeSpan operationTimeout, RetryPolicy retryPolicy)
+        public ServiceBusConnection(string namespaceConnectionString, TimeSpan operationTimeout, RetryPolicy retryPolicy)
             : base(operationTimeout, retryPolicy)
         {
             if (string.IsNullOrWhiteSpace(namespaceConnectionString))
@@ -29,7 +35,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             this.InitializeConnection(serviceBusConnectionStringBuilder);
         }
 
-        public ServiceBusNamespaceConnection(string endpoint, TransportType transportType, RetryPolicy retryPolicy)
+        public ServiceBusConnection(string endpoint, TransportType transportType, RetryPolicy retryPolicy)
             : base(Constants.DefaultOperationTimeout, retryPolicy)
         {
             if (string.IsNullOrWhiteSpace(endpoint))

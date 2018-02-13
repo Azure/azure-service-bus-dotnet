@@ -31,7 +31,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
         public AmqpSubscriptionClient(
             string path,
-            ServiceBusConnection servicebusConnection,
+            ServiceBusConnectionBase servicebusConnection,
             RetryPolicy retryPolicy,
             ICbsTokenProvider cbsTokenProvider,
             int prefetchCount = 0,
@@ -93,7 +93,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             }
         }
 
-        ServiceBusConnection ServiceBusConnection { get; }
+        ServiceBusConnectionBase ServiceBusConnection { get; }
 
         RetryPolicy RetryPolicy { get; }
 

@@ -13,12 +13,12 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     {
         readonly string transactionId;
         readonly AmqpTransactionManager transactionManager;
-        readonly ServiceBusConnection serviceBusConnection;
+        readonly ServiceBusConnectionBase serviceBusConnection;
 
         public AmqpTransactionEnlistment(
             Transaction transaction,
             AmqpTransactionManager transactionManager,
-            ServiceBusConnection serviceBusConnection)
+            ServiceBusConnectionBase serviceBusConnection)
         {
             this.transactionId = transaction.TransactionInformation.LocalIdentifier;
             this.transactionManager = transactionManager;

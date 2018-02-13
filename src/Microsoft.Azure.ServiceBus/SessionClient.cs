@@ -87,7 +87,7 @@ namespace Microsoft.Azure.ServiceBus
                   null,
                   receiveMode,
                   prefetchCount,
-                  new ServiceBusNamespaceConnection(connectionString),
+                  new ServiceBusConnection(connectionString),
                   null,
                   retryPolicy,
                   null)
@@ -102,7 +102,7 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             this.ownsConnection = true;
-            var tokenProvider = this.ServiceBusConnection.CreateTokenProvider();
+            var tokenProvider = this.ServiceBusConnection.TokenProvider;
             this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.ServiceBusConnection.OperationTimeout);
         }
 
@@ -112,7 +112,7 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEntityType? entityType,
             ReceiveMode receiveMode,
             int prefetchCount,
-            ServiceBusConnection serviceBusConnection,
+            ServiceBusConnectionBase serviceBusConnection,
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
             IList<ServiceBusPlugin> registeredPlugins)
@@ -157,7 +157,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal int PrefetchCount { get; set; }
 
-        ServiceBusConnection ServiceBusConnection { get; }
+        ServiceBusConnectionBase ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 

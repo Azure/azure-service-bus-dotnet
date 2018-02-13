@@ -79,23 +79,13 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
         /// <remarks>Creates a new connection to the subscription, which is opened during the first receive operation.</remarks>
         public SubscriptionClient(string connectionString, string topicPath, string subscriptionName, ReceiveMode receiveMode = ReceiveMode.PeekLock, RetryPolicy retryPolicy = null)
-            : this(new ServiceBusNamespaceConnection(connectionString), topicPath, subscriptionName, receiveMode, retryPolicy ?? RetryPolicy.Default)
+            : this(new ServiceBusConnection(connectionString), topicPath, subscriptionName, receiveMode, retryPolicy ?? RetryPolicy.Default)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
             }
-            if (string.IsNullOrWhiteSpace(topicPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(topicPath);
-            }
-            if (string.IsNullOrWhiteSpace(subscriptionName))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(subscriptionName);
-            }
 
-            this.InternalTokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
             this.ownsConnection = true;
         }
 
@@ -118,21 +108,33 @@ namespace Microsoft.Azure.ServiceBus
             TransportType transportType = TransportType.Amqp,
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null)
-            : this(new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), topicPath, subscriptionName, receiveMode, retryPolicy)
+            : this(new ServiceBusConnection(endpoint, transportType, retryPolicy), topicPath, subscriptionName, receiveMode, retryPolicy)
         {
-            if (tokenProvider == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(tokenProvider));
-            }
-
-            this.InternalTokenProvider = tokenProvider;
-            this.CbsTokenProvider = new TokenProviderAdapter(this.InternalTokenProvider, this.ServiceBusConnection.OperationTimeout);
+            this.ServiceBusConnection.TokenProvider = tokenProvider ?? throw Fx.Exception.ArgumentNull(nameof(tokenProvider));
+            this.CbsTokenProvider = new TokenProviderAdapter(this.ServiceBusConnection.TokenProvider, this.ServiceBusConnection.OperationTimeout);
             this.ownsConnection = true;
         }
 
-        SubscriptionClient(ServiceBusNamespaceConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode, RetryPolicy retryPolicy)
+        /// <summary>
+        /// Creates a new instance of the Subscription client on the given connection.
+        /// </summary>
+        /// <param name="serviceBusConnection">Connection object to the service bus namespace.</param>
+        /// <param name="topicPath">Topic path.</param>
+        /// <param name="subscriptionName">Subscription name.</param>
+        /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
+        /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        public SubscriptionClient(ServiceBusConnection serviceBusConnection, string topicPath, string subscriptionName, ReceiveMode receiveMode, RetryPolicy retryPolicy)
             : base(nameof(SubscriptionClient), $"{topicPath}/{subscriptionName}", retryPolicy)
         {
+            if (string.IsNullOrWhiteSpace(topicPath))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(topicPath);
+            }
+            if (string.IsNullOrWhiteSpace(subscriptionName))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(subscriptionName);
+            }
+
             MessagingEventSource.Log.SubscriptionClientCreateStart(serviceBusConnection?.Endpoint.Authority, topicPath, subscriptionName, receiveMode.ToString());
 
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
@@ -143,6 +145,11 @@ namespace Microsoft.Azure.ServiceBus
             this.Path = EntityNameHelper.FormatSubscriptionPath(this.TopicPath, this.SubscriptionName);
             this.ReceiveMode = receiveMode;
             this.diagnosticSource = new ServiceBusDiagnosticSource(this.Path, serviceBusConnection.Endpoint);
+            this.ownsConnection = false;
+            if (this.ServiceBusConnection.TokenProvider != null)
+            {
+                this.CbsTokenProvider = new TokenProviderAdapter(this.ServiceBusConnection.TokenProvider, this.ServiceBusConnection.OperationTimeout);
+            }
 
             MessagingEventSource.Log.SubscriptionClientCreateStop(serviceBusConnection.Endpoint.Authority, topicPath, subscriptionName, this.ClientId);
         }
@@ -290,11 +297,9 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        internal ServiceBusNamespaceConnection ServiceBusConnection { get; }
+        internal ServiceBusConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
-
-        ITokenProvider InternalTokenProvider { get; }
 
         /// <summary>
         /// Completes a <see cref="Message"/> using its lock token. This will delete the message from the subscription.

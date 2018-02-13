@@ -20,7 +20,7 @@ namespace Microsoft.Azure.ServiceBus
             string entityPath,
             MessagingEntityType? entityType,
             ReceiveMode receiveMode,
-            ServiceBusConnection serviceBusConnection,
+            ServiceBusConnectionBase serviceBusConnection,
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
             int prefetchCount = Constants.DefaultClientPrefetchCount,

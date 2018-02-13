@@ -65,20 +65,29 @@ namespace Microsoft.Azure.ServiceBus.Core
             string connectionString,
             string entityPath,
             RetryPolicy retryPolicy = null)
-            : this(entityPath, null, new ServiceBusNamespaceConnection(connectionString), null, retryPolicy)
+            : this(new ServiceBusConnection(connectionString), entityPath, retryPolicy)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
             }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
 
             this.ownsConnection = true;
-            var tokenProvider = this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = new TokenProviderAdapter(tokenProvider, this.ServiceBusConnection.OperationTimeout);
+        }
+
+        /// <summary>
+        /// Creates a new AMQP MessageSender
+        /// </summary>
+        /// <param name="serviceBusConnection">Connection object to the service bus namespace.</param>
+        /// <param name="entityPath">The path of the entity this sender should connect to.</param>
+        /// <param name="retryPolicy">The <see cref="RetryPolicy"/> that will be used when communicating with Service Bus. Defaults to <see cref="RetryPolicy.Default"/></param>
+        public MessageSender(
+            ServiceBusConnection serviceBusConnection,
+            string entityPath,
+            RetryPolicy retryPolicy = null)
+            : this(entityPath, null, serviceBusConnection, null, retryPolicy)
+        {
+            this.ownsConnection = false;
         }
 
         internal MessageSender(
@@ -90,12 +99,29 @@ namespace Microsoft.Azure.ServiceBus.Core
             : base(nameof(MessageSender), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
             MessagingEventSource.Log.MessageSenderCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath);
+            if (string.IsNullOrWhiteSpace(entityPath))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
+            }
 
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
             this.OperationTimeout = serviceBusConnection.OperationTimeout;
             this.Path = entityPath;
             this.EntityType = entityType;
-            this.CbsTokenProvider = cbsTokenProvider;
+
+            if (cbsTokenProvider != null)
+            {
+                this.CbsTokenProvider = cbsTokenProvider;
+            }
+            else if (this.ServiceBusConnection.TokenProvider != null)
+            {
+                this.CbsTokenProvider = new TokenProviderAdapter(this.ServiceBusConnection.TokenProvider, this.ServiceBusConnection.OperationTimeout);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
             this.SendLinkManager = new FaultTolerantAmqpObject<SendingAmqpLink>(this.CreateLinkAsync, CloseSession);
             this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, CloseRequestResponseSession);
             this.clientLinkManager = new ActiveClientLinkManager(this.ClientId, this.CbsTokenProvider);
