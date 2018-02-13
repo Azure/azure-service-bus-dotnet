@@ -65,7 +65,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             string connectionString,
             string entityPath,
             RetryPolicy retryPolicy = null)
-            : this(new ServiceBusConnection(connectionString), entityPath, retryPolicy)
+            : this(entityPath, null, new ServiceBusConnection(connectionString), null, retryPolicy)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
@@ -90,22 +90,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             ITokenProvider tokenProvider,
             TransportType transportType = TransportType.Amqp,
             RetryPolicy retryPolicy = null)
-            : this(entityPath, null, new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), tokenProvider, null, retryPolicy)
+            : this(entityPath, null, new ServiceBusConnection(endpoint, transportType, retryPolicy) {TokenProvider = tokenProvider}, null, retryPolicy)
         {
-            if (tokenProvider == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(tokenProvider));
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
-
             this.ownsConnection = true;
         }
 
         /// <summary>
-        /// Creates a new AMQP MessageSender
+        /// Creates a new AMQP MessageSender on a given <see cref="ServiceBusConnection"/>
         /// </summary>
         /// <param name="serviceBusConnection">Connection object to the service bus namespace.</param>
         /// <param name="entityPath">The path of the entity this sender should connect to.</param>
@@ -114,7 +105,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             ServiceBusConnection serviceBusConnection,
             string entityPath,
             RetryPolicy retryPolicy = null)
-            : this(entityPath, null, serviceBusConnection, null, null, retryPolicy)
+            : this(entityPath, null, serviceBusConnection, null, retryPolicy)
         {
             this.ownsConnection = false;
         }
@@ -123,12 +114,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             string entityPath,
             MessagingEntityType? entityType,
             ServiceBusConnection serviceBusConnection,
-            ITokenProvider tokenProvider,
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy)
             : base(nameof(MessageSender), entityPath, retryPolicy ?? RetryPolicy.Default)
         {
             MessagingEventSource.Log.MessageSenderCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath);
+
             if (string.IsNullOrWhiteSpace(entityPath))
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
@@ -148,7 +139,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
             else
             {
-                throw new NotImplementedException();
+                throw new ArgumentNullException($"{nameof(ServiceBusConnection)} doesn't have a valid token provider");
             }
 
             this.SendLinkManager = new FaultTolerantAmqpObject<SendingAmqpLink>(this.CreateLinkAsync, CloseSession);

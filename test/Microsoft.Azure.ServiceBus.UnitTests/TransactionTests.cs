@@ -4,9 +4,10 @@
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Transactions;
-    using Microsoft.Azure.ServiceBus.Core;
+    using Core;
     using Xunit;
 
     public class TransactionTests
@@ -15,17 +16,30 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         static readonly string ConnectionString = TestUtility.NamespaceConnectionString;
         static readonly TimeSpan ReceiveTimeout = TimeSpan.FromSeconds(5);
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async Task TransactionalSendCommitTest()
+        public static IEnumerable<object> TestPermutations => new object[]
         {
-            var sender = new MessageSender(ConnectionString, QueueName);
-            var receiver = new MessageReceiver(ConnectionString, QueueName);
+            new object[] { TestConstants.NonPartitionedQueueName },
+            new object[] { TestConstants.PartitionedQueueName }
+        };
+
+        public static IEnumerable<object> SessionTestPermutations => new object[]
+        {
+            new object[] { TestConstants.SessionNonPartitionedQueueName },
+            new object[] { TestConstants.SessionPartitionedQueueName }
+        };
+
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        public async Task TransactionalSendCommitTest(string queueName)
+        {
+            var sender = new MessageSender(ConnectionString, queueName);
+            var receiver = new MessageReceiver(ConnectionString, queueName);
             
             try
             {
                 string body = Guid.NewGuid().ToString("N");
-                var message = new Message(body.GetBytes());
+                var message = new Message(body.GetBytes()) {PartitionKey = "pk"};
                 using (var ts = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
                 {
                     await sender.SendAsync(message).ConfigureAwait(false);
@@ -36,7 +50,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
                 Assert.NotNull(receivedMessage);
                 Assert.Equal(body, receivedMessage.Body.GetString());
-                await receiver.CompleteAsync(receivedMessage.SystemProperties.LockToken);
+                await receiver.CompleteAsync(receivedMessage.SystemProperties.LockToken); 
             }
             finally
             {
@@ -45,17 +59,18 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Fact]
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        public async Task TransactionalSendRollbackTest()
+        public async Task TransactionalSendRollbackTest(string queueName)
         {
-            var sender = new MessageSender(ConnectionString, QueueName);
-            var receiver = new MessageReceiver(ConnectionString, QueueName);
+            var sender = new MessageSender(ConnectionString, queueName);
+            var receiver = new MessageReceiver(ConnectionString, queueName);
 
             try
             {
                 string body = Guid.NewGuid().ToString("N");
-                var message = new Message(body.GetBytes());
+                var message = new Message(body.GetBytes()) { PartitionKey = "pk" };
                 using (var ts = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
                 {
                     await sender.SendAsync(message).ConfigureAwait(false);
@@ -72,12 +87,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Fact]
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        public async Task TransactionalCompleteCommitTest()
+        public async Task TransactionalCompleteCommitTest(string queueName)
         {
-            var sender = new MessageSender(ConnectionString, QueueName);
-            var receiver = new MessageReceiver(ConnectionString, QueueName);
+            var sender = new MessageSender(ConnectionString, queueName);
+            var receiver = new MessageReceiver(ConnectionString, queueName);
 
             try
             {
@@ -104,12 +120,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Fact]
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        public async Task TransactionalCompleteRollbackTest()
+        public async Task TransactionalCompleteRollbackTest(string queueName)
         {
-            var sender = new MessageSender(ConnectionString, QueueName);
-            var receiver = new MessageReceiver(ConnectionString, QueueName);
+            var sender = new MessageSender(ConnectionString, queueName);
+            var receiver = new MessageReceiver(ConnectionString, queueName);
 
             try
             {
@@ -136,13 +153,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Fact]
+        [Theory]
+        [MemberData(nameof(SessionTestPermutations))]
         [DisplayTestMethodName]
-        public async Task TransactionalSessionDispositionTest()
+        public async Task TransactionalSessionDispositionTest(string queueName)
         {
-            var testQueueName = TestConstants.SessionNonPartitionedQueueName;
-            var sender = new MessageSender(ConnectionString, testQueueName);
-            var sessionClient = new SessionClient(ConnectionString, testQueueName);
+            var sender = new MessageSender(ConnectionString, queueName);
+            var sessionClient = new SessionClient(ConnectionString, queueName);
             IMessageSession receiver = null;
 
             try
@@ -185,12 +202,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        [Fact]
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        public async Task TransactionalRequestResponseDispositionTest()
+        public async Task TransactionalRequestResponseDispositionTest(string queueName)
         {
-            var sender = new MessageSender(ConnectionString, QueueName);
-            var receiver = new MessageReceiver(ConnectionString, QueueName);
+            var sender = new MessageSender(ConnectionString, queueName);
+            var receiver = new MessageReceiver(ConnectionString, queueName);
 
             try
             {
@@ -288,6 +306,92 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 await sender.CloseAsync();
                 await receiver.CloseAsync();
+            }
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task TransactionCommitWorksAcrossClientsUsingSameConnectionToSameEntity()
+        {
+            var connection = new ServiceBusConnection(ConnectionString);
+            var sender = new MessageSender(connection, QueueName);
+            var receiver = new MessageReceiver(connection, QueueName);
+
+            try
+            {
+                string body1 = Guid.NewGuid().ToString("N");
+                string body2 = Guid.NewGuid().ToString("N");
+                var message = new Message(body1.GetBytes());
+                var message2 = new Message(body2.GetBytes());
+                await sender.SendAsync(message).ConfigureAwait(false);
+
+                var receivedMessage = await receiver.ReceiveAsync(ReceiveTimeout);
+                Assert.NotNull(receivedMessage);
+                Assert.Equal(body1, receivedMessage.Body.GetString());
+
+                using (var ts = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    await receiver.CompleteAsync(receivedMessage.SystemProperties.LockToken);
+                    await sender.SendAsync(message2).ConfigureAwait(false);
+                    ts.Complete();
+                }
+
+                // Assert that complete did succeed
+                await Assert.ThrowsAsync<MessageLockLostException>(async () => await receiver.CompleteAsync(receivedMessage.SystemProperties.LockToken));
+
+                // Assert that send did succeed
+                receivedMessage = await receiver.ReceiveAsync(ReceiveTimeout);
+                Assert.NotNull(receivedMessage);
+                Assert.Equal(body2, receivedMessage.Body.GetString());
+                await receiver.CompleteAsync(receivedMessage.SystemProperties.LockToken);
+            }
+            finally
+            {
+                await sender.CloseAsync();
+                await receiver.CloseAsync();
+                await connection.CloseAsync();
+            }
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task TransactionRollbackWorksAcrossClientsUsingSameConnectionToSameEntity()
+        {
+            var connection = new ServiceBusConnection(ConnectionString);
+            var sender = new MessageSender(connection, QueueName);
+            var receiver = new MessageReceiver(connection, QueueName);
+
+            try
+            {
+                string body1 = Guid.NewGuid().ToString("N");
+                string body2 = Guid.NewGuid().ToString("N");
+                var message = new Message(body1.GetBytes());
+                var message2 = new Message(body2.GetBytes());
+                await sender.SendAsync(message).ConfigureAwait(false);
+
+                var receivedMessage = await receiver.ReceiveAsync(ReceiveTimeout);
+                Assert.NotNull(receivedMessage);
+                Assert.Equal(body1, receivedMessage.Body.GetString());
+
+                using (var ts = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    await receiver.CompleteAsync(receivedMessage.SystemProperties.LockToken);
+                    await sender.SendAsync(message2).ConfigureAwait(false);
+                    ts.Dispose();
+                }
+
+                // Following should succeed without exceptions
+                await receiver.CompleteAsync(receivedMessage.SystemProperties.LockToken);
+
+                // Assert that send failed
+                receivedMessage = await receiver.ReceiveAsync(ReceiveTimeout);
+                Assert.Null(receivedMessage);
+            }
+            finally
+            {
+                await sender.CloseAsync();
+                await receiver.CloseAsync();
+                await connection.CloseAsync();
             }
         }
     }

@@ -12,13 +12,13 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     internal abstract class AmqpLinkCreator
     {
         readonly string entityPath;
-        readonly ServiceBusConnectionBase serviceBusConnection;
+        readonly ServiceBusConnection serviceBusConnection;
         readonly Uri endpointAddress;
         readonly string[] requiredClaims;
         readonly ICbsTokenProvider cbsTokenProvider;
         readonly AmqpLinkSettings amqpLinkSettings;
 
-        protected AmqpLinkCreator(string entityPath, ServiceBusConnectionBase serviceBusConnection, Uri endpointAddress, string[] requiredClaims, ICbsTokenProvider cbsTokenProvider, AmqpLinkSettings amqpLinkSettings, string clientId)
+        protected AmqpLinkCreator(string entityPath, ServiceBusConnection serviceBusConnection, Uri endpointAddress, string[] requiredClaims, ICbsTokenProvider cbsTokenProvider, AmqpLinkSettings amqpLinkSettings, string clientId)
         {
             this.entityPath = entityPath;
             this.serviceBusConnection = serviceBusConnection;

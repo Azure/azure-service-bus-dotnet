@@ -108,15 +108,13 @@ namespace Microsoft.Azure.ServiceBus
             TransportType transportType = TransportType.Amqp,
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null)
-            : this(new ServiceBusConnection(endpoint, transportType, retryPolicy), topicPath, subscriptionName, receiveMode, retryPolicy)
+            : this(new ServiceBusConnection(endpoint, transportType, retryPolicy) {TokenProvider = tokenProvider}, topicPath, subscriptionName, receiveMode, retryPolicy)
         {
-            this.ServiceBusConnection.TokenProvider = tokenProvider ?? throw Fx.Exception.ArgumentNull(nameof(tokenProvider));
-            this.CbsTokenProvider = new TokenProviderAdapter(this.ServiceBusConnection.TokenProvider, this.ServiceBusConnection.OperationTimeout);
             this.ownsConnection = true;
         }
 
         /// <summary>
-        /// Creates a new instance of the Subscription client on the given connection.
+        /// Creates a new instance of the Subscription client on a given <see cref="ServiceBusConnection"/>
         /// </summary>
         /// <param name="serviceBusConnection">Connection object to the service bus namespace.</param>
         /// <param name="topicPath">Topic path.</param>
@@ -148,6 +146,10 @@ namespace Microsoft.Azure.ServiceBus
             if (this.ServiceBusConnection.TokenProvider != null)
             {
                 this.CbsTokenProvider = new TokenProviderAdapter(this.ServiceBusConnection.TokenProvider, this.ServiceBusConnection.OperationTimeout);
+            }
+            else
+            {
+                throw new ArgumentNullException($"{nameof(ServiceBusConnection)} doesn't have a valid token provider");
             }
 
             MessagingEventSource.Log.SubscriptionClientCreateStop(serviceBusConnection.Endpoint.Authority, topicPath, subscriptionName, this.ClientId);
@@ -262,7 +264,6 @@ namespace Microsoft.Azure.ServiceBus
                                 this.ReceiveMode,
                                 this.PrefetchCount,
                                 this.ServiceBusConnection,
-                                null,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy,
                                 this.RegisteredPlugins);

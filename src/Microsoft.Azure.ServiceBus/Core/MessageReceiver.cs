@@ -92,16 +92,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null,
             int prefetchCount = Constants.DefaultClientPrefetchCount)
-            : this(entityPath, null, receiveMode, new ServiceBusConnection(connectionString), null, null, retryPolicy, prefetchCount)
+            : this(entityPath, null, receiveMode, new ServiceBusConnection(connectionString), null, retryPolicy, prefetchCount)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
             }
             
-            this.ownsConnection = true;
-        }
-
             this.ownsConnection = true;
         }
 
@@ -125,22 +122,13 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null,
             int prefetchCount = Constants.DefaultClientPrefetchCount)
-            : this(entityPath, null, receiveMode, new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), tokenProvider, null, retryPolicy, prefetchCount)
+            : this(entityPath, null, receiveMode, new ServiceBusConnection(endpoint, transportType, retryPolicy) {TokenProvider = tokenProvider}, null, retryPolicy, prefetchCount)
         {
-            if (tokenProvider == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(tokenProvider));
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
-
             this.ownsConnection = true;
         }
 
         /// <summary>
-        /// Creates a new AMQP MessageReceiver
+        /// Creates a new AMQP MessageReceiver on a given <see cref="ServiceBusConnection"/>
         /// </summary>
         /// <param name="serviceBusConnection">Connection object to the service bus namespace.</param>
         /// <param name="entityPath">The path of the entity for this receiver. For Queues this will be the name, but for Subscriptions this will be the path.
@@ -165,7 +153,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEntityType? entityType,
             ReceiveMode receiveMode,
             ServiceBusConnection serviceBusConnection,
-            ITokenProvider tokenProvider,
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
             int prefetchCount = Constants.DefaultClientPrefetchCount,
@@ -195,7 +182,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
             else
             {
-                throw new NotImplementedException();
+                throw new ArgumentNullException($"{nameof(ServiceBusConnection)} doesn't have a valid token provider");
             }
 
             this.SessionIdInternal = sessionId;
@@ -300,7 +287,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         Exception LinkException { get; set; }
 
-        ServiceBusConnectionBase ServiceBusConnection { get; }
+        ServiceBusConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
