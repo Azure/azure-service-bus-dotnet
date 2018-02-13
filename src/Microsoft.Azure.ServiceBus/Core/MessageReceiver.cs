@@ -266,7 +266,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
-        FaultTolerantAmqpObject<ReceivingAmqpLink> ReceiveLinkManager { get; }
+        internal FaultTolerantAmqpObject<ReceivingAmqpLink> ReceiveLinkManager { get; }
 
         FaultTolerantAmqpObject<RequestResponseAmqpLink> RequestResponseLinkManager { get; }
 
@@ -1047,6 +1047,12 @@ namespace Microsoft.Azure.ServiceBus.Core
                         this.OperationTimeout,
                         null);
 
+                ReceivingAmqpLink receiveLink;
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+                {
+                    amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
+                }
+
                 amqpRequestMessage.Map[ManagementConstants.Properties.FromSequenceNumber] = fromSequenceNumber;
                 amqpRequestMessage.Map[ManagementConstants.Properties.MessageCount] = messageCount;
 
@@ -1098,6 +1104,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             try
             {
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.ReceiveBySequenceNumberOperation, this.OperationTimeout, null);
+                ReceivingAmqpLink receiveLink;
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+                {
+                    amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
+                }
                 amqpRequestMessage.Map[ManagementConstants.Properties.SequenceNumbers] = sequenceNumbers;
                 amqpRequestMessage.Map[ManagementConstants.Properties.ReceiverSettleMode] = (uint)(this.ReceiveMode == ReceiveMode.ReceiveAndDelete ? 0 : 1);
 
@@ -1191,6 +1202,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 // Create an AmqpRequest Message to renew  lock
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewLockOperation, this.OperationTimeout, null);
+                ReceivingAmqpLink receiveLink;
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+                {
+                    amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
+                }
                 amqpRequestMessage.Map[ManagementConstants.Properties.LockTokens] = new[] { new Guid(lockToken) };
 
                 var amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
@@ -1379,6 +1395,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 // Create an AmqpRequest Message to update disposition
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.UpdateDispositionOperation, this.OperationTimeout, null);
+                ReceivingAmqpLink receiveLink;
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+                {
+                    amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
+                }
                 amqpRequestMessage.Map[ManagementConstants.Properties.LockTokens] = lockTokens;
                 amqpRequestMessage.Map[ManagementConstants.Properties.DispositionStatus] = dispositionStatus.ToString().ToLowerInvariant();
 
