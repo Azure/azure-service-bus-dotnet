@@ -232,7 +232,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
-        protected FaultTolerantAmqpObject<ReceivingAmqpLink> ReceiveLinkManager { get; }
+        internal FaultTolerantAmqpObject<ReceivingAmqpLink> ReceiveLinkManager { get; }
 
         FaultTolerantAmqpObject<RequestResponseAmqpLink> RequestResponseLinkManager { get; }
 
