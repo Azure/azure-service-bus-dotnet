@@ -99,7 +99,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="transportType">Transport type.</param>
         /// <param name="receiveMode">Mode of receive of messages. Defaults to <see cref="ReceiveMode"/>.PeekLock.</param>
         /// <param name="retryPolicy">Retry policy for subscription operations. Defaults to <see cref="RetryPolicy.Default"/></param>
-        /// <returns></returns>
+        /// <remarks>Creates a new connection to the subscription, which is opened during the first receive operation.</remarks>
         public SubscriptionClient(
             string endpoint,
             string topicPath,
@@ -138,7 +138,6 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.SubscriptionClientCreateStart(serviceBusConnection?.Endpoint.Authority, topicPath, subscriptionName, receiveMode.ToString());
 
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
-            this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
             this.TopicPath = topicPath;
             this.SubscriptionName = subscriptionName;
@@ -263,6 +262,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.ReceiveMode,
                                 this.PrefetchCount,
                                 this.ServiceBusConnection,
+                                null,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy,
                                 this.RegisteredPlugins);
@@ -563,11 +563,11 @@ namespace Microsoft.Azure.ServiceBus
             MessagingEventSource.Log.GetRulesStart(this.ClientId);
             bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
             Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.GetRulesStart() : null;
-            Task<IEnumerable<RuleDescription>> getRulesTask = null;
+            Task<IList<RuleDescription>> getRulesTask = null;
 
             var skip = 0;
             var top = int.MaxValue;
-            IEnumerable<RuleDescription> rules = null;
+            IList<RuleDescription> rules = null;
 
             try
             {

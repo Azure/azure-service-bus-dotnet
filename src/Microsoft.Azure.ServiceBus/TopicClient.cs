@@ -72,7 +72,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="tokenProvider">Token provider which will generate security tokens for authorization.</param>
         /// <param name="transportType">Transport type.</param>
         /// <param name="retryPolicy">Retry policy for topic operations. Defaults to <see cref="RetryPolicy.Default"/></param>
-        /// <returns></returns>
+        /// <remarks>Creates a new connection to the topic, which is opened during the first send operation.</remarks>
         public TopicClient(
             string endpoint,
             string entityPath,
@@ -102,7 +102,6 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
             }
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
-            this.OperationTimeout = this.ServiceBusConnection.OperationTimeout;
             this.syncLock = new object();
             this.TopicName = entityPath;
             this.ownsConnection = false;
@@ -111,7 +110,7 @@ namespace Microsoft.Azure.ServiceBus
                 this.CbsTokenProvider = new TokenProviderAdapter(this.ServiceBusConnection.TokenProvider, this.ServiceBusConnection.OperationTimeout);
             }
 
-            MessagingEventSource.Log.TopicClientCreateStop(serviceBusConnection?.Endpoint.Authority, entityPath, this.ClientId);
+            MessagingEventSource.Log.TopicClientCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
         }
 
         /// <summary>
@@ -152,6 +151,7 @@ namespace Microsoft.Azure.ServiceBus
                                 this.TopicName,
                                 MessagingEntityType.Topic,
                                 this.ServiceBusConnection,
+                                null,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy);
                         }
