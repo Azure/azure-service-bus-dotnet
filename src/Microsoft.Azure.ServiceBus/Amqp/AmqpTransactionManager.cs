@@ -7,7 +7,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Transactions;
-    using Microsoft.Azure.ServiceBus.Primitives;
 
     internal class AmqpTransactionManager
     {
