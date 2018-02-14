@@ -69,7 +69,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 await controller.DischargeAsync(this.AmqpTransactionId, fail: false).ConfigureAwait(false);
                 singlePhaseEnlistment.Committed();
                 MessagingEventSource.Log.AmqpTransactionDischarged(this.transactionId, this.AmqpTransactionId, false);
-                await this.CloseAsync();
+                await this.CloseAsync().ConfigureAwait(false);
             }
             catch (Exception e)
             {

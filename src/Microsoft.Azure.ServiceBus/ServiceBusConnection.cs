@@ -196,7 +196,7 @@ namespace Microsoft.Azure.ServiceBus
         async Task<Controller> CreateControllerAsync(TimeSpan timeout)
         {
             var timeoutHelper = new TimeoutHelper(timeout);
-            var connection = await this.ConnectionManager.GetOrCreateAsync(timeoutHelper.RemainingTime());
+            var connection = await this.ConnectionManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
             var sessionSettings = new AmqpSessionSettings { Properties = new Fields() };
             AmqpSession amqpSession = null;
@@ -205,16 +205,16 @@ namespace Microsoft.Azure.ServiceBus
             try
             {
                 amqpSession = connection.CreateSession(sessionSettings);
-                await amqpSession.OpenAsync(timeoutHelper.RemainingTime());
+                await amqpSession.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
                 controller = new Controller(amqpSession, timeoutHelper.RemainingTime());
-                await controller.OpenAsync(timeoutHelper.RemainingTime());
+                await controller.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
             }
             catch (Exception exception)
             {
                 if (amqpSession != null)
                 {
-                    await amqpSession.CloseAsync(timeout);
+                    await amqpSession.CloseAsync(timeout).ConfigureAwait(false);
                 }
 
                 MessagingEventSource.Log.AmqpCreateControllerException(this.ConnectionManager.ToString(), exception);
