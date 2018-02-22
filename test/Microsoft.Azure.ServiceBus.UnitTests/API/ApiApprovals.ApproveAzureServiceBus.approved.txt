@@ -171,6 +171,11 @@ namespace Microsoft.Azure.ServiceBus
         public MessageLockLostException(string message) { }
         public MessageLockLostException(string message, System.Exception innerException) { }
     }
+    public sealed class MessageSizeExceededException : Microsoft.Azure.ServiceBus.ServiceBusException
+    {
+        public MessageSizeExceededException(string message) { }
+        public MessageSizeExceededException(string message, System.Exception innerException) { }
+    }
     public sealed class MessagingEntityDisabledException : Microsoft.Azure.ServiceBus.ServiceBusException
     {
         public MessagingEntityDisabledException(string message) { }
