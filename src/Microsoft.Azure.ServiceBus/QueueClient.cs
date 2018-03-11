@@ -210,7 +210,7 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public override IList<ServiceBusPlugin> RegisteredPlugins => this.InnerSender.RegisteredPlugins;
 
-        internal MessageSender InnerSender
+        public MessageSender InnerSender
         {
             get
             {
@@ -235,7 +235,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        internal MessageReceiver InnerReceiver
+        public MessageReceiver InnerReceiver
         {
             get
             {
