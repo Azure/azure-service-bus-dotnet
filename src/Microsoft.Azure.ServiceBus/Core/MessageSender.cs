@@ -499,10 +499,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                         var size = (ulong)amqpMessage.SerializedMessageSize;
                         if (size > amqpLink.Settings.MaxMessageSize.Value)
                         {
-                            // TODO: Add MessageSizeExceededException
-                            throw new NotImplementedException("MessageSizeExceededException: " + Resources.AmqpMessageSizeExceeded.FormatForUser(amqpMessage.DeliveryId.Value, size, amqpLink.Settings.MaxMessageSize.Value));
-                            ////throw Fx.Exception.AsError(new MessageSizeExceededException(
-                            ////Resources.AmqpMessageSizeExceeded.FormatForUser(amqpMessage.DeliveryId.Value, size, amqpLink.Settings.MaxMessageSize.Value)));
+                            throw new MessageSizeExceededException(Resources.AmqpMessageSizeExceeded.FormatForUser(amqpMessage.DeliveryId.Value, size, amqpLink.Settings.MaxMessageSize.Value));
                         }
                     }
 
@@ -529,6 +526,12 @@ namespace Microsoft.Azure.ServiceBus.Core
                     ManagementConstants.Operations.ScheduleMessageOperation,
                     this.OperationTimeout,
                     null);
+
+                SendingAmqpLink sendLink;
+                if(this.SendLinkManager.TryGetOpenedObject(out sendLink))
+                {
+                    request.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = sendLink.Name;
+                }
 
                 ArraySegment<byte>[] payload = amqpMessage.GetPayload();
                 var buffer = new BufferListStream(payload);
@@ -574,6 +577,13 @@ namespace Microsoft.Azure.ServiceBus.Core
                     ManagementConstants.Operations.CancelScheduledMessageOperation,
                     this.OperationTimeout,
                     null);
+
+            SendingAmqpLink sendLink;
+            if (this.SendLinkManager.TryGetOpenedObject(out sendLink))
+            {
+                request.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = sendLink.Name;
+            }
+
             request.Map[ManagementConstants.Properties.SequenceNumbers] = new[] { sequenceNumber };
 
             var response = await this.ExecuteRequestResponseAsync(request).ConfigureAwait(false);
