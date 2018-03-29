@@ -172,7 +172,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Gets the name of the queue.
         /// </summary>
-        public string Path => this.QueueName;
+        public override string Path => this.QueueName;
 
         /// <summary>
         /// Prefetch speeds up the message flow by aiming to have a message readily available for local retrieval when and before the application asks for one using Receive.
@@ -222,7 +222,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Connection object to the service bus namespace.
         /// </summary>
-        public ServiceBusConnection ServiceBusConnection { get; }
+        public override ServiceBusConnection ServiceBusConnection { get; }
 
         internal MessageSender InnerSender
         {

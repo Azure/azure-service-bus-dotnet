@@ -132,12 +132,12 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Gets the name of the topic.
         /// </summary>
-        public string Path => this.TopicName;
+        public override string Path => this.TopicName;
 
         /// <summary>
         /// Connection object to the service bus namespace.
         /// </summary>
-        public ServiceBusConnection ServiceBusConnection { get; }
+        public override ServiceBusConnection ServiceBusConnection { get; }
 
         internal MessageSender InnerSender
         {

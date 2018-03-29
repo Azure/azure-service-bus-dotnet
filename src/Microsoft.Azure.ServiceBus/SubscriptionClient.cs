@@ -164,7 +164,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Gets the formatted path of the subscription client.
         /// </summary>
         /// <seealso cref="EntityNameHelper.FormatSubscriptionPath(string, string)"/>
-        public string Path { get; }
+        public override string Path { get; }
 
         /// <summary>
         /// Gets the name of the subscription.
@@ -224,6 +224,11 @@ namespace Microsoft.Azure.ServiceBus
                 }
             }
         }
+
+        /// <summary>
+        /// Connection object to the service bus namespace.
+        /// </summary>
+        public override ServiceBusConnection ServiceBusConnection { get; }
 
         internal IInnerSubscriptionClient InnerSubscriptionClient
         {
@@ -297,8 +302,6 @@ namespace Microsoft.Azure.ServiceBus
                 return this.sessionPumpHost;
             }
         }
-
-        internal ServiceBusConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 

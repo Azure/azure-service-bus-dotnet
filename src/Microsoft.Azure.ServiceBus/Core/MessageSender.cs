@@ -159,7 +159,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         /// Gets the entity path of the MessageSender.
         /// </summary>
-        public virtual string Path { get; }
+        public override string Path { get; }
 
         /// <summary>
         /// Duration after which individual operations will timeout.
@@ -170,9 +170,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             set => this.ServiceBusConnection.OperationTimeout = value;
         }
 
-        internal MessagingEntityType? EntityType { get; }
+        /// <summary>
+        /// Connection object to the service bus namespace.
+        /// </summary>
+        public override ServiceBusConnection ServiceBusConnection { get; }
 
-        ServiceBusConnection ServiceBusConnection { get; }
+        internal MessagingEntityType? EntityType { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 

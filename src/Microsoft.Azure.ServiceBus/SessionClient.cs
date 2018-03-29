@@ -217,6 +217,11 @@ namespace Microsoft.Azure.ServiceBus
         public string EntityPath { get; }
 
         /// <summary>
+        /// Gets the path of the entity. This is either the name of the queue, or the full path of the subscription.
+        /// </summary>
+        public override string Path => this.EntityPath;
+
+        /// <summary>
         /// Duration after which individual operations will timeout.
         /// </summary>
         public override TimeSpan OperationTimeout
@@ -225,11 +230,14 @@ namespace Microsoft.Azure.ServiceBus
             set => this.ServiceBusConnection.OperationTimeout = value;
         }
 
+        /// <summary>
+        /// Connection object to the service bus namespace.
+        /// </summary>
+        public override ServiceBusConnection ServiceBusConnection { get; }
+
         MessagingEntityType? EntityType { get; }
 
         internal int PrefetchCount { get; set; }
-
-        ServiceBusConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 

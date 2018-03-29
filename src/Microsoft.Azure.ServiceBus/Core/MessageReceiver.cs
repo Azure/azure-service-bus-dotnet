@@ -263,7 +263,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>The path of the entity for this receiver. For Queues this will be the name, but for Subscriptions this will be the path.</summary>
-        public virtual string Path { get; }
+        public override string Path { get; }
 
         /// <summary>
         /// Duration after which individual operations will timeout.
@@ -272,6 +272,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             get => this.ServiceBusConnection.OperationTimeout;
             set => this.ServiceBusConnection.OperationTimeout = value;
         }
+
+        /// <summary>
+        /// Connection object to the service bus namespace.
+        /// </summary>
+        public override ServiceBusConnection ServiceBusConnection { get; }
 
         /// <summary>
         /// Gets the DateTime that the current receiver is locked until. This is only applicable when Sessions are used.
@@ -286,8 +291,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         internal MessagingEntityType? EntityType { get; }
 
         Exception LinkException { get; set; }
-
-        ServiceBusConnection ServiceBusConnection { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
