@@ -297,6 +297,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 }
 
                 transaction.Rollback();
+
+                await receiver.CompleteAsync(receivedMessage1.SystemProperties.LockToken);
+                await receiver.CompleteAsync(receivedMessage2.SystemProperties.LockToken);
             }
             catch (Exception e)
             {
