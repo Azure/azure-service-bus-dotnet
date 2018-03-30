@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
 
     public class MessageInteropEnd2EndTests
     {
-        public static IEnumerable<object> TestEnd2EndEntityPermutations => new object[]
+        public static IEnumerable<object[]> TestEnd2EndEntityPermutations => new object[][]
         {
             new object[] { TransportType.NetMessaging, MessageInteropEnd2EndTests.GetSbConnectionString(TransportType.NetMessaging) },
             new object[] { TransportType.Amqp, MessageInteropEnd2EndTests.GetSbConnectionString(TransportType.Amqp) }
@@ -28,7 +28,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
             var queueName = TestConstants.NonPartitionedQueueName;
 
             // Create a full framework MessageSender
-            var messagingFactory = MessagingFactory.CreateFromConnectionString(sbConnectionString);
+            var csb = new Microsoft.ServiceBus.ServiceBusConnectionStringBuilder(sbConnectionString)
+            {
+                TransportType = transportType
+            };
+            var messagingFactory = MessagingFactory.CreateFromConnectionString(csb.ToString());
             var fullFrameWorkClientSender = messagingFactory.CreateMessageSender(queueName);
 
             // Create a .NetStandard MessageReceiver
@@ -46,7 +50,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
                 TestUtility.Log($"Message1 SequenceNumber: {returnedMessage.SystemProperties.SequenceNumber}");
                 var returnedBody1 = returnedMessage.GetBody<string>();
                 TestUtility.Log($"Message1: {returnedBody1}");
-                Assert.True(string.Equals(message1Body, returnedBody1));
+                Assert.Equal(message1Body, returnedBody1);
 
                 // Send Custom object
                 var book = new TestBook("contosoBook", 1, 5);
@@ -70,7 +74,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
                 TestUtility.Log($"Message3 SequenceNumber: {returnedMessage.SystemProperties.SequenceNumber}");
                 var returnedBody3 = Encoding.UTF8.GetString(returnedMessage.GetBody<byte[]>());
                 TestUtility.Log($"Message1: {returnedBody3}");
-                Assert.True(string.Equals(message3Body, returnedBody3));
+                Assert.Equal(message3Body, returnedBody3);
 
                 // Send Stream Object
                 var message4Body = "contosoStreamObject";
@@ -82,7 +86,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.MessageInterop
                 TestUtility.Log($"Message3 SequenceNumber: {returnedMessage.SystemProperties.SequenceNumber}");
                 var returnedBody4 = Encoding.UTF8.GetString(returnedMessage.Body);
                 TestUtility.Log($"Message4: {returnedBody4}");
-                Assert.True(string.Equals(message4Body, returnedBody4));
+                Assert.Equal(message4Body, returnedBody4);
             }
             finally
             {
