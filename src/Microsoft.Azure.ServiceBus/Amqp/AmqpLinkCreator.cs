@@ -14,15 +14,17 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         readonly string entityPath;
         readonly ServiceBusConnection serviceBusConnection;
         readonly Uri endpointAddress;
+        readonly string[] audience;
         readonly string[] requiredClaims;
         readonly ICbsTokenProvider cbsTokenProvider;
         readonly AmqpLinkSettings amqpLinkSettings;
 
-        protected AmqpLinkCreator(string entityPath, ServiceBusConnection serviceBusConnection, Uri endpointAddress, string[] requiredClaims, ICbsTokenProvider cbsTokenProvider, AmqpLinkSettings amqpLinkSettings, string clientId)
+        protected AmqpLinkCreator(string entityPath, ServiceBusConnection serviceBusConnection, Uri endpointAddress, string[] audience, string[] requiredClaims, ICbsTokenProvider cbsTokenProvider, AmqpLinkSettings amqpLinkSettings, string clientId)
         {
             this.entityPath = entityPath;
             this.serviceBusConnection = serviceBusConnection;
             this.endpointAddress = endpointAddress;
+            this.audience = audience;
             this.requiredClaims = requiredClaims;
             this.cbsTokenProvider = cbsTokenProvider;
             this.amqpLinkSettings = amqpLinkSettings;
@@ -41,11 +43,16 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             // Authenticate over CBS
             var cbsLink = amqpConnection.Extensions.Find<AmqpCbsLink>();
+            DateTime cbsTokenExpiresAtUtc = DateTime.MaxValue;
 
-            var resource = this.endpointAddress.AbsoluteUri;
-            MessagingEventSource.Log.AmqpSendAuthenticationTokenStart(this.endpointAddress, resource, resource, this.requiredClaims);
-            var cbsTokenExpiresAtUtc = await cbsLink.SendTokenAsync(this.cbsTokenProvider, this.endpointAddress, resource, resource, this.requiredClaims, timeoutHelper.RemainingTime()).ConfigureAwait(false);
-            MessagingEventSource.Log.AmqpSendAuthenticationTokenStop();
+            foreach (var resource in this.audience)
+            {
+                MessagingEventSource.Log.AmqpSendAuthenticationTokenStart(this.endpointAddress, resource, resource, this.requiredClaims);
+                cbsTokenExpiresAtUtc = TimeoutHelper.Min(
+                    cbsTokenExpiresAtUtc, 
+                    await cbsLink.SendTokenAsync(this.cbsTokenProvider, this.endpointAddress, resource, resource, this.requiredClaims, timeoutHelper.RemainingTime()).ConfigureAwait(false));
+                MessagingEventSource.Log.AmqpSendAuthenticationTokenStop(); 
+            }
 
             AmqpSession session = null;
             try
