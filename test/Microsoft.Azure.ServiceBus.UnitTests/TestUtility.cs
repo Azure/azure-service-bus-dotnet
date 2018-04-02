@@ -21,7 +21,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 throw new InvalidOperationException($"'{TestConstants.ConnectionStringEnvironmentVariable}' environment variable was not found!");
             }
-            envConnectionString = "Endpoint=sb://contoso.servicebus.onebox.windows-int.net/;SharedAccessKeyName=DefaultNamespaceSasAllKeyName;SharedAccessKey=8864/auVd3qDC75iTjBL1GJ4D2oXC6bIttRd0jzDZ+g=";
+
             // Validate the connection string
             NamespaceConnectionString = new ServiceBusConnectionStringBuilder(envConnectionString).ToString();
             WebSocketsNamespaceConnectionString = new ServiceBusConnectionStringBuilder(envConnectionString){TransportType = TransportType.AmqpWebSockets}.ToString();
