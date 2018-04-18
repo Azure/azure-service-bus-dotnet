@@ -167,6 +167,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 return new MessageNotFoundException(message);
             }
 
+            if (string.Equals(condition, AmqpClientConstants.SessionCannotBeLockedError.Value))
+            {
+                return new SessionCannotBeLockedException(message);
+            }
+
             return new ServiceBusException(true, message);
         }
 
