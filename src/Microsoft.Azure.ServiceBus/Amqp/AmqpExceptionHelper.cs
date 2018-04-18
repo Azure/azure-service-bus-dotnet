@@ -36,6 +36,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             { AmqpClientConstants.PartitionNotOwnedError.Value, AmqpResponseStatusCode.Gone },
             { AmqpClientConstants.EntityDisabledError.Value, AmqpResponseStatusCode.BadRequest },
             { AmqpClientConstants.PublisherRevokedError.Value, AmqpResponseStatusCode.Unauthorized },
+            { AmqpClientConstants.AuthorizationFailedError.Value, AmqpResponseStatusCode.Unauthorized},
             { AmqpErrorCode.Stolen.Value, AmqpResponseStatusCode.Gone }
         };
 
@@ -118,7 +119,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             if (string.Equals(condition, AmqpErrorCode.UnauthorizedAccess.Value) ||
                 string.Equals(condition, AmqpClientConstants.AuthorizationFailedError.Value))
             {
-                return new UnauthorizedAccessException(message);
+                return new UnauthorizedException(message);
             }
 
             if (string.Equals(condition, AmqpClientConstants.ServerBusyError.Value))
