@@ -316,5 +316,23 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await receiver.CloseAsync();
             }
         }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task CancelScheduledMessageShouldThrowMessageNotFoundException()
+        {
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+
+            try
+            {
+                long nonExistingSequenceNumber = 1000;
+                await Assert.ThrowsAsync<MessageNotFoundException>(
+                    async () => await sender.CancelScheduledMessageAsync(nonExistingSequenceNumber));
+            }
+            finally
+            {
+                await sender.CloseAsync().ConfigureAwait(false);
+            }
+        }
     }
 }

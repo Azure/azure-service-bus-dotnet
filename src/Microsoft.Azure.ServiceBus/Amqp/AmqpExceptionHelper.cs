@@ -115,7 +115,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                 return new InvalidOperationException(message);
             }
 
-            if (string.Equals(condition, AmqpErrorCode.UnauthorizedAccess.Value))
+            if (string.Equals(condition, AmqpErrorCode.UnauthorizedAccess.Value) ||
+                string.Equals(condition, AmqpClientConstants.AuthorizationFailedError.Value))
             {
                 return new UnauthorizedAccessException(message);
             }
@@ -158,6 +159,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             if (string.Equals(condition, AmqpErrorCode.MessageSizeExceeded.Value))
             {
                 return new MessageSizeExceededException(message);
+            }
+
+            if (string.Equals(condition, AmqpClientConstants.MessageNotFoundError.Value))
+            {
+                return new MessageNotFoundException(message);
             }
 
             return new ServiceBusException(true, message);
