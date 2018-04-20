@@ -54,7 +54,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             };
             var receiver = new MessageReceiver(connection, TestConstants.NonPartitionedQueueName, ReceiveMode.PeekLock, RetryPolicy.Default);
 
-            var msg = await receiver.ReceiveAsync(TimeSpan.FromSeconds(5));
+            try
+            {
+                var msg = await receiver.ReceiveAsync(TimeSpan.FromSeconds(5));
+            }
+            finally
+            {
+                await receiver.CloseAsync();
+            }
         }
     }
 }
