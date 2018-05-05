@@ -286,7 +286,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             if (this.isViaSender && Transaction.Current != null)
             {
-                throw new ServiceBusException(false, $"{nameof(ScheduleMessageAsync)} method is not supported in a Via-Sender.");
+                throw new ServiceBusException(false, $"{nameof(ScheduleMessageAsync)} method is not supported in a Via-Sender with transactions.");
             }
 
             message.ScheduledEnqueueTimeUtc = scheduleEnqueueTimeUtc.UtcDateTime;
