@@ -9,6 +9,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Transactions;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
@@ -39,6 +40,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         readonly bool ownsConnection;
         readonly ActiveClientLinkManager clientLinkManager;
         readonly ServiceBusDiagnosticSource diagnosticSource;
+        readonly bool isViaSender;
+        readonly string transferDestinationPath;
 
         /// <summary>
         /// Creates a new AMQP MessageSender.
@@ -64,15 +67,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             string connectionString,
             string entityPath,
             RetryPolicy retryPolicy = null)
-            : this(entityPath, null, new ServiceBusNamespaceConnection(connectionString), null, null, retryPolicy)
+            : this(entityPath, null, null, new ServiceBusConnection(connectionString), null, retryPolicy)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
             }
 
             this.ownsConnection = true;
@@ -93,22 +92,52 @@ namespace Microsoft.Azure.ServiceBus.Core
             ITokenProvider tokenProvider,
             TransportType transportType = TransportType.Amqp,
             RetryPolicy retryPolicy = null)
-            : this(entityPath, null, new ServiceBusNamespaceConnection(endpoint, transportType, retryPolicy), tokenProvider, null, retryPolicy)
+            : this(entityPath, null, null, new ServiceBusConnection(endpoint, transportType, retryPolicy) {TokenProvider = tokenProvider}, null, retryPolicy)
         {
-            if (tokenProvider == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(tokenProvider));
-            }
-            if (string.IsNullOrWhiteSpace(entityPath))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
-            }
-
             this.ownsConnection = true;
+        }
+
+        /// <summary>
+        /// Creates a new AMQP MessageSender on a given <see cref="ServiceBusConnection"/>
+        /// </summary>
+        /// <param name="serviceBusConnection">Connection object to the service bus namespace.</param>
+        /// <param name="entityPath">The path of the entity this sender should connect to.</param>
+        /// <param name="retryPolicy">The <see cref="RetryPolicy"/> that will be used when communicating with Service Bus. Defaults to <see cref="RetryPolicy.Default"/></param>
+        public MessageSender(
+            ServiceBusConnection serviceBusConnection,
+            string entityPath,
+            RetryPolicy retryPolicy = null)
+            : this(entityPath, null, null, serviceBusConnection, null, retryPolicy)
+        {
+            this.ownsConnection = false;
+        }
+
+        /// <summary>
+        /// Creates a ViaMessageSender. This can be used to send messages to a destination entity via another another entity.
+        /// </summary>
+        /// <param name="serviceBusConnection">Connection object to the service bus namespace.</param>
+        /// <param name="entityPath">The final destination of the message.</param>
+        /// <param name="viaEntityPath">The first destination of the message.</param>
+        /// <param name="retryPolicy">The <see cref="RetryPolicy"/> that will be used when communicating with Service Bus. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <remarks>
+        /// This is mainly to be used when sending messages in a transaction. 
+        /// When messages need to be sent across entities in a single transaction, this can be used to ensure
+        /// all the messages land initially in the same entity/partition for local transactions, and then 
+        /// let service bus handle transferring the message to the actual destination.
+        /// </remarks>
+        public MessageSender(
+            ServiceBusConnection serviceBusConnection,
+            string entityPath,
+            string viaEntityPath,
+            RetryPolicy retryPolicy = null)
+            :this(viaEntityPath, entityPath, null, serviceBusConnection, null, retryPolicy)
+        {
+            this.ownsConnection = false;
         }
 
         internal MessageSender(
             string entityPath,
+            string transferDestinationPath,
             MessagingEntityType? entityType,
             ServiceBusConnection serviceBusConnection,
             ITokenProvider tokenProvider,
@@ -118,15 +147,38 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             MessagingEventSource.Log.MessageSenderCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath);
 
+            if (string.IsNullOrWhiteSpace(entityPath))
+            {
+                throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
+            }
+
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
             this.Path = entityPath;
             this.EntityType = entityType;
-            tokenProvider = tokenProvider ?? this.ServiceBusConnection.CreateTokenProvider();
-            this.CbsTokenProvider = cbsTokenProvider ?? new TokenProviderAdapter(tokenProvider, this.ServiceBusConnection.OperationTimeout);
+
+            if (cbsTokenProvider != null)
+            {
+                this.CbsTokenProvider = cbsTokenProvider;
+            }
+            else if (this.ServiceBusConnection.TokenProvider != null)
+            {
+                this.CbsTokenProvider = new TokenProviderAdapter(this.ServiceBusConnection.TokenProvider, this.ServiceBusConnection.OperationTimeout);
+            }
+            else
+            {
+                throw new ArgumentNullException($"{nameof(ServiceBusConnection)} doesn't have a valid token provider");
+            }
+
             this.SendLinkManager = new FaultTolerantAmqpObject<SendingAmqpLink>(this.CreateLinkAsync, CloseSession);
             this.RequestResponseLinkManager = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(this.CreateRequestResponseLinkAsync, CloseRequestResponseSession);
             this.clientLinkManager = new ActiveClientLinkManager(this, this.CbsTokenProvider);
             this.diagnosticSource = new ServiceBusDiagnosticSource(entityPath, serviceBusConnection.Endpoint);
+
+            if (!string.IsNullOrWhiteSpace(transferDestinationPath))
+            {
+                this.isViaSender = true;
+                this.transferDestinationPath = transferDestinationPath;
+            }
 
             MessagingEventSource.Log.MessageSenderCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
         }
@@ -140,7 +192,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         /// Gets the entity path of the MessageSender.
         /// </summary>
-        public virtual string Path { get; }
+        public override string Path { get; }
 
         /// <summary>
         /// Duration after which individual operations will timeout.
@@ -151,9 +203,12 @@ namespace Microsoft.Azure.ServiceBus.Core
             set => this.ServiceBusConnection.OperationTimeout = value;
         }
 
-        internal MessagingEntityType? EntityType { get; }
+        /// <summary>
+        /// Connection object to the service bus namespace.
+        /// </summary>
+        public override ServiceBusConnection ServiceBusConnection { get; }
 
-        ServiceBusConnection ServiceBusConnection { get; }
+        internal MessagingEntityType? EntityType { get; }
 
         ICbsTokenProvider CbsTokenProvider { get; }
 
@@ -230,6 +285,11 @@ namespace Microsoft.Azure.ServiceBus.Core
                     "Cannot schedule messages in the past");
             }
 
+            if (this.isViaSender && Transaction.Current != null)
+            {
+                throw new ServiceBusException(false, $"{nameof(ScheduleMessageAsync)} method is not supported in a Via-Sender with transactions.");
+            }
+
             message.ScheduledEnqueueTimeUtc = scheduleEnqueueTimeUtc.UtcDateTime;
             MessageSender.ValidateMessage(message);
             MessagingEventSource.Log.ScheduleMessageStart(this.ClientId, scheduleEnqueueTimeUtc);
@@ -276,6 +336,11 @@ namespace Microsoft.Azure.ServiceBus.Core
         public async Task CancelScheduledMessageAsync(long sequenceNumber)
         {
             this.ThrowIfClosed();
+            if (Transaction.Current != null)
+            {
+                throw new ServiceBusException(false, $"{nameof(CancelScheduledMessageAsync)} method is not supported within a transaction.");
+            }
+
             MessagingEventSource.Log.CancelScheduledMessageStart(this.ClientId, sequenceNumber);
 
             bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
@@ -347,13 +412,20 @@ namespace Microsoft.Azure.ServiceBus.Core
             var amqpMessage = amqpRequestMessage.AmqpMessage;
             var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
 
+            ArraySegment<byte> transactionId = AmqpConstants.NullBinary;
+            var ambientTransaction = Transaction.Current;
+            if (ambientTransaction != null)
+            {
+                transactionId = await AmqpTransactionManager.Instance.EnlistAsync(ambientTransaction, this.ServiceBusConnection).ConfigureAwait(false);
+            }
+
             if (!this.RequestResponseLinkManager.TryGetOpenedObject(out var requestResponseAmqpLink))
             {
                 requestResponseAmqpLink = await this.RequestResponseLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
             }
 
             var responseAmqpMessage = await Task.Factory.FromAsync(
-                (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, timeoutHelper.RemainingTime(), c, s),
+                (c, s) => requestResponseAmqpLink.BeginRequest(amqpMessage, transactionId, timeoutHelper.RemainingTime(), c, s),
                 a => requestResponseAmqpLink.EndRequest(a),
                 this).ConfigureAwait(false);
 
@@ -457,6 +529,13 @@ namespace Microsoft.Azure.ServiceBus.Core
                 SendingAmqpLink amqpLink = null;
                 try
                 {
+                    ArraySegment<byte> transactionId = AmqpConstants.NullBinary;
+                    var ambientTransaction = Transaction.Current;
+                    if (ambientTransaction != null)
+                    {
+                        transactionId = await AmqpTransactionManager.Instance.EnlistAsync(ambientTransaction, this.ServiceBusConnection).ConfigureAwait(false);
+                    }
+
                     if (!this.SendLinkManager.TryGetOpenedObject(out amqpLink))
                     {
                         amqpLink = await this.SendLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
@@ -470,7 +549,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                         }
                     }
 
-                    var outcome = await amqpLink.SendMessageAsync(amqpMessage, this.GetNextDeliveryTag(), AmqpConstants.NullBinary, timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                    var outcome = await amqpLink.SendMessageAsync(amqpMessage, this.GetNextDeliveryTag(), transactionId, timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
                     if (outcome.DescriptorCode != Accepted.Code)
                     {
@@ -487,79 +566,98 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         async Task<long> OnScheduleMessageAsync(Message message)
         {
-            // TODO: Ensure System.Transactions.Transaction.Current is null. Transactions are not supported by 1.0.0 version of dotnet core.
             using (var amqpMessage = AmqpMessageConverter.SBMessageToAmqpMessage(message))
             {
                 var request = AmqpRequestMessage.CreateRequest(
-                    ManagementConstants.Operations.ScheduleMessageOperation,
-                    this.OperationTimeout,
-                    null);
+                        ManagementConstants.Operations.ScheduleMessageOperation,
+                        this.OperationTimeout,
+                        null);
 
-                SendingAmqpLink sendLink;
-                if(this.SendLinkManager.TryGetOpenedObject(out sendLink))
+                SendingAmqpLink sendLink = null;
+
+                try
                 {
-                    request.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = sendLink.Name;
-                }
-
-                ArraySegment<byte>[] payload = amqpMessage.GetPayload();
-                var buffer = new BufferListStream(payload);
-                ArraySegment<byte> value = buffer.ReadBytes((int)buffer.Length);
-
-                var entry = new AmqpMap();
-                {
-                    entry[ManagementConstants.Properties.Message] = value;
-                    entry[ManagementConstants.Properties.MessageId] = message.MessageId;
-
-                    if (!string.IsNullOrWhiteSpace(message.SessionId))
+                    if (this.SendLinkManager.TryGetOpenedObject(out sendLink))
                     {
-                        entry[ManagementConstants.Properties.SessionId] = message.SessionId;
+                        request.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = sendLink.Name;
                     }
 
-                    if (!string.IsNullOrWhiteSpace(message.PartitionKey))
+                    ArraySegment<byte>[] payload = amqpMessage.GetPayload();
+                    var buffer = new BufferListStream(payload);
+                    ArraySegment<byte> value = buffer.ReadBytes((int)buffer.Length);
+
+                    var entry = new AmqpMap();
                     {
-                        entry[ManagementConstants.Properties.PartitionKey] = message.PartitionKey;
+                        entry[ManagementConstants.Properties.Message] = value;
+                        entry[ManagementConstants.Properties.MessageId] = message.MessageId;
+
+                        if (!string.IsNullOrWhiteSpace(message.SessionId))
+                        {
+                            entry[ManagementConstants.Properties.SessionId] = message.SessionId;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(message.PartitionKey))
+                        {
+                            entry[ManagementConstants.Properties.PartitionKey] = message.PartitionKey;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(message.ViaPartitionKey))
+                        {
+                            entry[ManagementConstants.Properties.ViaPartitionKey] = message.ViaPartitionKey;
+                        }
+                }
+
+                    request.Map[ManagementConstants.Properties.Messages] = new List<AmqpMap> { entry };
+
+                    IEnumerable<long> sequenceNumbers = null;
+                    var response = await this.ExecuteRequestResponseAsync(request).ConfigureAwait(false);
+                    if (response.StatusCode == AmqpResponseStatusCode.OK)
+                    {
+                        sequenceNumbers = response.GetValue<long[]>(ManagementConstants.Properties.SequenceNumbers);
                     }
+                    else
+                    {
+                        response.ToMessagingContractException();
+                    }
+
+                    return sequenceNumbers?.FirstOrDefault() ?? 0;
                 }
-
-                request.Map[ManagementConstants.Properties.Messages] = new List<AmqpMap> { entry };
-
-                IEnumerable<long> sequenceNumbers = null;
-                var response = await this.ExecuteRequestResponseAsync(request).ConfigureAwait(false);
-                if (response.StatusCode == AmqpResponseStatusCode.OK)
+                catch (Exception exception)
                 {
-                    sequenceNumbers = response.GetValue<long[]>(ManagementConstants.Properties.SequenceNumbers);
+                    throw AmqpExceptionHelper.GetClientException(exception, sendLink?.GetTrackingId(), null, sendLink?.Session.IsClosing() ?? false);
                 }
-                else
-                {
-                    response.ToMessagingContractException();
-                }
-
-                return sequenceNumbers?.FirstOrDefault() ?? 0;
             }
         }
 
         async Task OnCancelScheduledMessageAsync(long sequenceNumber)
         {
-            // TODO: Ensure System.Transactions.Transaction.Current is null. Transactions are not supported by 1.0.0 version of dotnet core.
             var request =
                 AmqpRequestMessage.CreateRequest(
                     ManagementConstants.Operations.CancelScheduledMessageOperation,
                     this.OperationTimeout,
                     null);
 
-            SendingAmqpLink sendLink;
-            if (this.SendLinkManager.TryGetOpenedObject(out sendLink))
+            SendingAmqpLink sendLink = null;
+
+            try
             {
-                request.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = sendLink.Name;
+                if (this.SendLinkManager.TryGetOpenedObject(out sendLink))
+                {
+                    request.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = sendLink.Name;
+                }
+
+                request.Map[ManagementConstants.Properties.SequenceNumbers] = new[] { sequenceNumber };
+
+                var response = await this.ExecuteRequestResponseAsync(request).ConfigureAwait(false);
+
+                if (response.StatusCode != AmqpResponseStatusCode.OK)
+                {
+                    throw response.ToMessagingContractException();
+                }
             }
-
-            request.Map[ManagementConstants.Properties.SequenceNumbers] = new[] { sequenceNumber };
-
-            var response = await this.ExecuteRequestResponseAsync(request).ConfigureAwait(false);
-
-            if (response.StatusCode != AmqpResponseStatusCode.OK)
+            catch (Exception exception)
             {
-                throw response.ToMessagingContractException();
+                throw AmqpExceptionHelper.GetClientException(exception, sendLink?.GetTrackingId(), null, sendLink?.Session.IsClosing() ?? false);
             }
         }
 
@@ -580,15 +678,28 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             var endpointUri = new Uri(this.ServiceBusConnection.Endpoint, this.Path);
+
+            string[] audience;
+            if (this.isViaSender)
+            {
+                var transferDestinationEndpointUri = new Uri(this.ServiceBusConnection.Endpoint, this.transferDestinationPath);
+                audience = new string[] { endpointUri.AbsoluteUri, transferDestinationEndpointUri.AbsoluteUri };
+                amqpLinkSettings.AddProperty(AmqpClientConstants.TransferDestinationAddress, this.transferDestinationPath);
+            }
+            else
+            {
+                audience = new string[] { endpointUri.AbsoluteUri };
+            }
+
             string[] claims = {ClaimConstants.Send};
-            var amqpSendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, endpointUri, claims, this.CbsTokenProvider, amqpLinkSettings, this.ClientId);
+            var amqpSendReceiveLinkCreator = new AmqpSendReceiveLinkCreator(this.Path, this.ServiceBusConnection, endpointUri, audience, claims, this.CbsTokenProvider, amqpLinkSettings, this.ClientId);
             Tuple<AmqpObject, DateTime> linkDetails = await amqpSendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
 
             var sendingAmqpLink = (SendingAmqpLink) linkDetails.Item1;
             var activeSendReceiveClientLink = new ActiveSendReceiveClientLink(
                 sendingAmqpLink,
                 endpointUri,
-                endpointUri.AbsoluteUri,
+                audience,
                 claims,
                 linkDetails.Item2);
 
@@ -605,11 +716,25 @@ namespace Microsoft.Azure.ServiceBus.Core
             amqpLinkSettings.AddProperty(AmqpClientConstants.EntityTypeName, AmqpClientConstants.EntityTypeManagement);
 
             var endpointUri = new Uri(this.ServiceBusConnection.Endpoint, entityPath);
+
+            string[] audience;
+            if (this.isViaSender)
+            {
+                var transferDestinationEndpointUri = new Uri(this.ServiceBusConnection.Endpoint, this.transferDestinationPath);
+                audience = new string[] { endpointUri.AbsoluteUri, transferDestinationEndpointUri.AbsoluteUri };
+                amqpLinkSettings.AddProperty(AmqpClientConstants.TransferDestinationAddress, this.transferDestinationPath);
+            }
+            else
+            {
+                audience = new string[] { endpointUri.AbsoluteUri };
+            }
+
             string[] claims = { ClaimConstants.Manage, ClaimConstants.Send };
             var amqpRequestResponseLinkCreator = new AmqpRequestResponseLinkCreator(
                 entityPath,
                 this.ServiceBusConnection,
                 endpointUri,
+                audience,
                 claims,
                 this.CbsTokenProvider,
                 amqpLinkSettings,
@@ -622,7 +747,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             var activeRequestResponseClientLink = new ActiveRequestResponseLink(
                 requestResponseAmqpLink,
                 endpointUri,
-                endpointUri.AbsoluteUri,
+                audience,
                 claims,
                 linkDetails.Item2);
             this.clientLinkManager.SetActiveRequestResponseLink(activeRequestResponseClientLink);

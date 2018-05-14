@@ -15,7 +15,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     {
         private static TimeSpan TwoSeconds = TimeSpan.FromSeconds(2);
 
-        public static IEnumerable<object> TestPermutations => new object[]
+        public static IEnumerable<object[]> TestPermutations => new object[][]
         {
             new object[] { TestConstants.NonPartitionedQueueName },
             new object[] { TestConstants.PartitionedQueueName }
@@ -101,7 +101,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [MemberData(nameof(TestPermutations))]
         [DisplayTestMethodName]
-        async Task ReceiveShouldThrowForServerTimeoutZero(string queueName)
+        async Task ReceiveShouldThrowForServerTimeoutZeroTest(string queueName)
         {
             var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, receiveMode: ReceiveMode.ReceiveAndDelete);
 
@@ -261,8 +261,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 Assert.NotNull(dlqMessage);
                 Assert.True(dlqMessage.UserProperties.ContainsKey(Message.DeadLetterReasonHeader));
                 Assert.True(dlqMessage.UserProperties.ContainsKey(Message.DeadLetterErrorDescriptionHeader));
-                Assert.Equal(dlqMessage.UserProperties[Message.DeadLetterReasonHeader], "deadLetterReason");
-                Assert.Equal(dlqMessage.UserProperties[Message.DeadLetterErrorDescriptionHeader], "deadLetterDescription");
+                Assert.Equal("deadLetterReason", dlqMessage.UserProperties[Message.DeadLetterReasonHeader]);
+                Assert.Equal("deadLetterDescription", dlqMessage.UserProperties[Message.DeadLetterErrorDescriptionHeader]);
             }
             finally
             {
@@ -295,7 +295,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 message = await receiver.ReceiveAsync();
                 Assert.NotNull(message);
                 Assert.True(message.UserProperties.ContainsKey("key"));
-                Assert.Equal(message.UserProperties["key"], "value1");
+                Assert.Equal("value1", message.UserProperties["key"]);
 
                 long sequenceNumber = message.SystemProperties.SequenceNumber;
                 await receiver.DeferAsync(message.SystemProperties.LockToken, new Dictionary<string, object>
@@ -306,7 +306,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 message = await receiver.ReceiveDeferredMessageAsync(sequenceNumber);
                 Assert.NotNull(message);
                 Assert.True(message.UserProperties.ContainsKey("key"));
-                Assert.Equal(message.UserProperties["key"], "value2");
+                Assert.Equal("value2", message.UserProperties["key"]);
 
                 await receiver.CompleteAsync(message.SystemProperties.LockToken);
             }
@@ -314,6 +314,49 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             {
                 await sender.CloseAsync();
                 await receiver.CloseAsync();
+            }
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task CancelScheduledMessageShouldThrowMessageNotFoundException()
+        {
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.NonPartitionedQueueName);
+
+            try
+            {
+                long nonExistingSequenceNumber = 1000;
+                await Assert.ThrowsAsync<MessageNotFoundException>(
+                    async () => await sender.CancelScheduledMessageAsync(nonExistingSequenceNumber));
+            }
+            finally
+            {
+                await sender.CloseAsync().ConfigureAwait(false);
+            }
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task ClientThrowsUnauthorizedExceptionWhenUserDoesntHaveAccess()
+        {
+            var csb = new ServiceBusConnectionStringBuilder(TestUtility.NamespaceConnectionString);
+            csb.SasKeyName = "nonExistingKey";
+            csb.EntityPath = TestConstants.NonPartitionedQueueName;
+
+            var sender = new MessageSender(csb);
+
+            try
+            {
+                await Assert.ThrowsAsync<UnauthorizedException>(
+                    async () => await sender.SendAsync(new Message()));
+
+                long nonExistingSequenceNumber = 1000;
+                await Assert.ThrowsAsync<UnauthorizedException>(
+                    async () => await sender.CancelScheduledMessageAsync(nonExistingSequenceNumber));
+            }
+            finally
+            {
+                await sender.CloseAsync().ConfigureAwait(false);
             }
         }
     }

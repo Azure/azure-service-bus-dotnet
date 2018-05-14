@@ -60,6 +60,26 @@ namespace Microsoft.Azure.ServiceBus.Primitives
             return Ticks.ToTimeSpan((Ticks.FromTimeSpan(timeout) / factor) + 1);
         }
 
+        public static TimeSpan Min(TimeSpan time1, TimeSpan time2)
+        {
+            if (time1 <= time2)
+            {
+                return time1;
+            }
+
+            return time2;
+        }
+
+        public static DateTime Min(DateTime first, DateTime second)
+        {
+            if (first <= second)
+            {
+                return first;
+            }
+
+            return second;
+        }
+
         public static void ThrowIfNegativeArgument(TimeSpan timeout)
         {
             ThrowIfNegativeArgument(timeout, nameof(timeout));
