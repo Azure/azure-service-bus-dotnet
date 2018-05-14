@@ -140,7 +140,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             string transferDestinationPath,
             MessagingEntityType? entityType,
             ServiceBusConnection serviceBusConnection,
-            ITokenProvider tokenProvider,
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy)
             : base(nameof(MessageSender), entityPath, retryPolicy ?? RetryPolicy.Default)

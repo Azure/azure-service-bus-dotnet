@@ -269,7 +269,6 @@ namespace Microsoft.Azure.ServiceBus
                                 this.ReceiveMode,
                                 this.PrefetchCount,
                                 this.ServiceBusConnection,
-                                null,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy,
                                 this.RegisteredPlugins);

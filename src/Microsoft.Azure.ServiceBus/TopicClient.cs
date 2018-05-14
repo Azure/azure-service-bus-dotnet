@@ -154,7 +154,6 @@ namespace Microsoft.Azure.ServiceBus
                                 null,
                                 MessagingEntityType.Topic,
                                 this.ServiceBusConnection,
-                                null,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy);
                         }

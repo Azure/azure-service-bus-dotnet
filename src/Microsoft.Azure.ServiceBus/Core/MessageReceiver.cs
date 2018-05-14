@@ -153,7 +153,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEntityType? entityType,
             ReceiveMode receiveMode,
             ServiceBusConnection serviceBusConnection,
-            ITokenProvider tokenProvider,
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
             int prefetchCount = Constants.DefaultClientPrefetchCount,

@@ -89,7 +89,6 @@ namespace Microsoft.Azure.ServiceBus
                   prefetchCount,
                   new ServiceBusConnection(connectionString),
                   null,
-                  null,
                   retryPolicy,
                   null)
         {
@@ -169,7 +168,6 @@ namespace Microsoft.Azure.ServiceBus
             ReceiveMode receiveMode,
             int prefetchCount,
             ServiceBusConnection serviceBusConnection,
-            ITokenProvider tokenProvider,
             ICbsTokenProvider cbsTokenProvider,
             RetryPolicy retryPolicy,
             IList<ServiceBusPlugin> registeredPlugins)

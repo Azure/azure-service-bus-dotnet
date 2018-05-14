@@ -239,7 +239,6 @@ namespace Microsoft.Azure.ServiceBus
                                 null,
                                 MessagingEntityType.Queue,
                                 this.ServiceBusConnection,
-                                null,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy);
                         }
@@ -265,7 +264,6 @@ namespace Microsoft.Azure.ServiceBus
                                 MessagingEntityType.Queue,
                                 this.ReceiveMode,
                                 this.ServiceBusConnection,
-                                null,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy,
                                 this.PrefetchCount);
@@ -294,7 +292,6 @@ namespace Microsoft.Azure.ServiceBus
                                 this.ReceiveMode,
                                 this.PrefetchCount,
                                 this.ServiceBusConnection,
-                                null,
                                 this.CbsTokenProvider,
                                 this.RetryPolicy,
                                 this.RegisteredPlugins);
