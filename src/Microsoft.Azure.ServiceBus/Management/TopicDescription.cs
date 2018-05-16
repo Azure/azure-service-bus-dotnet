@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
@@ -30,7 +28,5 @@ namespace Microsoft.Azure.ServiceBus.Management
         public EntityStatus Status { get; set; }
 
         public bool EnablePartitioning { get; set; }
-
-        public TopicRuntimeInfo TopicRuntimeInfo { get; internal set; }
     }
 }

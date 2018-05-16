@@ -4,11 +4,9 @@ using System.Text;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
-    public class TopicRuntimeInfo
+    public class SubscriptionInfo
     {
-        public long SizeInBytes { get; internal set; }
-
-        public EntityAvailabilityStatus AvailabilityStatus { get; internal set; }
+        public MessageCountDetails MessageCountDetails { get; set; }
 
         public DateTime CreatedAt { get; internal set; }
 
@@ -16,6 +14,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public DateTime AccessedAt { get; internal set; }
 
-        public int SubscriptionCount { get; internal set; }
+        public SubscriptionDescription SubscriptionDescription { get; set; }
     }
 }

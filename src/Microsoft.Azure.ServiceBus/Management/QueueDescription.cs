@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
@@ -23,7 +21,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public TimeSpan DefaultMessageTimeToLive { get; set; }
 
-        // TODO: Should it be part of runtime?
         public TimeSpan AutoDeleteOnIdle { get; set; }
 
         public bool EnableDeadLetteringOnMessageExpiration { get; set; }
@@ -36,14 +33,10 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public EntityStatus Status { get; set; }
 
-        // TODO: Should it be part of runtime?
         public string ForwardTo { get; set; }
 
-        // TODO: Should it be part of runtime?
         public string ForwardDeadLetteredMessagesTo { get; set; }
 
         public bool EnablePartitioning { get; set; }
-
-        public QueueRuntimeInfo QueueRuntimeInfo { get; internal set; }
     }
 }
