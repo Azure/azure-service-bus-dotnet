@@ -8,7 +8,6 @@
 
         public long ScheduledMessageCount { get; set; }
 
-        // TODO: Do we return the following two?
         public long TransferMessageCount { get; set; }
 
         public long TransferDeadLetterMessageCount { get; set; }
