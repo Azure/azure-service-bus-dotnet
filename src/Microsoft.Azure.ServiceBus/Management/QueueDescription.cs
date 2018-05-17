@@ -38,5 +38,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         public string ForwardDeadLetteredMessagesTo { get; set; }
 
         public bool EnablePartitioning { get; set; }
+
+        public QueueRuntimeInfo QueueRuntimeInfo { get; internal set; }
     }
 }

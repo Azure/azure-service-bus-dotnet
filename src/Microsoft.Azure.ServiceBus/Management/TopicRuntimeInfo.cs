@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
-    public class SubscriptionInfo
+    public class TopicRuntimeInfo
     {
-        public MessageCountDetails MessageCountDetails { get; set; }
+        public long SizeInBytes { get; internal set; }
 
         public DateTime CreatedAt { get; internal set; }
 
@@ -14,6 +12,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public DateTime AccessedAt { get; internal set; }
 
-        public SubscriptionDescription SubscriptionDescription { get; set; }
+        public int SubscriptionCount { get; internal set; }
     }
 }

@@ -19,8 +19,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public TimeSpan DuplicateDetectionHistoryTimeWindow { get; set; }
 
-        public long SizeInBytes { get; set; }
-
         public string Path { get; set; }
 
         public AuthorizationRules Authorization { get; set; }
@@ -28,5 +26,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         public EntityStatus Status { get; set; }
 
         public bool EnablePartitioning { get; set; }
+
+        public TopicRuntimeInfo TopicRuntimeInfo { get; internal set; }
     }
 }
