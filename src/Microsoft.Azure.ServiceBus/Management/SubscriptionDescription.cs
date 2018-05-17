@@ -33,5 +33,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         public string ForwardTo { get; set; }
 
         public string ForwardDeadLetteredMessagesTo { get; set; }
+
+        public SubscriptionRuntimeInfo SubscriptionRuntimeInfo { get; internal set; }
     }
 }

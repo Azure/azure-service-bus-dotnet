@@ -2,7 +2,7 @@
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
-    public class QueueInfo
+    public class QueueRuntimeInfo
     {
         public long SizeInBytes { get; internal set; }
 
@@ -13,7 +13,5 @@ namespace Microsoft.Azure.ServiceBus.Management
         public DateTime UpdatedAt { get; internal set; }
 
         public DateTime AccessedAt { get; internal set; }
-
-        public QueueDescription QueueDescription { get; set; }
     }
 }

@@ -7,127 +7,69 @@ namespace Microsoft.Azure.ServiceBus.Management
     public interface IManagementClient
     {
         // Create if not exist. Else throw.
-        Task<QueueDescription> CreateQueueAsync(string queueName);
+        Task<QueueDescription> CreateQueueAsync(string queueName, CancellationToken cancellationToken = default);
 
-        Task<QueueDescription> CreateQueueAsync(string queueName, CancellationToken cancellationToken);
+        Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default);
 
-        Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription);
+        Task<TopicDescription> CreateTopicAsync(string topicName, CancellationToken cancellationToken = default);
 
-        Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken);
+        Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default);
 
-        Task<TopicDescription> CreateTopicAsync(string topicName);
+        Task<SubscriptionDescription> CreateSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default);
 
-        Task<TopicDescription> CreateTopicAsync(string topicName, CancellationToken cancellationToken);
+        Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default);
 
-        Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription);
-
-        Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken);
-
-        Task<SubscriptionDescription> CreateSubscriptionAsync(string topicName, string subscriptionName);
-
-        Task<SubscriptionDescription> CreateSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken);
-
-        Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription);
-
-        Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken);
-
-        Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription);
-
-        Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken);
+        Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default);
 
         // Delete
-        Task DeleteQueueAsync(string queueName);
+        Task DeleteQueueAsync(string queueName, CancellationToken cancellationToken = default);
 
-        Task DeleteQueueAsync(string queueName, CancellationToken cancellationToken);
+        Task DeleteTopicAsync(string topicName, CancellationToken cancellationToken = default);
 
-        Task DeleteTopicAsync(string topicName);
+        Task DeleteSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default);
 
-        Task DeleteTopicAsync(string topicName, CancellationToken cancellationToken);
-
-        Task DeleteSubscriptionAsync(string topicName, string subscriptionName);
-
-        Task DeleteSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken);
-
-        Task DeleteRuleAsync(string topicName, string subscriptionName, string ruleName);
-
-        Task DeleteRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken);
+        Task DeleteRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default);
 
         // Get entity
-        Task<QueueDescription> GetQueueAsync(string queueName);
+        Task<QueueDescription> GetQueueAsync(string queueName, bool includeRuntimeInfo = false, CancellationToken cancellationToken = default);
 
-        Task<QueueDescription> GetQueueAsync(string queueName, CancellationToken cancellationToken);
+        Task<TopicDescription> GetTopicAsync(string topicName, bool includeRuntimeInfo = false, CancellationToken cancellationToken = default);
 
-        Task<QueueInfo> GetQueueRuntimeInfoAsync(string queueName);
+        Task<SubscriptionDescription> GetSubscriptionAsync(string formattedSubscriptionPath, bool includeRuntimeInfo = false, CancellationToken cancellationToken = default);
 
-        Task<QueueInfo> GetQueueRuntimeInfoAsync(string queueName, CancellationToken cancellationToken);
+        Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, bool includeRuntimeInfo = false, CancellationToken cancellationToken = default);
 
-        Task<TopicDescription> GetTopicAsync(string topicName);
+        Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default);
 
-        Task<TopicDescription> GetTopicAsync(string topicName, CancellationToken cancellationToken);
+        // Get entities (max of 100 at a time)
+        Task<ICollection<string>> GetQueuesAsync(int count = 100, CancellationToken cancellationToken = default);
 
-        Task<TopicInfo> GetTopicRuntimeInfoAsync(string topicName);
+        Task<ICollection<string>> GetQueuesAsync(int skip, int count, CancellationToken cancellationToken = default);
 
-        Task<TopicInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken);
+        Task<ICollection<string>> GetTopicsAsync(int count = 100, CancellationToken cancellationToken = default);
 
-        Task<SubscriptionDescription> GetSubscriptionAsync(string formattedSubscriptionPath);
+        Task<ICollection<string>> GetTopicsAsync(int skip, int count, CancellationToken cancellationToken = default);
 
-        Task<SubscriptionDescription> GetSubscriptionAsync(string formattedSubscriptionPath, CancellationToken cancellationToken);
+        Task<ICollection<string>> GetSubscriptionsAsync(string topicName, int count = 100, CancellationToken cancellationToken = default);
 
-        Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName);
+        Task<ICollection<string>> GetSubscriptionsAsync(string topicName, int skip, int count, CancellationToken cancellationToken = default);
 
-        Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken);
+        Task<ICollection<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, CancellationToken cancellationToken = default);
 
-        Task<SubscriptionInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName);
-
-        Task<SubscriptionInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName, CancellationToken cancellationToken);
-
-        Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName);
-
-        Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken);
-
-        // Get entities
-        // Limits to first 100.
-        Task<ICollection<string>> GetQueuesAsync(int count = 100);
-
-        // TODO: Should we expose GetQueuesCount()?
-        Task<ICollection<string>> GetQueuesAsync(int skip, int count);
-
-        Task<ICollection<string>> GetTopicsAsync(int count = 100);
-
-        Task<ICollection<string>> GetTopicsAsync(int skip, int count);
-
-        Task<ICollection<string>> GetSubscriptionsAsync(string topicName, int count = 100);
-
-        Task<ICollection<string>> GetSubscriptionsAsync(string topicName, int skip, int count);
-
-        Task<ICollection<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100);
-
-        Task<ICollection<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int skip, int count);
+        Task<ICollection<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int skip, int count, CancellationToken cancellationToken = default);
 
         // Update entity if exists. Else throws.
-        Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription);
+        Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default);
 
-        Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken);
+        Task<TopicDescription> UpdateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default);
 
-        Task<TopicDescription> UpdateTopicAsync(TopicDescription topicDescription);
-
-        Task<TopicDescription> UpdateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken);
-
-        Task<SubscriptionDescription> UpdateSubscriptionAsync(SubscriptionDescription subscriptionDescription);
-
-        Task<SubscriptionDescription> UpdateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken);
+        Task<SubscriptionDescription> UpdateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default);
 
         // Exists check
-        Task<bool> QueueExistsAsync(string queueName);
+        Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default);
 
-        Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken);
+        Task<bool> TopicExistsAsync(string topicName, CancellationToken cancellationToken = default);
 
-        Task<bool> TopicExistsAsync(string topicName);
-
-        Task<bool> TopicExistsAsync(string topicName, CancellationToken cancellationToken);
-
-        Task<bool> SubscriptionExistsAsync(string topicName, string subscriptionName);
-
-        Task<bool> SubscriptionExistsAsync(string topicName, string subscriptionName, CancellationToken cancellationToken);
+        Task<bool> SubscriptionExistsAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default);
     }
 }
