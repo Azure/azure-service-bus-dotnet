@@ -4,6 +4,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 {
     public class QueueRuntimeInfo
     {
+        public long MessageCount { get; internal set; }
+
         public long SizeInBytes { get; internal set; }
 
         public MessageCountDetails MessageCountDetails { get; internal set; }
