@@ -19,5 +19,9 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <summary>The receiving status of the messaging entity is disabled.</summary>
         [EnumMember]
         ReceiveDisabled = 4,
+
+        /// <summary>The status of the messaging entity is unknown.</summary>
+        [EnumMember]
+        Unknown = 99
     }
 }

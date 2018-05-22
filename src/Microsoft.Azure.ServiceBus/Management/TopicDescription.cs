@@ -27,6 +27,10 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool EnablePartitioning { get; set; }
 
+        public bool SupportOrdering { get; set; }
+
+        public bool EnableBatchedOperations { get; set; }
+
         public TopicRuntimeInfo TopicRuntimeInfo { get; internal set; }
     }
 }
