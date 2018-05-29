@@ -39,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         {
             lock (this.cleanupSynObject)
             {
-                if (this.cleanupScheduled)
+                if (this.cleanupScheduled || this.dictionary.Count <= 0)
                 {
                     return;
                 }
@@ -51,6 +51,8 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         async Task CollectExpiredEntries()
         {
+            await Task.Delay(TimeSpan.FromSeconds(30));
+
             lock (this.cleanupSynObject)
             {
                 this.cleanupScheduled = false;
@@ -64,13 +66,6 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                     this.dictionary.TryRemove(key, out entry);
                 }
             }
-
-            if (this.dictionary.Count <= 0)
-            {
-                return;
-            }
-
-            await Task.Delay(1000);
 
             this.ScheduleCleanup();
         }
