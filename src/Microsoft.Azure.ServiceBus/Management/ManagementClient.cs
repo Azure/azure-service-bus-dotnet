@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Microsoft.Azure.ServiceBus.Core;
 
 namespace Microsoft.Azure.ServiceBus.Management
@@ -53,17 +55,32 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new NotImplementedException($"{nameof(ManagementClient)} doesn't support plugins");
         }
 
-        public async Task<QueueDescription> CreateQueueAsync(string queueName, CancellationToken cancellationToken = default)
+        public Task<QueueDescription> CreateQueueAsync(string queueName, CancellationToken cancellationToken = default)
+        {
+            return this.CreateQueueAsync(new QueueDescription(queueName), cancellationToken);
+        }
+
+        public async Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
         {
             var uri = new UriBuilder(this.csBuilder.Endpoint)
             {
-                Path = queueName,
+                Path = queueDescription.Path,
+                Port = GetPort(this.csBuilder.Endpoint),
                 Scheme = Uri.UriSchemeHttps,
                 Query = $"{apiVersionQuery}"
             }.Uri;
 
-            var content = await PerformPutRequest(uri, cancellationToken);
-            return QueueDescription.ParseFromContent(content);
+            var atomRequest = queueDescription.Serialize().ToString();
+
+            var request = new HttpRequestMessage(HttpMethod.Put, uri);
+            request.Content = new StringContent(
+                atomRequest,
+                Encoding.UTF8,
+                "application/atom+xml"
+            );
+            
+            var response = await PutHttpRequest(request, uri, cancellationToken);
+            return QueueDescription.ParseFromContent(response);
         }
 
         public async Task<QueueDescription> GetQueueAsync(string queueName, bool includeRuntimeInfo = false, CancellationToken cancellationToken = default)
@@ -72,10 +89,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             {
                 Path = queueName,
                 Scheme = Uri.UriSchemeHttps,
+                Port = GetPort(this.csBuilder.Endpoint),
                 Query = $"{apiVersionQuery}&enrich={includeRuntimeInfo}"
             }.Uri;
 
-            var content = await PerformGetRequest(uri, cancellationToken);            
+            var content = await GetHttpContent(uri, cancellationToken);            
             return QueueDescription.ParseFromContent(content);
         }
 
@@ -85,10 +103,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             {
                 Path = "$Resources/queues",
                 Scheme = Uri.UriSchemeHttps,
+                Port = GetPort(this.csBuilder.Endpoint),
                 Query = $"{apiVersionQuery}&enrich=false"
             }.Uri;
 
-            var content = await PerformGetRequest(uri, cancellationToken);
+            var content = await GetHttpContent(uri, cancellationToken);
             return QueueDescription.ParseCollectionFromContent(content).Select(qd => qd.Path).ToList();
         }
 
@@ -106,13 +125,35 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        private string EncodeToAtom(XElement objectToEncode)
+        {
+            XDocument doc = new XDocument(
+               new XElement(XName.Get("entry", ManagementClient.AtomNs),
+                   new XElement(XName.Get("content", ManagementClient.AtomNs),
+                   objectToEncode
+                   )));
+
+            return doc.ToString();
+        }
+
         // TODO: Exception handling
-        private async Task<string> PerformGetRequest(Uri uri, CancellationToken cancellationToken)
+        private async Task<string> GetHttpContent(Uri uri, CancellationToken cancellationToken)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
             var token = await GetToken(request.RequestUri);
             request.Headers.Add("Authorization", token);
-            var response = await this.httpClient.SendAsync(request, cancellationToken);
+            HttpResponseMessage response;
+            response = await this.httpClient.SendAsync(request, cancellationToken);
+            var content = await response.Content.ReadAsStringAsync();
+            return content;
+        }
+
+        // TODO: Exception handling
+        private async Task<string> PutHttpRequest(HttpRequestMessage message, Uri uri, CancellationToken cancellationToken)
+        {
+            var token = await GetToken(message.RequestUri);
+            message.Headers.Add("Authorization", token);
+            var response = await this.httpClient.SendAsync(message, cancellationToken);
             var content = await response.Content.ReadAsStringAsync();
             return content;
         }
@@ -123,6 +164,16 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             var token = await this.ServiceBusConnection.TokenProvider.GetTokenAsync(requestUri.GetLeftPart(UriPartial.Path), this.ServiceBusConnection.OperationTimeout);
             return token.TokenValue;
+        }
+
+        private int GetPort(string endpoint)
+        {
+            if (endpoint.EndsWith("onebox.windows-int.net"))
+            {
+                return 4446;
+            }
+
+            return -1;
         }
     }
 }
