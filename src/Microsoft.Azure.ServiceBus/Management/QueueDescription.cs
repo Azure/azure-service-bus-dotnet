@@ -14,35 +14,35 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public string Path { get; set; }
 
-        public TimeSpan LockDuration { get; set; }
+        public TimeSpan LockDuration { get; set; } = TimeSpan.FromSeconds(30);
 
-        public long MaxSizeInMegabytes { get; set; }
+        public long MaxSizeInMegabytes { get; set; } = 1024;
 
-        public bool RequiresDuplicateDetection { get; set; }
+        public bool RequiresDuplicateDetection { get; set; } = false;
 
-        public bool RequiresSession { get; set; }
+        public bool RequiresSession { get; set; } = false;
 
-        public TimeSpan DefaultMessageTimeToLive { get; set; }
+        public TimeSpan DefaultMessageTimeToLive { get; set; } = TimeSpan.MaxValue;
 
-        public TimeSpan AutoDeleteOnIdle { get; set; }
+        public TimeSpan AutoDeleteOnIdle { get; set; } = TimeSpan.MaxValue;
 
-        public bool EnableDeadLetteringOnMessageExpiration { get; set; }
+        public bool EnableDeadLetteringOnMessageExpiration { get; set; } = false;
 
-        public TimeSpan DuplicateDetectionHistoryTimeWindow { get; set; }
+        public TimeSpan DuplicateDetectionHistoryTimeWindow { get; set; } = TimeSpan.FromSeconds(30);
 
-        public int MaxDeliveryCount { get; set; }
+        public int MaxDeliveryCount { get; set; } = 10;
 
-        public AuthorizationRules AuthorizationRules { get; set; }
+        public AuthorizationRules AuthorizationRules { get; set; } = null;
 
-        public EntityStatus Status { get; set; }
+        public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        public string ForwardTo { get; set; }
+        public string ForwardTo { get; set; } = null;
 
-        public string ForwardDeadLetteredMessagesTo { get; set; }
+        public string ForwardDeadLetteredMessagesTo { get; set; } = null;
 
-        public bool EnablePartitioning { get; set; }
+        public bool EnablePartitioning { get; set; } = false;
 
-        public bool EnableBatchedOperations { get; set; }
+        public bool EnableBatchedOperations { get; set; } = false;
 
         public QueueRuntimeInfo QueueRuntimeInfo { get; internal set; }
 
@@ -194,14 +194,16 @@ namespace Microsoft.Azure.ServiceBus.Management
                             new XElement(XName.Get("MaxSizeInMegabytes", ManagementClient.SbNs), XmlConvert.ToString(this.MaxSizeInMegabytes)),
                             new XElement(XName.Get("RequiresDuplicateDetection", ManagementClient.SbNs), XmlConvert.ToString(this.RequiresDuplicateDetection)),
                             new XElement(XName.Get("RequiresSession", ManagementClient.SbNs), XmlConvert.ToString(this.RequiresSession)),
-                            new XElement(XName.Get("DefaultMessageTimeToLive", ManagementClient.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)),
-                            new XElement(XName.Get("AutoDeleteOnIdle", ManagementClient.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)),
+                            this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementClient.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
+                            this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementClient.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null,
                             new XElement(XName.Get("EnableDeadLetteringOnMessageExpiration", ManagementClient.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnMessageExpiration)),
-                            new XElement(XName.Get("DuplicateDetectionHistoryTimeWindow", ManagementClient.SbNs), XmlConvert.ToString(this.DuplicateDetectionHistoryTimeWindow)),
+                            this.RequiresDuplicateDetection && this.DuplicateDetectionHistoryTimeWindow != default ? 
+                                new XElement(XName.Get("DuplicateDetectionHistoryTimeWindow", ManagementClient.SbNs), XmlConvert.ToString(this.DuplicateDetectionHistoryTimeWindow)) 
+                                : null,
                             new XElement(XName.Get("MaxDeliveryCount", ManagementClient.SbNs), XmlConvert.ToString(this.MaxDeliveryCount)),
                             new XElement(XName.Get("Status", ManagementClient.SbNs), this.Status.ToString()),
-                            new XElement(XName.Get("ForwardTo", ManagementClient.SbNs), this.ForwardTo),
-                            new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementClient.SbNs), this.ForwardDeadLetteredMessagesTo),
+                            this.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementClient.SbNs), this.ForwardTo) : null,
+                            this.ForwardDeadLetteredMessagesTo != null ? new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementClient.SbNs), this.ForwardDeadLetteredMessagesTo) : null,
                             new XElement(XName.Get("EnablePartitioning", ManagementClient.SbNs), XmlConvert.ToString(this.EnablePartitioning)),
                             new XElement(XName.Get("EnableBatchedOperations", ManagementClient.SbNs), XmlConvert.ToString(this.EnableBatchedOperations))
                         ))
