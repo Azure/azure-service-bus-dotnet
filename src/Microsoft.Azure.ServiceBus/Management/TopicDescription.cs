@@ -34,8 +34,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool EnableBatchedOperations { get; set; }
 
-        public TopicRuntimeInfo TopicRuntimeInfo { get; internal set; }
-
         static internal TopicDescription ParseFromContent(string xml)
         {
             var xDoc = XElement.Parse(xml);
@@ -73,7 +71,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new NotImplementedException(xml);
         }
 
-        // TODO: Authorization and messagecounts
+        // TODO: Authorization
         static private TopicDescription ParseFromEntryElement(XElement xEntry)
         {
             try
@@ -86,7 +84,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
                 foreach (var element in qdXml.Elements())
                 {
-                    // TODO: Alphabetical ordering
                     switch (element.Name.LocalName)
                     {
                         case "MaxSizeInMegabytes":
@@ -104,36 +101,8 @@ namespace Microsoft.Azure.ServiceBus.Management
                         case "EnableBatchedOperations":
                             topicDesc.EnableBatchedOperations = bool.Parse(element.Value);
                             break;
-                        case "SizeInBytes":
-                            if (topicDesc.TopicRuntimeInfo == null)
-                            {
-                                topicDesc.TopicRuntimeInfo = new TopicRuntimeInfo();
-                            }
-                            topicDesc.TopicRuntimeInfo.SizeInBytes = long.Parse(element.Value);
-                            break;
                         case "Status":
                             topicDesc.Status = (EntityStatus)Enum.Parse(typeof(EntityStatus), element.Value);
-                            break;
-                        case "CreatedAt":
-                            if (topicDesc.TopicRuntimeInfo == null)
-                            {
-                                topicDesc.TopicRuntimeInfo = new TopicRuntimeInfo();
-                            }
-                            topicDesc.TopicRuntimeInfo.CreatedAt = DateTime.Parse(element.Value);
-                            break;
-                        case "UpdatedAt":
-                            if (topicDesc.TopicRuntimeInfo == null)
-                            {
-                                topicDesc.TopicRuntimeInfo = new TopicRuntimeInfo();
-                            }
-                            topicDesc.TopicRuntimeInfo.UpdatedAt = DateTime.Parse(element.Value);
-                            break;
-                        case "AccessedAt":
-                            if (topicDesc.TopicRuntimeInfo == null)
-                            {
-                                topicDesc.TopicRuntimeInfo = new TopicRuntimeInfo();
-                            }
-                            topicDesc.TopicRuntimeInfo.AccessedAt = DateTime.Parse(element.Value);
                             break;
                         case "AutoDeleteOnIdle":
                             topicDesc.AutoDeleteOnIdle = XmlConvert.ToTimeSpan(element.Value);
@@ -148,7 +117,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
             catch (Exception ex)
             {
-                throw new ServiceBusException(true, ex);
+                throw new ServiceBusException(false, ex);
             }
         }
 
