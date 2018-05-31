@@ -212,6 +212,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         #endregion
 
+        #region GetEntity
+
         public async Task<QueueDescription> GetQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
             var uri = new UriBuilder(this.csBuilder.Endpoint)
@@ -230,56 +232,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             {
                 var content = await response.Content.ReadAsStringAsync();
                 return QueueDescription.ParseFromContent(content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public async Task<QueueRuntimeInfo> GetQueueRuntimeInfoAsync(string queueName, CancellationToken cancellationToken = default)
-        {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = queueName,
-                Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich=true"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await SendHttpRequest(request, cancellationToken);
-
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return QueueRuntimeInfo.ParseFromContent(content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public async Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, CancellationToken cancellationToken = default)
-        {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = "$Resources/queues",
-                Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich=false"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await SendHttpRequest(request, cancellationToken);
-
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return QueueDescription.ParseCollectionFromContent(content);
             }
             else
             {
@@ -312,6 +264,119 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        public async Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
+        {
+            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            {
+                Path = $"{topicName}/Subscriptions/{subscriptionName}",
+                Scheme = Uri.UriSchemeHttps,
+                Port = GetPort(this.csBuilder.Endpoint),
+                Query = $"{apiVersionQuery}&enrich=false"
+            }.Uri;
+
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            var response = await SendHttpRequest(request, cancellationToken);
+
+            // TODO: what about non success status code?
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return SubscriptionDescription.ParseFromContent(topicName, content);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public Task<SubscriptionDescription> GetSubscriptionAsync(string formattedSubscriptionPath, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region GetRuntimeInfo
+
+        public async Task<QueueRuntimeInfo> GetQueueRuntimeInfoAsync(string queueName, CancellationToken cancellationToken = default)
+        {
+            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            {
+                Path = queueName,
+                Scheme = Uri.UriSchemeHttps,
+                Port = GetPort(this.csBuilder.Endpoint),
+                Query = $"{apiVersionQuery}&enrich=true"
+            }.Uri;
+
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            var response = await SendHttpRequest(request, cancellationToken);
+
+            // TODO: what about non success status code?
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return QueueRuntimeInfo.ParseFromContent(content);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string formattedSubscriptionPath, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region GetEntities
+
+        public async Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, CancellationToken cancellationToken = default)
+        {
+            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            {
+                Path = "$Resources/queues",
+                Scheme = Uri.UriSchemeHttps,
+                Port = GetPort(this.csBuilder.Endpoint),
+                Query = $"{apiVersionQuery}&enrich=false"
+            }.Uri;
+
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            var response = await SendHttpRequest(request, cancellationToken);
+
+            // TODO: what about non success status code?
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return QueueDescription.ParseCollectionFromContent(content);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public Task<IList<QueueDescription>> GetQueuesAsync(int skip, int count, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, CancellationToken cancellationToken = default)
         {
             var uri = new UriBuilder(this.csBuilder.Endpoint)
@@ -337,29 +402,9 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        public async Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
+        public Task<IList<TopicDescription>> GetTopicsAsync(int skip, int count, CancellationToken cancellationToken = default)
         {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = $"{topicName}/Subscriptions/{subscriptionName}",
-                Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich=false"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await SendHttpRequest(request, cancellationToken);
-
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return SubscriptionDescription.ParseFromContent(topicName, content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            throw new NotImplementedException();
         }
 
         public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, CancellationToken cancellationToken = default)
@@ -387,70 +432,24 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        public Task<SubscriptionDescription> GetSubscriptionAsync(string formattedSubscriptionPath, CancellationToken cancellationToken = default)
+        public Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int skip, int count, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
+        public Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken = default)
+        public Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int skip, int count, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string formattedSubscriptionPath, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
+        #endregion
 
-        public Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<ICollection<string>> IManagementClient.GetQueuesAsync(int count, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<ICollection<string>> GetQueuesAsync(int skip, int count, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<ICollection<string>> IManagementClient.GetTopicsAsync(int count, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<ICollection<string>> GetTopicsAsync(int skip, int count, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<ICollection<string>> IManagementClient.GetSubscriptionsAsync(string topicName, int count, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<ICollection<string>> GetSubscriptionsAsync(string topicName, int skip, int count, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<ICollection<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<ICollection<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int skip, int count, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
+        #region UpdateEntity
 
         public Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
         {
@@ -467,6 +466,10 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new NotImplementedException();
         }
 
+        #endregion
+
+        #region Exists
+
         public Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
@@ -481,6 +484,8 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             throw new NotImplementedException();
         }
+
+        #endregion
 
         protected async override Task OnClosingAsync()
         {
