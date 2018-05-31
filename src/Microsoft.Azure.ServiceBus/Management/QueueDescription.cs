@@ -57,6 +57,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
+            // TODO error handling
             throw new NotImplementedException(xml);
         }
 
@@ -83,6 +84,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         }
 
         // TODO: Authorization and messagecounts
+        // TODO: Revisit all properties and ensure they are populated.
         static private QueueDescription ParseFromEntryElement(XElement xEntry)
         {
             try
@@ -183,8 +185,6 @@ namespace Microsoft.Azure.ServiceBus.Management
         // TODO: Authorization rules
         internal XDocument Serialize()
         {
-            //XNamespace.Get("http://www.w3.org/2001/XMLSchema-instance"),
-
             XDocument doc = new XDocument(
                 new XElement(XName.Get("entry", ManagementClient.AtomNs),
                     new XElement(XName.Get("content", ManagementClient.AtomNs),

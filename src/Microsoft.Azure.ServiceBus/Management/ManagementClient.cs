@@ -111,6 +111,64 @@ namespace Microsoft.Azure.ServiceBus.Management
             return QueueDescription.ParseCollectionFromContent(content).Select(qd => qd.Path).ToList();
         }
 
+        public async Task<TopicDescription> GetTopicAsync(string topicName, bool includeRuntimeInfo = false, CancellationToken cancellationToken = default)
+        {
+            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            {
+                Path = topicName,
+                Scheme = Uri.UriSchemeHttps,
+                Port = GetPort(this.csBuilder.Endpoint),
+                Query = $"{apiVersionQuery}&enrich={includeRuntimeInfo}"
+            }.Uri;
+
+            var content = await GetHttpContent(uri, cancellationToken);
+            return TopicDescription.ParseFromContent(content);
+        }
+
+        public async Task<IList<string>> GetTopicsAsync(int count = 100, CancellationToken cancellationToken = default)
+        {
+            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            {
+                Path = "$Resources/topics",
+                Scheme = Uri.UriSchemeHttps,
+                Port = GetPort(this.csBuilder.Endpoint),
+                Query = $"{apiVersionQuery}&enrich=false"
+            }.Uri;
+
+            var content = await GetHttpContent(uri, cancellationToken);
+            return TopicDescription.ParseCollectionFromContent(content).Select(td => td.Path).ToList();
+        }
+
+        public async Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, bool includeRuntimeInfo = false, CancellationToken cancellationToken = default)
+        {
+            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            {
+                Path = $"{topicName}/Subscriptions/{subscriptionName}",
+                Scheme = Uri.UriSchemeHttps,
+                Port = GetPort(this.csBuilder.Endpoint),
+                Query = $"{apiVersionQuery}&enrich={includeRuntimeInfo}"
+            }.Uri;
+
+            var content = await GetHttpContent(uri, cancellationToken);
+            var sd = SubscriptionDescription.ParseFromContent(content);
+            sd.TopicPath = topicName;
+            return sd;
+        }
+
+        public async Task<IList<string>> GetSubscriptionsAsync(string topicName, int count = 100, CancellationToken cancellationToken = default)
+        {
+            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            {
+                Path = $"{topicName}/Subscriptions",
+                Scheme = Uri.UriSchemeHttps,
+                Port = GetPort(this.csBuilder.Endpoint),
+                Query = $"{apiVersionQuery}&enrich=false"
+            }.Uri;
+
+            var content = await GetHttpContent(uri, cancellationToken);
+            return SubscriptionDescription.ParseCollectionFromContent(content).Select(sd => sd.SubscriptionName).ToList();
+        }
+
         protected async override Task OnClosingAsync()
         {
             if (this.ownsConnection)
