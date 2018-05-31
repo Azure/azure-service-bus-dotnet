@@ -37,8 +37,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public string ForwardDeadLetteredMessagesTo { get; set; }
 
-        public SubscriptionRuntimeInfo SubscriptionRuntimeInfo { get; internal set; }
-
         static internal SubscriptionDescription ParseFromContent(string topicName, string xml)
         {
             var xDoc = XElement.Parse(xml);
@@ -110,27 +108,6 @@ namespace Microsoft.Azure.ServiceBus.Management
                         case "Status":
                             subscriptionDesc.Status = (EntityStatus)Enum.Parse(typeof(EntityStatus), element.Value);
                             break;
-                        case "CreatedAt":
-                            if (subscriptionDesc.SubscriptionRuntimeInfo == null)
-                            {
-                                subscriptionDesc.SubscriptionRuntimeInfo = new SubscriptionRuntimeInfo();
-                            }
-                            subscriptionDesc.SubscriptionRuntimeInfo.CreatedAt = DateTime.Parse(element.Value);
-                            break;
-                        case "UpdatedAt":
-                            if (subscriptionDesc.SubscriptionRuntimeInfo == null)
-                            {
-                                subscriptionDesc.SubscriptionRuntimeInfo = new SubscriptionRuntimeInfo();
-                            }
-                            subscriptionDesc.SubscriptionRuntimeInfo.UpdatedAt = DateTime.Parse(element.Value);
-                            break;
-                        case "AccessedAt":
-                            if (subscriptionDesc.SubscriptionRuntimeInfo == null)
-                            {
-                                subscriptionDesc.SubscriptionRuntimeInfo = new SubscriptionRuntimeInfo();
-                            }
-                            subscriptionDesc.SubscriptionRuntimeInfo.AccessedAt = DateTime.Parse(element.Value);
-                            break;
                         case "AutoDeleteOnIdle":
                             subscriptionDesc.AutoDeleteOnIdle = XmlConvert.ToTimeSpan(element.Value);
                             break;
@@ -141,7 +118,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
             catch (Exception ex)
             {
-                throw new ServiceBusException(true, ex);
+                throw new ServiceBusException(false, ex);
             }
         }
 

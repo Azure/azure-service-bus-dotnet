@@ -141,7 +141,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
             catch (Exception ex)
             {
-                throw new ServiceBusException(true, ex);
+                throw new ServiceBusException(false, ex);
             }
         }
 
