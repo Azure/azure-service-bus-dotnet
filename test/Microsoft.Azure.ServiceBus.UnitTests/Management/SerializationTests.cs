@@ -6,6 +6,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 {
     // TODO: Asserts
     // Tests with XML encoded letters in queue name etc.
+    // Negative scenarios
     public class SerializationTests
     {
         internal string ConnectionString = TestUtility.NamespaceConnectionString;
@@ -15,7 +16,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         public async void GetQueue()
         {
             var client = new ManagementClient(new ServiceBusConnectionStringBuilder(ConnectionString));
-            var qd = await client.GetQueueAsync(TestConstants.NonPartitionedQueueName);
+            var qd = await client.GetQueueAsync("queue2");
+        }
+
+        [Fact]
+        public async void GetQueueRuntimeInfo()
+        {
+            var client = new ManagementClient(new ServiceBusConnectionStringBuilder(ConnectionString));
+            var qd = await client.GetQueueRuntimeInfoAsync(TestConstants.NonPartitionedQueueName);
         }
 
         [Fact]
@@ -60,7 +68,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         public async void GetSubscriptions()
         {
             var client = new ManagementClient(new ServiceBusConnectionStringBuilder(ConnectionString));
-            var subscriptions = await client.GetSubscriptionsAsync("mytopic");
+            var subscriptions = await client.GetSubscriptionsAsync(TestConstants.NonPartitionedTopicName);// "mytopic");
+        }
+
+        [Fact]
+        public async void DeleteQueue()
+        {
+            var client = new ManagementClient(new ServiceBusConnectionStringBuilder(ConnectionString));
+            await client.DeleteQueueAsync("queue2");
         }
     }
 }

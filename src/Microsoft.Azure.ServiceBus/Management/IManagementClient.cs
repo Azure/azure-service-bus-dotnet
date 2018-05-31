@@ -30,16 +30,25 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         Task DeleteRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default);
 
-        // Get entity
-        Task<QueueDescription> GetQueueAsync(string queueName, bool includeRuntimeInfo = false, CancellationToken cancellationToken = default);
+        // Get entity description
+        Task<QueueDescription> GetQueueAsync(string queueName, CancellationToken cancellationToken = default);
 
-        Task<TopicDescription> GetTopicAsync(string topicName, bool includeRuntimeInfo = false, CancellationToken cancellationToken = default);
+        Task<TopicDescription> GetTopicAsync(string topicName, CancellationToken cancellationToken = default);
 
-        Task<SubscriptionDescription> GetSubscriptionAsync(string formattedSubscriptionPath, bool includeRuntimeInfo = false, CancellationToken cancellationToken = default);
+        Task<SubscriptionDescription> GetSubscriptionAsync(string formattedSubscriptionPath, CancellationToken cancellationToken = default);
 
-        Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, bool includeRuntimeInfo = false, CancellationToken cancellationToken = default);
+        Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default);
 
         Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default);
+
+        // Get entity runtime information
+        Task<QueueRuntimeInfo> GetQueueRuntimeInfoAsync(string queueName, CancellationToken cancellationToken = default);
+
+        Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken = default);
+
+        Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string formattedSubscriptionPath, CancellationToken cancellationToken = default);
+
+        Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default);
 
         // Get entities (max of 100 at a time)
         Task<ICollection<string>> GetQueuesAsync(int count = 100, CancellationToken cancellationToken = default);

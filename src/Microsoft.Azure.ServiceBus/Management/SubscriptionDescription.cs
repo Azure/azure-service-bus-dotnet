@@ -39,14 +39,14 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public SubscriptionRuntimeInfo SubscriptionRuntimeInfo { get; internal set; }
 
-        static internal SubscriptionDescription ParseFromContent(string xml)
+        static internal SubscriptionDescription ParseFromContent(string topicName, string xml)
         {
             var xDoc = XElement.Parse(xml);
             if (!xDoc.IsEmpty)
             {
                 if (xDoc.Name.LocalName == "entry")
                 {
-                    return ParseFromEntryElement(xDoc);
+                    return ParseFromEntryElement(topicName, xDoc);
                 }
             }
 
@@ -54,7 +54,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new NotImplementedException(xml);
         }
 
-        static internal IList<SubscriptionDescription> ParseCollectionFromContent(string xml)
+        static internal IList<SubscriptionDescription> ParseCollectionFromContent(string topicName, string xml)
         {
             var xDoc = XElement.Parse(xml);
             if (!xDoc.IsEmpty)
@@ -66,7 +66,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     var entryList = xDoc.Elements(XName.Get("entry", ManagementClient.AtomNs));
                     foreach (var entry in entryList)
                     {
-                        subscriptionList.Add(ParseFromEntryElement(entry));
+                        subscriptionList.Add(ParseFromEntryElement(topicName, entry));
                     }
 
                     return subscriptionList;
@@ -77,12 +77,12 @@ namespace Microsoft.Azure.ServiceBus.Management
         }
 
         // TODO: Authorization and messagecounts
-        static private SubscriptionDescription ParseFromEntryElement(XElement xEntry)
+        static private SubscriptionDescription ParseFromEntryElement(string topicName, XElement xEntry)
         {
             try
             {
                 var name = xEntry.Element(XName.Get("title", ManagementClient.AtomNs)).Value;
-                var subscriptionDesc = new SubscriptionDescription("topicName", name);
+                var subscriptionDesc = new SubscriptionDescription(topicName, name);
 
                 var qdXml = xEntry.Element(XName.Get("content", ManagementClient.AtomNs))
                     .Element(XName.Get("SubscriptionDescription", ManagementClient.SbNs));
