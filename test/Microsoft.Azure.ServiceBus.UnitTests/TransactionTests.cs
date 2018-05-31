@@ -290,11 +290,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     ts.Complete();
                 }
 
+                transaction.Rollback();
+                
                 // Adding delay since transaction Commit/Rollback is an asynchronous operation.
                 // Operating on the same message should not be done.
                 await Task.Delay(TimeSpan.FromSeconds(2));
-
-                transaction.Rollback();
 
                 // Two complete operations to different partitions.
                 await sender.SendAsync(message1);
@@ -315,11 +315,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     ts.Complete();
                 }
 
+                transaction.Rollback();
+
                 // Adding delay since transaction Commit/Rollback is an asynchronous operation.
                 // Operating on the same message should not be done.
                 await Task.Delay(TimeSpan.FromSeconds(2));
-
-                transaction.Rollback();
 
                 await receiver.CompleteAsync(receivedMessage1.SystemProperties.LockToken);
                 await receiver.CompleteAsync(receivedMessage2.SystemProperties.LockToken);
