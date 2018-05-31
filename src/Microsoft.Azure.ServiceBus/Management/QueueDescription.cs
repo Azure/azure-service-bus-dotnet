@@ -44,8 +44,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool EnableBatchedOperations { get; set; } = false;
 
-        public QueueRuntimeInfo QueueRuntimeInfo { get; internal set; }
-
         static internal QueueDescription ParseFromContent(string xml)
         {
             var xDoc = XElement.Parse(xml);
@@ -83,7 +81,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new NotImplementedException(xml);
         }
 
-        // TODO: Authorization and messagecounts
+        // TODO: Authorization
         // TODO: Revisit all properties and ensure they are populated.
         static private QueueDescription ParseFromEntryElement(XElement xEntry)
         {
@@ -127,43 +125,8 @@ namespace Microsoft.Azure.ServiceBus.Management
                         case "EnableBatchedOperations":
                             qd.EnableBatchedOperations = bool.Parse(element.Value);
                             break;
-                        case "SizeInBytes": 
-                            if (qd.QueueRuntimeInfo == null)
-                            {
-                                qd.QueueRuntimeInfo = new QueueRuntimeInfo();
-                            }
-                            qd.QueueRuntimeInfo.SizeInBytes = long.Parse(element.Value);
-                            break;
-                        case "MessageCount":
-                            if (qd.QueueRuntimeInfo == null)
-                            {
-                                qd.QueueRuntimeInfo = new QueueRuntimeInfo();
-                            }
-                            qd.QueueRuntimeInfo.MessageCount = long.Parse(element.Value);
-                            break;
                         case "Status":
                             qd.Status = (EntityStatus)Enum.Parse(typeof(EntityStatus), element.Value);
-                            break;
-                        case "CreatedAt":
-                            if (qd.QueueRuntimeInfo == null)
-                            {
-                                qd.QueueRuntimeInfo = new QueueRuntimeInfo();
-                            }
-                            qd.QueueRuntimeInfo.CreatedAt = DateTime.Parse(element.Value);
-                            break;
-                        case "UpdatedAt":
-                            if (qd.QueueRuntimeInfo == null)
-                            {
-                                qd.QueueRuntimeInfo = new QueueRuntimeInfo();
-                            }
-                            qd.QueueRuntimeInfo.UpdatedAt = DateTime.Parse(element.Value);
-                            break;
-                        case "AccessedAt":
-                            if (qd.QueueRuntimeInfo == null)
-                            {
-                                qd.QueueRuntimeInfo = new QueueRuntimeInfo();
-                            }
-                            qd.QueueRuntimeInfo.AccessedAt = DateTime.Parse(element.Value);
                             break;
                         case "AutoDeleteOnIdle":
                             qd.AutoDeleteOnIdle = XmlConvert.ToTimeSpan(element.Value);
