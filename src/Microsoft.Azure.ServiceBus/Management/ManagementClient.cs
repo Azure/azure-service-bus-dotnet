@@ -498,6 +498,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             var token = await GetToken(request.RequestUri);
             request.Headers.Add("Authorization", token);
             var response = await this.httpClient.SendAsync(request, cancellationToken);
+            ValidateHttpResponse(response);
             return response;
         }
 
@@ -519,5 +520,9 @@ namespace Microsoft.Azure.ServiceBus.Management
             return -1;
         }
 
+        private void ValidateHttpResponse(HttpResponseMessage response)
+        {
+            // TODO: Validate response
+        }
     }
 }
