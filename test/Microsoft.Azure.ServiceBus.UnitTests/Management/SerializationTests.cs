@@ -15,13 +15,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 
         public SerializationTests()
         {
-            var client = new ManagementClient(new ServiceBusConnectionStringBuilder(ConnectionString));
+            client = new ManagementClient(new ServiceBusConnectionStringBuilder(ConnectionString));
         }
 
         [Fact]
         public async void GetQueue()
         {
-            var qd = await client.GetQueueAsync("queue2");
+            var qd = await client.GetQueueAsync("queue22");
         }
 
         [Fact]

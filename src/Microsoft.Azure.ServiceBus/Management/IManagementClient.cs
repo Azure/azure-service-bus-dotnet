@@ -35,8 +35,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         Task<TopicDescription> GetTopicAsync(string topicName, CancellationToken cancellationToken = default);
 
-        Task<SubscriptionDescription> GetSubscriptionAsync(string formattedSubscriptionPath, CancellationToken cancellationToken = default);
-
         Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default);
 
         Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default);
@@ -45,8 +43,6 @@ namespace Microsoft.Azure.ServiceBus.Management
         Task<QueueRuntimeInfo> GetQueueRuntimeInfoAsync(string queueName, CancellationToken cancellationToken = default);
 
         Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken = default);
-
-        Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string formattedSubscriptionPath, CancellationToken cancellationToken = default);
 
         Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default);
 
