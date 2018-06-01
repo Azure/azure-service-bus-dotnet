@@ -17,6 +17,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         // TODO: Move to ManagementConstants.cs
         internal const string AtomNs = "http://www.w3.org/2005/Atom";
         internal const string SbNs = "http://schemas.microsoft.com/netservices/2010/10/servicebus/connect";
+        internal const string XmlSchemaNs = "http://www.w3.org/2001/XMLSchema-instance";
         internal const string AtomContentType = "application/atom+xml";
         internal const string apiVersionQuery = "api-version=" + ApiVersion;
         internal const string ApiVersion = "2017-04";
@@ -286,9 +287,10 @@ namespace Microsoft.Azure.ServiceBus.Management
             return SubscriptionDescription.ParseCollectionFromContent(topicName, content);
         }
 
-        public Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
+        public async Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules", false, cancellationToken);
+            return RuleDescription.ParseCollectionFromContent(content);
         }
 
         private async Task<string> GetEntity(string path, bool enrich, CancellationToken cancellationToken)

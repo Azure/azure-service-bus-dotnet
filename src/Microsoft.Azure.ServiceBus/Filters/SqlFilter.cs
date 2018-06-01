@@ -5,6 +5,8 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Xml.Linq;
+    using Microsoft.Azure.ServiceBus.Management;
     using Primitives;
 
     /// <summary>
@@ -64,6 +66,14 @@ namespace Microsoft.Azure.ServiceBus
         public override string ToString()
         {
             return string.Format(CultureInfo.InvariantCulture, "SqlFilter: {0}", this.SqlExpression);
+        }
+
+        internal new static Filter ParseFromXElement(XElement xElement)
+        {
+            var expression = xElement.Element(XName.Get("SqlExpression", ManagementClient.SbNs)).Value;
+            var filter = new SqlFilter(expression);
+            // TODO: populate parameters
+            return filter;
         }
     }
 }
