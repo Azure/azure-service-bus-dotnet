@@ -157,6 +157,21 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
+        static internal RuleDescription ParseFromContent(string xml)
+        {
+            var xDoc = XElement.Parse(xml);
+            if (!xDoc.IsEmpty)
+            {
+                if (xDoc.Name.LocalName == "entry")
+                {
+                    return ParseFromEntryElement(xDoc);
+                }
+            }
+
+            // TODO error handling
+            throw new NotImplementedException(xml);
+        }
+
         static internal IList<RuleDescription> ParseCollectionFromContent(string xml)
         {
             var xDoc = XElement.Parse(xml);

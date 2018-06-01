@@ -68,6 +68,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         }
 
         [Fact]
+        public async void GetRule()
+        {
+            var rule = await client.GetRuleAsync("mytopic", "sub1", "rule1");
+        }
+
+        [Fact]
         public async void GetRules()
         {
             var rules = await client.GetRulesAsync("mytopic", "sub1");
