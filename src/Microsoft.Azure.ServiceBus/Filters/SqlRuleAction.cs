@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Xml.Linq;
     using Primitives;
 
     /// <summary>
@@ -58,6 +59,11 @@ namespace Microsoft.Azure.ServiceBus
         public override string ToString()
         {
             return string.Format(CultureInfo.InvariantCulture, "SqlRuleAction: {0}", this.SqlExpression);
+        }
+
+        internal new static RuleAction ParseFromXElement(XElement xElement)
+        {
+            return null;
         }
     }
 }

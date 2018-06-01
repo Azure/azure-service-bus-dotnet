@@ -68,6 +68,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         }
 
         [Fact]
+        public async void GetRules()
+        {
+            var rules = await client.GetRulesAsync("mytopic", "sub1");
+        }
+
+        [Fact]
         public async void DeleteQueue()
         {
             await client.DeleteQueueAsync("queue2");

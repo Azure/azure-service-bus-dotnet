@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
+using System.Xml.Linq;
+using Microsoft.Azure.ServiceBus.Management;
 using Microsoft.Azure.ServiceBus.Primitives;
 
 namespace Microsoft.Azure.ServiceBus
@@ -113,6 +117,12 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
+        // TODO: Implement for AMQP
+        public DateTime CreatedAt
+        {
+            get; internal set;
+        }
+
         internal void ValidateDescriptionName()
         {
             if (string.IsNullOrWhiteSpace(this.name))
@@ -144,6 +154,65 @@ namespace Microsoft.Azure.ServiceBus
                         nameof(this.name),
                         Resources.CharacterReservedForUriScheme.FormatForUser(nameof(this.name), uriSchemeKey));
                 }
+            }
+        }
+
+        static internal IList<RuleDescription> ParseCollectionFromContent(string xml)
+        {
+            var xDoc = XElement.Parse(xml);
+            if (!xDoc.IsEmpty)
+            {
+                if (xDoc.Name.LocalName == "feed")
+                {
+                    var rules = new List<RuleDescription>();
+
+                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClient.AtomNs));
+                    foreach (var entry in entryList)
+                    {
+                        rules.Add(ParseFromEntryElement(entry));
+                    }
+
+                    return rules;
+                }
+            }
+
+            throw new NotImplementedException(xml);
+        }
+
+        static private RuleDescription ParseFromEntryElement(XElement xEntry)
+        {
+            try
+            {
+                var name = xEntry.Element(XName.Get("title", ManagementClient.AtomNs)).Value;
+                var ruleDescription = new RuleDescription();
+
+                var rdXml = xEntry.Element(XName.Get("content", ManagementClient.AtomNs))
+                    .Element(XName.Get("RuleDescription", ManagementClient.SbNs));
+
+                foreach (var element in rdXml.Elements())
+                {
+                    switch (element.Name.LocalName)
+                    {
+                        case "Name":
+                            ruleDescription.Name = element.Value;
+                            break;
+                        case "Filter":
+                            ruleDescription.Filter = Filter.ParseFromXElement(element);
+                            break;
+                        case "Action":
+                            ruleDescription.Action = RuleAction.ParseFromXElement(element);
+                            break;
+                        case "CreatedAt":
+                            ruleDescription.CreatedAt = DateTime.Parse(element.Value);
+                            break;
+                    }
+                }
+
+                return ruleDescription;
+            }
+            catch (Exception ex)
+            {
+                throw new ServiceBusException(false, ex);
             }
         }
     }
