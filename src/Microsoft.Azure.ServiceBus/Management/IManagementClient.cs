@@ -51,21 +51,13 @@ namespace Microsoft.Azure.ServiceBus.Management
         Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default);
 
         // Get entities (max of 100 at a time)
-        Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, CancellationToken cancellationToken = default);
+        Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default);
 
-        Task<IList<QueueDescription>> GetQueuesAsync(int skip, int count, CancellationToken cancellationToken = default);
+        Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default);
 
-        Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, CancellationToken cancellationToken = default);
+        Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, int skip = 0, CancellationToken cancellationToken = default);
 
-        Task<IList<TopicDescription>> GetTopicsAsync(int skip, int count, CancellationToken cancellationToken = default);
-
-        Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, CancellationToken cancellationToken = default);
-
-        Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int skip, int count, CancellationToken cancellationToken = default);
-
-        Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, CancellationToken cancellationToken = default);
-
-        Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int skip, int count, CancellationToken cancellationToken = default);
+        Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, int skip = 0, CancellationToken cancellationToken = default);
 
         // Update entity if exists. Else throws.
         Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default);
