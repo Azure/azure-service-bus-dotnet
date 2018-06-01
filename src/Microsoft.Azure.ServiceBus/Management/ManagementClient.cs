@@ -1,22 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Azure.ServiceBus.Core;
+using Microsoft.Azure.ServiceBus.Primitives;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
     public class ManagementClient : ClientEntity, IManagementClient
     {
-        // TODO: Maybe move to ManagementConstants.cs
+        // TODO: Move to ManagementConstants.cs
         internal const string AtomNs = "http://www.w3.org/2005/Atom";
         internal const string SbNs = "http://schemas.microsoft.com/netservices/2010/10/servicebus/connect";
         internal const string AtomContentType = "application/atom+xml";
-        internal const string apiVersionQuery = "api-version=2017-04";
+        internal const string apiVersionQuery = "api-version=" + ApiVersion;
+        internal const string ApiVersion = "2017-04";
 
         private bool ownsConnection;
         private HttpClient httpClient;
@@ -216,82 +219,21 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<QueueDescription> GetQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = queueName,
-                Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich=false"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await SendHttpRequest(request, cancellationToken);
-
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return QueueDescription.ParseFromContent(content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            CheckValidEntityName(queueName, ManagementConstants.QueueNameMaximumLength, true, nameof(queueName));
+            var content = await GetEntity(queueName, false, cancellationToken);
+            return QueueDescription.ParseFromContent(content);
         }
 
         public async Task<TopicDescription> GetTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = topicName,
-                Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich=false"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await SendHttpRequest(request, cancellationToken);
-
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return TopicDescription.ParseFromContent(content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            var content = await GetEntity(topicName, false, cancellationToken);
+            return TopicDescription.ParseFromContent(content);
         }
 
         public async Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = $"{topicName}/Subscriptions/{subscriptionName}",
-                Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich=false"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await SendHttpRequest(request, cancellationToken);
-
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return SubscriptionDescription.ParseFromContent(topicName, content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public Task<SubscriptionDescription> GetSubscriptionAsync(string formattedSubscriptionPath, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
+            var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), false, cancellationToken);
+            return SubscriptionDescription.ParseFromContent(topicName, content);
         }
 
         public Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
@@ -305,126 +247,73 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<QueueRuntimeInfo> GetQueueRuntimeInfoAsync(string queueName, CancellationToken cancellationToken = default)
         {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = queueName,
-                Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich=true"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await SendHttpRequest(request, cancellationToken);
-
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return QueueRuntimeInfo.ParseFromContent(content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            var content = await GetEntity(queueName, true, cancellationToken);
+            return QueueRuntimeInfo.ParseFromContent(content);
         }
 
-        public Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken = default)
+        public async Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var content = await GetEntity(topicName, true, cancellationToken);
+            return TopicRuntimeInfo.ParseFromContent(content);
         }
 
-        public Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string formattedSubscriptionPath, CancellationToken cancellationToken = default)
+        public async Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
+            var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), true, cancellationToken);
+            return SubscriptionRuntimeInfo.ParseFromContent(topicName, content);
         }
 
         #endregion
 
         #region GetEntities
 
+        // TODO: pass skip and top
         public async Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = "$Resources/queues",
-                Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich=false"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await SendHttpRequest(request, cancellationToken);
-
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return QueueDescription.ParseCollectionFromContent(content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            var content = await GetEntity("$Resources/queues", false, cancellationToken);
+            return QueueDescription.ParseCollectionFromContent(content);
         }
 
         public async Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = "$Resources/topics",
-                Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich=false"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await SendHttpRequest(request, cancellationToken);
-
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return TopicDescription.ParseCollectionFromContent(content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            var content = await GetEntity("$Resources/topics", false, cancellationToken);
+            return TopicDescription.ParseCollectionFromContent(content);
         }
 
         public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = $"{topicName}/Subscriptions",
-                Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich=false"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await SendHttpRequest(request, cancellationToken);
-
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return SubscriptionDescription.ParseCollectionFromContent(topicName, content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            var content = await GetEntity($"{topicName}/Subscriptions", false, cancellationToken);
+            return SubscriptionDescription.ParseCollectionFromContent(topicName, content);
         }
 
         public Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
+        }
+
+        private async Task<string> GetEntity(string path, bool enrich, CancellationToken cancellationToken)
+        {
+            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            {
+                Path = path,
+                Scheme = Uri.UriSchemeHttps,
+                Port = GetPort(this.csBuilder.Endpoint),
+                Query = $"{apiVersionQuery}&enrich={enrich}"
+            }.Uri;
+
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            var response = await SendHttpRequest(request, cancellationToken);
+
+            // TODO: what about non success status code?
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return content;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         #endregion
@@ -497,7 +386,18 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             var token = await GetToken(request.RequestUri);
             request.Headers.Add("Authorization", token);
-            var response = await this.httpClient.SendAsync(request, cancellationToken);
+            request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementClient.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
+            // Tracking ID + CorrelationID
+            HttpResponseMessage response;
+            try
+            {
+                response = await this.httpClient.SendAsync(request, cancellationToken);
+            }
+            catch (HttpRequestException exception)
+            {
+                throw new ServiceBusException(true, exception);
+            }
+
             ValidateHttpResponse(response);
             return response;
         }
@@ -512,6 +412,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         private int GetPort(string endpoint)
         {
+            // used for manual testing
             if (endpoint.EndsWith("onebox.windows-int.net"))
             {
                 return 4446;
@@ -520,9 +421,84 @@ namespace Microsoft.Azure.ServiceBus.Management
             return -1;
         }
 
-        private void ValidateHttpResponse(HttpResponseMessage response)
+        private async void ValidateHttpResponse(HttpResponseMessage response)
         {
-            // TODO: Validate response
+            if (response.IsSuccessStatusCode)
+            {
+                return;
+            }
+
+            var content = await response.Content.ReadAsStringAsync() ?? string.Empty;
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedException(content);
+            }
+            else if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.NoContent)
+            {
+                throw new MessagingEntityNotFoundException(content);
+            }
+            else if (response.StatusCode == HttpStatusCode.Conflict && response.RequestMessage.Method == HttpMethod.Put)
+            {
+                // TODO: What if Update() is in conflict
+                throw new MessagingEntityAlreadyExistsException(content);
+            }
+            else if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                throw new InvalidOperationException(content);
+                // TODO: Isolate cases when it needs to be QUotaExceededException
+            }
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                throw new ArgumentException(content);
+            }
+            else if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+            {
+                throw new ServerBusyException(content);
+            }
+            else
+            {
+                throw new ServiceBusException(true, content);
+            }
+        }
+
+        static void CheckValidEntityName(string entityName, int maxEntityNameLength, bool allowSeparator, string paramName)
+        {
+            if (string.IsNullOrWhiteSpace(entityName))
+            {
+                throw new ArgumentNullException(paramName);
+            }
+
+            // and "\" will be converted to "/" on the REST path anyway. Gateway/REST do not
+            // have to worry about the begin/end slash problem, so this is purely a client side check.
+            string tmpName = entityName.Replace(@"\", Constants.PathDelimiter);
+            if (tmpName.Length > maxEntityNameLength)
+            {
+                throw new ArgumentOutOfRangeException(paramName, $"Entity path '{entityName}' " +
+                    $"exceeds the '{maxEntityNameLength}' character limit.");
+            }
+
+            if (tmpName.StartsWith(Constants.PathDelimiter, StringComparison.Ordinal) || 
+                tmpName.EndsWith(Constants.PathDelimiter, StringComparison.Ordinal))
+            {
+                throw new ArgumentException($"The entity name/path cannot contain '/' as " +
+                    $"prefix or suffix. The supplied value is '{entityName}'", paramName);
+            }
+
+            if (!allowSeparator && tmpName.Contains(Constants.PathDelimiter))
+            {
+                throw new ArgumentException($"The entity name/path contains an invalid character" +
+                    $" '{Constants.PathDelimiter}'", paramName);
+            }
+
+            string[] uriSchemeKeys = new string[] { "@", "?", "#" };
+            foreach (var uriSchemeKey in uriSchemeKeys)
+            {
+                if (entityName.Contains(uriSchemeKey))
+                {
+                    throw new ArgumentException($"'{entityName}' contains character '{uriSchemeKey}' " +
+                        $"which is not allowed because it is reserved in the Uri scheme.", paramName);
+                }
+            }
         }
     }
 }
