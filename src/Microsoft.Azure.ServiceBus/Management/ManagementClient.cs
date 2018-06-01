@@ -227,6 +227,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<TopicDescription> GetTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
+            // TODO Input Validation, for other methods as well.
             var content = await GetEntity(topicName, false, cancellationToken);
             return TopicDescription.ParseFromContent(content);
         }
@@ -237,9 +238,10 @@ namespace Microsoft.Azure.ServiceBus.Management
             return SubscriptionDescription.ParseFromContent(topicName, content);
         }
 
-        public Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
+        public async Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", false, cancellationToken);
+            return RuleDescription.ParseFromContent(content);
         }
 
         #endregion
@@ -414,7 +416,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         private int GetPort(string endpoint)
         {
-            // used for manual testing
+            // used for internal testing
             if (endpoint.EndsWith("onebox.windows-int.net"))
             {
                 return 4446;
