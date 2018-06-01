@@ -347,7 +347,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         #region GetEntities
 
-        public async Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, CancellationToken cancellationToken = default)
+        public async Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             var uri = new UriBuilder(this.csBuilder.Endpoint)
             {
@@ -372,12 +372,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        public Task<IList<QueueDescription>> GetQueuesAsync(int skip, int count, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, CancellationToken cancellationToken = default)
+        public async Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             var uri = new UriBuilder(this.csBuilder.Endpoint)
             {
@@ -402,12 +397,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        public Task<IList<TopicDescription>> GetTopicsAsync(int skip, int count, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, CancellationToken cancellationToken = default)
+        public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             var uri = new UriBuilder(this.csBuilder.Endpoint)
             {
@@ -432,17 +422,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        public Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int skip, int count, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int skip, int count, CancellationToken cancellationToken = default)
+        public Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
