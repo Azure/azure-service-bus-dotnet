@@ -48,7 +48,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 {
                     var subscriptionList = new List<SubscriptionRuntimeInfo>();
 
-                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClient.AtomNs));
+                    var entryList = xDoc.Elements(XName.Get("entry", ManagementConstants.AtomNs));
                     foreach (var entry in entryList)
                     {
                         subscriptionList.Add(ParseFromEntryElement(topicName, entry));
@@ -65,11 +65,11 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             try
             {
-                var name = xEntry.Element(XName.Get("title", ManagementClient.AtomNs)).Value;
+                var name = xEntry.Element(XName.Get("title", ManagementConstants.AtomNs)).Value;
                 var subscriptionRuntimeInfo = new SubscriptionRuntimeInfo(topicName, name);
 
-                var qdXml = xEntry.Element(XName.Get("content", ManagementClient.AtomNs))
-                    .Element(XName.Get("SubscriptionDescription", ManagementClient.SbNs));
+                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))
+                    .Element(XName.Get("SubscriptionDescription", ManagementConstants.SbNs));
 
                 foreach (var element in qdXml.Elements())
                 {

@@ -70,7 +70,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal new static Filter ParseFromXElement(XElement xElement)
         {
-            var expression = xElement.Element(XName.Get("SqlExpression", ManagementClient.SbNs)).Value;
+            var expression = xElement.Element(XName.Get("SqlExpression", ManagementConstants.SbNs)).Value;
             var filter = new SqlFilter(expression);
             // TODO: populate parameters
             return filter;

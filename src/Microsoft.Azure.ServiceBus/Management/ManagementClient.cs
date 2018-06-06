@@ -14,14 +14,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 {
     public class ManagementClient : ClientEntity, IManagementClient
     {
-        // TODO: Move to ManagementConstants.cs
-        internal const string AtomNs = "http://www.w3.org/2005/Atom";
-        internal const string SbNs = "http://schemas.microsoft.com/netservices/2010/10/servicebus/connect";
-        internal const string XmlSchemaNs = "http://www.w3.org/2001/XMLSchema-instance";
-        internal const string AtomContentType = "application/atom+xml";
-        internal const string apiVersionQuery = "api-version=" + ApiVersion;
-        internal const string ApiVersion = "2017-04";
-
         private bool ownsConnection;
         private HttpClient httpClient;
         private ServiceBusConnectionStringBuilder csBuilder;
@@ -89,7 +81,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 Path = path,
                 Scheme = Uri.UriSchemeHttps,
                 Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich=false"
+                Query = $"{ManagementConstants.apiVersionQuery}&enrich=false"
             }.Uri;
 
             var request = new HttpRequestMessage(HttpMethod.Delete, uri);
@@ -184,14 +176,14 @@ namespace Microsoft.Azure.ServiceBus.Management
                 Path = path,
                 Scheme = Uri.UriSchemeHttps,
                 Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{apiVersionQuery}&enrich={enrich}"
+                Query = $"{ManagementConstants.apiVersionQuery}&enrich={enrich}"
             }.Uri;
 
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
             var response = await SendHttpRequest(request, cancellationToken);
 
             // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            if (response.StatusCode == HttpStatusCode.OK)
             {
                 var content = await response.Content.ReadAsStringAsync();
                 return content;
@@ -223,7 +215,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             return this.CreateTopicAsync(new TopicDescription(topicName), cancellationToken);
         }
 
-        // TODO: See if can reuse code in CreateQueue
         public async Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
         {
             var atomRequest = topicDescription.Serialize().ToString();
@@ -289,14 +280,14 @@ namespace Microsoft.Azure.ServiceBus.Management
                 Path = path,
                 Port = GetPort(this.csBuilder.Endpoint),
                 Scheme = Uri.UriSchemeHttps,
-                Query = $"{apiVersionQuery}"
+                Query = $"{ManagementConstants.apiVersionQuery}"
             }.Uri;
 
             var request = new HttpRequestMessage(HttpMethod.Put, uri);
             request.Content = new StringContent(
                 requestBody,
                 Encoding.UTF8,
-                ManagementClient.AtomContentType
+                ManagementConstants.AtomContentType
             );
 
             if (isUpdate)
@@ -385,8 +376,8 @@ namespace Microsoft.Azure.ServiceBus.Management
         private string EncodeToAtom(XElement objectToEncode)
         {
             XDocument doc = new XDocument(
-               new XElement(XName.Get("entry", ManagementClient.AtomNs),
-                   new XElement(XName.Get("content", ManagementClient.AtomNs),
+               new XElement(XName.Get("entry", ManagementConstants.AtomNs),
+                   new XElement(XName.Get("content", ManagementConstants.AtomNs),
                    objectToEncode
                    )));
 
@@ -398,7 +389,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             var token = await GetToken(request.RequestUri);
             request.Headers.Add("Authorization", token);
-            request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementClient.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
+            request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementConstants.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
             // Tracking ID + CorrelationID
             HttpResponseMessage response;
             try
