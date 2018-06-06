@@ -58,7 +58,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 {
                     var topicList = new List<TopicDescription>();
 
-                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClient.AtomNs));
+                    var entryList = xDoc.Elements(XName.Get("entry", ManagementConstants.AtomNs));
                     foreach (var entry in entryList)
                     {
                         topicList.Add(ParseFromEntryElement(entry));
@@ -76,11 +76,11 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             try
             {
-                var name = xEntry.Element(XName.Get("title", ManagementClient.AtomNs)).Value;
+                var name = xEntry.Element(XName.Get("title", ManagementConstants.AtomNs)).Value;
                 var topicDesc = new TopicDescription(name);
 
-                var qdXml = xEntry.Element(XName.Get("content", ManagementClient.AtomNs))
-                    .Element(XName.Get("TopicDescription", ManagementClient.SbNs));
+                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))
+                    .Element(XName.Get("TopicDescription", ManagementConstants.SbNs));
 
                 if (qdXml == null)
                 {
@@ -133,21 +133,21 @@ namespace Microsoft.Azure.ServiceBus.Management
         internal XDocument Serialize()
         {
             XDocument doc = new XDocument(
-                new XElement(XName.Get("entry", ManagementClient.AtomNs),
-                    new XElement(XName.Get("content", ManagementClient.AtomNs),
+                new XElement(XName.Get("entry", ManagementConstants.AtomNs),
+                    new XElement(XName.Get("content", ManagementConstants.AtomNs),
                         new XAttribute("type", "application/xml"),
-                        new XElement(XName.Get("TopicDescription", ManagementClient.SbNs),
-                            new XElement(XName.Get("MaxSizeInMegabytes", ManagementClient.SbNs), XmlConvert.ToString(this.MaxSizeInMegabytes)),
-                            new XElement(XName.Get("RequiresDuplicateDetection", ManagementClient.SbNs), XmlConvert.ToString(this.RequiresDuplicateDetection)),
-                            this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementClient.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
-                            this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementClient.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null,
+                        new XElement(XName.Get("TopicDescription", ManagementConstants.SbNs),
+                            new XElement(XName.Get("MaxSizeInMegabytes", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxSizeInMegabytes)),
+                            new XElement(XName.Get("RequiresDuplicateDetection", ManagementConstants.SbNs), XmlConvert.ToString(this.RequiresDuplicateDetection)),
+                            this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementConstants.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
+                            this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementConstants.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null,
                             this.RequiresDuplicateDetection && this.DuplicateDetectionHistoryTimeWindow != default ?
-                                new XElement(XName.Get("DuplicateDetectionHistoryTimeWindow", ManagementClient.SbNs), XmlConvert.ToString(this.DuplicateDetectionHistoryTimeWindow))
+                                new XElement(XName.Get("DuplicateDetectionHistoryTimeWindow", ManagementConstants.SbNs), XmlConvert.ToString(this.DuplicateDetectionHistoryTimeWindow))
                                 : null,
-                            new XElement(XName.Get("Status", ManagementClient.SbNs), this.Status.ToString()),
-                            new XElement(XName.Get("EnablePartitioning", ManagementClient.SbNs), XmlConvert.ToString(this.EnablePartitioning)),
-                            new XElement(XName.Get("EnableBatchedOperations", ManagementClient.SbNs), XmlConvert.ToString(this.EnableBatchedOperations)),
-                            new XElement(XName.Get("SupportOrdering", ManagementClient.SbNs), XmlConvert.ToString(this.SupportOrdering))
+                            new XElement(XName.Get("Status", ManagementConstants.SbNs), this.Status.ToString()),
+                            new XElement(XName.Get("EnablePartitioning", ManagementConstants.SbNs), XmlConvert.ToString(this.EnablePartitioning)),
+                            new XElement(XName.Get("EnableBatchedOperations", ManagementConstants.SbNs), XmlConvert.ToString(this.EnableBatchedOperations)),
+                            new XElement(XName.Get("SupportOrdering", ManagementConstants.SbNs), XmlConvert.ToString(this.SupportOrdering))
                         ))
                     ));
 

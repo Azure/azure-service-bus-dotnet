@@ -47,7 +47,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 {
                     var topicList = new List<TopicRuntimeInfo>();
 
-                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClient.AtomNs));
+                    var entryList = xDoc.Elements(XName.Get("entry", ManagementConstants.AtomNs));
                     foreach (var entry in entryList)
                     {
                         topicList.Add(ParseFromEntryElement(entry));
@@ -64,11 +64,11 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             try
             {
-                var name = xEntry.Element(XName.Get("title", ManagementClient.AtomNs)).Value;
+                var name = xEntry.Element(XName.Get("title", ManagementConstants.AtomNs)).Value;
                 var topicRuntimeInfo = new TopicRuntimeInfo(name);
 
-                var qdXml = xEntry.Element(XName.Get("content", ManagementClient.AtomNs))
-                    .Element(XName.Get("TopicDescription", ManagementClient.SbNs));
+                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))
+                    .Element(XName.Get("TopicDescription", ManagementConstants.SbNs));
 
                 foreach (var element in qdXml.Elements())
                 {

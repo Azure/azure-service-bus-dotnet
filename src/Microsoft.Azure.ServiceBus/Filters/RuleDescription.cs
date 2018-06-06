@@ -180,7 +180,7 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     var rules = new List<RuleDescription>();
 
-                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClient.AtomNs));
+                    var entryList = xDoc.Elements(XName.Get("entry", ManagementConstants.AtomNs));
                     foreach (var entry in entryList)
                     {
                         rules.Add(ParseFromEntryElement(entry));
@@ -197,11 +197,11 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                var name = xEntry.Element(XName.Get("title", ManagementClient.AtomNs)).Value;
+                var name = xEntry.Element(XName.Get("title", ManagementConstants.AtomNs)).Value;
                 var ruleDescription = new RuleDescription();
 
-                var rdXml = xEntry.Element(XName.Get("content", ManagementClient.AtomNs))
-                    .Element(XName.Get("RuleDescription", ManagementClient.SbNs));
+                var rdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))
+                    .Element(XName.Get("RuleDescription", ManagementConstants.SbNs));
 
                 if (rdXml == null)
                 {
