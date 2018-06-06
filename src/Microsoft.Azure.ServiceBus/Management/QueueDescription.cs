@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
-    public class QueueDescription
+    public class QueueDescription : IEquatable<QueueDescription>
     {
         public QueueDescription(string path)
         {
@@ -16,6 +17,9 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public TimeSpan LockDuration { get; set; } = TimeSpan.FromSeconds(30);
 
+        /// <summary>
+        /// Supported values: 1024;2048;3072;4096;5120
+        /// </summary>
         public long MaxSizeInMegabytes { get; set; } = 1024;
 
         public bool RequiresDuplicateDetection { get; set; } = false;
@@ -55,8 +59,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            // TODO error handling
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Queue was not found");
         }
 
         static internal IList<QueueDescription> ParseCollectionFromContent(string xml)
@@ -78,7 +81,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Queue was not found");
         }
 
         // TODO: Authorization
@@ -92,6 +95,11 @@ namespace Microsoft.Azure.ServiceBus.Management
 
                 var qdXml = xEntry.Element(XName.Get("content", ManagementClient.AtomNs))
                     .Element(XName.Get("QueueDescription", ManagementClient.SbNs));
+
+                if (qdXml == null)
+                {
+                    throw new MessagingEntityNotFoundException("Queue was not found");
+                }
 
                 foreach (var element in qdXml.Elements())
                 {
@@ -159,7 +167,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                             new XElement(XName.Get("RequiresSession", ManagementClient.SbNs), XmlConvert.ToString(this.RequiresSession)),
                             this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementClient.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
                             this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementClient.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null,
-                            new XElement(XName.Get("EnableDeadLetteringOnMessageExpiration", ManagementClient.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnMessageExpiration)),
+                            new XElement(XName.Get("DeadLetteringOnMessageExpiration", ManagementClient.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnMessageExpiration)),
                             this.RequiresDuplicateDetection && this.DuplicateDetectionHistoryTimeWindow != default ? 
                                 new XElement(XName.Get("DuplicateDetectionHistoryTimeWindow", ManagementClient.SbNs), XmlConvert.ToString(this.DuplicateDetectionHistoryTimeWindow)) 
                                 : null,
@@ -173,6 +181,31 @@ namespace Microsoft.Azure.ServiceBus.Management
                     ));
 
             return doc;
+        }
+
+        // TODO: Auth rules
+        public bool Equals(QueueDescription other)
+        {
+            if (this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
+                && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
+                && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
+                && this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow)
+                && this.EnableBatchedOperations == other.EnableBatchedOperations
+                && this.EnableDeadLetteringOnMessageExpiration == other.EnableDeadLetteringOnMessageExpiration
+                && this.EnablePartitioning == other.EnablePartitioning
+                && string.Equals(this.ForwardDeadLetteredMessagesTo, other.ForwardDeadLetteredMessagesTo, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(this.ForwardTo, other.ForwardTo, StringComparison.OrdinalIgnoreCase)
+                && this.LockDuration.Equals(other.LockDuration)
+                && this.MaxDeliveryCount == other.MaxDeliveryCount
+                && this.MaxSizeInMegabytes == other.MaxSizeInMegabytes
+                && this.RequiresDuplicateDetection.Equals(other.RequiresDuplicateDetection)
+                && this.RequiresSession.Equals(other.RequiresSession)
+                && this.Status.Equals(other.Status))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

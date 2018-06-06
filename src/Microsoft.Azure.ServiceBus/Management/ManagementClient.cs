@@ -59,137 +59,34 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             throw new NotImplementedException($"{nameof(ManagementClient)} doesn't support plugins");
         }
-
-        #region CreateEntity
-
-        public Task<QueueDescription> CreateQueueAsync(string queueName, CancellationToken cancellationToken = default)
-        {
-            return this.CreateQueueAsync(new QueueDescription(queueName), cancellationToken);
-        }
-
-        public async Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
-        {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = queueDescription.Path,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Scheme = Uri.UriSchemeHttps,
-                Query = $"{apiVersionQuery}"
-            }.Uri;
-
-            var atomRequest = queueDescription.Serialize().ToString();
-
-            var request = new HttpRequestMessage(HttpMethod.Put, uri);
-            request.Content = new StringContent(
-                atomRequest,
-                Encoding.UTF8,
-                ManagementClient.AtomContentType
-            );
-
-            var response = await SendHttpRequest(request, cancellationToken);
-            // TODO: non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.Created)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return QueueDescription.ParseFromContent(content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public Task<TopicDescription> CreateTopicAsync(string topicName, CancellationToken cancellationToken = default)
-        {
-            return this.CreateTopicAsync(new TopicDescription(topicName), cancellationToken);
-        }
-
-        // TODO: See if can reuse code in CreateQueue
-        public async Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
-        {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = topicDescription.Path,
-                Port = GetPort(this.csBuilder.Endpoint),
-                Scheme = Uri.UriSchemeHttps,
-                Query = $"{apiVersionQuery}"
-            }.Uri;
-
-            var atomRequest = topicDescription.Serialize().ToString();
-
-            var request = new HttpRequestMessage(HttpMethod.Put, uri);
-            request.Content = new StringContent(
-                atomRequest,
-                Encoding.UTF8,
-                ManagementClient.AtomContentType
-            );
-
-            var response = await SendHttpRequest(request, cancellationToken);
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.Created)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return TopicDescription.ParseFromContent(content);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public Task<SubscriptionDescription> CreateSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
-        {
-            return this.CreateSubscriptionAsync(new SubscriptionDescription(topicName, subscriptionName), cancellationToken);
-        }
-
-        public async Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
-        {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
-            {
-                Path = EntityNameHelper.FormatSubscriptionPath(subscriptionDescription.TopicPath, subscriptionDescription.SubscriptionName),
-                Port = GetPort(this.csBuilder.Endpoint),
-                Scheme = Uri.UriSchemeHttps,
-                Query = $"{apiVersionQuery}"
-            }.Uri;
-
-            var atomRequest = subscriptionDescription.Serialize().ToString();
-
-            var request = new HttpRequestMessage(HttpMethod.Put, uri);
-            request.Content = new StringContent(
-                atomRequest,
-                Encoding.UTF8,
-                ManagementClient.AtomContentType
-            );
-
-            var response = await SendHttpRequest(request, cancellationToken);
-            
-            // TODO: what about non success status code?
-            if (response.StatusCode == System.Net.HttpStatusCode.Created)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content); 
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        // TODO
-        public Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion CreateEntity
-
+        
         #region DeleteEntity
 
         public async Task DeleteQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
+            await DeleteEntity(queueName, cancellationToken);
+        }
+
+        public async Task DeleteTopicAsync(string topicName, CancellationToken cancellationToken = default)
+        {
+            await DeleteEntity(topicName, cancellationToken);
+        }
+
+        public async Task DeleteSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
+        {
+            await DeleteEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), cancellationToken);
+        }
+
+        public async Task DeleteRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
+        {
+            await DeleteEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", cancellationToken);
+        }
+
+        private async Task DeleteEntity(string path, CancellationToken cancellationToken)
+        {
             var uri = new UriBuilder(this.csBuilder.Endpoint)
             {
-                Path = queueName,
+                Path = path,
                 Scheme = Uri.UriSchemeHttps,
                 Port = GetPort(this.csBuilder.Endpoint),
                 Query = $"{apiVersionQuery}&enrich=false"
@@ -197,21 +94,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             var request = new HttpRequestMessage(HttpMethod.Delete, uri);
             await SendHttpRequest(request, cancellationToken);
-        }
-
-        public Task DeleteTopicAsync(string topicName, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task DeleteSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task DeleteRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
         }
 
         #endregion
@@ -322,40 +204,166 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         #endregion
 
+        #region CreateEntity
+
+        public Task<QueueDescription> CreateQueueAsync(string queueName, CancellationToken cancellationToken = default)
+        {
+            return this.CreateQueueAsync(new QueueDescription(queueName), cancellationToken);
+        }
+
+        public async Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
+        {
+            var atomRequest = queueDescription.Serialize().ToString();
+            var content = await PutEntity(queueDescription.Path, atomRequest, false, cancellationToken);
+            return QueueDescription.ParseFromContent(content);
+        }
+
+        public Task<TopicDescription> CreateTopicAsync(string topicName, CancellationToken cancellationToken = default)
+        {
+            return this.CreateTopicAsync(new TopicDescription(topicName), cancellationToken);
+        }
+
+        // TODO: See if can reuse code in CreateQueue
+        public async Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
+        {
+            var atomRequest = topicDescription.Serialize().ToString();
+            var content = await PutEntity(topicDescription.Path, atomRequest, false, cancellationToken);
+            return TopicDescription.ParseFromContent(content);
+        }
+
+        public Task<SubscriptionDescription> CreateSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
+        {
+            return this.CreateSubscriptionAsync(new SubscriptionDescription(topicName, subscriptionName), cancellationToken);
+        }
+
+        public async Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
+        {
+            var atomRequest = subscriptionDescription.Serialize().ToString();
+            var content = await PutEntity(
+                EntityNameHelper.FormatSubscriptionPath(subscriptionDescription.TopicPath, subscriptionDescription.SubscriptionName),
+                atomRequest,
+                false,
+                cancellationToken);
+            return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content);
+        }
+
+        // TODO
+        public Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion CreateEntity
+
         #region UpdateEntity
 
-        public Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
+        public async Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var atomRequest = queueDescription.Serialize().ToString();
+            var content = await PutEntity(queueDescription.Path, atomRequest, true, cancellationToken);
+            return QueueDescription.ParseFromContent(content);
         }
 
-        public Task<TopicDescription> UpdateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
+        public async Task<TopicDescription> UpdateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var atomRequest = topicDescription.Serialize().ToString();
+            var content = await PutEntity(topicDescription.Path, atomRequest, true, cancellationToken);
+            return TopicDescription.ParseFromContent(content);
         }
 
-        public Task<SubscriptionDescription> UpdateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
+        public async Task<SubscriptionDescription> UpdateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var atomRequest = subscriptionDescription.Serialize().ToString();
+            var content = await PutEntity(
+                EntityNameHelper.FormatSubscriptionPath(subscriptionDescription.TopicPath, subscriptionDescription.SubscriptionName),
+                atomRequest,
+                false,
+                cancellationToken);
+            return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content);
+        }
+
+        private async Task<string> PutEntity(string path, string requestBody, bool isUpdate, CancellationToken cancellationToken)
+        {
+            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            {
+                Path = path,
+                Port = GetPort(this.csBuilder.Endpoint),
+                Scheme = Uri.UriSchemeHttps,
+                Query = $"{apiVersionQuery}"
+            }.Uri;
+
+            var request = new HttpRequestMessage(HttpMethod.Put, uri);
+            request.Content = new StringContent(
+                requestBody,
+                Encoding.UTF8,
+                ManagementClient.AtomContentType
+            );
+
+            if (isUpdate)
+            {
+                request.Headers.Add("If-Match", "*"); 
+            }
+
+            var response = await SendHttpRequest(request, cancellationToken);
+            // TODO: non success status code?
+            if (response.StatusCode == HttpStatusCode.Created || response.StatusCode == HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return content;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         #endregion
 
         #region Exists
 
-        public Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default)
+        public async Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // TODO: Optimize by removing deserialization costs.
+                var qd = await GetQueueAsync(queueName, cancellationToken);
+            }
+            catch (MessagingEntityNotFoundException)
+            {
+                return false;
+            }
+
+            return true;
         }
 
-        public Task<bool> TopicExistsAsync(string topicName, CancellationToken cancellationToken = default)
+        public async Task<bool> TopicExistsAsync(string topicName, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // TODO: Optimize by removing deserialization costs.
+                var td = await GetTopicAsync(topicName, cancellationToken);
+            }
+            catch (MessagingEntityNotFoundException)
+            {
+                return false;
+            }
+
+            return true;
         }
 
-        public Task<bool> SubscriptionExistsAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
+        public async Task<bool> SubscriptionExistsAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // TODO: Optimize by removing deserialization costs.
+                var sd = await GetSubscriptionAsync(topicName, subscriptionName, cancellationToken);
+            }
+            catch (MessagingEntityNotFoundException)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         #endregion
@@ -402,7 +410,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 throw new ServiceBusException(true, exception);
             }
 
-            ValidateHttpResponse(response);
+            await ValidateHttpResponse(response);
             return response;
         }
 
@@ -425,7 +433,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             return -1;
         }
 
-        private async void ValidateHttpResponse(HttpResponseMessage response)
+        private async Task ValidateHttpResponse(HttpResponseMessage response)
         {
             if (response.IsSuccessStatusCode)
             {
