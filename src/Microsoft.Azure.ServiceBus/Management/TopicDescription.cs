@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
-    public class TopicDescription
+    public class TopicDescription : IEquatable<TopicDescription>
     {
         public TopicDescription(string path)
         {
@@ -45,8 +45,8 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            // TODO error handling
-            throw new NotImplementedException(xml);
+            // TODO: Log
+            throw new MessagingEntityNotFoundException("Topic was not found");
         }
 
         static internal IList<TopicDescription> ParseCollectionFromContent(string xml)
@@ -68,7 +68,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Topic was not found");
         }
 
         // TODO: Authorization
@@ -81,6 +81,11 @@ namespace Microsoft.Azure.ServiceBus.Management
 
                 var qdXml = xEntry.Element(XName.Get("content", ManagementClient.AtomNs))
                     .Element(XName.Get("TopicDescription", ManagementClient.SbNs));
+
+                if (qdXml == null)
+                {
+                    throw new MessagingEntityNotFoundException("Topic was not found");
+                }
 
                 foreach (var element in qdXml.Elements())
                 {
@@ -110,6 +115,9 @@ namespace Microsoft.Azure.ServiceBus.Management
                         case "EnablePartitioning":
                             topicDesc.EnablePartitioning = bool.Parse(element.Value);
                             break;
+                        case "SupportOrdering":
+                            topicDesc.SupportOrdering = bool.Parse(element.Value);
+                            break;
                     }
                 }
 
@@ -138,11 +146,30 @@ namespace Microsoft.Azure.ServiceBus.Management
                                 : null,
                             new XElement(XName.Get("Status", ManagementClient.SbNs), this.Status.ToString()),
                             new XElement(XName.Get("EnablePartitioning", ManagementClient.SbNs), XmlConvert.ToString(this.EnablePartitioning)),
-                            new XElement(XName.Get("EnableBatchedOperations", ManagementClient.SbNs), XmlConvert.ToString(this.EnableBatchedOperations))
+                            new XElement(XName.Get("EnableBatchedOperations", ManagementClient.SbNs), XmlConvert.ToString(this.EnableBatchedOperations)),
+                            new XElement(XName.Get("SupportOrdering", ManagementClient.SbNs), XmlConvert.ToString(this.SupportOrdering))
                         ))
                     ));
 
             return doc;
+        }
+
+        public bool Equals(TopicDescription other)
+        {
+            if (this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
+                && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
+                && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
+                && this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow)
+                && this.EnableBatchedOperations == other.EnableBatchedOperations
+                && this.EnablePartitioning == other.EnablePartitioning
+                && this.MaxSizeInMegabytes == other.MaxSizeInMegabytes
+                && this.RequiresDuplicateDetection.Equals(other.RequiresDuplicateDetection)
+                && this.Status.Equals(other.Status))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

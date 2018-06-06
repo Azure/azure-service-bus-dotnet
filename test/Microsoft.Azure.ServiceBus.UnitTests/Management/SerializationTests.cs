@@ -1,12 +1,19 @@
 ﻿using Xunit;
 using Microsoft.Azure.ServiceBus.Management;
 using System;
+using System.Threading.Tasks;
 
 namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 {
-    // TODO: Asserts
+    // TODO
     // Tests with XML encoded letters in queue name etc.
     // Negative scenarios
+    // Test with mix and match default values and set values.
+    // What if default value in service is different from client.
+    // Update non-updatable property
+    // QuotaExceededException
+    // Verify Runtime count
+    // Get more than 100 queues - manual test.
     public class SerializationTests : IDisposable
     {
         internal string ConnectionString = TestUtility.NamespaceConnectionString;
@@ -19,9 +26,46 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         }
 
         [Fact]
-        public async void GetQueue()
+        public async Task BasicQueueCrudTest()
         {
-            var qd = await client.GetQueueAsync("queue22");
+            var queueName = Guid.NewGuid().ToString("D").Substring(0, 8);
+
+            var qd = new QueueDescription(queueName)
+            {
+                AutoDeleteOnIdle = TimeSpan.FromHours(1),
+                DefaultMessageTimeToLive = TimeSpan.FromDays(2),
+                DuplicateDetectionHistoryTimeWindow = TimeSpan.FromMinutes(1),
+                EnableBatchedOperations = true,
+                EnableDeadLetteringOnMessageExpiration = true,
+                EnablePartitioning = false,
+                ForwardDeadLetteredMessagesTo = null,
+                ForwardTo = null,
+                LockDuration = TimeSpan.FromSeconds(45),
+                MaxDeliveryCount = 8,
+                MaxSizeInMegabytes = 2048,
+                RequiresDuplicateDetection = true,
+                RequiresSession = true
+            };
+
+            var finalQ = await client.CreateQueueAsync(qd);
+            Assert.Equal(qd, finalQ);
+
+            var getQ = await client.GetQueueAsync(qd.Path);
+            Assert.Equal(qd, getQ);
+
+            getQ.EnableBatchedOperations = false;
+            getQ.MaxDeliveryCount = 9;
+
+            var updatedQ = await client.UpdateQueueAsync(getQ);
+            Assert.Equal(getQ, updatedQ);
+
+            await client.DeleteQueueAsync(updatedQ.Path);
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                    async () =>
+                    {
+                        await client.GetQueueAsync(qd.Path);
+                    });
         }
 
         [Fact]
@@ -34,13 +78,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         public async void GetQueues()
         {
             var queues = await client.GetQueuesAsync();
-        }
-
-        [Fact]
-        public async void CreateQueue()
-        {
-            var qd = new QueueDescription("queue2");
-            var queue = await client.CreateQueueAsync(qd.Path);
         }
 
         [Fact]
@@ -64,7 +101,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         [Fact]
         public async void GetSubscriptions()
         {
-            var subscriptions = await client.GetSubscriptionsAsync(TestConstants.NonPartitionedTopicName);// "mytopic");
+            var subscriptions = await client.GetSubscriptionsAsync(TestConstants.NonPartitionedTopicName);
         }
 
         [Fact]
@@ -77,12 +114,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         public async void GetRules()
         {
             var rules = await client.GetRulesAsync("mytopic", "sub1");
-        }
-
-        [Fact]
-        public async void DeleteQueue()
-        {
-            await client.DeleteQueueAsync("queue2");
         }
 
         public void Dispose()

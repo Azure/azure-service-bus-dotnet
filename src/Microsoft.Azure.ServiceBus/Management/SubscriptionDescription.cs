@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
-    public class SubscriptionDescription
+    public class SubscriptionDescription : IEquatable<SubscriptionDescription>
     {
         public SubscriptionDescription(string topicPath, string subscriptionName)
         {
@@ -48,8 +48,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            // TODO error handling
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Subscription was not found");
         }
 
         static internal IList<SubscriptionDescription> ParseCollectionFromContent(string topicName, string xml)
@@ -71,7 +70,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Subscription was not found");
         }
 
         // TODO: Authorization and messagecounts
@@ -85,6 +84,11 @@ namespace Microsoft.Azure.ServiceBus.Management
                 var qdXml = xEntry.Element(XName.Get("content", ManagementClient.AtomNs))
                     .Element(XName.Get("SubscriptionDescription", ManagementClient.SbNs));
 
+                if (qdXml == null)
+                {
+                    throw new MessagingEntityNotFoundException("Subscription was not found");
+                }
+
                 foreach (var element in qdXml.Elements())
                 {
                     // TODO: Alphabetical ordering
@@ -95,6 +99,9 @@ namespace Microsoft.Azure.ServiceBus.Management
                             break;
                         case "DeadLetteringOnMessageExpiration":
                             subscriptionDesc.EnableDeadLetteringOnMessageExpiration = bool.Parse(element.Value);
+                            break;
+                        case "DeadLetteringOnFilterEvaluationExceptions":
+                            subscriptionDesc.EnableDeadLetteringOnFilterEvaluationExceptions = bool.Parse(element.Value);
                             break;
                         case "LockDuration":
                             subscriptionDesc.LockDuration = XmlConvert.ToTimeSpan(element.Value);
@@ -134,7 +141,8 @@ namespace Microsoft.Azure.ServiceBus.Management
                             new XElement(XName.Get("RequiresSession", ManagementClient.SbNs), XmlConvert.ToString(this.RequiresSession)),
                             this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementClient.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
                             this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementClient.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null,
-                            new XElement(XName.Get("EnableDeadLetteringOnMessageExpiration", ManagementClient.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnMessageExpiration)),
+                            new XElement(XName.Get("DeadLetteringOnMessageExpiration", ManagementClient.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnMessageExpiration)),
+                            new XElement(XName.Get("DeadLetteringOnFilterEvaluationExceptions", ManagementClient.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnFilterEvaluationExceptions)),
                             new XElement(XName.Get("MaxDeliveryCount", ManagementClient.SbNs), XmlConvert.ToString(this.MaxDeliveryCount)),
                             new XElement(XName.Get("Status", ManagementClient.SbNs), this.Status.ToString()),
                             this.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementClient.SbNs), this.ForwardTo) : null,
@@ -143,6 +151,27 @@ namespace Microsoft.Azure.ServiceBus.Management
                     ));
 
             return doc;
+        }
+
+        public bool Equals(SubscriptionDescription other)
+        {
+            if (this.SubscriptionName.Equals(other.SubscriptionName, StringComparison.OrdinalIgnoreCase)
+                && this.TopicPath.Equals(other.TopicPath, StringComparison.OrdinalIgnoreCase)
+                && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
+                && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
+                && this.EnableDeadLetteringOnMessageExpiration == other.EnableDeadLetteringOnMessageExpiration
+                && this.EnableDeadLetteringOnFilterEvaluationExceptions == other.EnableDeadLetteringOnFilterEvaluationExceptions
+                && this.ForwardDeadLetteredMessagesTo.Equals(other.ForwardDeadLetteredMessagesTo, StringComparison.OrdinalIgnoreCase)
+                && this.ForwardTo.Equals(other.ForwardTo, StringComparison.OrdinalIgnoreCase)
+                && this.LockDuration.Equals(other.LockDuration)
+                && this.MaxDeliveryCount == other.MaxDeliveryCount
+                && this.RequiresSession.Equals(other.RequiresSession)
+                && this.Status.Equals(other.Status))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

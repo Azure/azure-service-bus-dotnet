@@ -168,8 +168,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
             }
 
-            // TODO error handling
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Rule was not found");
         }
 
         static internal IList<RuleDescription> ParseCollectionFromContent(string xml)
@@ -191,7 +190,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
             }
 
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Rule was not found");
         }
 
         static private RuleDescription ParseFromEntryElement(XElement xEntry)
@@ -203,6 +202,11 @@ namespace Microsoft.Azure.ServiceBus
 
                 var rdXml = xEntry.Element(XName.Get("content", ManagementClient.AtomNs))
                     .Element(XName.Get("RuleDescription", ManagementClient.SbNs));
+
+                if (rdXml == null)
+                {
+                    throw new MessagingEntityNotFoundException("Rule was not found");
+                }
 
                 foreach (var element in rdXml.Elements())
                 {
