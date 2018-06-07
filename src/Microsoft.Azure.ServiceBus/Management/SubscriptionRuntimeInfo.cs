@@ -16,6 +16,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public string SubscriptionName { get; set; }
 
+        public long MessageCount { get; internal set; }
+
         public MessageCountDetails MessageCountDetails { get; set; }
 
         public DateTime AccessedAt { get; internal set; }
@@ -84,6 +86,9 @@ namespace Microsoft.Azure.ServiceBus.Management
                             break;
                         case "UpdatedAt":
                             subscriptionRuntimeInfo.UpdatedAt = DateTime.Parse(element.Value);
+                            break;
+                        case "MessageCount":
+                            subscriptionRuntimeInfo.MessageCount = long.Parse(element.Value);
                             break;
                         case "CountDetails":
                             subscriptionRuntimeInfo.MessageCountDetails = new MessageCountDetails();
