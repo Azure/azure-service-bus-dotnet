@@ -15,7 +15,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public string Path { get; set; }
 
-        public TimeSpan LockDuration { get; set; } = TimeSpan.FromSeconds(30);
+        public TimeSpan LockDuration { get; set; } = TimeSpan.FromSeconds(60);
 
         /// <summary>
         /// Supported values: 1024;2048;3072;4096;5120
@@ -46,7 +46,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool EnablePartitioning { get; set; } = false;
 
-        public bool EnableBatchedOperations { get; set; } = false;
+        public bool EnableBatchedOperations { get; set; } = true;
 
         static internal QueueDescription ParseFromContent(string xml)
         {

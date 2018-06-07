@@ -12,27 +12,27 @@ namespace Microsoft.Azure.ServiceBus.Management
             this.Path = path;
         }
 
-        public TimeSpan DefaultMessageTimeToLive { get; set; }
+        public TimeSpan DefaultMessageTimeToLive { get; set; } = TimeSpan.MaxValue;
 
-        public TimeSpan AutoDeleteOnIdle { get; set; }
+        public TimeSpan AutoDeleteOnIdle { get; set; } = TimeSpan.MaxValue;
 
-        public long MaxSizeInMegabytes { get; set; }
+        public long MaxSizeInMegabytes { get; set; } = 1024;
 
-        public bool RequiresDuplicateDetection { get; set; }
+        public bool RequiresDuplicateDetection { get; set; } = false;
 
-        public TimeSpan DuplicateDetectionHistoryTimeWindow { get; set; }
+        public TimeSpan DuplicateDetectionHistoryTimeWindow { get; set; } = TimeSpan.FromSeconds(30);
 
         public string Path { get; set; }
 
         public AuthorizationRules Authorization { get; set; }
 
-        public EntityStatus Status { get; set; }
+        public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        public bool EnablePartitioning { get; set; }
+        public bool EnablePartitioning { get; set; } = false;
 
-        public bool SupportOrdering { get; set; }
+        public bool SupportOrdering { get; set; } = false;
 
-        public bool EnableBatchedOperations { get; set; }
+        public bool EnableBatchedOperations { get; set; } = true;
 
         static internal TopicDescription ParseFromContent(string xml)
         {
