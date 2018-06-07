@@ -2,6 +2,7 @@
 using Microsoft.Azure.ServiceBus.Management;
 using System;
 using System.Threading.Tasks;
+using Microsoft.Azure.ServiceBus.Core;
 
 namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 {
@@ -27,6 +28,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         }
 
         [Fact]
+        [DisplayTestMethodName]
         public async Task BasicQueueCrudTest()
         {
             var queueName = Guid.NewGuid().ToString("D").Substring(0, 8);
@@ -70,6 +72,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         }
 
         [Fact]
+        [DisplayTestMethodName]
         public async Task BasicTopicCrudTest()
         {
             var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
@@ -107,6 +110,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         }
 
         [Fact]
+        [DisplayTestMethodName]
         public async Task BasicSubscriptionCrudTest()
         {
             var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
@@ -126,7 +130,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             };
 
             var createdS = await client.CreateSubscriptionAsync(sd);
-            //var createdS2 = await client.UpdateSubscriptionAsync(sd);
             Assert.Equal(sd, createdS);
 
             var getS = await client.GetSubscriptionAsync(sd.TopicPath, sd.SubscriptionName);
@@ -150,11 +153,100 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         }
 
         [Fact]
-        public async void GetQueueRuntimeInfo()
+        [DisplayTestMethodName]
+        public async void GetQueueRuntimeInfoTest()
         {
-            var qd = await client.GetQueueRuntimeInfoAsync(TestConstants.NonPartitionedQueueName);
+            var queueName = Guid.NewGuid().ToString("D").Substring(0, 8);
+
+            // Fixing Created Time
+            var qd = await client.CreateQueueAsync(queueName);
+
+            // Changing Last Updated Time
+            qd.AutoDeleteOnIdle = TimeSpan.FromMinutes(100);
+            var updatedQ = await client.UpdateQueueAsync(qd);
+
+            // Populating 1 active message, 1 dead letter message and 1 scheduled message
+            // Changing Last Accessed Time
+            var qClient = new QueueClient(this.ConnectionString, queueName);
+            await qClient.SendAsync(new Message() { MessageId = "1" });
+            await qClient.SendAsync(new Message() { MessageId = "2" });
+            await qClient.SendAsync(new Message() { MessageId = "3", ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddDays(1) });
+            var msg = await qClient.InnerReceiver.ReceiveAsync();
+            await qClient.DeadLetterAsync(msg.SystemProperties.LockToken);
+
+            var runtimeInfo = await client.GetQueueRuntimeInfoAsync(queueName);
+
+            Assert.Equal(queueName, runtimeInfo.Path);
+            Assert.True(runtimeInfo.CreatedAt < runtimeInfo.UpdatedAt);
+            Assert.True(runtimeInfo.UpdatedAt < runtimeInfo.AccessedAt);
+            Assert.Equal(1, runtimeInfo.MessageCountDetails.ActiveMessageCount);
+            Assert.Equal(1, runtimeInfo.MessageCountDetails.DeadLetterMessageCount);
+            Assert.Equal(1, runtimeInfo.MessageCountDetails.ScheduledMessageCount);
+            Assert.Equal(3, runtimeInfo.MessageCount);
+            Assert.True(runtimeInfo.SizeInBytes > 0);
+
+            await client.DeleteQueueAsync(queueName);
+            await qClient.CloseAsync();
         }
 
+        [Fact]
+        [DisplayTestMethodName]
+        public async void GetTopicAndSubscriptionRuntimeInfoTest()
+        {
+            var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            var td = await client.CreateTopicAsync(topicName);
+
+            // Changing Last Updated Time
+            td.AutoDeleteOnIdle = TimeSpan.FromMinutes(100);
+            var updatedT = await client.UpdateTopicAsync(td);
+
+            var subscriptionName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            var sd = await client.CreateSubscriptionAsync(topicName, subscriptionName);
+
+            // Changing Last Updated Time for subscription
+            sd.AutoDeleteOnIdle = TimeSpan.FromMinutes(100);
+            var updatedS = await client.UpdateSubscriptionAsync(sd);
+
+            // Populating 1 active message, 1 dead letter message and 1 scheduled message
+            // Changing Last Accessed Time
+            var sender = new MessageSender(this.ConnectionString, topicName);
+            var receiver = new MessageReceiver(this.ConnectionString, EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName));
+            await sender.SendAsync(new Message() { MessageId = "1" });
+            await sender.SendAsync(new Message() { MessageId = "2" });
+            await sender.SendAsync(new Message() { MessageId = "3", ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddDays(1) });
+            var msg = await receiver.ReceiveAsync();
+            await receiver.DeadLetterAsync(msg.SystemProperties.LockToken);
+
+            var topicRI = await client.GetTopicRuntimeInfoAsync(topicName);
+            var subscriptionRI = await client.GetSubscriptionRuntimeInfoAsync(topicName, subscriptionName);
+
+            Assert.Equal(topicName, topicRI.Path);
+            Assert.Equal(topicName, subscriptionRI.TopicPath);
+            Assert.Equal(subscriptionName, subscriptionRI.SubscriptionName);
+
+            Assert.True(topicRI.CreatedAt < topicRI.UpdatedAt);
+            Assert.True(topicRI.UpdatedAt < topicRI.AccessedAt);
+            Assert.True(subscriptionRI.CreatedAt < subscriptionRI.UpdatedAt);
+            Assert.True(subscriptionRI.UpdatedAt < subscriptionRI.AccessedAt);
+            Assert.True(topicRI.UpdatedAt < subscriptionRI.UpdatedAt);
+
+            Assert.Equal(0, topicRI.MessageCountDetails.ActiveMessageCount);
+            Assert.Equal(0, topicRI.MessageCountDetails.DeadLetterMessageCount);
+            Assert.Equal(1, topicRI.MessageCountDetails.ScheduledMessageCount);
+            Assert.Equal(1, subscriptionRI.MessageCountDetails.ActiveMessageCount);
+            Assert.Equal(1, subscriptionRI.MessageCountDetails.DeadLetterMessageCount);
+            Assert.Equal(0, subscriptionRI.MessageCountDetails.ScheduledMessageCount);
+            Assert.Equal(2, subscriptionRI.MessageCount);
+            Assert.Equal(1, topicRI.SubscriptionCount);
+            Assert.True(topicRI.SizeInBytes > 0);
+
+            await client.DeleteSubscriptionAsync(topicName, subscriptionName);
+            await client.DeleteTopicAsync(topicName);
+            await sender.CloseAsync();
+            await receiver.CloseAsync();
+        }
+
+        // TODO: Asserts
         [Fact]
         public async void GetQueues()
         {
@@ -162,21 +254,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         }
 
         [Fact]
-        public async void GetTopic()
-        {
-            var td = await client.GetTopicAsync(TestConstants.NonPartitionedTopicName);
-        }
-
-        [Fact]
         public async void GetTopics()
         {
             var topics = await client.GetTopicsAsync();
-        }
-
-        [Fact]
-        public async void GetSubscription()
-        {
-            var sd = await client.GetSubscriptionAsync("mytopic", "sub1");
         }
 
         [Fact]

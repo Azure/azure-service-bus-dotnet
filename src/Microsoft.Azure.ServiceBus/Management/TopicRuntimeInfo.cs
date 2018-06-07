@@ -13,6 +13,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public string Path { get; set; }
 
+        public MessageCountDetails MessageCountDetails { get; internal set; }
+
         public DateTime AccessedAt { get; internal set; }
 
         public DateTime CreatedAt { get; internal set; }
@@ -88,6 +90,30 @@ namespace Microsoft.Azure.ServiceBus.Management
                             break;
                         case "UpdatedAt":
                             topicRuntimeInfo.UpdatedAt = DateTime.Parse(element.Value);
+                            break;
+                        case "CountDetails":
+                            topicRuntimeInfo.MessageCountDetails = new MessageCountDetails();
+                            foreach (var countElement in element.Elements())
+                            {
+                                switch (countElement.Name.LocalName)
+                                {
+                                    case "ActiveMessageCount":
+                                        topicRuntimeInfo.MessageCountDetails.ActiveMessageCount = long.Parse(countElement.Value);
+                                        break;
+                                    case "DeadLetterMessageCount":
+                                        topicRuntimeInfo.MessageCountDetails.DeadLetterMessageCount = long.Parse(countElement.Value);
+                                        break;
+                                    case "ScheduledMessageCount":
+                                        topicRuntimeInfo.MessageCountDetails.ScheduledMessageCount = long.Parse(countElement.Value);
+                                        break;
+                                    case "TransferMessageCount":
+                                        topicRuntimeInfo.MessageCountDetails.TransferMessageCount = long.Parse(countElement.Value);
+                                        break;
+                                    case "TransferDeadLetterMessageCount":
+                                        topicRuntimeInfo.MessageCountDetails.TransferDeadLetterMessageCount = long.Parse(countElement.Value);
+                                        break;
+                                }
+                            }
                             break;
                     }
                 }
