@@ -3,6 +3,7 @@ using Microsoft.Azure.ServiceBus.Management;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Azure.ServiceBus.Core;
+using System.Linq;
 
 namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 {
@@ -62,6 +63,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             var updatedQ = await client.UpdateQueueAsync(getQ);
             Assert.Equal(getQ, updatedQ);
 
+            var exists = await client.QueueExistsAsync(queueName);
+            Assert.True(exists);
+
+            var queues = await client.GetQueuesAsync();
+            Assert.True(queues.Count > 1);
+            Assert.Contains(queues, e => e.Path.Equals(queueName, StringComparison.OrdinalIgnoreCase));
+
             await client.DeleteQueueAsync(updatedQ.Path);
 
             await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
@@ -69,6 +77,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                     {
                         await client.GetQueueAsync(qd.Path);
                     });
+
+            exists = await client.QueueExistsAsync(queueName);
+            Assert.False(exists);
         }
 
         [Fact]
@@ -100,6 +111,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             var updatedT = await client.UpdateTopicAsync(getT);
             Assert.Equal(getT, updatedT);
 
+            var exists = await client.TopicExistsAsync(topicName);
+            Assert.True(exists);
+
+            var topics = await client.GetTopicsAsync();
+            Assert.True(topics.Count > 1);
+            Assert.Contains(topics, e => e.Path.Equals(topicName, StringComparison.OrdinalIgnoreCase));
+
             await client.DeleteTopicAsync(updatedT.Path);
 
             await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
@@ -107,6 +125,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                     {
                         await client.GetTopicAsync(td.Path);
                     });
+
+            exists = await client.TopicExistsAsync(topicName);
+            Assert.False(exists);
         }
 
         [Fact]
@@ -141,6 +162,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             var updatedS = await client.UpdateSubscriptionAsync(getS);
             Assert.Equal(getS, updatedS);
 
+            var exists = await client.SubscriptionExistsAsync(topicName, subscriptionName);
+            Assert.True(exists);
+
+            var subs = await client.GetSubscriptionsAsync(topicName);
+            Assert.Equal(1, subs.Count);
+
             await client.DeleteSubscriptionAsync(sd.TopicPath, sd.SubscriptionName);
 
             await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
@@ -150,6 +177,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                     });
 
             await client.DeleteTopicAsync(sd.TopicPath);
+
+            exists = await client.SubscriptionExistsAsync(topicName, subscriptionName);
+            Assert.False(exists);
         }
 
         [Fact]
@@ -244,25 +274,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             await client.DeleteTopicAsync(topicName);
             await sender.CloseAsync();
             await receiver.CloseAsync();
-        }
-
-        // TODO: Asserts
-        [Fact]
-        public async void GetQueues()
-        {
-            var queues = await client.GetQueuesAsync();
-        }
-
-        [Fact]
-        public async void GetTopics()
-        {
-            var topics = await client.GetTopicsAsync();
-        }
-
-        [Fact]
-        public async void GetSubscriptions()
-        {
-            var subscriptions = await client.GetSubscriptionsAsync(TestConstants.NonPartitionedTopicName);
         }
 
         [Fact]
