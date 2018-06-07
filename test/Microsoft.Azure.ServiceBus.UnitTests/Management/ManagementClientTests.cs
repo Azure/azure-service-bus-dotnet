@@ -14,13 +14,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
     // QuotaExceededException
     // Verify Runtime count
     // Get more than 100 queues - manual test.
-    public class SerializationTests : IDisposable
+    // entity name validation tests
+    public class ManagementClientTests : IDisposable
     {
         internal string ConnectionString = TestUtility.NamespaceConnectionString;
         //internal string ConnectionString = "Endpoint=sb://contoso.servicebus.onebox.windows-int.net/;SharedAccessKeyName=DefaultNamespaceSasAllKeyName;SharedAccessKey=8864/auVd3qDC75iTjBL1GJ4D2oXC6bIttRd0jzDZ+g=";
         ManagementClient client;
 
-        public SerializationTests()
+        public ManagementClientTests()
         {
             client = new ManagementClient(new ServiceBusConnectionStringBuilder(ConnectionString));
         }
@@ -66,6 +67,86 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                     {
                         await client.GetQueueAsync(qd.Path);
                     });
+        }
+
+        [Fact]
+        public async Task BasicTopicCrudTest()
+        {
+            var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
+
+            var td = new TopicDescription(topicName)
+            {
+                AutoDeleteOnIdle = TimeSpan.FromHours(1),
+                DefaultMessageTimeToLive = TimeSpan.FromDays(2),
+                DuplicateDetectionHistoryTimeWindow = TimeSpan.FromMinutes(1),
+                EnableBatchedOperations = true,
+                EnablePartitioning = false,
+                MaxSizeInMegabytes = 2048,
+                RequiresDuplicateDetection = true
+            };
+
+            var createdT = await client.CreateTopicAsync(td);
+            Assert.Equal(td, createdT);
+
+            var getT = await client.GetTopicAsync(td.Path);
+            Assert.Equal(td, getT);
+
+            getT.EnableBatchedOperations = false;
+            getT.DefaultMessageTimeToLive = TimeSpan.FromDays(3);
+
+            var updatedT = await client.UpdateTopicAsync(getT);
+            Assert.Equal(getT, updatedT);
+
+            await client.DeleteTopicAsync(updatedT.Path);
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                    async () =>
+                    {
+                        await client.GetTopicAsync(td.Path);
+                    });
+        }
+
+        [Fact]
+        public async Task BasicSubscriptionCrudTest()
+        {
+            var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            await client.CreateTopicAsync(topicName);
+
+            var subscriptionName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            var sd = new SubscriptionDescription(topicName, subscriptionName)
+            {
+                AutoDeleteOnIdle = TimeSpan.FromHours(1),
+                DefaultMessageTimeToLive = TimeSpan.FromDays(2),
+                EnableDeadLetteringOnMessageExpiration = true,
+                ForwardDeadLetteredMessagesTo = null,
+                ForwardTo = null,
+                LockDuration = TimeSpan.FromSeconds(45),
+                MaxDeliveryCount = 8,
+                RequiresSession = true
+            };
+
+            var createdS = await client.CreateSubscriptionAsync(sd);
+            //var createdS2 = await client.UpdateSubscriptionAsync(sd);
+            Assert.Equal(sd, createdS);
+
+            var getS = await client.GetSubscriptionAsync(sd.TopicPath, sd.SubscriptionName);
+            Assert.Equal(sd, getS);
+
+            getS.DefaultMessageTimeToLive = TimeSpan.FromDays(3);
+            getS.MaxDeliveryCount = 9;
+
+            var updatedS = await client.UpdateSubscriptionAsync(getS);
+            Assert.Equal(getS, updatedS);
+
+            await client.DeleteSubscriptionAsync(sd.TopicPath, sd.SubscriptionName);
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                    async () =>
+                    {
+                        await client.GetSubscriptionAsync(sd.TopicPath, sd.SubscriptionName);
+                    });
+
+            await client.DeleteTopicAsync(sd.TopicPath);
         }
 
         [Fact]

@@ -227,6 +227,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             return this.CreateSubscriptionAsync(new SubscriptionDescription(topicName, subscriptionName), cancellationToken);
         }
 
+        // TODO: Expose CreateSubscriptionWithRule()
         public async Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
         {
             var atomRequest = subscriptionDescription.Serialize().ToString();
@@ -268,7 +269,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             var content = await PutEntity(
                 EntityNameHelper.FormatSubscriptionPath(subscriptionDescription.TopicPath, subscriptionDescription.SubscriptionName),
                 atomRequest,
-                false,
+                true,
                 cancellationToken);
             return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content);
         }

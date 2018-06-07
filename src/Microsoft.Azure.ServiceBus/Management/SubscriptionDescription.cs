@@ -13,29 +13,29 @@ namespace Microsoft.Azure.ServiceBus.Management
             this.SubscriptionName = subscriptionName;
         }
 
-        public TimeSpan LockDuration { get; set; }
+        public TimeSpan LockDuration { get; set; } = TimeSpan.FromSeconds(60);
 
-        public bool RequiresSession { get; set; }
+        public bool RequiresSession { get; set; } = false;
 
-        public TimeSpan DefaultMessageTimeToLive { get; set; }
+        public TimeSpan DefaultMessageTimeToLive { get; set; } = TimeSpan.MaxValue;
 
-        public TimeSpan AutoDeleteOnIdle { get; set; }
+        public TimeSpan AutoDeleteOnIdle { get; set; } = TimeSpan.MaxValue;
 
-        public bool EnableDeadLetteringOnMessageExpiration { get; set; }
+        public bool EnableDeadLetteringOnMessageExpiration { get; set; } = false;
 
-        public bool EnableDeadLetteringOnFilterEvaluationExceptions { get; set; }
+        public bool EnableDeadLetteringOnFilterEvaluationExceptions { get; set; } = true;
 
         public string TopicPath { get; set; }
 
         public string SubscriptionName { get; set; }
 
-        public int MaxDeliveryCount { get; set; }
+        public int MaxDeliveryCount { get; set; } = 10;
 
-        public EntityStatus Status { get; set; }
+        public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        public string ForwardTo { get; set; }
+        public string ForwardTo { get; set; } = null;
 
-        public string ForwardDeadLetteredMessagesTo { get; set; }
+        public string ForwardDeadLetteredMessagesTo { get; set; } = null;
 
         static internal SubscriptionDescription ParseFromContent(string topicName, string xml)
         {
@@ -140,13 +140,13 @@ namespace Microsoft.Azure.ServiceBus.Management
                             new XElement(XName.Get("LockDuration", ManagementConstants.SbNs), XmlConvert.ToString(this.LockDuration)),
                             new XElement(XName.Get("RequiresSession", ManagementConstants.SbNs), XmlConvert.ToString(this.RequiresSession)),
                             this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementConstants.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
-                            this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementConstants.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null,
                             new XElement(XName.Get("DeadLetteringOnMessageExpiration", ManagementConstants.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnMessageExpiration)),
                             new XElement(XName.Get("DeadLetteringOnFilterEvaluationExceptions", ManagementConstants.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnFilterEvaluationExceptions)),
                             new XElement(XName.Get("MaxDeliveryCount", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxDeliveryCount)),
                             new XElement(XName.Get("Status", ManagementConstants.SbNs), this.Status.ToString()),
                             this.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementConstants.SbNs), this.ForwardTo) : null,
-                            this.ForwardDeadLetteredMessagesTo != null ? new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementConstants.SbNs), this.ForwardDeadLetteredMessagesTo) : null
+                            this.ForwardDeadLetteredMessagesTo != null ? new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementConstants.SbNs), this.ForwardDeadLetteredMessagesTo) : null,
+                            this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementConstants.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null
                         ))
                     ));
 
@@ -161,8 +161,8 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
                 && this.EnableDeadLetteringOnMessageExpiration == other.EnableDeadLetteringOnMessageExpiration
                 && this.EnableDeadLetteringOnFilterEvaluationExceptions == other.EnableDeadLetteringOnFilterEvaluationExceptions
-                && this.ForwardDeadLetteredMessagesTo.Equals(other.ForwardDeadLetteredMessagesTo, StringComparison.OrdinalIgnoreCase)
-                && this.ForwardTo.Equals(other.ForwardTo, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(this.ForwardDeadLetteredMessagesTo, other.ForwardDeadLetteredMessagesTo, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(this.ForwardTo, other.ForwardTo, StringComparison.OrdinalIgnoreCase)
                 && this.LockDuration.Equals(other.LockDuration)
                 && this.MaxDeliveryCount == other.MaxDeliveryCount
                 && this.RequiresSession.Equals(other.RequiresSession)
