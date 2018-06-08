@@ -93,7 +93,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 var name = xEntry.Element(XName.Get("title", ManagementConstants.AtomNs)).Value;
                 var qd = new QueueDescription(name);
 
-                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))
+                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))?
                     .Element(XName.Get("QueueDescription", ManagementConstants.SbNs));
 
                 if (qdXml == null)
@@ -147,7 +147,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
                 return qd;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is ServiceBusException))
             {
                 throw new ServiceBusException(false, ex);
             }

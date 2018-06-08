@@ -36,8 +36,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            // TODO error handling
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Topic was not found");
         }
 
         static internal IList<TopicRuntimeInfo> ParseCollectionFromContent(string xml)
@@ -59,7 +58,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Topic was not found");
         }
 
         static private TopicRuntimeInfo ParseFromEntryElement(XElement xEntry)
@@ -69,8 +68,13 @@ namespace Microsoft.Azure.ServiceBus.Management
                 var name = xEntry.Element(XName.Get("title", ManagementConstants.AtomNs)).Value;
                 var topicRuntimeInfo = new TopicRuntimeInfo(name);
 
-                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))
+                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))?
                     .Element(XName.Get("TopicDescription", ManagementConstants.SbNs));
+
+                if (qdXml == null)
+                {
+                    throw new MessagingEntityNotFoundException("Topic was not found");
+                }
 
                 foreach (var element in qdXml.Elements())
                 {
@@ -120,7 +124,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
                 return topicRuntimeInfo;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is ServiceBusException))
             {
                 throw new ServiceBusException(false, ex);
             }

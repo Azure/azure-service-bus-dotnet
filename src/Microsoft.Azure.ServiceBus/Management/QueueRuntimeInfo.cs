@@ -31,8 +31,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            // TODO error handling
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Queue was not found");
         }
 
         static internal IList<QueueRuntimeInfo> ParseCollectionFromContent(string xml)
@@ -54,7 +53,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Queue was not found");
         }
 
         static private QueueRuntimeInfo ParseFromEntryElement(XElement xEntry)
@@ -67,8 +66,13 @@ namespace Microsoft.Azure.ServiceBus.Management
                     Path = name
                 };
 
-                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))
+                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))?
                     .Element(XName.Get("QueueDescription", ManagementConstants.SbNs));
+
+                if (qdXml == null)
+                {
+                    throw new MessagingEntityNotFoundException("Queue was not found");
+                }
 
                 foreach (var element in qdXml.Elements())
                 {
@@ -118,7 +122,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
                 return qRuntime;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is ServiceBusException))
             {
                 throw new ServiceBusException(false, ex);
             }

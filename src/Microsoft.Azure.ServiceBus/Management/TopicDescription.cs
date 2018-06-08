@@ -79,7 +79,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 var name = xEntry.Element(XName.Get("title", ManagementConstants.AtomNs)).Value;
                 var topicDesc = new TopicDescription(name);
 
-                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))
+                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))?
                     .Element(XName.Get("TopicDescription", ManagementConstants.SbNs));
 
                 if (qdXml == null)
@@ -123,7 +123,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
                 return topicDesc;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is ServiceBusException))
             {
                 throw new ServiceBusException(false, ex);
             }
