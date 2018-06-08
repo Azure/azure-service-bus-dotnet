@@ -58,21 +58,28 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task DeleteQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
+            CheckValidQueueName(queueName);
             await DeleteEntity(queueName, cancellationToken);
         }
 
         public async Task DeleteTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
+            CheckValidTopicName(topicName);
             await DeleteEntity(topicName, cancellationToken);
         }
 
         public async Task DeleteSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
+            CheckValidTopicName(topicName);
+            CheckValidSubscriptionName(subscriptionName);
             await DeleteEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), cancellationToken);
         }
 
         public async Task DeleteRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
         {
+            CheckValidTopicName(topicName);
+            CheckValidSubscriptionName(subscriptionName);
+            CheckValidRuleName(ruleName);
             await DeleteEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", cancellationToken);
         }
 
@@ -96,26 +103,31 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<QueueDescription> GetQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
-            CheckValidEntityName(queueName, ManagementConstants.QueueNameMaximumLength, true, nameof(queueName));
+            CheckValidQueueName(queueName);
             var content = await GetEntity(queueName, false, cancellationToken);
             return QueueDescription.ParseFromContent(content);
         }
 
         public async Task<TopicDescription> GetTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
-            // TODO Input Validation, for other methods as well.
+            CheckValidTopicName(topicName);
             var content = await GetEntity(topicName, false, cancellationToken);
             return TopicDescription.ParseFromContent(content);
         }
 
         public async Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
+            CheckValidTopicName(topicName);
+            CheckValidSubscriptionName(subscriptionName);
             var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), false, cancellationToken);
             return SubscriptionDescription.ParseFromContent(topicName, content);
         }
 
         public async Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
         {
+            CheckValidTopicName(topicName);
+            CheckValidSubscriptionName(subscriptionName);
+            CheckValidRuleName(ruleName);
             var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", false, cancellationToken);
             return RuleDescription.ParseFromContent(content);
         }
@@ -126,18 +138,22 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<QueueRuntimeInfo> GetQueueRuntimeInfoAsync(string queueName, CancellationToken cancellationToken = default)
         {
+            CheckValidQueueName(queueName);
             var content = await GetEntity(queueName, true, cancellationToken);
             return QueueRuntimeInfo.ParseFromContent(content);
         }
 
         public async Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken = default)
         {
+            CheckValidTopicName(topicName);
             var content = await GetEntity(topicName, true, cancellationToken);
             return TopicRuntimeInfo.ParseFromContent(content);
         }
 
         public async Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
+            CheckValidTopicName(topicName);
+            CheckValidSubscriptionName(subscriptionName);
             var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), true, cancellationToken);
             return SubscriptionRuntimeInfo.ParseFromContent(topicName, content);
         }
@@ -161,12 +177,15 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
+            CheckValidTopicName(topicName);
             var content = await GetEntity($"{topicName}/Subscriptions", false, cancellationToken);
             return SubscriptionDescription.ParseCollectionFromContent(topicName, content);
         }
 
         public async Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
+            CheckValidTopicName(topicName);
+            CheckValidSubscriptionName(subscriptionName);
             var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules", false, cancellationToken);
             return RuleDescription.ParseCollectionFromContent(content);
         }
@@ -317,6 +336,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default)
         {
+            CheckValidQueueName(queueName);
+            
             try
             {
                 // TODO: Optimize by removing deserialization costs.
@@ -332,6 +353,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<bool> TopicExistsAsync(string topicName, CancellationToken cancellationToken = default)
         {
+            CheckValidTopicName(topicName);
+            
             try
             {
                 // TODO: Optimize by removing deserialization costs.
@@ -347,6 +370,9 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<bool> SubscriptionExistsAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
+            CheckValidTopicName(topicName);
+            CheckValidSubscriptionName(subscriptionName);
+
             try
             {
                 // TODO: Optimize by removing deserialization costs.
@@ -376,24 +402,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        private string EncodeToAtom(XElement objectToEncode)
-        {
-            XDocument doc = new XDocument(
-               new XElement(XName.Get("entry", ManagementConstants.AtomNs),
-                   new XElement(XName.Get("content", ManagementConstants.AtomNs),
-                   objectToEncode
-                   )));
-
-            return doc.ToString();
-        }
-
-        // TODO: Exception handling
         private async Task<HttpResponseMessage> SendHttpRequest(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var token = await GetToken(request.RequestUri);
             request.Headers.Add("Authorization", token);
             request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementConstants.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
-            // Tracking ID + CorrelationID
             HttpResponseMessage response;
             try
             {
@@ -488,7 +501,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        static string ParseDetailIfAvailable(string content)
+        private static string ParseDetailIfAvailable(string content)
         {
             if (string.IsNullOrWhiteSpace(content))
             {
@@ -512,7 +525,27 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        static void CheckValidEntityName(string entityName, int maxEntityNameLength, bool allowSeparator, string paramName)
+        internal static void CheckValidQueueName(string queueName, string paramName = "queueName")
+        {
+            CheckValidEntityName(queueName, ManagementConstants.QueueNameMaximumLength, true, paramName);
+        }
+
+        internal static void CheckValidTopicName(string topicName, string paramName = "topicName")
+        {
+            CheckValidEntityName(topicName, ManagementConstants.TopicNameMaximumLength, true, paramName);
+        }
+
+        internal static void CheckValidSubscriptionName(string subscriptionName, string paramName = "subscriptionName")
+        {
+            CheckValidEntityName(subscriptionName, ManagementConstants.SubscriptionNameMaximumLength, false, paramName);
+        }
+
+        internal static void CheckValidRuleName(string ruleName, string paramName = "ruleName")
+        {
+            CheckValidEntityName(ruleName, ManagementConstants.RuleNameMaximumLength, false, paramName);
+        }
+
+        private static void CheckValidEntityName(string entityName, int maxEntityNameLength, bool allowSeparator, string paramName)
         {
             if (string.IsNullOrWhiteSpace(entityName))
             {

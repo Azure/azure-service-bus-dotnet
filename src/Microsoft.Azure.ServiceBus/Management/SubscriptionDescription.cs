@@ -2,40 +2,140 @@
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
+using Microsoft.Azure.ServiceBus.Primitives;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
     public class SubscriptionDescription : IEquatable<SubscriptionDescription>
     {
+        string topicPath, subscriptionName;
+        TimeSpan lockDuration = TimeSpan.FromSeconds(60);
+        long maxSizeInGB = 1;
+        TimeSpan defaultMessageTimeToLive = TimeSpan.MaxValue;
+        TimeSpan autoDeleteOnIdle = TimeSpan.MaxValue;
+        TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(30);
+        int maxDeliveryCount = 10;
+        string forwardTo = null;
+        string forwardDeadLetteredMessagesTo = null;
+
         public SubscriptionDescription(string topicPath, string subscriptionName)
         {
             this.TopicPath = topicPath;
             this.SubscriptionName = subscriptionName;
         }
 
-        public TimeSpan LockDuration { get; set; } = TimeSpan.FromSeconds(60);
+        public TimeSpan LockDuration
+        {
+            get => this.lockDuration;
+            set
+            {
+                TimeoutHelper.ThrowIfNonPositiveArgument(value, nameof(LockDuration));
+                this.lockDuration = value;
+            }
+        }
 
         public bool RequiresSession { get; set; } = false;
 
-        public TimeSpan DefaultMessageTimeToLive { get; set; } = TimeSpan.MaxValue;
+        public TimeSpan DefaultMessageTimeToLive
+        {
+            get => this.defaultMessageTimeToLive;
+            set
+            {
+                if (value < ManagementConstants.MinimumAllowedTimeToLive || value > ManagementConstants.MaximumAllowedTimeToLive)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(DefaultMessageTimeToLive),
+                        $"The value must be between {ManagementConstants.MinimumAllowedTimeToLive} and {ManagementConstants.MaximumAllowedTimeToLive}");
+                }
 
-        public TimeSpan AutoDeleteOnIdle { get; set; } = TimeSpan.MaxValue;
+                this.defaultMessageTimeToLive = value;
+            }
+        }
+
+        public TimeSpan AutoDeleteOnIdle
+        {
+            get => this.autoDeleteOnIdle;
+            set
+            {
+                if (value < ManagementConstants.MinimumAllowedAutoDeleteOnIdle)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(AutoDeleteOnIdle),
+                        $"The value must be greater than {ManagementConstants.MinimumAllowedAutoDeleteOnIdle}");
+                }
+
+                this.autoDeleteOnIdle = value;
+            }
+        }
 
         public bool EnableDeadLetteringOnMessageExpiration { get; set; } = false;
 
         public bool EnableDeadLetteringOnFilterEvaluationExceptions { get; set; } = true;
 
-        public string TopicPath { get; set; }
+        public string TopicPath
+        {
+            get => this.topicPath;
+            set
+            {
+                ManagementClient.CheckValidTopicName(value, nameof(TopicPath));
+                this.topicPath = value;
+            }
+        }
 
-        public string SubscriptionName { get; set; }
+        public string SubscriptionName
+        {
+            get => this.subscriptionName;
+            set
+            {
+                ManagementClient.CheckValidSubscriptionName(value, nameof(SubscriptionName));
+                this.subscriptionName = value;
+            }
+        }
 
-        public int MaxDeliveryCount { get; set; } = 10;
+        public int MaxDeliveryCount
+        {
+            get => this.maxDeliveryCount;
+            set
+            {
+                if (value < ManagementConstants.MinAllowedMaxDeliveryCount)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(MaxDeliveryCount),
+                        $"The value must be greater than {ManagementConstants.MinAllowedMaxDeliveryCount}");
+                }
+
+                this.maxDeliveryCount = value;
+            }
+        }
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        public string ForwardTo { get; set; } = null;
+        public string ForwardTo
+        {
+            get => this.forwardTo;
+            set
+            {
+                ManagementClient.CheckValidQueueName(value, nameof(ForwardTo));
+                if (this.topicPath.Equals(value, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    throw new InvalidOperationException("Entity cannot have auto-forwarding policy to itself");
+                }
 
-        public string ForwardDeadLetteredMessagesTo { get; set; } = null;
+                this.forwardTo = value;
+            }
+        }
+
+        public string ForwardDeadLetteredMessagesTo
+        {
+            get => this.forwardDeadLetteredMessagesTo;
+            set
+            {
+                ManagementClient.CheckValidQueueName(value, nameof(ForwardDeadLetteredMessagesTo));
+                if (this.topicPath.Equals(value, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    throw new InvalidOperationException("Entity cannot have auto-forwarding policy to itself");
+                }
+
+                this.forwardDeadLetteredMessagesTo = value;
+            }
+        }
 
         static internal SubscriptionDescription ParseFromContent(string topicName, string xml)
         {
@@ -73,7 +173,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new MessagingEntityNotFoundException("Subscription was not found");
         }
 
-        // TODO: Authorization and messagecounts
+        // TODO: Authorization
         static private SubscriptionDescription ParseFromEntryElement(string topicName, XElement xEntry)
         {
             try
@@ -91,7 +191,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
                 foreach (var element in qdXml.Elements())
                 {
-                    // TODO: Alphabetical ordering
                     switch (element.Name.LocalName)
                     {
                         case "RequiresSession":

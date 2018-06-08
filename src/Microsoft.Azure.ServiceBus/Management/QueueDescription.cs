@@ -1,52 +1,170 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
+using Microsoft.Azure.ServiceBus.Primitives;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
+    // TODO: Input validation
     public class QueueDescription : IEquatable<QueueDescription>
     {
+        string path;
+        TimeSpan lockDuration = TimeSpan.FromSeconds(60);
+        long maxSizeInGB = 1;
+        TimeSpan defaultMessageTimeToLive = TimeSpan.MaxValue;
+        TimeSpan autoDeleteOnIdle = TimeSpan.MaxValue;
+        TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(30);
+        int maxDeliveryCount = 10;
+        string forwardTo = null;
+        string forwardDeadLetteredMessagesTo = null;
+
         public QueueDescription(string path)
         {
             this.Path = path;
         }
 
-        public string Path { get; set; }
+        public string Path
+        {
+            get => this.path;
+            set
+            {
+                ManagementClient.CheckValidQueueName(value, nameof(Path));
+                this.path = value;
+            }
+        }
 
-        public TimeSpan LockDuration { get; set; } = TimeSpan.FromSeconds(60);
+        public TimeSpan LockDuration
+        {
+            get => this.lockDuration;
+            set
+            {
+                TimeoutHelper.ThrowIfNonPositiveArgument(value, nameof(LockDuration));
+                this.lockDuration = value;
+            }
+        }
 
         /// <summary>
-        /// Supported values: 1024;2048;3072;4096;5120
+        /// Allowed values: 1-5
         /// </summary>
-        public long MaxSizeInMegabytes { get; set; } = 1024;
+        public long MaxSizeInGB
+        {
+            get => this.maxSizeInGB;
+            set
+            {
+                if (value < ManagementConstants.MinAllowedMaxEntitySizeInGB || value > ManagementConstants.MaxAllowedMaxEntitySizeInGB)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(MaxSizeInGB),
+                        $"The value must be between {ManagementConstants.MinAllowedMaxEntitySizeInGB} and {ManagementConstants.MaxAllowedMaxEntitySizeInGB}");
+                }
+
+                this.maxSizeInGB = value;
+            }
+        }
 
         public bool RequiresDuplicateDetection { get; set; } = false;
 
         public bool RequiresSession { get; set; } = false;
 
-        public TimeSpan DefaultMessageTimeToLive { get; set; } = TimeSpan.MaxValue;
+        public TimeSpan DefaultMessageTimeToLive
+        {
+            get => this.defaultMessageTimeToLive;
+            set
+            {
+                if (value < ManagementConstants.MinimumAllowedTimeToLive || value > ManagementConstants.MaximumAllowedTimeToLive)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(DefaultMessageTimeToLive),
+                        $"The value must be between {ManagementConstants.MinimumAllowedTimeToLive} and {ManagementConstants.MaximumAllowedTimeToLive}");
+                }
 
-        public TimeSpan AutoDeleteOnIdle { get; set; } = TimeSpan.MaxValue;
+                this.defaultMessageTimeToLive = value;
+            }
+        }
+
+        public TimeSpan AutoDeleteOnIdle
+        {
+            get => this.autoDeleteOnIdle;
+            set
+            {
+                if (value < ManagementConstants.MinimumAllowedAutoDeleteOnIdle)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(AutoDeleteOnIdle),
+                        $"The value must be greater than {ManagementConstants.MinimumAllowedAutoDeleteOnIdle}");
+                }
+
+                this.autoDeleteOnIdle = value;
+            }
+        }
 
         public bool EnableDeadLetteringOnMessageExpiration { get; set; } = false;
 
-        public TimeSpan DuplicateDetectionHistoryTimeWindow { get; set; } = TimeSpan.FromSeconds(30);
+        public TimeSpan DuplicateDetectionHistoryTimeWindow
+        {
+            get => this.duplicateDetectionHistoryTimeWindow;
+            set
+            {
+                if (value < ManagementConstants.MinimumDuplicateDetectionHistoryTimeWindow || value > ManagementConstants.MaximumDuplicateDetectionHistoryTimeWindow)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(DuplicateDetectionHistoryTimeWindow),
+                        $"The value must be between {ManagementConstants.MinimumDuplicateDetectionHistoryTimeWindow} and {ManagementConstants.MaximumDuplicateDetectionHistoryTimeWindow}");
+                }
 
-        public int MaxDeliveryCount { get; set; } = 10;
+                this.duplicateDetectionHistoryTimeWindow = value;
+            }
+        }
 
-        public AuthorizationRules AuthorizationRules { get; set; } = null;
+        public int MaxDeliveryCount
+        {
+            get => this.maxDeliveryCount;
+            set
+            {
+                if (value < ManagementConstants.MinAllowedMaxDeliveryCount)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(MaxDeliveryCount),
+                        $"The value must be greater than {ManagementConstants.MinAllowedMaxDeliveryCount}");
+                }
+
+                this.maxDeliveryCount = value;
+            }
+        }
+
+        public bool EnableBatchedOperations { get; set; } = true;
+
+        public AuthorizationRules AuthorizationRules { get; internal set; } = null;
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        public string ForwardTo { get; set; } = null;
+        public string ForwardTo
+        {
+            get => this.forwardTo;
+            set
+            {
+                ManagementClient.CheckValidQueueName(value, nameof(ForwardTo));
+                if (this.path.Equals(value, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    throw new InvalidOperationException("Entity cannot have auto-forwarding policy to itself");
+                }
 
-        public string ForwardDeadLetteredMessagesTo { get; set; } = null;
+                this.forwardTo = value;
+            }
+        }
+
+        public string ForwardDeadLetteredMessagesTo
+        {
+            get => this.forwardDeadLetteredMessagesTo;
+            set
+            {
+                ManagementClient.CheckValidQueueName(value, nameof(ForwardDeadLetteredMessagesTo));
+                if (this.path.Equals(value, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    throw new InvalidOperationException("Entity cannot have auto-forwarding policy to itself");
+                }
+
+                this.forwardDeadLetteredMessagesTo = value;
+            }
+        }
 
         public bool EnablePartitioning { get; set; } = false;
-
-        public bool EnableBatchedOperations { get; set; } = true;
 
         static internal QueueDescription ParseFromContent(string xml)
         {
@@ -107,7 +225,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     switch (element.Name.LocalName)
                     {
                         case "MaxSizeInMegabytes":
-                            qd.MaxSizeInMegabytes = long.Parse(element.Value);
+                            qd.MaxSizeInGB = long.Parse(element.Value) / 1024;
                             break;
                         case "RequiresDuplicateDetection":
                             qd.RequiresDuplicateDetection = bool.Parse(element.Value);
@@ -162,7 +280,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                         new XAttribute("type", "application/xml"),
                         new XElement(XName.Get("QueueDescription",ManagementConstants.SbNs),
                             new XElement(XName.Get("LockDuration", ManagementConstants.SbNs), XmlConvert.ToString(this.LockDuration)),
-                            new XElement(XName.Get("MaxSizeInMegabytes", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxSizeInMegabytes)),
+                            new XElement(XName.Get("MaxSizeInMegabytes", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxSizeInGB * 1024)),
                             new XElement(XName.Get("RequiresDuplicateDetection", ManagementConstants.SbNs), XmlConvert.ToString(this.RequiresDuplicateDetection)),
                             new XElement(XName.Get("RequiresSession", ManagementConstants.SbNs), XmlConvert.ToString(this.RequiresSession)),
                             this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementConstants.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
@@ -197,7 +315,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && string.Equals(this.ForwardTo, other.ForwardTo, StringComparison.OrdinalIgnoreCase)
                 && this.LockDuration.Equals(other.LockDuration)
                 && this.MaxDeliveryCount == other.MaxDeliveryCount
-                && this.MaxSizeInMegabytes == other.MaxSizeInMegabytes
+                && this.MaxSizeInGB == other.MaxSizeInGB
                 && this.RequiresDuplicateDetection.Equals(other.RequiresDuplicateDetection)
                 && this.RequiresSession.Equals(other.RequiresSession)
                 && this.Status.Equals(other.Status))

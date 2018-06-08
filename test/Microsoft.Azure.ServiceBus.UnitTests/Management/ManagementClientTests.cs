@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Azure.ServiceBus.Core;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 {
@@ -17,6 +18,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
     // Verify Runtime count
     // Get more than 100 queues - manual test.
     // entity name validation tests
+    // test with cancellation token
+    // test connection issues???
+    // forward to
     public class ManagementClientTests : IDisposable
     {
         internal string ConnectionString = TestUtility.NamespaceConnectionString;
@@ -46,7 +50,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 ForwardTo = null,
                 LockDuration = TimeSpan.FromSeconds(45),
                 MaxDeliveryCount = 8,
-                MaxSizeInMegabytes = 2048,
+                MaxSizeInGB = 2048,
                 RequiresDuplicateDetection = true,
                 RequiresSession = true
             };
@@ -384,13 +388,48 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             await client.DeleteTopicAsync(topicName);
         }
 
+        public static IEnumerable<object[]> TestData_EntityNameValidationTest
+            => new[] {
+                new object[] { "qq@", true },
+                new object[] { "qq/", true },
+                new object[] { "/qq", true },
+                new object[] { "qq\\", true },
+                new object[] { "q/q", false },
+                new object[] { "qq?", true },
+                new object[] { "qq#", true },
+            };
+
+
+        [Theory]
+        [MemberData(nameof(TestData_EntityNameValidationTest))]
+        [DisplayTestMethodName]
+        public void EntityNameValidationTest(string entityName, bool isPathSeparatorAllowed)
+        {
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    if (isPathSeparatorAllowed)
+                    {
+                        ManagementClient.CheckValidQueueName(entityName);
+                    }
+                    else
+                    {
+                        ManagementClient.CheckValidSubscriptionName(entityName);
+                    }
+                });
+        }
+
         [Fact]
         public async Task Test()
         {
-            var entity = new QueueDescription("sd");
+            var entity = new QueueDescription("sd")
+            {
+                MaxSizeInGB = 100
+            };
+
             try
             {
-                await client.GetQueueAsync("mytopic");
+                await client.CreateQueueAsync(entity);
             }
             catch (Exception e)
             {
