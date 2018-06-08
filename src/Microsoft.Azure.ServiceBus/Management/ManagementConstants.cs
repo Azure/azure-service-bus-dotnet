@@ -24,6 +24,17 @@ namespace Microsoft.Azure.ServiceBus.Management
         public static string ForbiddenInvalidOperationSubCode =
             string.Format(HttpErrorSubCodeFormatString, ExceptionErrorCodes.ForbiddenInvalidOperation.ToString("D"));
 
+        public static readonly TimeSpan MinimumAllowedTimeToLive = TimeSpan.FromSeconds(1);
+        public static readonly TimeSpan MaximumAllowedTimeToLive = TimeSpan.MaxValue;
+        public static readonly TimeSpan MinimumLockDuration = TimeSpan.FromSeconds(5);
+        public static readonly TimeSpan MaximumLockDuration = TimeSpan.FromMinutes(5);
+        public static readonly TimeSpan MinimumAllowedAutoDeleteOnIdle = TimeSpan.FromMinutes(5);
+        public static readonly TimeSpan MaximumDuplicateDetectionHistoryTimeWindow = TimeSpan.FromDays(7);
+        public static readonly TimeSpan MinimumDuplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(20);
+        public static readonly int MinAllowedMaxDeliveryCount = 1;
+        public static readonly int MinAllowedMaxEntitySizeInGB = 1;
+        public static readonly int MaxAllowedMaxEntitySizeInGB = 5;
+
         /// <summary>Specifies the error codes of the exceptions.</summary>
         public enum ExceptionErrorCodes
         {

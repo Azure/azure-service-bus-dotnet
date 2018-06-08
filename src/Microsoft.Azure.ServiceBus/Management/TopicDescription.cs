@@ -7,22 +7,88 @@ namespace Microsoft.Azure.ServiceBus.Management
 {
     public class TopicDescription : IEquatable<TopicDescription>
     {
+        string path;
+        long maxSizeInGB = 1;
+        TimeSpan defaultMessageTimeToLive = TimeSpan.MaxValue;
+        TimeSpan autoDeleteOnIdle = TimeSpan.MaxValue;
+        TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(30);
+
         public TopicDescription(string path)
         {
             this.Path = path;
         }
 
-        public TimeSpan DefaultMessageTimeToLive { get; set; } = TimeSpan.MaxValue;
+        public TimeSpan DefaultMessageTimeToLive
+        {
+            get => this.defaultMessageTimeToLive;
+            set
+            {
+                if (value < ManagementConstants.MinimumAllowedTimeToLive || value > ManagementConstants.MaximumAllowedTimeToLive)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(DefaultMessageTimeToLive),
+                        $"The value must be between {ManagementConstants.MinimumAllowedTimeToLive} and {ManagementConstants.MaximumAllowedTimeToLive}");
+                }
 
-        public TimeSpan AutoDeleteOnIdle { get; set; } = TimeSpan.MaxValue;
+                this.defaultMessageTimeToLive = value;
+            }
+        }
 
-        public long MaxSizeInMegabytes { get; set; } = 1024;
+        public TimeSpan AutoDeleteOnIdle
+        {
+            get => this.autoDeleteOnIdle;
+            set
+            {
+                if (value < ManagementConstants.MinimumAllowedAutoDeleteOnIdle)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(AutoDeleteOnIdle),
+                        $"The value must be greater than {ManagementConstants.MinimumAllowedAutoDeleteOnIdle}");
+                }
+
+                this.autoDeleteOnIdle = value;
+            }
+        }
+
+        public long MaxSizeInGB
+        {
+            get => this.maxSizeInGB;
+            set
+            {
+                if (value < ManagementConstants.MinAllowedMaxEntitySizeInGB || value > ManagementConstants.MaxAllowedMaxEntitySizeInGB)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(MaxSizeInGB),
+                        $"The value must be between {ManagementConstants.MinAllowedMaxEntitySizeInGB} and {ManagementConstants.MaxAllowedMaxEntitySizeInGB}");
+                }
+
+                this.maxSizeInGB = value;
+            }
+        }
 
         public bool RequiresDuplicateDetection { get; set; } = false;
 
-        public TimeSpan DuplicateDetectionHistoryTimeWindow { get; set; } = TimeSpan.FromSeconds(30);
+        public TimeSpan DuplicateDetectionHistoryTimeWindow
+        {
+            get => this.duplicateDetectionHistoryTimeWindow;
+            set
+            {
+                if (value < ManagementConstants.MinimumDuplicateDetectionHistoryTimeWindow || value > ManagementConstants.MaximumDuplicateDetectionHistoryTimeWindow)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(DuplicateDetectionHistoryTimeWindow),
+                        $"The value must be between {ManagementConstants.MinimumDuplicateDetectionHistoryTimeWindow} and {ManagementConstants.MaximumDuplicateDetectionHistoryTimeWindow}");
+                }
 
-        public string Path { get; set; }
+                this.duplicateDetectionHistoryTimeWindow = value;
+            }
+        }
+
+        public string Path
+        {
+            get => this.path;
+            set
+            {
+                ManagementClient.CheckValidTopicName(value, nameof(Path));
+                this.path = value;
+            }
+        }
 
         public AuthorizationRules Authorization { get; set; }
 
@@ -92,7 +158,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     switch (element.Name.LocalName)
                     {
                         case "MaxSizeInMegabytes":
-                            topicDesc.MaxSizeInMegabytes = long.Parse(element.Value);
+                            topicDesc.MaxSizeInGB = long.Parse(element.Value) / 1024;
                             break;
                         case "RequiresDuplicateDetection":
                             topicDesc.RequiresDuplicateDetection = bool.Parse(element.Value);
@@ -137,7 +203,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     new XElement(XName.Get("content", ManagementConstants.AtomNs),
                         new XAttribute("type", "application/xml"),
                         new XElement(XName.Get("TopicDescription", ManagementConstants.SbNs),
-                            new XElement(XName.Get("MaxSizeInMegabytes", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxSizeInMegabytes)),
+                            new XElement(XName.Get("MaxSizeInMegabytes", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxSizeInGB * 1024)),
                             new XElement(XName.Get("RequiresDuplicateDetection", ManagementConstants.SbNs), XmlConvert.ToString(this.RequiresDuplicateDetection)),
                             this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementConstants.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
                             this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementConstants.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null,
@@ -162,7 +228,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow)
                 && this.EnableBatchedOperations == other.EnableBatchedOperations
                 && this.EnablePartitioning == other.EnablePartitioning
-                && this.MaxSizeInMegabytes == other.MaxSizeInMegabytes
+                && this.MaxSizeInGB == other.MaxSizeInGB
                 && this.RequiresDuplicateDetection.Equals(other.RequiresDuplicateDetection)
                 && this.Status.Equals(other.Status))
             {
