@@ -184,7 +184,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 
         [Fact]
         [DisplayTestMethodName]
-        public async void GetQueueRuntimeInfoTest()
+        public async Task GetQueueRuntimeInfoTest()
         {
             var queueName = Guid.NewGuid().ToString("D").Substring(0, 8);
 
@@ -221,7 +221,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 
         [Fact]
         [DisplayTestMethodName]
-        public async void GetTopicAndSubscriptionRuntimeInfoTest()
+        public async Task GetTopicAndSubscriptionRuntimeInfoTest()
         {
             var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
             var td = await client.CreateTopicAsync(topicName);
@@ -277,13 +277,28 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         }
 
         [Fact]
-        public async void GetRule()
+        public async Task Test()
+        {
+            var entity = new QueueDescription("sd");
+            try
+            {
+                await client.UpdateQueueAsync(entity);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+
+        [Fact]
+        public async Task GetRule()
         {
             var rule = await client.GetRuleAsync("mytopic", "sub1", "rule1");
         }
 
         [Fact]
-        public async void GetRules()
+        public async Task GetRules()
         {
             var rules = await client.GetRulesAsync("mytopic", "sub1");
         }
