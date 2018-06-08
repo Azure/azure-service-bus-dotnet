@@ -37,8 +37,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            // TODO error handling
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Subscription was not found");
         }
 
         static internal IList<SubscriptionRuntimeInfo> ParseCollectionFromContent(string topicName, string xml)
@@ -60,7 +59,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            throw new NotImplementedException(xml);
+            throw new MessagingEntityNotFoundException("Subscription was not found");
         }
 
         static private SubscriptionRuntimeInfo ParseFromEntryElement(string topicName, XElement xEntry)
@@ -70,8 +69,13 @@ namespace Microsoft.Azure.ServiceBus.Management
                 var name = xEntry.Element(XName.Get("title", ManagementConstants.AtomNs)).Value;
                 var subscriptionRuntimeInfo = new SubscriptionRuntimeInfo(topicName, name);
 
-                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))
+                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))?
                     .Element(XName.Get("SubscriptionDescription", ManagementConstants.SbNs));
+
+                if (qdXml == null)
+                {
+                    throw new MessagingEntityNotFoundException("Subscription was not found");
+                }
 
                 foreach (var element in qdXml.Elements())
                 {
@@ -119,7 +123,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
                 return subscriptionRuntimeInfo;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is ServiceBusException))
             {
                 throw new ServiceBusException(false, ex);
             }

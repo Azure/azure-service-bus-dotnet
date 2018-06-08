@@ -277,12 +277,120 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
         }
 
         [Fact]
+        [DisplayTestMethodName]
+        public async Task MessagingEntityNotFoundExceptionTest()
+        {
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                async () =>
+                {
+                    await client.GetQueueAsync("NonExistingPath");
+                });
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                async () =>
+                {
+                    await client.GetSubscriptionAsync("NonExistingTopic", "NonExistingPath");
+                });
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                async () =>
+                {
+                    await client.UpdateQueueAsync(new QueueDescription("NonExistingPath"));
+                });
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                async () =>
+                {
+                    await client.UpdateTopicAsync(new TopicDescription("NonExistingPath"));
+                });
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                async () =>
+                {
+                    await client.UpdateSubscriptionAsync(new SubscriptionDescription("NonExistingTopic", "NonExistingPath"));
+                });
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                async () =>
+                {
+                    await client.DeleteQueueAsync("NonExistingPath");
+                });
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                async () =>
+                {
+                    await client.DeleteTopicAsync("NonExistingPath");
+                });
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                async () =>
+                {
+                    await client.DeleteSubscriptionAsync("NonExistingTopic", "NonExistingPath");
+                });
+
+            var queueName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            await client.CreateQueueAsync(queueName);
+            await client.CreateTopicAsync(topicName);
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                async () =>
+                {
+                    await client.GetQueueAsync(topicName);
+                });
+
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                async () =>
+                {
+                    await client.GetTopicAsync(queueName);
+                });
+
+            // Cleanup
+            await client.DeleteQueueAsync(queueName);
+            await client.DeleteTopicAsync(topicName);
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task MessagingEntityAlreadyExistsExceptionTest()
+        {
+            var queueName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            var subscriptionName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            await client.CreateQueueAsync(queueName);
+            await client.CreateTopicAsync(topicName);
+            await client.CreateSubscriptionAsync(topicName, subscriptionName);
+
+            await Assert.ThrowsAsync<MessagingEntityAlreadyExistsException>(
+                async () =>
+                {
+                    await client.CreateQueueAsync(queueName);
+                });
+
+            await Assert.ThrowsAsync<MessagingEntityAlreadyExistsException>(
+                async () =>
+                {
+                    await client.CreateTopicAsync(topicName);
+                });
+
+            await Assert.ThrowsAsync<MessagingEntityAlreadyExistsException>(
+                async () =>
+                {
+                    await client.CreateSubscriptionAsync(topicName, subscriptionName);
+                });
+
+            // Cleanup
+            await client.DeleteQueueAsync(queueName);
+            await client.DeleteTopicAsync(topicName);
+        }
+
+        [Fact]
         public async Task Test()
         {
             var entity = new QueueDescription("sd");
             try
             {
-                await client.UpdateQueueAsync(entity);
+                await client.GetQueueAsync("mytopic");
             }
             catch (Exception e)
             {

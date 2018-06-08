@@ -27,6 +27,11 @@ namespace Microsoft.Azure.ServiceBus
         internal static RuleAction ParseFromXElement(XElement xElement)
         {
             var attribute = xElement.Attribute(XName.Get("type", ManagementConstants.XmlSchemaNs));
+            if (attribute == null)
+            {
+                return null;
+            }
+
             switch (attribute.Value)
             {
                 case "SqlRuleAction":

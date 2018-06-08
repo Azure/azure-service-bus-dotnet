@@ -200,7 +200,7 @@ namespace Microsoft.Azure.ServiceBus
                 var name = xEntry.Element(XName.Get("title", ManagementConstants.AtomNs)).Value;
                 var ruleDescription = new RuleDescription();
 
-                var rdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))
+                var rdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))?
                     .Element(XName.Get("RuleDescription", ManagementConstants.SbNs));
 
                 if (rdXml == null)
@@ -229,7 +229,7 @@ namespace Microsoft.Azure.ServiceBus
 
                 return ruleDescription;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is ServiceBusException))
             {
                 throw new ServiceBusException(false, ex);
             }
