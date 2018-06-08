@@ -12,6 +12,8 @@ using Microsoft.Azure.ServiceBus.Primitives;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
+    // TODO: Document all exceptions that might be thrown
+    // TODO: Retry for transient
     public class ManagementClient : ClientEntity, IManagementClient
     {
         private bool ownsConnection;
@@ -432,36 +434,81 @@ namespace Microsoft.Azure.ServiceBus.Management
                 return;
             }
 
-            var content = await response.Content.ReadAsStringAsync() ?? string.Empty;
+            var exceptionMessage = await response.Content?.ReadAsStringAsync();
+            exceptionMessage = ParseDetailIfAvailable(exceptionMessage) ?? response.ReasonPhrase;
+
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                throw new UnauthorizedException(content);
+                throw new UnauthorizedException(exceptionMessage);
             }
             else if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.NoContent)
             {
-                throw new MessagingEntityNotFoundException(content);
+                throw new MessagingEntityNotFoundException(exceptionMessage);
             }
-            else if (response.StatusCode == HttpStatusCode.Conflict && response.RequestMessage.Method == HttpMethod.Put)
+            else if (response.StatusCode == HttpStatusCode.Conflict)
             {
-                // TODO: What if Update() is in conflict
-                throw new MessagingEntityAlreadyExistsException(content);
+                if (response.RequestMessage.Method.Equals(HttpMethod.Delete))
+                {
+                    throw new ServiceBusException(true, exceptionMessage);
+                }
+                if (response.RequestMessage.Method.Equals(HttpMethod.Put) && response.RequestMessage.Headers.IfMatch.Count > 0)
+                {
+                    // response.RequestMessage.Headers.IfMatch.Count > 0 is true for UpdateEntity scenario
+                    throw new ServiceBusException(true, exceptionMessage);
+                }
+                else if (exceptionMessage.Contains(ManagementConstants.ConflictOperationInProgressSubCode))
+                {
+                    throw new ServiceBusException(true, exceptionMessage);
+                }
+                else
+                {
+                    throw new MessagingEntityAlreadyExistsException(exceptionMessage);
+                }
             }
             else if (response.StatusCode == HttpStatusCode.Forbidden)
             {
-                throw new InvalidOperationException(content);
-                // TODO: Isolate cases when it needs to be QUotaExceededException
+                if (exceptionMessage.Contains(ManagementConstants.ForbiddenInvalidOperationSubCode))
+                {
+                    throw new InvalidOperationException(exceptionMessage);
+                }
+                
+                throw new QuotaExceededException(exceptionMessage);
             }
             else if (response.StatusCode == HttpStatusCode.BadRequest)
             {
-                throw new ArgumentException(content);
+                throw new ServiceBusException(false, new ArgumentException(exceptionMessage));
             }
             else if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
             {
-                throw new ServerBusyException(content);
+                throw new ServerBusyException(exceptionMessage);
             }
             else
             {
-                throw new ServiceBusException(true, content);
+                throw new ServiceBusException(true, exceptionMessage);
+            }
+        }
+
+        static string ParseDetailIfAvailable(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return null;
+            }
+
+            try
+            {
+                var errorContentXml = XElement.Parse(content);
+                var detail = errorContentXml.Element("Detail");
+                if (detail != null)
+                {
+                    return detail.Value;
+                }
+
+                return content;
+            }
+            catch (Exception)
+            {
+                return content;
             }
         }
 
