@@ -9,7 +9,8 @@ namespace Microsoft.Azure.ServiceBus
     public static class EntityNameHelper
     {
         private const string PathDelimiter = @"/";
-        private const string Subscriptions = "Subscriptions";
+        private const string SubscriptionsSubPath = "Subscriptions";
+        private const string RulesSubPath = "Rules";
         private const string SubQueuePrefix = "$";
         private const string DeadLetterQueueSuffix = "DeadLetterQueue";
         private const string DeadLetterQueueName = SubQueuePrefix + DeadLetterQueueSuffix;
@@ -40,9 +41,25 @@ namespace Microsoft.Azure.ServiceBus
         /// Formats the subscription path, based on the topic path and subscription name.
         /// </summary>
         /// <param name="topicPath">The name of the topic, including slashes.</param>
+        /// <param name="subscriptionName">The name of the subscription.</param>
         public static string FormatSubscriptionPath(string topicPath, string subscriptionName)
         {
-            return string.Concat(topicPath, PathDelimiter, Subscriptions, PathDelimiter, subscriptionName);
+            return string.Concat(topicPath, PathDelimiter, SubscriptionsSubPath, PathDelimiter, subscriptionName);
+        }
+
+        /// <summary>
+        /// Formats the rule path, based on the topic path and subscription name.
+        /// </summary>
+        /// <param name="topicPath">The name of the topic, including slashes.</param>
+        /// <param name="subscriptionName">The name of the subscription.</param>
+        /// <param name="ruleName">The name of the rule</param>
+        public static string FormatRulePath(string topicPath, string subscriptionName, string ruleName)
+        {
+            return string.Concat(
+                topicPath, PathDelimiter, 
+                SubscriptionsSubPath, PathDelimiter, 
+                subscriptionName, PathDelimiter, 
+                RulesSubPath, PathDelimiter, ruleName);
         }
 
         /// <summary>

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Xml.Linq;
 using Microsoft.Azure.ServiceBus.Management;
 
@@ -20,7 +21,7 @@ namespace Microsoft.Azure.ServiceBus
     /// <seealso cref="TrueFilter"/>
     /// <seealso cref="CorrelationFilter "/>
     /// <seealso cref="FalseFilter"/>
-    public abstract class Filter
+    public abstract class Filter : IEquatable<Filter>
     {
         internal Filter()
         {
@@ -50,5 +51,9 @@ namespace Microsoft.Azure.ServiceBus
                     return null;
             }
         }
+
+        public abstract bool Equals(Filter other);
+
+        internal abstract XElement Serialize();
     }
 }

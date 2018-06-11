@@ -3,9 +3,11 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Xml.Linq;
+    using Microsoft.Azure.ServiceBus.Management;
     using Primitives;
 
     /// <summary>
@@ -63,7 +65,40 @@ namespace Microsoft.Azure.ServiceBus
 
         internal new static RuleAction ParseFromXElement(XElement xElement)
         {
-            return null;
+            var expression = xElement.Element(XName.Get("SqlExpression", ManagementConstants.SbNs))?.Value;
+            if (string.IsNullOrWhiteSpace(expression))
+            {
+                return null;
+            }
+
+            var action = new SqlRuleAction(expression);
+            // TODO: populate parameters
+            return action;
+        }
+
+        // TODO: Parameters
+        internal override XElement Serialize()
+        {
+            XElement action = new XElement(
+                XName.Get("Action", ManagementConstants.SbNs),
+                new XAttribute(XName.Get("type", ManagementConstants.XmlSchemaNs), nameof(SqlRuleAction)),
+                new XElement(XName.Get("SqlExpression", ManagementConstants.SbNs), this.SqlExpression));
+
+            return action;
+        }
+
+        //TODO: parameters
+        public override bool Equals(RuleAction other)
+        {
+            if (other is SqlRuleAction sqlAction)
+            {
+                if (string.Equals(this.SqlExpression, sqlAction.SqlExpression, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

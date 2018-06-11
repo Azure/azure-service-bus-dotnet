@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Xml.Linq;
+using Microsoft.Azure.ServiceBus.Management;
+
 namespace Microsoft.Azure.ServiceBus
 {
     /// <summary>
@@ -25,6 +28,21 @@ namespace Microsoft.Azure.ServiceBus
         public override string ToString()
         {
             return "FalseFilter";
+        }
+
+        internal override XElement Serialize()
+        {
+            XElement filter = new XElement(
+                XName.Get("Filter", ManagementConstants.SbNs),
+                new XAttribute(XName.Get("type", ManagementConstants.XmlSchemaNs), nameof(FalseFilter)),
+                new XElement(XName.Get("SqlExpression", ManagementConstants.SbNs), this.SqlExpression));
+
+            return filter;
+        }
+
+        public override bool Equals(Filter other)
+        {
+            return other is FalseFilter;
         }
     }
 }

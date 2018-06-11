@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Xml.Linq;
@@ -79,6 +80,31 @@ namespace Microsoft.Azure.ServiceBus
             var filter = new SqlFilter(expression);
             // TODO: populate parameters
             return filter;
+        }
+
+        // TODO: Populate params
+        internal override XElement Serialize()
+        {
+            XElement filter = new XElement(
+                XName.Get("Filter", ManagementConstants.SbNs),
+                new XAttribute(XName.Get("type", ManagementConstants.XmlSchemaNs), nameof(SqlFilter)),
+                new XElement(XName.Get("SqlExpression", ManagementConstants.SbNs), this.SqlExpression));
+
+            return filter;
+        }
+
+        // TODO: params
+        public override bool Equals(Filter other)
+        {
+            if (other is SqlFilter sqlFilter)
+            {
+                if (string.Equals(this.SqlExpression, sqlFilter.SqlExpression, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

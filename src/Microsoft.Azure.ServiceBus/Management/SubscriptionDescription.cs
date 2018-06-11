@@ -10,7 +10,6 @@ namespace Microsoft.Azure.ServiceBus.Management
     {
         string topicPath, subscriptionName;
         TimeSpan lockDuration = TimeSpan.FromSeconds(60);
-        long maxSizeInGB = 1;
         TimeSpan defaultMessageTimeToLive = TimeSpan.MaxValue;
         TimeSpan autoDeleteOnIdle = TimeSpan.MaxValue;
         TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(30);
