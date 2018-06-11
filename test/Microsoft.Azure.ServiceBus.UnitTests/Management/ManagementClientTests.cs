@@ -485,37 +485,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 });
         }
 
-        [Fact]
-        public async Task Test()
-        {
-            var entity = new QueueDescription("sd")
-            {
-                MaxSizeInGB = 100
-            };
-
-            try
-            {
-                await client.CreateQueueAsync(entity);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-        }
-
-        [Fact]
-        public async Task GetRule()
-        {
-            var rule = await client.GetRuleAsync("mytopic", "sub1", "rule1");
-        }
-
-        [Fact]
-        public async Task GetRules()
-        {
-            var rules = await client.GetRulesAsync("mytopic", "sub1");
-        }
-
         public void Dispose()
         {
             client.CloseAsync().Wait();
