@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.ServiceBus.Core;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.Azure.ServiceBus.Primitives;
 
 namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 {
@@ -99,7 +100,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 DuplicateDetectionHistoryTimeWindow = TimeSpan.FromMinutes(1),
                 EnableBatchedOperations = true,
                 EnablePartitioning = false,
-                MaxSizeInMegabytes = 2048,
+                MaxSizeInGB = 2,
                 RequiresDuplicateDetection = true
             };
 
@@ -184,6 +185,71 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 
             exists = await client.SubscriptionExistsAsync(topicName, subscriptionName);
             Assert.False(exists);
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task BasicRulesCrudTest()
+        {
+            var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            var subscriptionName = Guid.NewGuid().ToString("D").Substring(0, 8);
+
+            await client.CreateTopicAsync(topicName);
+            await client.CreateSubscriptionAsync(topicName, subscriptionName);
+
+            var sqlFilter = new SqlFilter("1=1");
+            sqlFilter.Parameters.Add("stringParam", "string");
+            sqlFilter.Parameters.Add("intParam", (int)1);
+            sqlFilter.Parameters.Add("longParam", (long)12);
+            sqlFilter.Parameters.Add("dateParam", DateTime.UtcNow);
+            var rule1 = new RuleDescription()
+            {
+                Name = "rule1",
+                Filter = sqlFilter,
+                Action = new SqlRuleAction("SET a='b'")
+            };
+            await client.CreateRuleAsync(topicName, subscriptionName, rule1);
+
+            var correlationFilter = new CorrelationFilter()
+            {
+                ContentType = "contentType",
+                CorrelationId = "correlationId",
+                Label = "label",
+                MessageId = "messageId",
+                ReplyTo = "replyTo",
+                ReplyToSessionId = "replyToSessionId",
+                SessionId = "sessionId",
+                To = "to"
+            };
+            correlationFilter.Properties.Add("customKey", "customValue");
+            var rule2 = new RuleDescription()
+            {
+                Name = "rule2",
+                Filter = correlationFilter,
+                Action = null
+            };
+            await client.CreateRuleAsync(topicName, subscriptionName, rule2);
+
+            var rules = await client.GetRulesAsync(topicName, subscriptionName);
+            Assert.True(rules.Count == 3);
+            Assert.Equal(RuleDescription.DefaultRuleName, rules[0].Name);
+            Assert.Equal(rule1, rules[1]);
+            Assert.Equal(rule2, rules[2]);
+
+            ((CorrelationFilter)rule2.Filter).CorrelationId = "correlationIdModified";
+            var updatedRule2 = await client.UpdateRuleAsync(topicName, subscriptionName, rule2);
+            Assert.Equal(rule2, updatedRule2);
+
+            var defaultRule = await client.GetRuleAsync(topicName, subscriptionName, RuleDescription.DefaultRuleName);
+            Assert.NotNull(defaultRule);
+            await client.DeleteRuleAsync(topicName, subscriptionName, RuleDescription.DefaultRuleName);
+            await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
+                    async () =>
+                    {
+                        await client.GetRuleAsync(topicName, subscriptionName, RuleDescription.DefaultRuleName);
+                    });
+
+            await client.DeleteTopicAsync(topicName);
         }
 
         [Fact]

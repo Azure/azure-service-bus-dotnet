@@ -12,7 +12,7 @@ namespace Microsoft.Azure.ServiceBus
     /// <summary>
     /// Represents a description of a rule.
     /// </summary>
-    public sealed class RuleDescription
+    public sealed class RuleDescription : IEquatable<RuleDescription>
     {
         /// <summary>
         /// Gets the name of the default rule on the subscription.
@@ -30,7 +30,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Initializes a new instance of the <see cref="RuleDescription" /> class with default values.
         /// </summary>
         public RuleDescription()
-            : this(TrueFilter.Default)
+            : this(RuleDescription.DefaultRuleName, TrueFilter.Default)
         {
         }
 
@@ -46,6 +46,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Initializes a new instance of the <see cref="RuleDescription" /> class with the specified filter expression.
         /// </summary>
         /// <param name="filter">The filter expression used to match messages.</param>
+        [Obsolete("This constructor will be removed in next version, please use RuleDescription(string, Filter) instead.")]
         public RuleDescription(Filter filter)
         {
             if (filter == null)
@@ -118,9 +119,9 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         // TODO: Implement for AMQP
-        public DateTime CreatedAt
+        internal DateTime CreatedAt
         {
-            get; internal set;
+            get; set;
         }
 
         internal void ValidateDescriptionName()
@@ -233,6 +234,33 @@ namespace Microsoft.Azure.ServiceBus
             {
                 throw new ServiceBusException(false, ex);
             }
+        }
+
+        internal XDocument Serialize()
+        {
+            XDocument doc = new XDocument(
+                   new XElement(XName.Get("entry", ManagementConstants.AtomNs),
+                       new XElement(XName.Get("content", ManagementConstants.AtomNs),
+                           new XAttribute("type", "application/xml"),
+                           new XElement(
+                                XName.Get("RuleDescription", ManagementConstants.SbNs),
+                                this.Filter?.Serialize(),
+                                this.Action?.Serialize(),
+                                new XElement(XName.Get("Name", ManagementConstants.SbNs), this.Name)))));
+
+            return doc;
+        }
+
+        public bool Equals(RuleDescription other)
+        {
+            if (string.Equals(this.Name, other.Name, StringComparison.OrdinalIgnoreCase)
+                && (this.Filter == null || this.Filter.Equals(other.Filter))
+                && (this.Action == null || this.Action.Equals(other.Action)))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

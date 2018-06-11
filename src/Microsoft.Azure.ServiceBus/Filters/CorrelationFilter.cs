@@ -3,8 +3,12 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
     using System.Collections.Generic;
     using System.Text;
+    using System.Xml;
+    using System.Xml.Linq;
+    using Microsoft.Azure.ServiceBus.Management;
     using Primitives;
 
     /// <summary>
@@ -196,6 +200,94 @@ namespace Microsoft.Azure.ServiceBus
 
                 builder.AppendFormat("{0} = '{1}'", propertyName, value);
             }
+        }
+
+        internal new static Filter ParseFromXElement(XElement xElement)
+        {
+            var correlationFilter = new CorrelationFilter();
+            foreach (var element in xElement.Elements())
+            {
+                switch (element.Name.LocalName)
+                {
+                    case "CorrelationId":
+                        correlationFilter.CorrelationId = element.Value;
+                        break;
+                    case "MessageId":
+                        correlationFilter.MessageId = element.Value;
+                        break;
+                    case "To":
+                        correlationFilter.To = element.Value;
+                        break;
+                    case "ReplyTo":
+                        correlationFilter.ReplyTo = element.Value;
+                        break;
+                    case "Label":
+                        correlationFilter.Label = element.Value;
+                        break;
+                    case "SessionId":
+                        correlationFilter.SessionId = element.Value;
+                        break;
+                    case "ReplyToSessionId":
+                        correlationFilter.ReplyToSessionId = element.Value;
+                        break;
+                    case "ContentType":
+                        correlationFilter.ContentType = element.Value;
+                        break;
+                    case "Properties":
+                        // TODO
+                        break;
+                }
+            }
+
+            return correlationFilter;
+        }
+
+        internal override XElement Serialize()
+        {
+            XElement filter = new XElement(
+                XName.Get("Filter", ManagementConstants.SbNs),
+                new XAttribute(XName.Get("type", ManagementConstants.XmlSchemaNs), nameof(CorrelationFilter)),
+                string.IsNullOrWhiteSpace(this.CorrelationId) ? null : 
+                    new XElement(XName.Get("CorrelationId", ManagementConstants.SbNs), this.CorrelationId),
+                string.IsNullOrWhiteSpace(this.MessageId) ? null :
+                    new XElement(XName.Get("MessageId", ManagementConstants.SbNs), this.MessageId),
+                string.IsNullOrWhiteSpace(this.To) ? null :
+                    new XElement(XName.Get("To", ManagementConstants.SbNs), this.To),
+                string.IsNullOrWhiteSpace(this.ReplyTo) ? null :
+                    new XElement(XName.Get("ReplyTo", ManagementConstants.SbNs), this.ReplyTo),
+                string.IsNullOrWhiteSpace(this.Label) ? null :
+                    new XElement(XName.Get("Label", ManagementConstants.SbNs), this.Label),
+                string.IsNullOrWhiteSpace(this.SessionId) ? null :
+                    new XElement(XName.Get("SessionId", ManagementConstants.SbNs), this.SessionId),
+                string.IsNullOrWhiteSpace(this.ReplyToSessionId) ? null :
+                    new XElement(XName.Get("ReplyToSessionId", ManagementConstants.SbNs), this.ReplyToSessionId),
+                string.IsNullOrWhiteSpace(this.ContentType) ? null :
+                    new XElement(XName.Get("ContentType", ManagementConstants.SbNs), this.ContentType),
+                // todo
+                null
+                );
+
+            return filter;
+        }
+
+        public override bool Equals(Filter other)
+        {
+            if (other is CorrelationFilter correlationFilter)
+            {
+                if (string.Equals(this.CorrelationId, correlationFilter.CorrelationId, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(this.MessageId, correlationFilter.MessageId, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(this.To, correlationFilter.To, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(this.ReplyTo, correlationFilter.ReplyTo, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(this.Label, correlationFilter.Label, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(this.SessionId, correlationFilter.SessionId, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(this.ReplyToSessionId, correlationFilter.ReplyToSessionId, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(this.ContentType, correlationFilter.ContentType, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Xml.Linq;
 using Microsoft.Azure.ServiceBus.Management;
 
@@ -16,7 +17,7 @@ namespace Microsoft.Azure.ServiceBus
     /// for example assigning a group ID based on the correlation ID of a message.
     /// </remarks>
     /// <seealso cref="SqlRuleAction"/>
-    public abstract class RuleAction
+    public abstract class RuleAction : IEquatable<RuleAction>
     {
         internal RuleAction()
         {
@@ -42,5 +43,9 @@ namespace Microsoft.Azure.ServiceBus
                     return null;
             }
         }
+
+        public abstract bool Equals(RuleAction other);
+
+        internal abstract XElement Serialize();
     }
 }

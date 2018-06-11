@@ -260,10 +260,17 @@ namespace Microsoft.Azure.ServiceBus.Management
             return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content);
         }
 
-        // TODO
-        public Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
+        public async Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            ManagementClient.CheckValidTopicName(topicName);
+            ManagementClient.CheckValidSubscriptionName(topicName);
+            var atomRequest = ruleDescription.Serialize().ToString();
+            var content = await PutEntity(
+                EntityNameHelper.FormatRulePath(topicName, subscriptionName, ruleDescription.Name),
+                atomRequest,
+                false,
+                cancellationToken);
+            return RuleDescription.ParseFromContent(content);
         }
 
         #endregion CreateEntity
@@ -293,6 +300,18 @@ namespace Microsoft.Azure.ServiceBus.Management
                 true,
                 cancellationToken);
             return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content);
+        }
+
+        public async Task<RuleDescription> UpdateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
+        {
+            ManagementClient.CheckValidRuleName(ruleDescription.Name);
+            var atomRequest = ruleDescription.Serialize().ToString();
+            var content = await PutEntity(
+                EntityNameHelper.FormatRulePath(topicName, subscriptionName, ruleDescription.Name),
+                atomRequest,
+                true,
+                cancellationToken);
+            return RuleDescription.ParseFromContent(content);
         }
 
         private async Task<string> PutEntity(string path, string requestBody, bool isUpdate, CancellationToken cancellationToken)
