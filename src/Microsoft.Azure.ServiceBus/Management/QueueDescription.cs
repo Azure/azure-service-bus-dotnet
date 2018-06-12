@@ -6,7 +6,6 @@ using Microsoft.Azure.ServiceBus.Primitives;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
-    // TODO: Input validation
     public class QueueDescription : IEquatable<QueueDescription>
     {
         string path;
@@ -52,11 +51,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.maxSizeInGB;
             set
             {
-                if (value < ManagementConstants.MinAllowedMaxEntitySizeInGB || value > ManagementConstants.MaxAllowedMaxEntitySizeInGB)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(MaxSizeInGB),
-                        $"The value must be between {ManagementConstants.MinAllowedMaxEntitySizeInGB} and {ManagementConstants.MaxAllowedMaxEntitySizeInGB}");
-                }
+                //if (value < ManagementConstants.MinAllowedMaxEntitySizeInGB || value > ManagementConstants.MaxAllowedMaxEntitySizeInGB)
+                //{
+                //    throw new ArgumentOutOfRangeException(nameof(MaxSizeInGB),
+                //        $"The value must be between {ManagementConstants.MinAllowedMaxEntitySizeInGB} and {ManagementConstants.MaxAllowedMaxEntitySizeInGB}");
+                //}
 
                 this.maxSizeInGB = value;
             }
@@ -260,6 +259,18 @@ namespace Microsoft.Azure.ServiceBus.Management
                         case "EnablePartitioning":
                             qd.EnablePartitioning = bool.Parse(element.Value);
                             break;
+                        case "ForwardTo":
+                            if (!string.IsNullOrWhiteSpace(element.Value))
+                            {
+                                qd.ForwardTo = element.Value;
+                            }
+                            break;
+                        case "ForwardDeadLetteredMessagesTo":
+                            if (!string.IsNullOrWhiteSpace(element.Value))
+                            {
+                                qd.ForwardDeadLetteredMessagesTo = element.Value;
+                            }
+                            break;
                     }
                 }
 
@@ -269,6 +280,35 @@ namespace Microsoft.Azure.ServiceBus.Management
             {
                 throw new ServiceBusException(false, ex);
             }
+        }
+
+        internal void NormalizeDescription(string baseAddress)
+        {
+            if (!string.IsNullOrWhiteSpace(this.ForwardTo))
+            {
+                this.ForwardTo = NormalizeForwardToAddress(this.ForwardTo, baseAddress);
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.ForwardDeadLetteredMessagesTo))
+            {
+                this.ForwardDeadLetteredMessagesTo = NormalizeForwardToAddress(this.ForwardDeadLetteredMessagesTo, baseAddress);
+            }
+        }
+
+        private static string NormalizeForwardToAddress(string forwardTo, string baseAddress)
+        {
+            Uri forwardToUri;
+            if (!Uri.TryCreate(forwardTo, UriKind.Absolute, out forwardToUri))
+            {
+                if (!baseAddress.EndsWith("/", StringComparison.Ordinal))
+                {
+                    baseAddress += "/";
+                }
+
+                forwardToUri = new Uri(new Uri(baseAddress), forwardTo);
+            }
+
+            return forwardToUri.AbsoluteUri;
         }
 
         // TODO: Authorization rules

@@ -136,6 +136,35 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        internal void NormalizeDescription(string baseAddress)
+        {
+            if (!string.IsNullOrWhiteSpace(this.ForwardTo))
+            {
+                this.ForwardTo = NormalizeForwardToAddress(this.ForwardTo, baseAddress);
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.ForwardDeadLetteredMessagesTo))
+            {
+                this.ForwardDeadLetteredMessagesTo = NormalizeForwardToAddress(this.ForwardDeadLetteredMessagesTo, baseAddress);
+            }
+        }
+
+        private static string NormalizeForwardToAddress(string forwardTo, string baseAddress)
+        {
+            Uri forwardToUri;
+            if (!Uri.TryCreate(forwardTo, UriKind.Absolute, out forwardToUri))
+            {
+                if (!baseAddress.EndsWith("/", StringComparison.Ordinal))
+                {
+                    baseAddress += "/";
+                }
+
+                forwardToUri = new Uri(new Uri(baseAddress), forwardTo);
+            }
+
+            return forwardToUri.AbsoluteUri;
+        }
+
         static internal SubscriptionDescription ParseFromContent(string topicName, string xml)
         {
             var xDoc = XElement.Parse(xml);
@@ -215,6 +244,18 @@ namespace Microsoft.Azure.ServiceBus.Management
                             break;
                         case "AutoDeleteOnIdle":
                             subscriptionDesc.AutoDeleteOnIdle = XmlConvert.ToTimeSpan(element.Value);
+                            break;
+                        case "ForwardTo":
+                            if (!string.IsNullOrWhiteSpace(element.Value))
+                            {
+                                subscriptionDesc.ForwardTo = element.Value;
+                            }
+                            break;
+                        case "ForwardDeadLetteredMessagesTo":
+                            if (!string.IsNullOrWhiteSpace(element.Value))
+                            {
+                                subscriptionDesc.ForwardDeadLetteredMessagesTo = element.Value;
+                            }
                             break;
                     }
                 }

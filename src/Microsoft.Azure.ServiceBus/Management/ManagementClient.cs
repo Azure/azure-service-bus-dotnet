@@ -226,8 +226,15 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
         {
+            queueDescription.NormalizeDescription(this.csBuilder.Endpoint);
             var atomRequest = queueDescription.Serialize().ToString();
-            var content = await PutEntity(queueDescription.Path, atomRequest, false, cancellationToken);
+            var content = await PutEntity(
+                queueDescription.Path, 
+                atomRequest, 
+                false, 
+                queueDescription.ForwardTo, 
+                queueDescription.ForwardDeadLetteredMessagesTo, 
+                cancellationToken);
             return QueueDescription.ParseFromContent(content);
         }
 
@@ -239,7 +246,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
         {
             var atomRequest = topicDescription.Serialize().ToString();
-            var content = await PutEntity(topicDescription.Path, atomRequest, false, cancellationToken);
+            var content = await PutEntity(topicDescription.Path, atomRequest, false, null, null, cancellationToken);
             return TopicDescription.ParseFromContent(content);
         }
 
@@ -251,11 +258,14 @@ namespace Microsoft.Azure.ServiceBus.Management
         // TODO: Expose CreateSubscriptionWithRule()
         public async Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
         {
+            subscriptionDescription.NormalizeDescription(this.csBuilder.Endpoint);
             var atomRequest = subscriptionDescription.Serialize().ToString();
             var content = await PutEntity(
                 EntityNameHelper.FormatSubscriptionPath(subscriptionDescription.TopicPath, subscriptionDescription.SubscriptionName),
                 atomRequest,
                 false,
+                subscriptionDescription.ForwardTo,
+                subscriptionDescription.ForwardDeadLetteredMessagesTo,
                 cancellationToken);
             return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content);
         }
@@ -269,6 +279,8 @@ namespace Microsoft.Azure.ServiceBus.Management
                 EntityNameHelper.FormatRulePath(topicName, subscriptionName, ruleDescription.Name),
                 atomRequest,
                 false,
+                null, 
+                null,
                 cancellationToken);
             return RuleDescription.ParseFromContent(content);
         }
@@ -279,25 +291,35 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
         {
+            queueDescription.NormalizeDescription(this.csBuilder.Endpoint);
             var atomRequest = queueDescription.Serialize().ToString();
-            var content = await PutEntity(queueDescription.Path, atomRequest, true, cancellationToken);
+            var content = await PutEntity(
+                queueDescription.Path, 
+                atomRequest, 
+                true, 
+                queueDescription.ForwardTo,
+                queueDescription.ForwardDeadLetteredMessagesTo, 
+                cancellationToken);
             return QueueDescription.ParseFromContent(content);
         }
 
         public async Task<TopicDescription> UpdateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
         {
             var atomRequest = topicDescription.Serialize().ToString();
-            var content = await PutEntity(topicDescription.Path, atomRequest, true, cancellationToken);
+            var content = await PutEntity(topicDescription.Path, atomRequest, true, null, null, cancellationToken);
             return TopicDescription.ParseFromContent(content);
         }
 
         public async Task<SubscriptionDescription> UpdateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
         {
+            subscriptionDescription.NormalizeDescription(this.csBuilder.Endpoint);
             var atomRequest = subscriptionDescription.Serialize().ToString();
             var content = await PutEntity(
                 EntityNameHelper.FormatSubscriptionPath(subscriptionDescription.TopicPath, subscriptionDescription.SubscriptionName),
                 atomRequest,
                 true,
+                subscriptionDescription.ForwardTo,
+                subscriptionDescription.ForwardDeadLetteredMessagesTo,
                 cancellationToken);
             return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content);
         }
@@ -310,11 +332,12 @@ namespace Microsoft.Azure.ServiceBus.Management
                 EntityNameHelper.FormatRulePath(topicName, subscriptionName, ruleDescription.Name),
                 atomRequest,
                 true,
+                null, null,
                 cancellationToken);
             return RuleDescription.ParseFromContent(content);
         }
 
-        private async Task<string> PutEntity(string path, string requestBody, bool isUpdate, CancellationToken cancellationToken)
+        private async Task<string> PutEntity(string path, string requestBody, bool isUpdate, string forwardTo, string fwdDeadLetterTo, CancellationToken cancellationToken)
         {
             var uri = new UriBuilder(this.csBuilder.Endpoint)
             {
@@ -334,6 +357,18 @@ namespace Microsoft.Azure.ServiceBus.Management
             if (isUpdate)
             {
                 request.Headers.Add("If-Match", "*"); 
+            }
+
+            if (!string.IsNullOrWhiteSpace(forwardTo))
+            {
+                var token = await GetToken(forwardTo);
+                request.Headers.Add(ManagementConstants.ServiceBusSupplementartyAuthorizationHeaderName, token);
+            }
+
+            if (!string.IsNullOrWhiteSpace(fwdDeadLetterTo))
+            {
+                var token = await GetToken(fwdDeadLetterTo);
+                request.Headers.Add(ManagementConstants.ServiceBusDlqSupplementaryAuthorizationHeaderName, token);
             }
 
             var response = await SendHttpRequest(request, cancellationToken);
@@ -442,9 +477,14 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         // TODO: Operation timeout as token timeout??? :O
         // TODO: token caching?
-        private async Task<string> GetToken(Uri requestUri)
+        private Task<string> GetToken(Uri requestUri)
         {
-            var token = await this.ServiceBusConnection.TokenProvider.GetTokenAsync(requestUri.GetLeftPart(UriPartial.Path), this.ServiceBusConnection.OperationTimeout);
+            return this.GetToken(requestUri.GetLeftPart(UriPartial.Path));
+        }
+
+        private async Task<string> GetToken(string requestUri)
+        {
+            var token = await this.ServiceBusConnection.TokenProvider.GetTokenAsync(requestUri, this.ServiceBusConnection.OperationTimeout);
             return token.TokenValue;
         }
 
