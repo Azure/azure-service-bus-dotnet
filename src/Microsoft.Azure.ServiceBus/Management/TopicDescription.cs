@@ -53,11 +53,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.maxSizeInGB;
             set
             {
-                if (value < ManagementConstants.MinAllowedMaxEntitySizeInGB || value > ManagementConstants.MaxAllowedMaxEntitySizeInGB)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(MaxSizeInGB),
-                        $"The value must be between {ManagementConstants.MinAllowedMaxEntitySizeInGB} and {ManagementConstants.MaxAllowedMaxEntitySizeInGB}");
-                }
+                //if (value < ManagementConstants.MinAllowedMaxEntitySizeInGB || value > ManagementConstants.MaxAllowedMaxEntitySizeInGB)
+                //{
+                //    throw new ArgumentOutOfRangeException(nameof(MaxSizeInGB),
+                //        $"The value must be between {ManagementConstants.MinAllowedMaxEntitySizeInGB} and {ManagementConstants.MaxAllowedMaxEntitySizeInGB}");
+                //}
 
                 this.maxSizeInGB = value;
             }

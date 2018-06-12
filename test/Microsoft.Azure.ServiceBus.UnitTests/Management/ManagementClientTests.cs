@@ -10,22 +10,16 @@ using Microsoft.Azure.ServiceBus.Primitives;
 namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 {
     // TODO
-    // Tests with XML encoded letters in queue name etc.
-    // Negative scenarios
-    // Test with mix and match default values and set values.
     // What if default value in service is different from client.
     // Update non-updatable property
-    // QuotaExceededException
-    // Verify Runtime count
     // Get more than 100 queues - manual test.
-    // entity name validation tests
     // test with cancellation token
     // test connection issues???
     // forward to
     public class ManagementClientTests : IDisposable
     {
-        internal string ConnectionString = TestUtility.NamespaceConnectionString;
-        //internal string ConnectionString = "Endpoint=sb://contoso.servicebus.onebox.windows-int.net/;SharedAccessKeyName=DefaultNamespaceSasAllKeyName;SharedAccessKey=8864/auVd3qDC75iTjBL1GJ4D2oXC6bIttRd0jzDZ+g=";
+        //internal string ConnectionString = TestUtility.NamespaceConnectionString;
+        internal string ConnectionString = "Endpoint=sb://contoso.servicebus.onebox.windows-int.net/;SharedAccessKeyName=DefaultNamespaceSasAllKeyName;SharedAccessKey=8864/auVd3qDC75iTjBL1GJ4D2oXC6bIttRd0jzDZ+g=";
         ManagementClient client;
 
         public ManagementClientTests()
@@ -464,8 +458,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 new object[] { "qq?", true },
                 new object[] { "qq#", true },
             };
-
-
         [Theory]
         [MemberData(nameof(TestData_EntityNameValidationTest))]
         [DisplayTestMethodName]
@@ -483,6 +475,49 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                         ManagementClient.CheckValidSubscriptionName(entityName);
                     }
                 });
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task ForwardingEntitySetupTest()
+        {
+            // queueName --Fwd to--> destinationName --fwd dlq to--> dqlDestinationName
+            var queueName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            var destinationName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            var dlqDestinationName = Guid.NewGuid().ToString("D").Substring(0, 8);
+
+            var dlqDestinationQ = await client.CreateQueueAsync(dlqDestinationName);
+            var destinationQ = await client.CreateQueueAsync(
+                new QueueDescription(destinationName)
+                {
+                    ForwardDeadLetteredMessagesTo = dlqDestinationName
+                });
+            
+            var qd = new QueueDescription(queueName)
+            {
+                ForwardTo = destinationName                
+            };
+            var baseQ = await client.CreateQueueAsync(qd);
+
+            var sender = new MessageSender(this.ConnectionString, queueName);
+            await sender.SendAsync(new Message() { MessageId = "mid" }); 
+
+            var receiver = new MessageReceiver(this.ConnectionString, destinationName);
+            var msg = await receiver.ReceiveAsync();
+            Assert.NotNull(msg);
+            Assert.Equal("mid", msg.MessageId);
+            await receiver.DeadLetterAsync(msg.SystemProperties.LockToken);
+            await receiver.CloseAsync();
+
+            receiver = new MessageReceiver(this.ConnectionString, dlqDestinationName);
+            msg = await receiver.ReceiveAsync();
+            Assert.NotNull(msg);
+            Assert.Equal("mid", msg.MessageId);
+            await receiver.CompleteAsync(msg.SystemProperties.LockToken);
+            await receiver.CloseAsync();
+
+            await client.DeleteQueueAsync(queueName);
+            await client.DeleteQueueAsync(destinationName);
         }
 
         public void Dispose()
