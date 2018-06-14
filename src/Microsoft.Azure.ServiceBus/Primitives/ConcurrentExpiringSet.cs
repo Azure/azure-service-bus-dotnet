@@ -12,6 +12,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
         readonly ConcurrentDictionary<TKey, DateTime> dictionary;
         readonly object cleanupSynObject = new object();
         bool cleanupScheduled;
+        static TimeSpan delayBetweenCleanups = TimeSpan.FromSeconds(30);
 
         public ConcurrentExpiringSet()
         {
@@ -45,7 +46,7 @@ namespace Microsoft.Azure.ServiceBus.Primitives
 
         async Task CollectExpiredEntries()
         {
-            await Task.Delay(TimeSpan.FromSeconds(30));
+            await Task.Delay(delayBetweenCleanups);
 
             lock (this.cleanupSynObject)
             {
