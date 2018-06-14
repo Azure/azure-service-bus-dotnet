@@ -1082,8 +1082,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                         this.OperationTimeout,
                         null);
 
-                ReceivingAmqpLink receiveLink;
-                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out var receiveLink))
                 {
                     amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
                 }
@@ -1139,8 +1138,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             try
             {
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.ReceiveBySequenceNumberOperation, this.OperationTimeout, null);
-                ReceivingAmqpLink receiveLink;
-                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out var receiveLink))
                 {
                     amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
                 }
@@ -1237,8 +1236,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 // Create an AmqpRequest Message to renew  lock
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewLockOperation, this.OperationTimeout, null);
-                ReceivingAmqpLink receiveLink;
-                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out var receiveLink))
                 {
                     amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
                 }
@@ -1437,8 +1436,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 // Create an AmqpRequest Message to update disposition
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.UpdateDispositionOperation, this.OperationTimeout, null);
-                ReceivingAmqpLink receiveLink;
-                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out var receiveLink))
                 {
                     amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
                 }
