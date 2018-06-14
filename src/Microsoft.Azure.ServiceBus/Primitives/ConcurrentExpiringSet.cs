@@ -40,11 +40,11 @@ namespace Microsoft.Azure.ServiceBus.Primitives
                 }
 
                 this.cleanupScheduled = true;
-                Task.Run(async () => await this.CollectExpiredEntries().ConfigureAwait(false));
+                Task.Run(async () => await this.CollectExpiredEntriesAsync().ConfigureAwait(false));
             }
         }
 
-        async Task CollectExpiredEntries()
+        async Task CollectExpiredEntriesAsync()
         {
             await Task.Delay(delayBetweenCleanups);
 
