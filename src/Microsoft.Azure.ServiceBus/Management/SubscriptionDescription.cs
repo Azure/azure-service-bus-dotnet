@@ -111,6 +111,12 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.forwardTo;
             set
             {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    this.forwardTo = value;
+                    return;
+                }
+
                 ManagementClient.CheckValidQueueName(value, nameof(ForwardTo));
                 if (this.topicPath.Equals(value, StringComparison.CurrentCultureIgnoreCase))
                 {
@@ -126,6 +132,12 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.forwardDeadLetteredMessagesTo;
             set
             {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    this.forwardDeadLetteredMessagesTo = value;
+                    return;
+                }
+
                 ManagementClient.CheckValidQueueName(value, nameof(ForwardDeadLetteredMessagesTo));
                 if (this.topicPath.Equals(value, StringComparison.CurrentCultureIgnoreCase))
                 {

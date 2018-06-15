@@ -137,7 +137,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.forwardTo;
             set
             {
-                if (value == null)
+                if (string.IsNullOrWhiteSpace(value))
                 {
                     this.forwardTo = value;
                     return;
@@ -158,7 +158,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.forwardDeadLetteredMessagesTo;
             set
             {
-                if (value == null)
+                if (string.IsNullOrWhiteSpace(value))
                 {
                     this.forwardDeadLetteredMessagesTo = value;
                     return;

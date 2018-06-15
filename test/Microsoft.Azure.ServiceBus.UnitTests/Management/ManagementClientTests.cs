@@ -44,7 +44,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 ForwardTo = null,
                 LockDuration = TimeSpan.FromSeconds(45),
                 MaxDeliveryCount = 8,
-                MaxSizeInMB = 2045,
+                MaxSizeInMB = 2048,
                 RequiresDuplicateDetection = true,
                 RequiresSession = true
             };
