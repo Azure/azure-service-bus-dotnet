@@ -48,7 +48,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        public long MaxSizeInGB { get; set; } = 1;
+        public long MaxSizeInMB { get; set; } = 1024;
 
         public bool RequiresDuplicateDetection { get; set; } = false;
 
@@ -159,7 +159,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     switch (element.Name.LocalName)
                     {
                         case "MaxSizeInMegabytes":
-                            topicDesc.MaxSizeInGB = long.Parse(element.Value) / 1024;
+                            topicDesc.MaxSizeInMB = long.Parse(element.Value);
                             break;
                         case "RequiresDuplicateDetection":
                             topicDesc.RequiresDuplicateDetection = bool.Parse(element.Value);
@@ -206,7 +206,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     new XElement(XName.Get("content", ManagementConstants.AtomNs),
                         new XAttribute("type", "application/xml"),
                         new XElement(XName.Get("TopicDescription", ManagementConstants.SbNs),
-                            new XElement(XName.Get("MaxSizeInMegabytes", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxSizeInGB * 1024)),
+                            new XElement(XName.Get("MaxSizeInMegabytes", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxSizeInMB)),
                             new XElement(XName.Get("RequiresDuplicateDetection", ManagementConstants.SbNs), XmlConvert.ToString(this.RequiresDuplicateDetection)),
                             this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementConstants.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
                             this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementConstants.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null,
@@ -232,7 +232,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow)
                 && this.EnableBatchedOperations == other.EnableBatchedOperations
                 && this.EnablePartitioning == other.EnablePartitioning
-                && this.MaxSizeInGB == other.MaxSizeInGB
+                && this.MaxSizeInMB == other.MaxSizeInMB
                 && this.RequiresDuplicateDetection.Equals(other.RequiresDuplicateDetection)
                 && this.Status.Equals(other.Status)
                 && (this.authorizationRules != null && other.authorizationRules != null

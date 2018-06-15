@@ -34,8 +34,6 @@ namespace Microsoft.Azure.ServiceBus.Management
         public static readonly TimeSpan MaximumDuplicateDetectionHistoryTimeWindow = TimeSpan.FromDays(7);
         public static readonly TimeSpan MinimumDuplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(20);
         public static readonly int MinAllowedMaxDeliveryCount = 1;
-        public static readonly int MinAllowedMaxEntitySizeInGB = 1;
-        public static readonly int MaxAllowedMaxEntitySizeInGB = 5;
 
         // Authorization constants
         public static readonly int SupportedClaimsCount = 3;

@@ -44,7 +44,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 ForwardTo = null,
                 LockDuration = TimeSpan.FromSeconds(45),
                 MaxDeliveryCount = 8,
-                MaxSizeInGB = 2,
+                MaxSizeInMB = 2045,
                 RequiresDuplicateDetection = true,
                 RequiresSession = true
             };
@@ -101,7 +101,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 DuplicateDetectionHistoryTimeWindow = TimeSpan.FromMinutes(1),
                 EnableBatchedOperations = true,
                 EnablePartitioning = false,
-                MaxSizeInGB = 2,
+                MaxSizeInMB = 2048,
                 RequiresDuplicateDetection = true
             };
 
