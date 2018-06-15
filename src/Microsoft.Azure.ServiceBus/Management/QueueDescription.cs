@@ -10,13 +10,13 @@ namespace Microsoft.Azure.ServiceBus.Management
     {
         string path;
         TimeSpan lockDuration = TimeSpan.FromSeconds(60);
-        long maxSizeInGB = 1;
         TimeSpan defaultMessageTimeToLive = TimeSpan.MaxValue;
         TimeSpan autoDeleteOnIdle = TimeSpan.MaxValue;
         TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(30);
         int maxDeliveryCount = 10;
         string forwardTo = null;
         string forwardDeadLetteredMessagesTo = null;
+        AuthorizationRules authorizationRules = null;
 
         public QueueDescription(string path)
         {
@@ -43,23 +43,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        /// <summary>
-        /// Allowed values: 1-5
-        /// </summary>
-        public long MaxSizeInGB
-        {
-            get => this.maxSizeInGB;
-            set
-            {
-                //if (value < ManagementConstants.MinAllowedMaxEntitySizeInGB || value > ManagementConstants.MaxAllowedMaxEntitySizeInGB)
-                //{
-                //    throw new ArgumentOutOfRangeException(nameof(MaxSizeInGB),
-                //        $"The value must be between {ManagementConstants.MinAllowedMaxEntitySizeInGB} and {ManagementConstants.MaxAllowedMaxEntitySizeInGB}");
-                //}
-
-                this.maxSizeInGB = value;
-            }
-        }
+        public long MaxSizeInGB { get; set; } = 1;
 
         public bool RequiresDuplicateDetection { get; set; } = false;
 
@@ -129,7 +113,22 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool EnableBatchedOperations { get; set; } = true;
 
-        public AuthorizationRules AuthorizationRules { get; internal set; } = null;
+        public AuthorizationRules AuthorizationRules
+        {
+            get
+            {
+                if (this.authorizationRules == null)
+                {
+                    this.authorizationRules = new AuthorizationRules();
+                }
+
+                return this.authorizationRules;
+            }
+            internal set
+            {
+                this.authorizationRules = value;
+            }
+        }
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
@@ -138,6 +137,12 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.forwardTo;
             set
             {
+                if (value == null)
+                {
+                    this.forwardTo = value;
+                    return;
+                }
+
                 ManagementClient.CheckValidQueueName(value, nameof(ForwardTo));
                 if (this.path.Equals(value, StringComparison.CurrentCultureIgnoreCase))
                 {
@@ -153,6 +158,12 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.forwardDeadLetteredMessagesTo;
             set
             {
+                if (value == null)
+                {
+                    this.forwardDeadLetteredMessagesTo = value;
+                    return;
+                }
+
                 ManagementClient.CheckValidQueueName(value, nameof(ForwardDeadLetteredMessagesTo));
                 if (this.path.Equals(value, StringComparison.CurrentCultureIgnoreCase))
                 {
@@ -201,7 +212,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new MessagingEntityNotFoundException("Queue was not found");
         }
 
-        // TODO: Authorization
         // TODO: Revisit all properties and ensure they are populated.
         static private QueueDescription ParseFromEntryElement(XElement xEntry)
         {
@@ -220,7 +230,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
                 foreach (var element in qdXml.Elements())
                 {
-                    // TODO: Alphabetical ordering
                     switch (element.Name.LocalName)
                     {
                         case "MaxSizeInMegabytes":
@@ -271,6 +280,9 @@ namespace Microsoft.Azure.ServiceBus.Management
                                 qd.ForwardDeadLetteredMessagesTo = element.Value;
                             }
                             break;
+                        case "AuthorizationRules":
+                            qd.AuthorizationRules = AuthorizationRules.ParseFromXElement(element);
+                            break;
                     }
                 }
 
@@ -311,7 +323,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             return forwardToUri.AbsoluteUri;
         }
 
-        // TODO: Authorization rules
         internal XDocument Serialize()
         {
             XDocument doc = new XDocument(
@@ -324,24 +335,24 @@ namespace Microsoft.Azure.ServiceBus.Management
                             new XElement(XName.Get("RequiresDuplicateDetection", ManagementConstants.SbNs), XmlConvert.ToString(this.RequiresDuplicateDetection)),
                             new XElement(XName.Get("RequiresSession", ManagementConstants.SbNs), XmlConvert.ToString(this.RequiresSession)),
                             this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementConstants.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
-                            this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementConstants.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null,
                             new XElement(XName.Get("DeadLetteringOnMessageExpiration", ManagementConstants.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnMessageExpiration)),
-                            this.RequiresDuplicateDetection && this.DuplicateDetectionHistoryTimeWindow != default ? 
-                                new XElement(XName.Get("DuplicateDetectionHistoryTimeWindow", ManagementConstants.SbNs), XmlConvert.ToString(this.DuplicateDetectionHistoryTimeWindow)) 
+                            this.RequiresDuplicateDetection && this.DuplicateDetectionHistoryTimeWindow != default ?
+                                new XElement(XName.Get("DuplicateDetectionHistoryTimeWindow", ManagementConstants.SbNs), XmlConvert.ToString(this.DuplicateDetectionHistoryTimeWindow))
                                 : null,
                             new XElement(XName.Get("MaxDeliveryCount", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxDeliveryCount)),
+                            new XElement(XName.Get("EnableBatchedOperations", ManagementConstants.SbNs), XmlConvert.ToString(this.EnableBatchedOperations)),
+                            this.authorizationRules != null ? this.AuthorizationRules.Serialize() : null,
                             new XElement(XName.Get("Status", ManagementConstants.SbNs), this.Status.ToString()),
                             this.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementConstants.SbNs), this.ForwardTo) : null,
-                            this.ForwardDeadLetteredMessagesTo != null ? new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementConstants.SbNs), this.ForwardDeadLetteredMessagesTo) : null,
+                            this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementConstants.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null,
                             new XElement(XName.Get("EnablePartitioning", ManagementConstants.SbNs), XmlConvert.ToString(this.EnablePartitioning)),
-                            new XElement(XName.Get("EnableBatchedOperations", ManagementConstants.SbNs), XmlConvert.ToString(this.EnableBatchedOperations))
+                            this.ForwardDeadLetteredMessagesTo != null ? new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementConstants.SbNs), this.ForwardDeadLetteredMessagesTo) : null
                         ))
                     ));
 
             return doc;
         }
 
-        // TODO: Auth rules
         public bool Equals(QueueDescription other)
         {
             if (this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
@@ -358,7 +369,10 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && this.MaxSizeInGB == other.MaxSizeInGB
                 && this.RequiresDuplicateDetection.Equals(other.RequiresDuplicateDetection)
                 && this.RequiresSession.Equals(other.RequiresSession)
-                && this.Status.Equals(other.Status))
+                && this.Status.Equals(other.Status)
+                && (this.authorizationRules != null && other.authorizationRules != null
+                    || this.authorizationRules == null && other.authorizationRules == null)
+                && this.authorizationRules != null && this.AuthorizationRules.Equals(other.AuthorizationRules))
             {
                 return true;
             }

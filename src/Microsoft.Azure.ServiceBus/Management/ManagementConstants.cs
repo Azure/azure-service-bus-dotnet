@@ -37,6 +37,9 @@ namespace Microsoft.Azure.ServiceBus.Management
         public static readonly int MinAllowedMaxEntitySizeInGB = 1;
         public static readonly int MaxAllowedMaxEntitySizeInGB = 5;
 
+        // Authorization constants
+        public static readonly int SupportedClaimsCount = 3;
+
         /// <summary>Specifies the error codes of the exceptions.</summary>
         public enum ExceptionErrorCodes
         {

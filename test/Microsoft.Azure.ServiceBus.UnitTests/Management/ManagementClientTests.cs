@@ -15,11 +15,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
     // Get more than 100 queues - manual test.
     // test with cancellation token
     // test connection issues???
-    // forward to
     public class ManagementClientTests : IDisposable
     {
-        //internal string ConnectionString = TestUtility.NamespaceConnectionString;
-        internal string ConnectionString = "Endpoint=sb://contoso.servicebus.onebox.windows-int.net/;SharedAccessKeyName=DefaultNamespaceSasAllKeyName;SharedAccessKey=8864/auVd3qDC75iTjBL1GJ4D2oXC6bIttRd0jzDZ+g=";
+        internal string ConnectionString = TestUtility.NamespaceConnectionString;
+        //internal string ConnectionString = "Endpoint=sb://contoso.servicebus.onebox.windows-int.net/;SharedAccessKeyName=DefaultNamespaceSasAllKeyName;SharedAccessKey=8864/auVd3qDC75iTjBL1GJ4D2oXC6bIttRd0jzDZ+g=";
         ManagementClient client;
 
         public ManagementClientTests()
@@ -45,10 +44,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 ForwardTo = null,
                 LockDuration = TimeSpan.FromSeconds(45),
                 MaxDeliveryCount = 8,
-                MaxSizeInGB = 2048,
+                MaxSizeInGB = 2,
                 RequiresDuplicateDetection = true,
                 RequiresSession = true
             };
+
+            qd.AuthorizationRules.Add(new SharedAccessAuthorizationRule(
+                "allClaims", 
+                new[] { AccessRights.Manage, AccessRights.Send, AccessRights.Listen }));
 
             var finalQ = await client.CreateQueueAsync(qd);
             Assert.Equal(qd, finalQ);
@@ -58,6 +61,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 
             getQ.EnableBatchedOperations = false;
             getQ.MaxDeliveryCount = 9;
+            getQ.AuthorizationRules.Clear();
+            getQ.AuthorizationRules.Add(new SharedAccessAuthorizationRule(
+                "noManage",
+                new[] { AccessRights.Send, AccessRights.Listen }));
 
             var updatedQ = await client.UpdateQueueAsync(getQ);
             Assert.Equal(getQ, updatedQ);
@@ -97,6 +104,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 MaxSizeInGB = 2,
                 RequiresDuplicateDetection = true
             };
+
+            td.AuthorizationRules.Add(new SharedAccessAuthorizationRule(
+               "allClaims",
+               new[] { AccessRights.Manage, AccessRights.Send, AccessRights.Listen }));
 
             var createdT = await client.CreateTopicAsync(td);
             Assert.Equal(td, createdT);
@@ -518,6 +529,23 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 
             await client.DeleteQueueAsync(queueName);
             await client.DeleteQueueAsync(destinationName);
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public void AuthRulesEqualityCheckTest()
+        {
+            var qd = new QueueDescription("a");
+            var rule1 = new SharedAccessAuthorizationRule("sendListen", new List<AccessRights> { AccessRights.Listen, AccessRights.Send });
+            var rule2 = new SharedAccessAuthorizationRule("manage", new List<AccessRights> { AccessRights.Listen, AccessRights.Send, AccessRights.Manage });
+            qd.AuthorizationRules.Add(rule1);
+            qd.AuthorizationRules.Add(rule2);
+
+            var qd2 = new QueueDescription("a");
+            qd2.AuthorizationRules.Add(new SharedAccessAuthorizationRule(rule2.KeyName, rule2.PrimaryKey, rule2.SecondaryKey, rule2.Rights));
+            qd2.AuthorizationRules.Add(new SharedAccessAuthorizationRule(rule1.KeyName, rule1.PrimaryKey, rule1.SecondaryKey, rule1.Rights));
+
+            Assert.Equal(qd, qd2);
         }
 
         public void Dispose()
