@@ -68,5 +68,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         Task<bool> TopicExistsAsync(string topicName, CancellationToken cancellationToken = default);
 
         Task<bool> SubscriptionExistsAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default);
+
+        Task CloseAsync();
     }
 }
