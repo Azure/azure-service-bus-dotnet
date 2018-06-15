@@ -8,10 +8,10 @@ namespace Microsoft.Azure.ServiceBus.Management
     public class TopicDescription : IEquatable<TopicDescription>
     {
         string path;
-        long maxSizeInGB = 1;
         TimeSpan defaultMessageTimeToLive = TimeSpan.MaxValue;
         TimeSpan autoDeleteOnIdle = TimeSpan.MaxValue;
         TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(30);
+        AuthorizationRules authorizationRules = null;
 
         public TopicDescription(string path)
         {
@@ -48,20 +48,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        public long MaxSizeInGB
-        {
-            get => this.maxSizeInGB;
-            set
-            {
-                //if (value < ManagementConstants.MinAllowedMaxEntitySizeInGB || value > ManagementConstants.MaxAllowedMaxEntitySizeInGB)
-                //{
-                //    throw new ArgumentOutOfRangeException(nameof(MaxSizeInGB),
-                //        $"The value must be between {ManagementConstants.MinAllowedMaxEntitySizeInGB} and {ManagementConstants.MaxAllowedMaxEntitySizeInGB}");
-                //}
-
-                this.maxSizeInGB = value;
-            }
-        }
+        public long MaxSizeInGB { get; set; } = 1;
 
         public bool RequiresDuplicateDetection { get; set; } = false;
 
@@ -90,7 +77,22 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        public AuthorizationRules Authorization { get; set; }
+        public AuthorizationRules AuthorizationRules
+        {
+            get
+            {
+                if (this.authorizationRules == null)
+                {
+                    this.authorizationRules = new AuthorizationRules();
+                }
+
+                return this.authorizationRules;
+            }
+            internal set
+            {
+                this.authorizationRules = value;
+            }
+        }
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
@@ -137,7 +139,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new MessagingEntityNotFoundException("Topic was not found");
         }
 
-        // TODO: Authorization
         static private TopicDescription ParseFromEntryElement(XElement xEntry)
         {
             try
@@ -184,6 +185,9 @@ namespace Microsoft.Azure.ServiceBus.Management
                         case "SupportOrdering":
                             topicDesc.SupportOrdering = bool.Parse(element.Value);
                             break;
+                        case "AuthorizationRules":
+                            topicDesc.AuthorizationRules = AuthorizationRules.ParseFromXElement(element);
+                            break;
                     }
                 }
 
@@ -195,7 +199,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        // TODO: Authorization rules
         internal XDocument Serialize()
         {
             XDocument doc = new XDocument(
@@ -210,6 +213,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                             this.RequiresDuplicateDetection && this.DuplicateDetectionHistoryTimeWindow != default ?
                                 new XElement(XName.Get("DuplicateDetectionHistoryTimeWindow", ManagementConstants.SbNs), XmlConvert.ToString(this.DuplicateDetectionHistoryTimeWindow))
                                 : null,
+                            this.authorizationRules != null ? this.AuthorizationRules.Serialize() : null,
                             new XElement(XName.Get("Status", ManagementConstants.SbNs), this.Status.ToString()),
                             new XElement(XName.Get("EnablePartitioning", ManagementConstants.SbNs), XmlConvert.ToString(this.EnablePartitioning)),
                             new XElement(XName.Get("EnableBatchedOperations", ManagementConstants.SbNs), XmlConvert.ToString(this.EnableBatchedOperations)),
@@ -230,7 +234,10 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && this.EnablePartitioning == other.EnablePartitioning
                 && this.MaxSizeInGB == other.MaxSizeInGB
                 && this.RequiresDuplicateDetection.Equals(other.RequiresDuplicateDetection)
-                && this.Status.Equals(other.Status))
+                && this.Status.Equals(other.Status)
+                && (this.authorizationRules != null && other.authorizationRules != null
+                    || this.authorizationRules == null && other.authorizationRules == null)
+                && this.authorizationRules != null && this.AuthorizationRules.Equals(other.AuthorizationRules))
             {
                 return true;
             }
