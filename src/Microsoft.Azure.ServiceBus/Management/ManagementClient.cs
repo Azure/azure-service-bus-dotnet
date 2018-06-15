@@ -13,7 +13,6 @@ using Microsoft.Azure.ServiceBus.Primitives;
 namespace Microsoft.Azure.ServiceBus.Management
 {
     // TODO: Document all exceptions that might be thrown
-    // TODO: Retry for transient
     public class ManagementClient : ClientEntity, IManagementClient
     {
         private bool ownsConnection;
@@ -105,7 +104,13 @@ namespace Microsoft.Azure.ServiceBus.Management
             }.Uri;
 
             var request = new HttpRequestMessage(HttpMethod.Delete, uri);
-            await SendHttpRequest(request, cancellationToken);
+
+            await this.RetryPolicy.RunOperation(
+                async () =>
+                {
+                    await SendHttpRequest(request, cancellationToken)
+                        .ConfigureAwait(false);
+                }, this.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
         }
 
         #endregion
@@ -212,18 +217,17 @@ namespace Microsoft.Azure.ServiceBus.Management
             }.Uri;
 
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await SendHttpRequest(request, cancellationToken);
 
-            // TODO: what about non success status code?
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return content;
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            HttpResponseMessage response = null;
+            await this.RetryPolicy.RunOperation(
+                async () =>
+                {
+                    response = await SendHttpRequest(request, cancellationToken)
+                        .ConfigureAwait(false);
+                }, this.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
+
+            var content = await response.Content.ReadAsStringAsync();
+            return content;
         }
 
         #endregion
@@ -382,17 +386,16 @@ namespace Microsoft.Azure.ServiceBus.Management
                 request.Headers.Add(ManagementClientConstants.ServiceBusDlqSupplementaryAuthorizationHeaderName, token);
             }
 
-            var response = await SendHttpRequest(request, cancellationToken);
-            // TODO: non success status code?
-            if (response.StatusCode == HttpStatusCode.Created || response.StatusCode == HttpStatusCode.OK)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return content;
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            HttpResponseMessage response = null;
+            await this.RetryPolicy.RunOperation(
+                async () =>
+                {
+                    response = await SendHttpRequest(request, cancellationToken)
+                        .ConfigureAwait(false);
+                }, this.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
+
+            var content = await response.Content.ReadAsStringAsync();
+            return content;
         }
 
         #endregion
