@@ -65,7 +65,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal new static RuleAction ParseFromXElement(XElement xElement)
         {
-            var expression = xElement.Element(XName.Get("SqlExpression", ManagementConstants.SbNs))?.Value;
+            var expression = xElement.Element(XName.Get("SqlExpression", ManagementClientConstants.SbNs))?.Value;
             if (string.IsNullOrWhiteSpace(expression))
             {
                 return null;
@@ -80,9 +80,9 @@ namespace Microsoft.Azure.ServiceBus
         internal override XElement Serialize()
         {
             XElement action = new XElement(
-                XName.Get("Action", ManagementConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementConstants.XmlSchemaNs), nameof(SqlRuleAction)),
-                new XElement(XName.Get("SqlExpression", ManagementConstants.SbNs), this.SqlExpression));
+                XName.Get("Action", ManagementClientConstants.SbNs),
+                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(SqlRuleAction)),
+                new XElement(XName.Get("SqlExpression", ManagementClientConstants.SbNs), this.SqlExpression));
 
             return action;
         }

@@ -71,7 +71,7 @@ namespace Microsoft.Azure.ServiceBus
 
         internal new static Filter ParseFromXElement(XElement xElement)
         {
-            var expression = xElement.Element(XName.Get("SqlExpression", ManagementConstants.SbNs))?.Value;
+            var expression = xElement.Element(XName.Get("SqlExpression", ManagementClientConstants.SbNs))?.Value;
             if (string.IsNullOrWhiteSpace(expression))
             {
                 return null;
@@ -86,9 +86,9 @@ namespace Microsoft.Azure.ServiceBus
         internal override XElement Serialize()
         {
             XElement filter = new XElement(
-                XName.Get("Filter", ManagementConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementConstants.XmlSchemaNs), nameof(SqlFilter)),
-                new XElement(XName.Get("SqlExpression", ManagementConstants.SbNs), this.SqlExpression));
+                XName.Get("Filter", ManagementClientConstants.SbNs),
+                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(SqlFilter)),
+                new XElement(XName.Get("SqlExpression", ManagementClientConstants.SbNs), this.SqlExpression));
 
             return filter;
         }

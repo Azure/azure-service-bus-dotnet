@@ -14,7 +14,8 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
         }
 
-        public MessagingEntityAlreadyExistsException(string message, Exception innerException) : base(true, message, innerException)
+        public MessagingEntityAlreadyExistsException(string message, Exception innerException) 
+            : base(false, message, innerException)
         {
         }
     }

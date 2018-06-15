@@ -33,9 +33,9 @@ namespace Microsoft.Azure.ServiceBus
         internal override XElement Serialize()
         {
             XElement filter = new XElement(
-                XName.Get("Filter", ManagementConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementConstants.XmlSchemaNs), nameof(FalseFilter)),
-                new XElement(XName.Get("SqlExpression", ManagementConstants.SbNs), this.SqlExpression));
+                XName.Get("Filter", ManagementClientConstants.SbNs),
+                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(FalseFilter)),
+                new XElement(XName.Get("SqlExpression", ManagementClientConstants.SbNs), this.SqlExpression));
 
             return filter;
         }

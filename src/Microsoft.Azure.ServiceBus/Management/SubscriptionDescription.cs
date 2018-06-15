@@ -40,10 +40,10 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.defaultMessageTimeToLive;
             set
             {
-                if (value < ManagementConstants.MinimumAllowedTimeToLive || value > ManagementConstants.MaximumAllowedTimeToLive)
+                if (value < ManagementClientConstants.MinimumAllowedTimeToLive || value > ManagementClientConstants.MaximumAllowedTimeToLive)
                 {
                     throw new ArgumentOutOfRangeException(nameof(DefaultMessageTimeToLive),
-                        $"The value must be between {ManagementConstants.MinimumAllowedTimeToLive} and {ManagementConstants.MaximumAllowedTimeToLive}");
+                        $"The value must be between {ManagementClientConstants.MinimumAllowedTimeToLive} and {ManagementClientConstants.MaximumAllowedTimeToLive}");
                 }
 
                 this.defaultMessageTimeToLive = value;
@@ -55,10 +55,10 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.autoDeleteOnIdle;
             set
             {
-                if (value < ManagementConstants.MinimumAllowedAutoDeleteOnIdle)
+                if (value < ManagementClientConstants.MinimumAllowedAutoDeleteOnIdle)
                 {
                     throw new ArgumentOutOfRangeException(nameof(AutoDeleteOnIdle),
-                        $"The value must be greater than {ManagementConstants.MinimumAllowedAutoDeleteOnIdle}");
+                        $"The value must be greater than {ManagementClientConstants.MinimumAllowedAutoDeleteOnIdle}");
                 }
 
                 this.autoDeleteOnIdle = value;
@@ -94,10 +94,10 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.maxDeliveryCount;
             set
             {
-                if (value < ManagementConstants.MinAllowedMaxDeliveryCount)
+                if (value < ManagementClientConstants.MinAllowedMaxDeliveryCount)
                 {
                     throw new ArgumentOutOfRangeException(nameof(MaxDeliveryCount),
-                        $"The value must be greater than {ManagementConstants.MinAllowedMaxDeliveryCount}");
+                        $"The value must be greater than {ManagementClientConstants.MinAllowedMaxDeliveryCount}");
                 }
 
                 this.maxDeliveryCount = value;
@@ -188,7 +188,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 {
                     var subscriptionList = new List<SubscriptionDescription>();
 
-                    var entryList = xDoc.Elements(XName.Get("entry", ManagementConstants.AtomNs));
+                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClientConstants.AtomNs));
                     foreach (var entry in entryList)
                     {
                         subscriptionList.Add(ParseFromEntryElement(topicName, entry));
@@ -206,11 +206,11 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             try
             {
-                var name = xEntry.Element(XName.Get("title", ManagementConstants.AtomNs)).Value;
+                var name = xEntry.Element(XName.Get("title", ManagementClientConstants.AtomNs)).Value;
                 var subscriptionDesc = new SubscriptionDescription(topicName, name);
 
-                var qdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))?
-                    .Element(XName.Get("SubscriptionDescription", ManagementConstants.SbNs));
+                var qdXml = xEntry.Element(XName.Get("content", ManagementClientConstants.AtomNs))?
+                    .Element(XName.Get("SubscriptionDescription", ManagementClientConstants.SbNs));
 
                 if (qdXml == null)
                 {
@@ -272,20 +272,20 @@ namespace Microsoft.Azure.ServiceBus.Management
         internal XDocument Serialize()
         {
             XDocument doc = new XDocument(
-                new XElement(XName.Get("entry", ManagementConstants.AtomNs),
-                    new XElement(XName.Get("content", ManagementConstants.AtomNs),
+                new XElement(XName.Get("entry", ManagementClientConstants.AtomNs),
+                    new XElement(XName.Get("content", ManagementClientConstants.AtomNs),
                         new XAttribute("type", "application/xml"),
-                        new XElement(XName.Get("SubscriptionDescription", ManagementConstants.SbNs),
-                            new XElement(XName.Get("LockDuration", ManagementConstants.SbNs), XmlConvert.ToString(this.LockDuration)),
-                            new XElement(XName.Get("RequiresSession", ManagementConstants.SbNs), XmlConvert.ToString(this.RequiresSession)),
-                            this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementConstants.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
-                            new XElement(XName.Get("DeadLetteringOnMessageExpiration", ManagementConstants.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnMessageExpiration)),
-                            new XElement(XName.Get("DeadLetteringOnFilterEvaluationExceptions", ManagementConstants.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnFilterEvaluationExceptions)),
-                            new XElement(XName.Get("MaxDeliveryCount", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxDeliveryCount)),
-                            new XElement(XName.Get("Status", ManagementConstants.SbNs), this.Status.ToString()),
-                            this.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementConstants.SbNs), this.ForwardTo) : null,
-                            this.ForwardDeadLetteredMessagesTo != null ? new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementConstants.SbNs), this.ForwardDeadLetteredMessagesTo) : null,
-                            this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementConstants.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null
+                        new XElement(XName.Get("SubscriptionDescription", ManagementClientConstants.SbNs),
+                            new XElement(XName.Get("LockDuration", ManagementClientConstants.SbNs), XmlConvert.ToString(this.LockDuration)),
+                            new XElement(XName.Get("RequiresSession", ManagementClientConstants.SbNs), XmlConvert.ToString(this.RequiresSession)),
+                            this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementClientConstants.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
+                            new XElement(XName.Get("DeadLetteringOnMessageExpiration", ManagementClientConstants.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnMessageExpiration)),
+                            new XElement(XName.Get("DeadLetteringOnFilterEvaluationExceptions", ManagementClientConstants.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnFilterEvaluationExceptions)),
+                            new XElement(XName.Get("MaxDeliveryCount", ManagementClientConstants.SbNs), XmlConvert.ToString(this.MaxDeliveryCount)),
+                            new XElement(XName.Get("Status", ManagementClientConstants.SbNs), this.Status.ToString()),
+                            this.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementClientConstants.SbNs), this.ForwardTo) : null,
+                            this.ForwardDeadLetteredMessagesTo != null ? new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementClientConstants.SbNs), this.ForwardDeadLetteredMessagesTo) : null,
+                            this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementClientConstants.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null
                         ))
                     ));
 

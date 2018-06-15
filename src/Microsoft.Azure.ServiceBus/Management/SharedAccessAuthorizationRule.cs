@@ -145,9 +145,9 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.internalRights;
             set
             {
-                if (value == null || value.Count < 0 || value.Count > ManagementConstants.SupportedClaimsCount)
+                if (value == null || value.Count < 0 || value.Count > ManagementClientConstants.SupportedClaimsCount)
                 {
-                    throw new ArgumentException($"Rights cannot be null, empty or greater than {ManagementConstants.SupportedClaimsCount}");
+                    throw new ArgumentException($"Rights cannot be null, empty or greater than {ManagementClientConstants.SupportedClaimsCount}");
                 }
 
                 HashSet<AccessRights> dedupedAccessRights = new HashSet<AccessRights>(value);
@@ -264,7 +264,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                         break;
                     case "Rights":
                         var rights = new List<AccessRights>();
-                        var xRights = element.Elements(XName.Get("AccessRights", ManagementConstants.SbNs));
+                        var xRights = element.Elements(XName.Get("AccessRights", ManagementClientConstants.SbNs));
                         foreach (var xRight in xRights)
                         {
                             rights.Add((AccessRights)Enum.Parse(typeof(AccessRights), xRight.Value));
@@ -281,17 +281,17 @@ namespace Microsoft.Azure.ServiceBus.Management
         internal override XElement Serialize()
         {
             XElement rule = new XElement(
-                XName.Get("AuthorizationRule", ManagementConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementConstants.XmlSchemaNs), nameof(SharedAccessAuthorizationRule)),
-                new XElement(XName.Get("ClaimType", ManagementConstants.SbNs), this.ClaimType),
-                new XElement(XName.Get("ClaimValue", ManagementConstants.SbNs), this.ClaimValue),
-                new XElement(XName.Get("Rights", ManagementConstants.SbNs),
-                    this.Rights.Select(right => new XElement(XName.Get("AccessRights", ManagementConstants.SbNs), right.ToString()))),
-                new XElement(XName.Get("CreatedTime", ManagementConstants.SbNs), XmlConvert.ToString(this.CreatedTime, XmlDateTimeSerializationMode.Utc)),
-                new XElement(XName.Get("ModifiedTime", ManagementConstants.SbNs), XmlConvert.ToString(this.ModifiedTime, XmlDateTimeSerializationMode.Utc)),
-                new XElement(XName.Get("KeyName", ManagementConstants.SbNs), this.KeyName),
-                new XElement(XName.Get("PrimaryKey", ManagementConstants.SbNs), this.PrimaryKey),
-                new XElement(XName.Get("SecondaryKey", ManagementConstants.SbNs), this.SecondaryKey)
+                XName.Get("AuthorizationRule", ManagementClientConstants.SbNs),
+                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(SharedAccessAuthorizationRule)),
+                new XElement(XName.Get("ClaimType", ManagementClientConstants.SbNs), this.ClaimType),
+                new XElement(XName.Get("ClaimValue", ManagementClientConstants.SbNs), this.ClaimValue),
+                new XElement(XName.Get("Rights", ManagementClientConstants.SbNs),
+                    this.Rights.Select(right => new XElement(XName.Get("AccessRights", ManagementClientConstants.SbNs), right.ToString()))),
+                new XElement(XName.Get("CreatedTime", ManagementClientConstants.SbNs), XmlConvert.ToString(this.CreatedTime, XmlDateTimeSerializationMode.Utc)),
+                new XElement(XName.Get("ModifiedTime", ManagementClientConstants.SbNs), XmlConvert.ToString(this.ModifiedTime, XmlDateTimeSerializationMode.Utc)),
+                new XElement(XName.Get("KeyName", ManagementClientConstants.SbNs), this.KeyName),
+                new XElement(XName.Get("PrimaryKey", ManagementClientConstants.SbNs), this.PrimaryKey),
+                new XElement(XName.Get("SecondaryKey", ManagementClientConstants.SbNs), this.SecondaryKey)
             );
 
             return rule;
