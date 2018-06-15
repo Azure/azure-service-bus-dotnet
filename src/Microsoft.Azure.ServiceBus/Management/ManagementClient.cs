@@ -18,8 +18,6 @@ namespace Microsoft.Azure.ServiceBus.Management
         private bool ownsConnection;
         private HttpClient httpClient;
         private ServiceBusConnectionStringBuilder csBuilder;
-        private ITokenProvider tokenProvider;
-        private string endpoint;
         
         public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = null)
             : base(nameof(ManagementClient), string.Empty, retryPolicy ?? RetryPolicy.Default)
@@ -120,14 +118,14 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<QueueDescription> GetQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
             CheckValidQueueName(queueName);
-            var content = await GetEntity(queueName, false, cancellationToken);
+            var content = await GetEntity(queueName, null, false, cancellationToken);
             return QueueDescription.ParseFromContent(content);
         }
 
         public async Task<TopicDescription> GetTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
             CheckValidTopicName(topicName);
-            var content = await GetEntity(topicName, false, cancellationToken);
+            var content = await GetEntity(topicName, null, false, cancellationToken);
             return TopicDescription.ParseFromContent(content);
         }
 
@@ -135,7 +133,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
-            var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), false, cancellationToken);
+            var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), null, false, cancellationToken);
             return SubscriptionDescription.ParseFromContent(topicName, content);
         }
 
@@ -144,7 +142,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
             CheckValidRuleName(ruleName);
-            var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", false, cancellationToken);
+            var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", null, false, cancellationToken);
             return RuleDescription.ParseFromContent(content);
         }
 
@@ -155,14 +153,14 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<QueueRuntimeInfo> GetQueueRuntimeInfoAsync(string queueName, CancellationToken cancellationToken = default)
         {
             CheckValidQueueName(queueName);
-            var content = await GetEntity(queueName, true, cancellationToken);
+            var content = await GetEntity(queueName, null, true, cancellationToken);
             return QueueRuntimeInfo.ParseFromContent(content);
         }
 
         public async Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken = default)
         {
             CheckValidTopicName(topicName);
-            var content = await GetEntity(topicName, true, cancellationToken);
+            var content = await GetEntity(topicName, null, true, cancellationToken);
             return TopicRuntimeInfo.ParseFromContent(content);
         }
 
@@ -170,7 +168,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
-            var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), true, cancellationToken);
+            var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), null, true, cancellationToken);
             return SubscriptionRuntimeInfo.ParseFromContent(topicName, content);
         }
 
@@ -178,23 +176,22 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         #region GetEntities
 
-        // TODO: pass skip and top
         public async Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
-            var content = await GetEntity("$Resources/queues", false, cancellationToken);
+            var content = await GetEntity("$Resources/queues", $"$skip={skip}&$top={count}", false, cancellationToken);
             return QueueDescription.ParseCollectionFromContent(content);
         }
 
         public async Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
-            var content = await GetEntity("$Resources/topics", false, cancellationToken);
+            var content = await GetEntity("$Resources/topics", $"$skip={skip}&$top={count}", false, cancellationToken);
             return TopicDescription.ParseCollectionFromContent(content);
         }
 
         public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             CheckValidTopicName(topicName);
-            var content = await GetEntity($"{topicName}/Subscriptions", false, cancellationToken);
+            var content = await GetEntity($"{topicName}/Subscriptions", $"$skip={skip}&$top={count}", false, cancellationToken);
             return SubscriptionDescription.ParseCollectionFromContent(topicName, content);
         }
 
@@ -202,18 +199,23 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
-            var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules", false, cancellationToken);
+            var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules", $"$skip={skip}&$top={count}", false, cancellationToken);
             return RuleDescription.ParseCollectionFromContent(content);
         }
 
-        private async Task<string> GetEntity(string path, bool enrich, CancellationToken cancellationToken)
+        private async Task<string> GetEntity(string path, string query, bool enrich, CancellationToken cancellationToken)
         {
+            var queryString = $"{ManagementClientConstants.apiVersionQuery}&enrich={enrich}";
+            if (query!=null)
+            {
+                queryString = queryString + "&" + query;
+            }
             var uri = new UriBuilder(this.csBuilder.Endpoint)
             {
                 Path = path,
                 Scheme = Uri.UriSchemeHttps,
                 Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{ManagementClientConstants.apiVersionQuery}&enrich={enrich}"
+                Query = queryString
             }.Uri;
 
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
