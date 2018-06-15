@@ -43,7 +43,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        public long MaxSizeInGB { get; set; } = 1;
+        public long MaxSizeInMB { get; set; } = 1024;
 
         public bool RequiresDuplicateDetection { get; set; } = false;
 
@@ -233,7 +233,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     switch (element.Name.LocalName)
                     {
                         case "MaxSizeInMegabytes":
-                            qd.MaxSizeInGB = long.Parse(element.Value) / 1024;
+                            qd.MaxSizeInMB = long.Parse(element.Value);
                             break;
                         case "RequiresDuplicateDetection":
                             qd.RequiresDuplicateDetection = bool.Parse(element.Value);
@@ -331,7 +331,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                         new XAttribute("type", "application/xml"),
                         new XElement(XName.Get("QueueDescription",ManagementConstants.SbNs),
                             new XElement(XName.Get("LockDuration", ManagementConstants.SbNs), XmlConvert.ToString(this.LockDuration)),
-                            new XElement(XName.Get("MaxSizeInMegabytes", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxSizeInGB * 1024)),
+                            new XElement(XName.Get("MaxSizeInMegabytes", ManagementConstants.SbNs), XmlConvert.ToString(this.MaxSizeInMB)),
                             new XElement(XName.Get("RequiresDuplicateDetection", ManagementConstants.SbNs), XmlConvert.ToString(this.RequiresDuplicateDetection)),
                             new XElement(XName.Get("RequiresSession", ManagementConstants.SbNs), XmlConvert.ToString(this.RequiresSession)),
                             this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementConstants.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
@@ -366,7 +366,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && string.Equals(this.ForwardTo, other.ForwardTo, StringComparison.OrdinalIgnoreCase)
                 && this.LockDuration.Equals(other.LockDuration)
                 && this.MaxDeliveryCount == other.MaxDeliveryCount
-                && this.MaxSizeInGB == other.MaxSizeInGB
+                && this.MaxSizeInMB == other.MaxSizeInMB
                 && this.RequiresDuplicateDetection.Equals(other.RequiresDuplicateDetection)
                 && this.RequiresSession.Equals(other.RequiresSession)
                 && this.Status.Equals(other.Status)
