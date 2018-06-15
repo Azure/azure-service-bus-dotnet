@@ -19,17 +19,28 @@ namespace Microsoft.Azure.ServiceBus.Management
         private bool ownsConnection;
         private HttpClient httpClient;
         private ServiceBusConnectionStringBuilder csBuilder;
-        private string namespaceConnectionString;
+        private ITokenProvider tokenProvider;
+        private string endpoint;
         
-        // TODO: Expose other constructor overloads
-        public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder)
-            : base(nameof(ManagementClient), string.Empty, new NoRetry())
+        public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = null)
+            : base(nameof(ManagementClient), string.Empty, retryPolicy ?? RetryPolicy.Default)
         {
             this.csBuilder = connectionStringBuilder;
-            this.namespaceConnectionString = connectionStringBuilder.GetNamespaceConnectionString();
             this.ServiceBusConnection = new ServiceBusConnection(connectionStringBuilder);
+            this.ServiceBusConnection.RetryPolicy = this.RetryPolicy;
             this.ownsConnection = true;
             this.httpClient = new HttpClient();
+        }
+
+        public ManagementClient(string connectionString, RetryPolicy retryPolicy = null)
+            : this(new ServiceBusConnectionStringBuilder(connectionString), retryPolicy)
+        {
+        }
+
+        public ManagementClient(string endpoint, ITokenProvider tokenProvider, RetryPolicy retryPolicy = null)
+            : this(new ServiceBusConnectionStringBuilder() { Endpoint = endpoint}, retryPolicy)
+        {
+            this.ServiceBusConnection.TokenProvider = tokenProvider;
         }
 
         public override ServiceBusConnection ServiceBusConnection { get; }
@@ -90,7 +101,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 Path = path,
                 Scheme = Uri.UriSchemeHttps,
                 Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{ManagementConstants.apiVersionQuery}&enrich=false"
+                Query = $"{ManagementClientConstants.apiVersionQuery}&enrich=false"
             }.Uri;
 
             var request = new HttpRequestMessage(HttpMethod.Delete, uri);
@@ -197,7 +208,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 Path = path,
                 Scheme = Uri.UriSchemeHttps,
                 Port = GetPort(this.csBuilder.Endpoint),
-                Query = $"{ManagementConstants.apiVersionQuery}&enrich={enrich}"
+                Query = $"{ManagementClientConstants.apiVersionQuery}&enrich={enrich}"
             }.Uri;
 
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
@@ -344,14 +355,14 @@ namespace Microsoft.Azure.ServiceBus.Management
                 Path = path,
                 Port = GetPort(this.csBuilder.Endpoint),
                 Scheme = Uri.UriSchemeHttps,
-                Query = $"{ManagementConstants.apiVersionQuery}"
+                Query = $"{ManagementClientConstants.apiVersionQuery}"
             }.Uri;
 
             var request = new HttpRequestMessage(HttpMethod.Put, uri);
             request.Content = new StringContent(
                 requestBody,
                 Encoding.UTF8,
-                ManagementConstants.AtomContentType
+                ManagementClientConstants.AtomContentType
             );
 
             if (isUpdate)
@@ -362,13 +373,13 @@ namespace Microsoft.Azure.ServiceBus.Management
             if (!string.IsNullOrWhiteSpace(forwardTo))
             {
                 var token = await GetToken(forwardTo);
-                request.Headers.Add(ManagementConstants.ServiceBusSupplementartyAuthorizationHeaderName, token);
+                request.Headers.Add(ManagementClientConstants.ServiceBusSupplementartyAuthorizationHeaderName, token);
             }
 
             if (!string.IsNullOrWhiteSpace(fwdDeadLetterTo))
             {
                 var token = await GetToken(fwdDeadLetterTo);
-                request.Headers.Add(ManagementConstants.ServiceBusDlqSupplementaryAuthorizationHeaderName, token);
+                request.Headers.Add(ManagementClientConstants.ServiceBusDlqSupplementaryAuthorizationHeaderName, token);
             }
 
             var response = await SendHttpRequest(request, cancellationToken);
@@ -460,7 +471,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             var token = await GetToken(request.RequestUri);
             request.Headers.Add("Authorization", token);
-            request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementConstants.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
+            request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementClientConstants.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
             HttpResponseMessage response;
             try
             {
@@ -528,7 +539,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     // response.RequestMessage.Headers.IfMatch.Count > 0 is true for UpdateEntity scenario
                     throw new ServiceBusException(true, exceptionMessage);
                 }
-                else if (exceptionMessage.Contains(ManagementConstants.ConflictOperationInProgressSubCode))
+                else if (exceptionMessage.Contains(ManagementClientConstants.ConflictOperationInProgressSubCode))
                 {
                     throw new ServiceBusException(true, exceptionMessage);
                 }
@@ -539,7 +550,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
             else if (response.StatusCode == HttpStatusCode.Forbidden)
             {
-                if (exceptionMessage.Contains(ManagementConstants.ForbiddenInvalidOperationSubCode))
+                if (exceptionMessage.Contains(ManagementClientConstants.ForbiddenInvalidOperationSubCode))
                 {
                     throw new InvalidOperationException(exceptionMessage);
                 }
@@ -586,22 +597,22 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         internal static void CheckValidQueueName(string queueName, string paramName = "queueName")
         {
-            CheckValidEntityName(queueName, ManagementConstants.QueueNameMaximumLength, true, paramName);
+            CheckValidEntityName(queueName, ManagementClientConstants.QueueNameMaximumLength, true, paramName);
         }
 
         internal static void CheckValidTopicName(string topicName, string paramName = "topicName")
         {
-            CheckValidEntityName(topicName, ManagementConstants.TopicNameMaximumLength, true, paramName);
+            CheckValidEntityName(topicName, ManagementClientConstants.TopicNameMaximumLength, true, paramName);
         }
 
         internal static void CheckValidSubscriptionName(string subscriptionName, string paramName = "subscriptionName")
         {
-            CheckValidEntityName(subscriptionName, ManagementConstants.SubscriptionNameMaximumLength, false, paramName);
+            CheckValidEntityName(subscriptionName, ManagementClientConstants.SubscriptionNameMaximumLength, false, paramName);
         }
 
         internal static void CheckValidRuleName(string ruleName, string paramName = "ruleName")
         {
-            CheckValidEntityName(ruleName, ManagementConstants.RuleNameMaximumLength, false, paramName);
+            CheckValidEntityName(ruleName, ManagementClientConstants.RuleNameMaximumLength, false, paramName);
         }
 
         private static void CheckValidEntityName(string entityName, int maxEntityNameLength, bool allowSeparator, string paramName)

@@ -245,24 +245,24 @@ namespace Microsoft.Azure.ServiceBus
         internal override XElement Serialize()
         {
             XElement filter = new XElement(
-                XName.Get("Filter", ManagementConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementConstants.XmlSchemaNs), nameof(CorrelationFilter)),
+                XName.Get("Filter", ManagementClientConstants.SbNs),
+                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(CorrelationFilter)),
                 string.IsNullOrWhiteSpace(this.CorrelationId) ? null : 
-                    new XElement(XName.Get("CorrelationId", ManagementConstants.SbNs), this.CorrelationId),
+                    new XElement(XName.Get("CorrelationId", ManagementClientConstants.SbNs), this.CorrelationId),
                 string.IsNullOrWhiteSpace(this.MessageId) ? null :
-                    new XElement(XName.Get("MessageId", ManagementConstants.SbNs), this.MessageId),
+                    new XElement(XName.Get("MessageId", ManagementClientConstants.SbNs), this.MessageId),
                 string.IsNullOrWhiteSpace(this.To) ? null :
-                    new XElement(XName.Get("To", ManagementConstants.SbNs), this.To),
+                    new XElement(XName.Get("To", ManagementClientConstants.SbNs), this.To),
                 string.IsNullOrWhiteSpace(this.ReplyTo) ? null :
-                    new XElement(XName.Get("ReplyTo", ManagementConstants.SbNs), this.ReplyTo),
+                    new XElement(XName.Get("ReplyTo", ManagementClientConstants.SbNs), this.ReplyTo),
                 string.IsNullOrWhiteSpace(this.Label) ? null :
-                    new XElement(XName.Get("Label", ManagementConstants.SbNs), this.Label),
+                    new XElement(XName.Get("Label", ManagementClientConstants.SbNs), this.Label),
                 string.IsNullOrWhiteSpace(this.SessionId) ? null :
-                    new XElement(XName.Get("SessionId", ManagementConstants.SbNs), this.SessionId),
+                    new XElement(XName.Get("SessionId", ManagementClientConstants.SbNs), this.SessionId),
                 string.IsNullOrWhiteSpace(this.ReplyToSessionId) ? null :
-                    new XElement(XName.Get("ReplyToSessionId", ManagementConstants.SbNs), this.ReplyToSessionId),
+                    new XElement(XName.Get("ReplyToSessionId", ManagementClientConstants.SbNs), this.ReplyToSessionId),
                 string.IsNullOrWhiteSpace(this.ContentType) ? null :
-                    new XElement(XName.Get("ContentType", ManagementConstants.SbNs), this.ContentType),
+                    new XElement(XName.Get("ContentType", ManagementClientConstants.SbNs), this.ContentType),
                 // todo
                 null
                 );

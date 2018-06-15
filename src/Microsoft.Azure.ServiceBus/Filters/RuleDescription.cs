@@ -181,7 +181,7 @@ namespace Microsoft.Azure.ServiceBus
                 {
                     var rules = new List<RuleDescription>();
 
-                    var entryList = xDoc.Elements(XName.Get("entry", ManagementConstants.AtomNs));
+                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClientConstants.AtomNs));
                     foreach (var entry in entryList)
                     {
                         rules.Add(ParseFromEntryElement(entry));
@@ -198,11 +198,11 @@ namespace Microsoft.Azure.ServiceBus
         {
             try
             {
-                var name = xEntry.Element(XName.Get("title", ManagementConstants.AtomNs)).Value;
+                var name = xEntry.Element(XName.Get("title", ManagementClientConstants.AtomNs)).Value;
                 var ruleDescription = new RuleDescription();
 
-                var rdXml = xEntry.Element(XName.Get("content", ManagementConstants.AtomNs))?
-                    .Element(XName.Get("RuleDescription", ManagementConstants.SbNs));
+                var rdXml = xEntry.Element(XName.Get("content", ManagementClientConstants.AtomNs))?
+                    .Element(XName.Get("RuleDescription", ManagementClientConstants.SbNs));
 
                 if (rdXml == null)
                 {
@@ -239,14 +239,14 @@ namespace Microsoft.Azure.ServiceBus
         internal XDocument Serialize()
         {
             XDocument doc = new XDocument(
-                   new XElement(XName.Get("entry", ManagementConstants.AtomNs),
-                       new XElement(XName.Get("content", ManagementConstants.AtomNs),
+                   new XElement(XName.Get("entry", ManagementClientConstants.AtomNs),
+                       new XElement(XName.Get("content", ManagementClientConstants.AtomNs),
                            new XAttribute("type", "application/xml"),
                            new XElement(
-                                XName.Get("RuleDescription", ManagementConstants.SbNs),
+                                XName.Get("RuleDescription", ManagementClientConstants.SbNs),
                                 this.Filter?.Serialize(),
                                 this.Action?.Serialize(),
-                                new XElement(XName.Get("Name", ManagementConstants.SbNs), this.Name)))));
+                                new XElement(XName.Get("Name", ManagementClientConstants.SbNs), this.Name)))));
 
             return doc;
         }

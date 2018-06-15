@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
-    internal class ManagementConstants
+    internal class ManagementClientConstants
     {
         public const int QueueNameMaximumLength = 260;
         public const int TopicNameMaximumLength = 260;
