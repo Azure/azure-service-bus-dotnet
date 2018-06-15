@@ -13,21 +13,11 @@ using Microsoft.Azure.ServiceBus.Primitives;
 namespace Microsoft.Azure.ServiceBus.Management
 {
     // TODO: Document all exceptions that might be thrown
-    public class ManagementClient : ClientEntity, IManagementClient
+    public class ManagementClient : IManagementClient
     {
-        private bool ownsConnection;
         private HttpClient httpClient;
         private ServiceBusConnectionStringBuilder csBuilder;
-        
-        public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = null)
-            : base(nameof(ManagementClient), string.Empty, retryPolicy ?? RetryPolicy.Default)
-        {
-            this.csBuilder = connectionStringBuilder;
-            this.ServiceBusConnection = new ServiceBusConnection(connectionStringBuilder);
-            this.ServiceBusConnection.RetryPolicy = this.RetryPolicy;
-            this.ownsConnection = true;
-            this.httpClient = new HttpClient();
-        }
+        private readonly InternalClient internalClient;
 
         public ManagementClient(string connectionString, RetryPolicy retryPolicy = null)
             : this(new ServiceBusConnectionStringBuilder(connectionString), retryPolicy)
@@ -37,58 +27,44 @@ namespace Microsoft.Azure.ServiceBus.Management
         public ManagementClient(string endpoint, ITokenProvider tokenProvider, RetryPolicy retryPolicy = null)
             : this(new ServiceBusConnectionStringBuilder() { Endpoint = endpoint}, retryPolicy)
         {
-            this.ServiceBusConnection.TokenProvider = tokenProvider;
+            this.internalClient.ServiceBusConnection.TokenProvider = tokenProvider;
         }
 
-        public override ServiceBusConnection ServiceBusConnection { get; }
-
-        public override TimeSpan OperationTimeout
+        public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = null)
         {
-            get => this.ServiceBusConnection.OperationTimeout;
-            set => this.ServiceBusConnection.OperationTimeout = value;
+            this.csBuilder = connectionStringBuilder;
+            this.httpClient = new HttpClient();
+
+            this.internalClient = new InternalClient(nameof(ManagementClient), string.Empty, retryPolicy ?? RetryPolicy.Default, connectionStringBuilder);
         }
 
-        public override string Path => this.ServiceBusConnection.Endpoint.AbsoluteUri;
-
-        public override IList<ServiceBusPlugin> RegisteredPlugins => null;
-
-        public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin)
-        {
-            throw new NotImplementedException($"{nameof(ManagementClient)} doesn't support plugins");
-        }
-
-        public override void UnregisterPlugin(string serviceBusPluginName)
-        {
-            throw new NotImplementedException($"{nameof(ManagementClient)} doesn't support plugins");
-        }
-        
         #region DeleteEntity
 
-        public async Task DeleteQueueAsync(string queueName, CancellationToken cancellationToken = default)
+        public Task DeleteQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
             CheckValidQueueName(queueName);
-            await DeleteEntity(queueName, cancellationToken);
+            return DeleteEntity(queueName, cancellationToken);
         }
 
-        public async Task DeleteTopicAsync(string topicName, CancellationToken cancellationToken = default)
+        public Task DeleteTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
             CheckValidTopicName(topicName);
-            await DeleteEntity(topicName, cancellationToken);
+            return DeleteEntity(topicName, cancellationToken);
         }
 
-        public async Task DeleteSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
+        public Task DeleteSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
-            await DeleteEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), cancellationToken);
+            return DeleteEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), cancellationToken);
         }
 
-        public async Task DeleteRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
+        public Task DeleteRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
         {
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
             CheckValidRuleName(ruleName);
-            await DeleteEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", cancellationToken);
+            return DeleteEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", cancellationToken);
         }
 
         private async Task DeleteEntity(string path, CancellationToken cancellationToken)
@@ -103,12 +79,11 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             var request = new HttpRequestMessage(HttpMethod.Delete, uri);
 
-            await this.RetryPolicy.RunOperation(
+            await this.internalClient.RetryPolicy.RunOperation(
                 async () =>
                 {
-                    await SendHttpRequest(request, cancellationToken)
-                        .ConfigureAwait(false);
-                }, this.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
+                    await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
+                }, this.internalClient.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
         }
 
         #endregion
@@ -118,14 +93,14 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<QueueDescription> GetQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
             CheckValidQueueName(queueName);
-            var content = await GetEntity(queueName, null, false, cancellationToken);
+            var content = await GetEntity(queueName, null, false, cancellationToken).ConfigureAwait(false);
             return QueueDescription.ParseFromContent(content);
         }
 
         public async Task<TopicDescription> GetTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
             CheckValidTopicName(topicName);
-            var content = await GetEntity(topicName, null, false, cancellationToken);
+            var content = await GetEntity(topicName, null, false, cancellationToken).ConfigureAwait(false);
             return TopicDescription.ParseFromContent(content);
         }
 
@@ -133,7 +108,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
-            var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), null, false, cancellationToken);
+            var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), null, false, cancellationToken).ConfigureAwait(false);
             return SubscriptionDescription.ParseFromContent(topicName, content);
         }
 
@@ -142,7 +117,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
             CheckValidRuleName(ruleName);
-            var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", null, false, cancellationToken);
+            var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", null, false, cancellationToken).ConfigureAwait(false);
             return RuleDescription.ParseFromContent(content);
         }
 
@@ -153,14 +128,14 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<QueueRuntimeInfo> GetQueueRuntimeInfoAsync(string queueName, CancellationToken cancellationToken = default)
         {
             CheckValidQueueName(queueName);
-            var content = await GetEntity(queueName, null, true, cancellationToken);
+            var content = await GetEntity(queueName, null, true, cancellationToken).ConfigureAwait(false);
             return QueueRuntimeInfo.ParseFromContent(content);
         }
 
         public async Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken = default)
         {
             CheckValidTopicName(topicName);
-            var content = await GetEntity(topicName, null, true, cancellationToken);
+            var content = await GetEntity(topicName, null, true, cancellationToken).ConfigureAwait(false);
             return TopicRuntimeInfo.ParseFromContent(content);
         }
 
@@ -168,7 +143,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
-            var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), null, true, cancellationToken);
+            var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), null, true, cancellationToken).ConfigureAwait(false);
             return SubscriptionRuntimeInfo.ParseFromContent(topicName, content);
         }
 
@@ -178,20 +153,20 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
-            var content = await GetEntity("$Resources/queues", $"$skip={skip}&$top={count}", false, cancellationToken);
+            var content = await GetEntity("$Resources/queues", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
             return QueueDescription.ParseCollectionFromContent(content);
         }
 
         public async Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
-            var content = await GetEntity("$Resources/topics", $"$skip={skip}&$top={count}", false, cancellationToken);
+            var content = await GetEntity("$Resources/topics", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
             return TopicDescription.ParseCollectionFromContent(content);
         }
 
         public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             CheckValidTopicName(topicName);
-            var content = await GetEntity($"{topicName}/Subscriptions", $"$skip={skip}&$top={count}", false, cancellationToken);
+            var content = await GetEntity($"{topicName}/Subscriptions", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
             return SubscriptionDescription.ParseCollectionFromContent(topicName, content);
         }
 
@@ -199,7 +174,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
-            var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules", $"$skip={skip}&$top={count}", false, cancellationToken);
+            var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
             return RuleDescription.ParseCollectionFromContent(content);
         }
 
@@ -221,15 +196,13 @@ namespace Microsoft.Azure.ServiceBus.Management
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
 
             HttpResponseMessage response = null;
-            await this.RetryPolicy.RunOperation(
+            await this.internalClient.RetryPolicy.RunOperation(
                 async () =>
                 {
-                    response = await SendHttpRequest(request, cancellationToken)
-                        .ConfigureAwait(false);
-                }, this.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
+                    response = await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
+                }, this.internalClient.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
 
-            var content = await response.Content.ReadAsStringAsync();
-            return content;
+            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
 
         #endregion
@@ -251,7 +224,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 false, 
                 queueDescription.ForwardTo, 
                 queueDescription.ForwardDeadLetteredMessagesTo, 
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
             return QueueDescription.ParseFromContent(content);
         }
 
@@ -263,7 +236,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
         {
             var atomRequest = topicDescription.Serialize().ToString();
-            var content = await PutEntity(topicDescription.Path, atomRequest, false, null, null, cancellationToken);
+            var content = await PutEntity(topicDescription.Path, atomRequest, false, null, null, cancellationToken).ConfigureAwait(false);
             return TopicDescription.ParseFromContent(content);
         }
 
@@ -283,7 +256,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 false,
                 subscriptionDescription.ForwardTo,
                 subscriptionDescription.ForwardDeadLetteredMessagesTo,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
             return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content);
         }
 
@@ -298,7 +271,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 false,
                 null, 
                 null,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
             return RuleDescription.ParseFromContent(content);
         }
 
@@ -316,14 +289,14 @@ namespace Microsoft.Azure.ServiceBus.Management
                 true, 
                 queueDescription.ForwardTo,
                 queueDescription.ForwardDeadLetteredMessagesTo, 
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
             return QueueDescription.ParseFromContent(content);
         }
 
         public async Task<TopicDescription> UpdateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
         {
             var atomRequest = topicDescription.Serialize().ToString();
-            var content = await PutEntity(topicDescription.Path, atomRequest, true, null, null, cancellationToken);
+            var content = await PutEntity(topicDescription.Path, atomRequest, true, null, null, cancellationToken).ConfigureAwait(false);
             return TopicDescription.ParseFromContent(content);
         }
 
@@ -337,7 +310,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 true,
                 subscriptionDescription.ForwardTo,
                 subscriptionDescription.ForwardDeadLetteredMessagesTo,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
             return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content);
         }
 
@@ -350,7 +323,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 atomRequest,
                 true,
                 null, null,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
             return RuleDescription.ParseFromContent(content);
         }
 
@@ -378,26 +351,24 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             if (!string.IsNullOrWhiteSpace(forwardTo))
             {
-                var token = await GetToken(forwardTo);
+                var token = await this.internalClient.GetToken(forwardTo).ConfigureAwait(false);
                 request.Headers.Add(ManagementClientConstants.ServiceBusSupplementartyAuthorizationHeaderName, token);
             }
 
             if (!string.IsNullOrWhiteSpace(fwdDeadLetterTo))
             {
-                var token = await GetToken(fwdDeadLetterTo);
+                var token = await this.internalClient.GetToken(fwdDeadLetterTo).ConfigureAwait(false);
                 request.Headers.Add(ManagementClientConstants.ServiceBusDlqSupplementaryAuthorizationHeaderName, token);
             }
 
             HttpResponseMessage response = null;
-            await this.RetryPolicy.RunOperation(
+            await this.internalClient.RetryPolicy.RunOperation(
                 async () =>
                 {
-                    response = await SendHttpRequest(request, cancellationToken)
-                        .ConfigureAwait(false);
-                }, this.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
+                    response = await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
+                }, this.internalClient.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
 
-            var content = await response.Content.ReadAsStringAsync();
-            return content;
+            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
 
         #endregion
@@ -411,7 +382,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             try
             {
                 // TODO: Optimize by removing deserialization costs.
-                var qd = await GetQueueAsync(queueName, cancellationToken);
+                var qd = await GetQueueAsync(queueName, cancellationToken).ConfigureAwait(false);
             }
             catch (MessagingEntityNotFoundException)
             {
@@ -428,7 +399,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             try
             {
                 // TODO: Optimize by removing deserialization costs.
-                var td = await GetTopicAsync(topicName, cancellationToken);
+                var td = await GetTopicAsync(topicName, cancellationToken).ConfigureAwait(false);
             }
             catch (MessagingEntityNotFoundException)
             {
@@ -446,7 +417,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             try
             {
                 // TODO: Optimize by removing deserialization costs.
-                var sd = await GetSubscriptionAsync(topicName, subscriptionName, cancellationToken);
+                var sd = await GetSubscriptionAsync(topicName, subscriptionName, cancellationToken).ConfigureAwait(false);
             }
             catch (MessagingEntityNotFoundException)
             {
@@ -456,14 +427,9 @@ namespace Microsoft.Azure.ServiceBus.Management
             return true;
         }
 
-        #endregion
-
-        protected async override Task OnClosingAsync()
+        public async Task CloseAsync()
         {
-            if (this.ownsConnection)
-            {
-                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
-            }
+            await internalClient.CloseAsync().ConfigureAwait(false);
 
             if (httpClient != null)
             {
@@ -472,39 +438,28 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        #endregion
+
         private async Task<HttpResponseMessage> SendHttpRequest(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var token = await GetToken(request.RequestUri);
+            var token = await this.internalClient.GetToken(request.RequestUri).ConfigureAwait(false);
             request.Headers.Add("Authorization", token);
             request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementClientConstants.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
             HttpResponseMessage response;
             try
             {
-                response = await this.httpClient.SendAsync(request, cancellationToken);
+                response = await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             }
             catch (HttpRequestException exception)
             {
                 throw new ServiceBusException(true, exception);
             }
 
-            await ValidateHttpResponse(response);
+            await ValidateHttpResponse(response).ConfigureAwait(false);
             return response;
         }
 
-        // TODO: Operation timeout as token timeout??? :O
-        // TODO: token caching?
-        private Task<string> GetToken(Uri requestUri)
-        {
-            return this.GetToken(requestUri.GetLeftPart(UriPartial.Path));
-        }
-
-        private async Task<string> GetToken(string requestUri)
-        {
-            var token = await this.ServiceBusConnection.TokenProvider.GetTokenAsync(requestUri, this.ServiceBusConnection.OperationTimeout);
-            return token.TokenValue;
-        }
-
-        private int GetPort(string endpoint)
+       private int GetPort(string endpoint)
         {
             // used for internal testing
             if (endpoint.EndsWith("onebox.windows-int.net"))
@@ -657,6 +612,55 @@ namespace Microsoft.Azure.ServiceBus.Management
                     throw new ArgumentException($"'{entityName}' contains character '{uriSchemeKey}' " +
                         $"which is not allowed because it is reserved in the Uri scheme.", paramName);
                 }
+            }
+        }
+
+        class InternalClient : ClientEntity
+        {
+            private bool ownsConnection;
+
+            public InternalClient(string clientTypeName, string postfix, RetryPolicy retryPolicy, ServiceBusConnectionStringBuilder connectionStringBuilder) : base(clientTypeName, postfix, retryPolicy)
+            {
+                this.ServiceBusConnection = new ServiceBusConnection(connectionStringBuilder);
+                this.ServiceBusConnection.RetryPolicy = this.RetryPolicy;
+                this.ownsConnection = true;
+            }
+
+            public override ServiceBusConnection ServiceBusConnection { get; }
+
+            public override TimeSpan OperationTimeout
+            {
+                get => this.ServiceBusConnection.OperationTimeout;
+                set => this.ServiceBusConnection.OperationTimeout = value;
+            }
+
+            public override string Path => this.ServiceBusConnection.Endpoint.AbsoluteUri;
+
+            public override IList<ServiceBusPlugin> RegisteredPlugins => throw new NotImplementedException($"{nameof(ManagementClient)} doesn't support plugins");
+
+            public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin) => throw new NotImplementedException($"{nameof(ManagementClient)} doesn't support plugins");
+            
+            public override void UnregisterPlugin(string serviceBusPluginName) => throw new NotImplementedException($"{nameof(ManagementClient)} doesn't support plugins");
+
+            protected async override Task OnClosingAsync()
+            {
+                if (this.ownsConnection)
+                {
+                    await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+                }
+            }
+
+            // TODO: Operation timeout as token timeout??? :O
+            // TODO: token caching?
+            public Task<string> GetToken(Uri requestUri)
+            {
+                return this.GetToken(requestUri.GetLeftPart(UriPartial.Path));
+            }
+
+            public async Task<string> GetToken(string requestUri)
+            {
+                var token = await this.ServiceBusConnection.TokenProvider.GetTokenAsync(requestUri, this.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
+                return token.TokenValue;
             }
         }
     }
