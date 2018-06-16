@@ -504,7 +504,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             return token.TokenValue;
         }
 
-        private int GetPort(string endpoint)
+        private static int GetPort(string endpoint)
         {
             // used for internal testing
             if (endpoint.EndsWith("onebox.windows-int.net"))
@@ -515,7 +515,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             return -1;
         }
 
-        private async Task ValidateHttpResponse(HttpResponseMessage response)
+        private static async Task ValidateHttpResponse(HttpResponseMessage response)
         {
             if (response.IsSuccessStatusCode)
             {
