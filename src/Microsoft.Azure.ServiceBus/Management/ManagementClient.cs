@@ -18,7 +18,8 @@ namespace Microsoft.Azure.ServiceBus.Management
         private bool ownsConnection;
         private HttpClient httpClient;
         private ServiceBusConnectionStringBuilder csBuilder;
-        
+        private readonly int port;
+
         public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = null)
             : base(nameof(ManagementClient), string.Empty, retryPolicy ?? RetryPolicy.Default)
         {
@@ -27,6 +28,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             this.ServiceBusConnection.RetryPolicy = this.RetryPolicy;
             this.ownsConnection = true;
             this.httpClient = new HttpClient();
+            this.port = GetPort(connectionStringBuilder.Endpoint);
         }
 
         public ManagementClient(string connectionString, RetryPolicy retryPolicy = null)
@@ -97,7 +99,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             {
                 Path = path,
                 Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
+                Port = this.port,
                 Query = $"{ManagementClientConstants.apiVersionQuery}&enrich=false"
             }.Uri;
 
@@ -214,7 +216,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             {
                 Path = path,
                 Scheme = Uri.UriSchemeHttps,
-                Port = GetPort(this.csBuilder.Endpoint),
+                Port = this.port,
                 Query = queryString
             }.Uri;
 
@@ -359,7 +361,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             var uri = new UriBuilder(this.csBuilder.Endpoint)
             {
                 Path = path,
-                Port = GetPort(this.csBuilder.Endpoint),
+                Port = this.port,
                 Scheme = Uri.UriSchemeHttps,
                 Query = $"{ManagementClientConstants.apiVersionQuery}"
             }.Uri;
@@ -507,7 +509,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         private static int GetPort(string endpoint)
         {
             // used for internal testing
-            if (endpoint.EndsWith("onebox.windows-int.net"))
+            if (endpoint.EndsWith("onebox.windows-int.net", StringComparison.InvariantCultureIgnoreCase))
             {
                 return 4446;
             }
