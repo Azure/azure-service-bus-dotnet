@@ -21,16 +21,16 @@ namespace Microsoft.Azure.ServiceBus.Management
             this.port = GetPort(connectionStringBuilder.Endpoint);
 
         public ManagementClient(string connectionString, RetryPolicy retryPolicy = default)
-            : this(new ServiceBusConnectionStringBuilder(connectionString), retryPolicy)
+            : this(new ServiceBusConnectionStringBuilder(connectionString), retryPolicy:retryPolicy)
         {
         }
 
         public ManagementClient(string endpoint, ITokenProvider tokenProvider, RetryPolicy retryPolicy = default )
-            : this(new ServiceBusConnectionStringBuilder { Endpoint = endpoint}, retryPolicy, tokenProvider)
+            : this(new ServiceBusConnectionStringBuilder { Endpoint = endpoint}, tokenProvider, retryPolicy)
         {
         }
 
-        public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = default, ITokenProvider tokenProvider = default)
+        public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, ITokenProvider tokenProvider = default, RetryPolicy retryPolicy = default)
         {
             this.httpClient = new HttpClient();
 
