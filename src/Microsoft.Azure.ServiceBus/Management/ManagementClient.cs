@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Microsoft.Azure.ServiceBus.Core;
 using Microsoft.Azure.ServiceBus.Primitives;
 
 namespace Microsoft.Azure.ServiceBus.Management
@@ -16,28 +14,47 @@ namespace Microsoft.Azure.ServiceBus.Management
     public class ManagementClient : IManagementClient
     {
         private HttpClient httpClient;
-        private ServiceBusConnectionStringBuilder csBuilder;
-        private readonly int port;
-        private readonly InternalClient internalClient;
+        private readonly RetryPolicy retryPolicy;
+        private readonly string endpointFQDN;
+        private readonly ITokenProvider tokenProvider;
+        private readonly TimeSpan operationTimeout;
             this.port = GetPort(connectionStringBuilder.Endpoint);
 
-        public ManagementClient(string connectionString, RetryPolicy retryPolicy = null)
+        public ManagementClient(string connectionString, RetryPolicy retryPolicy = default)
             : this(new ServiceBusConnectionStringBuilder(connectionString), retryPolicy)
         {
         }
 
-        public ManagementClient(string endpoint, ITokenProvider tokenProvider, RetryPolicy retryPolicy = null)
-            : this(new ServiceBusConnectionStringBuilder() { Endpoint = endpoint}, retryPolicy)
+        public ManagementClient(string endpoint, ITokenProvider tokenProvider, RetryPolicy retryPolicy = default )
+            : this(new ServiceBusConnectionStringBuilder { Endpoint = endpoint}, retryPolicy, tokenProvider)
         {
-            this.internalClient.ServiceBusConnection.TokenProvider = tokenProvider;
         }
 
-        public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = null)
+        public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, RetryPolicy retryPolicy = default, ITokenProvider tokenProvider = default)
         {
-            this.csBuilder = connectionStringBuilder;
             this.httpClient = new HttpClient();
 
-            this.internalClient = new InternalClient(nameof(ManagementClient), string.Empty, retryPolicy ?? RetryPolicy.Default, connectionStringBuilder);
+            //this.internalClient = new InternalClient(nameof(ManagementClient), string.Empty, retryPolicy ?? RetryPolicy.Default, connectionStringBuilder);
+            this.endpointFQDN = connectionStringBuilder.Endpoint;
+            this.retryPolicy = retryPolicy;
+            this.tokenProvider = tokenProvider ?? CreateTokenProvider(connectionStringBuilder);
+            this.operationTimeout = Constants.DefaultOperationTimeout;
+        }
+
+        private static ITokenProvider CreateTokenProvider(ServiceBusConnectionStringBuilder builder)
+        {
+            if (builder.SasToken != null)
+            {
+                return new SharedAccessSignatureTokenProvider(builder.SasToken);
+            }
+
+            if (builder.SasKeyName != null || builder.SasKey != null)
+            {
+                return new SharedAccessSignatureTokenProvider(builder.SasKeyName, builder.SasKey);
+            }
+
+            // TODO: is this even possible?
+            throw new Exception("Could not create token provider from the provided connection string.");
         }
 
         #region DeleteEntity
@@ -71,7 +88,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         private async Task DeleteEntity(string path, CancellationToken cancellationToken)
         {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            var uri = new UriBuilder(this.endpointFQDN)
             {
                 Path = path,
                 Scheme = Uri.UriSchemeHttps,
@@ -81,11 +98,11 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             var request = new HttpRequestMessage(HttpMethod.Delete, uri);
 
-            await this.internalClient.RetryPolicy.RunOperation(
+            await this.retryPolicy.RunOperation(
                 async () =>
                 {
                     await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
-                }, this.internalClient.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
+                }, this.operationTimeout).ConfigureAwait(false);
         }
 
         #endregion
@@ -187,7 +204,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             {
                 queryString = queryString + "&" + query;
             }
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            var uri = new UriBuilder(this.endpointFQDN)
             {
                 Path = path,
                 Scheme = Uri.UriSchemeHttps,
@@ -198,11 +215,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
 
             HttpResponseMessage response = null;
-            await this.internalClient.RetryPolicy.RunOperation(
+            await this.retryPolicy.RunOperation(
                 async () =>
                 {
                     response = await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
-                }, this.internalClient.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
+                }, this.operationTimeout).ConfigureAwait(false);
 
             return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
@@ -218,7 +235,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
         {
-            queueDescription.NormalizeDescription(this.csBuilder.Endpoint);
+            queueDescription.NormalizeDescription(this.endpointFQDN);
             var atomRequest = queueDescription.Serialize().ToString();
             var content = await PutEntity(
                 queueDescription.Path, 
@@ -250,7 +267,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         // TODO: Expose CreateSubscriptionWithRule()
         public async Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
         {
-            subscriptionDescription.NormalizeDescription(this.csBuilder.Endpoint);
+            subscriptionDescription.NormalizeDescription(this.endpointFQDN);
             var atomRequest = subscriptionDescription.Serialize().ToString();
             var content = await PutEntity(
                 EntityNameHelper.FormatSubscriptionPath(subscriptionDescription.TopicPath, subscriptionDescription.SubscriptionName),
@@ -264,8 +281,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
         {
-            ManagementClient.CheckValidTopicName(topicName);
-            ManagementClient.CheckValidSubscriptionName(topicName);
+            CheckValidTopicName(topicName);
+            CheckValidSubscriptionName(topicName);
             var atomRequest = ruleDescription.Serialize().ToString();
             var content = await PutEntity(
                 EntityNameHelper.FormatRulePath(topicName, subscriptionName, ruleDescription.Name),
@@ -283,7 +300,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
         {
-            queueDescription.NormalizeDescription(this.csBuilder.Endpoint);
+            queueDescription.NormalizeDescription(this.endpointFQDN);
             var atomRequest = queueDescription.Serialize().ToString();
             var content = await PutEntity(
                 queueDescription.Path, 
@@ -304,7 +321,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<SubscriptionDescription> UpdateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
         {
-            subscriptionDescription.NormalizeDescription(this.csBuilder.Endpoint);
+            subscriptionDescription.NormalizeDescription(this.endpointFQDN);
             var atomRequest = subscriptionDescription.Serialize().ToString();
             var content = await PutEntity(
                 EntityNameHelper.FormatSubscriptionPath(subscriptionDescription.TopicPath, subscriptionDescription.SubscriptionName),
@@ -318,7 +335,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<RuleDescription> UpdateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
         {
-            ManagementClient.CheckValidRuleName(ruleDescription.Name);
+            CheckValidRuleName(ruleDescription.Name);
             var atomRequest = ruleDescription.Serialize().ToString();
             var content = await PutEntity(
                 EntityNameHelper.FormatRulePath(topicName, subscriptionName, ruleDescription.Name),
@@ -331,7 +348,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         private async Task<string> PutEntity(string path, string requestBody, bool isUpdate, string forwardTo, string fwdDeadLetterTo, CancellationToken cancellationToken)
         {
-            var uri = new UriBuilder(this.csBuilder.Endpoint)
+            var uri = new UriBuilder(this.endpointFQDN)
             {
                 Path = path,
                 Port = this.port,
@@ -353,22 +370,22 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             if (!string.IsNullOrWhiteSpace(forwardTo))
             {
-                var token = await this.internalClient.GetToken(forwardTo).ConfigureAwait(false);
+                var token = await this.GetToken(forwardTo).ConfigureAwait(false);
                 request.Headers.Add(ManagementClientConstants.ServiceBusSupplementartyAuthorizationHeaderName, token);
             }
 
             if (!string.IsNullOrWhiteSpace(fwdDeadLetterTo))
             {
-                var token = await this.internalClient.GetToken(fwdDeadLetterTo).ConfigureAwait(false);
+                var token = await this.GetToken(fwdDeadLetterTo).ConfigureAwait(false);
                 request.Headers.Add(ManagementClientConstants.ServiceBusDlqSupplementaryAuthorizationHeaderName, token);
             }
 
             HttpResponseMessage response = null;
-            await this.internalClient.RetryPolicy.RunOperation(
+            await this.retryPolicy.RunOperation(
                 async () =>
                 {
                     response = await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
-                }, this.internalClient.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
+                }, this.operationTimeout).ConfigureAwait(false);
 
             return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
@@ -429,22 +446,19 @@ namespace Microsoft.Azure.ServiceBus.Management
             return true;
         }
 
-        public async Task CloseAsync()
+        public Task CloseAsync()
         {
-            await internalClient.CloseAsync().ConfigureAwait(false);
+            httpClient?.Dispose();
+            httpClient = null;
 
-            if (httpClient != null)
-            {
-                httpClient.Dispose();
-                httpClient = null;
-            }
+            return Task.CompletedTask;
         }
 
         #endregion
 
         private async Task<HttpResponseMessage> SendHttpRequest(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var token = await this.internalClient.GetToken(request.RequestUri).ConfigureAwait(false);
+            var token = await this.GetToken(request.RequestUri).ConfigureAwait(false);
             request.Headers.Add("Authorization", token);
             request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementClientConstants.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
             HttpResponseMessage response;
@@ -486,31 +500,34 @@ namespace Microsoft.Azure.ServiceBus.Management
             {
                 throw new UnauthorizedException(exceptionMessage);
             }
-            else if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.NoContent)
+
+            if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.NoContent)
             {
                 throw new MessagingEntityNotFoundException(exceptionMessage);
             }
-            else if (response.StatusCode == HttpStatusCode.Conflict)
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
             {
                 if (response.RequestMessage.Method.Equals(HttpMethod.Delete))
                 {
                     throw new ServiceBusException(true, exceptionMessage);
                 }
+
                 if (response.RequestMessage.Method.Equals(HttpMethod.Put) && response.RequestMessage.Headers.IfMatch.Count > 0)
                 {
                     // response.RequestMessage.Headers.IfMatch.Count > 0 is true for UpdateEntity scenario
                     throw new ServiceBusException(true, exceptionMessage);
                 }
-                else if (exceptionMessage.Contains(ManagementClientConstants.ConflictOperationInProgressSubCode))
+
+                if (exceptionMessage.Contains(ManagementClientConstants.ConflictOperationInProgressSubCode))
                 {
                     throw new ServiceBusException(true, exceptionMessage);
                 }
-                else
-                {
-                    throw new MessagingEntityAlreadyExistsException(exceptionMessage);
-                }
+
+                throw new MessagingEntityAlreadyExistsException(exceptionMessage);
             }
-            else if (response.StatusCode == HttpStatusCode.Forbidden)
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
             {
                 if (exceptionMessage.Contains(ManagementClientConstants.ForbiddenInvalidOperationSubCode))
                 {
@@ -519,18 +536,18 @@ namespace Microsoft.Azure.ServiceBus.Management
                 
                 throw new QuotaExceededException(exceptionMessage);
             }
-            else if (response.StatusCode == HttpStatusCode.BadRequest)
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
             {
                 throw new ServiceBusException(false, new ArgumentException(exceptionMessage));
             }
-            else if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+
+            if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
             {
                 throw new ServerBusyException(exceptionMessage);
             }
-            else
-            {
-                throw new ServiceBusException(true, exceptionMessage);
-            }
+
+            throw new ServiceBusException(true, exceptionMessage);
         }
 
         private static string ParseDetailIfAvailable(string content)
@@ -544,12 +561,8 @@ namespace Microsoft.Azure.ServiceBus.Management
             {
                 var errorContentXml = XElement.Parse(content);
                 var detail = errorContentXml.Element("Detail");
-                if (detail != null)
-                {
-                    return detail.Value;
-                }
 
-                return content;
+                return detail?.Value ?? content;
             }
             catch (Exception)
             {
@@ -586,84 +599,44 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             // and "\" will be converted to "/" on the REST path anyway. Gateway/REST do not
             // have to worry about the begin/end slash problem, so this is purely a client side check.
-            string tmpName = entityName.Replace(@"\", Constants.PathDelimiter);
+            var tmpName = entityName.Replace(@"\", Constants.PathDelimiter);
             if (tmpName.Length > maxEntityNameLength)
             {
-                throw new ArgumentOutOfRangeException(paramName, $"Entity path '{entityName}' " +
-                    $"exceeds the '{maxEntityNameLength}' character limit.");
+                throw new ArgumentOutOfRangeException(paramName, $@"Entity path '{entityName}' exceeds the '{maxEntityNameLength}' character limit.");
             }
 
-            if (tmpName.StartsWith(Constants.PathDelimiter, StringComparison.Ordinal) || 
-                tmpName.EndsWith(Constants.PathDelimiter, StringComparison.Ordinal))
+            if (tmpName.StartsWith(Constants.PathDelimiter, StringComparison.OrdinalIgnoreCase) || 
+                tmpName.EndsWith(Constants.PathDelimiter, StringComparison.OrdinalIgnoreCase))
             {
-                throw new ArgumentException($"The entity name/path cannot contain '/' as " +
-                    $"prefix or suffix. The supplied value is '{entityName}'", paramName);
+                throw new ArgumentException($@"The entity name/path cannot contain '/' as prefix or suffix. The supplied value is '{entityName}'", paramName);
             }
 
             if (!allowSeparator && tmpName.Contains(Constants.PathDelimiter))
             {
-                throw new ArgumentException($"The entity name/path contains an invalid character" +
-                    $" '{Constants.PathDelimiter}'", paramName);
+                throw new ArgumentException($@"The entity name/path contains an invalid character '{Constants.PathDelimiter}'", paramName);
             }
 
-            string[] uriSchemeKeys = new string[] { "@", "?", "#" };
+            string[] uriSchemeKeys = { "@", "?", "#" };
             foreach (var uriSchemeKey in uriSchemeKeys)
             {
                 if (entityName.Contains(uriSchemeKey))
                 {
-                    throw new ArgumentException($"'{entityName}' contains character '{uriSchemeKey}' " +
-                        $"which is not allowed because it is reserved in the Uri scheme.", paramName);
+                    throw new ArgumentException($@"'{entityName}' contains character '{uriSchemeKey}' which is not allowed because it is reserved in the Uri scheme.", paramName);
                 }
             }
         }
 
-        class InternalClient : ClientEntity
+        // TODO: Operation timeout as token timeout??? :O
+        // TODO: token caching?
+        public Task<string> GetToken(Uri requestUri)
         {
-            private bool ownsConnection;
+            return this.GetToken(requestUri.GetLeftPart(UriPartial.Path));
+        }
 
-            public InternalClient(string clientTypeName, string postfix, RetryPolicy retryPolicy, ServiceBusConnectionStringBuilder connectionStringBuilder) : base(clientTypeName, postfix, retryPolicy)
-            {
-                this.ServiceBusConnection = new ServiceBusConnection(connectionStringBuilder);
-                this.ServiceBusConnection.RetryPolicy = this.RetryPolicy;
-                this.ownsConnection = true;
-            }
-
-            public override ServiceBusConnection ServiceBusConnection { get; }
-
-            public override TimeSpan OperationTimeout
-            {
-                get => this.ServiceBusConnection.OperationTimeout;
-                set => this.ServiceBusConnection.OperationTimeout = value;
-            }
-
-            public override string Path => this.ServiceBusConnection.Endpoint.AbsoluteUri;
-
-            public override IList<ServiceBusPlugin> RegisteredPlugins => throw new NotImplementedException($"{nameof(ManagementClient)} doesn't support plugins");
-
-            public override void RegisterPlugin(ServiceBusPlugin serviceBusPlugin) => throw new NotImplementedException($"{nameof(ManagementClient)} doesn't support plugins");
-            
-            public override void UnregisterPlugin(string serviceBusPluginName) => throw new NotImplementedException($"{nameof(ManagementClient)} doesn't support plugins");
-
-            protected async override Task OnClosingAsync()
-            {
-                if (this.ownsConnection)
-                {
-                    await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
-                }
-            }
-
-            // TODO: Operation timeout as token timeout??? :O
-            // TODO: token caching?
-            public Task<string> GetToken(Uri requestUri)
-            {
-                return this.GetToken(requestUri.GetLeftPart(UriPartial.Path));
-            }
-
-            public async Task<string> GetToken(string requestUri)
-            {
-                var token = await this.ServiceBusConnection.TokenProvider.GetTokenAsync(requestUri, this.ServiceBusConnection.OperationTimeout).ConfigureAwait(false);
-                return token.TokenValue;
-            }
+        public async Task<string> GetToken(string requestUri)
+        {
+            var token = await this.tokenProvider.GetTokenAsync(requestUri, this.operationTimeout).ConfigureAwait(false);
+            return token.TokenValue;
         }
     }
 }
