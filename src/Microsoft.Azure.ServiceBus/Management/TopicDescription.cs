@@ -104,6 +104,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool Equals(TopicDescription other)
         {
+            // TODO: other could be null
+
             if (this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
