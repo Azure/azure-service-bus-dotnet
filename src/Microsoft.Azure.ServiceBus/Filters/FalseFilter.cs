@@ -30,16 +30,6 @@ namespace Microsoft.Azure.ServiceBus
             return "FalseFilter";
         }
 
-        internal override XElement Serialize()
-        {
-            XElement filter = new XElement(
-                XName.Get("Filter", ManagementClientConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(FalseFilter)),
-                new XElement(XName.Get("SqlExpression", ManagementClientConstants.SbNs), this.SqlExpression));
-
-            return filter;
-        }
-
         public override bool Equals(Filter other)
         {
             return other is FalseFilter;
