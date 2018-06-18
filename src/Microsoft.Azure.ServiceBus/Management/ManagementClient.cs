@@ -121,8 +121,10 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<TopicDescription> GetTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
             CheckValidTopicName(topicName);
+
             var content = await GetEntity(topicName, null, false, cancellationToken).ConfigureAwait(false);
-            return TopicDescription.ParseFromContent(content);
+
+            return TopicDescriptionExtensions.ParseFromContent(content);
         }
 
         public async Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
@@ -181,7 +183,8 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             var content = await GetEntity("$Resources/topics", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
-            return TopicDescription.ParseCollectionFromContent(content);
+
+            return TopicDescriptionExtensions.ParseCollectionFromContent(content);
         }
 
         public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
@@ -257,8 +260,10 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
         {
             var atomRequest = topicDescription.Serialize().ToString();
+
             var content = await PutEntity(topicDescription.Path, atomRequest, false, null, null, cancellationToken).ConfigureAwait(false);
-            return TopicDescription.ParseFromContent(content);
+
+            return TopicDescriptionExtensions.ParseFromContent(content);
         }
 
         public Task<SubscriptionDescription> CreateSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
@@ -320,8 +325,10 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<TopicDescription> UpdateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
         {
             var atomRequest = topicDescription.Serialize().ToString();
+
             var content = await PutEntity(topicDescription.Path, atomRequest, true, null, null, cancellationToken).ConfigureAwait(false);
-            return TopicDescription.ParseFromContent(content);
+
+            return TopicDescriptionExtensions.ParseFromContent(content);
         }
 
         public async Task<SubscriptionDescription> UpdateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
