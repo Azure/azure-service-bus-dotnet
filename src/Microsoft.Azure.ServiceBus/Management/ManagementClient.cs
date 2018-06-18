@@ -132,7 +132,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
             var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), null, false, cancellationToken).ConfigureAwait(false);
-            return SubscriptionDescription.ParseFromContent(topicName, content);
+            return SubscriptionDescriptionExtensions.ParseFromContent(topicName, content);
         }
 
         public async Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
@@ -190,8 +190,10 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             CheckValidTopicName(topicName);
+
             var content = await GetEntity($"{topicName}/Subscriptions", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
-            return SubscriptionDescription.ParseCollectionFromContent(topicName, content);
+
+            return SubscriptionDescriptionExtensions.ParseCollectionFromContent(topicName, content);
         }
 
         public async Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
@@ -283,7 +285,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 subscriptionDescription.ForwardTo,
                 subscriptionDescription.ForwardDeadLetteredMessagesTo,
                 cancellationToken).ConfigureAwait(false);
-            return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content);
+            return SubscriptionDescriptionExtensions.ParseFromContent(subscriptionDescription.TopicPath, content);
         }
 
         public async Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
@@ -342,7 +344,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 subscriptionDescription.ForwardTo,
                 subscriptionDescription.ForwardDeadLetteredMessagesTo,
                 cancellationToken).ConfigureAwait(false);
-            return SubscriptionDescription.ParseFromContent(subscriptionDescription.TopicPath, content);
+            return SubscriptionDescriptionExtensions.ParseFromContent(subscriptionDescription.TopicPath, content);
         }
 
         public async Task<RuleDescription> UpdateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
