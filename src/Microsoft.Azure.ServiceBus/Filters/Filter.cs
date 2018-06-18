@@ -40,9 +40,9 @@ namespace Microsoft.Azure.ServiceBus
             switch (attribute.Value)
             {
                 case "SqlFilter":
-                    return SqlFilter.ParseFromXElement(xElement);
+                    return SqlFilterExtensions.ParseFromXElement(xElement);
                 case "CorrelationFilter":
-                    return CorrelationFilter.ParseFromXElement(xElement);
+                    return CorrelationFilterExtensions.ParseFromXElement(xElement);
                 case "TrueFilter":
                     return new TrueFilter();
                 case "FalseFilter":
@@ -52,8 +52,21 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        public abstract bool Equals(Filter other);
+        internal XElement Serialize()
+        {
+            switch (this)
+            {
+                case SqlFilter sqlFilter:
+                    return SqlFilterExtensions.Serialize(sqlFilter);
 
-        internal abstract XElement Serialize();
+                case CorrelationFilter correlationFilter:
+                    return CorrelationFilterExtensions.Serialize(correlationFilter);
+
+                default:
+                    return null;
+            }
+        }
+
+        public abstract bool Equals(Filter other);
     }
 }
