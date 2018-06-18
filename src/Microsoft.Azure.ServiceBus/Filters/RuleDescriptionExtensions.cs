@@ -120,17 +120,24 @@
             }
         }
 
-        public static XDocument Serialize(this RuleDescription description)
+        internal static XDocument Serialize(this RuleDescription description)
         {
-            return new XDocument(
-                new XElement(XName.Get("entry", ManagementClientConstants.AtomNs),
-                    new XElement(XName.Get("content", ManagementClientConstants.AtomNs),
-                        new XAttribute("type", "application/xml"),
-                        new XElement(
-                            XName.Get("RuleDescription", ManagementClientConstants.SbNs),
-                            description.Filter?.Serialize(),
-                            description.Action?.Serialize(),
-                            new XElement(XName.Get("Name", ManagementClientConstants.SbNs), description.Name)))));
+            XDocument doc = new XDocument(
+                   new XElement(XName.Get("entry", ManagementClientConstants.AtomNs),
+                       new XElement(XName.Get("content", ManagementClientConstants.AtomNs),
+                           new XAttribute("type", "application/xml"),
+                           description.SerializeRule())));
+
+            return doc;
+        }
+
+        public static XElement SerializeRule(this RuleDescription description, string elementName = "RuleDescription")
+        {
+            return new XElement(
+                XName.Get(elementName, ManagementClientConstants.SbNs),
+                description.Filter?.Serialize(),
+                description.Action?.Serialize(),
+                new XElement(XName.Get("Name", ManagementClientConstants.SbNs), description.Name));
         }
     }
 }
