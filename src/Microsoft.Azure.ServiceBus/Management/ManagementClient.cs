@@ -140,8 +140,10 @@ namespace Microsoft.Azure.ServiceBus.Management
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
             CheckValidRuleName(ruleName);
+
             var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", null, false, cancellationToken).ConfigureAwait(false);
-            return RuleDescription.ParseFromContent(content);
+
+            return RuleDescriptionExtensions.ParseFromContent(content);
         }
 
         #endregion
@@ -200,8 +202,10 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(subscriptionName);
+
             var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
-            return RuleDescription.ParseCollectionFromContent(content);
+
+            return RuleDescriptionExtensions.ParseCollectionFromContent(content);
         }
 
         private async Task<string> GetEntity(string path, string query, bool enrich, CancellationToken cancellationToken)
@@ -292,7 +296,9 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             CheckValidTopicName(topicName);
             CheckValidSubscriptionName(topicName);
+
             var atomRequest = ruleDescription.Serialize().ToString();
+
             var content = await PutEntity(
                 EntityNameHelper.FormatRulePath(topicName, subscriptionName, ruleDescription.Name),
                 atomRequest,
@@ -300,7 +306,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 null, 
                 null,
                 cancellationToken).ConfigureAwait(false);
-            return RuleDescription.ParseFromContent(content);
+            return RuleDescriptionExtensions.ParseFromContent(content);
         }
 
         #endregion CreateEntity
@@ -357,7 +363,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 true,
                 null, null,
                 cancellationToken).ConfigureAwait(false);
-            return RuleDescription.ParseFromContent(content);
+            return RuleDescriptionExtensions.ParseFromContent(content);
         }
 
         private async Task<string> PutEntity(string path, string requestBody, bool isUpdate, string forwardTo, string fwdDeadLetterTo, CancellationToken cancellationToken)
