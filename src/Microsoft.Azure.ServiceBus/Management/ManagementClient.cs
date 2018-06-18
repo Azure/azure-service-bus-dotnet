@@ -18,7 +18,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         private readonly string endpointFQDN;
         private readonly ITokenProvider tokenProvider;
         private readonly TimeSpan operationTimeout;
-            this.port = GetPort(connectionStringBuilder.Endpoint);
+        private readonly int port;
 
         public ManagementClient(string connectionString, RetryPolicy retryPolicy = default)
             : this(new ServiceBusConnectionStringBuilder(connectionString), retryPolicy:retryPolicy)
@@ -33,12 +33,11 @@ namespace Microsoft.Azure.ServiceBus.Management
         public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, ITokenProvider tokenProvider = default, RetryPolicy retryPolicy = default)
         {
             this.httpClient = new HttpClient();
-
-            //this.internalClient = new InternalClient(nameof(ManagementClient), string.Empty, retryPolicy ?? RetryPolicy.Default, connectionStringBuilder);
             this.endpointFQDN = connectionStringBuilder.Endpoint;
             this.retryPolicy = retryPolicy ?? RetryPolicy.Default;
             this.tokenProvider = tokenProvider ?? CreateTokenProvider(connectionStringBuilder);
             this.operationTimeout = Constants.DefaultOperationTimeout;
+            this.port = GetPort(connectionStringBuilder.Endpoint);
         }
 
         private static ITokenProvider CreateTokenProvider(ServiceBusConnectionStringBuilder builder)
