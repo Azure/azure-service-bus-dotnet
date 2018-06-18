@@ -11,8 +11,6 @@ namespace Microsoft.Azure.ServiceBus
     /// </summary>
     public sealed class FalseFilter : SqlFilter
     {
-        internal static readonly FalseFilter Default = new FalseFilter();
-
         /// <summary>
         /// Initializes a new instance of the <see cref="FalseFilter" /> class.
         /// </summary>
@@ -28,16 +26,6 @@ namespace Microsoft.Azure.ServiceBus
         public override string ToString()
         {
             return "FalseFilter";
-        }
-
-        internal override XElement Serialize()
-        {
-            XElement filter = new XElement(
-                XName.Get("Filter", ManagementClientConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(FalseFilter)),
-                new XElement(XName.Get("SqlExpression", ManagementClientConstants.SbNs), this.SqlExpression));
-
-            return filter;
         }
 
         public override bool Equals(Filter other)

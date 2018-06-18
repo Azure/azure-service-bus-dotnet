@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using Microsoft.Azure.ServiceBus.Management;
+
 namespace Microsoft.Azure.ServiceBus
 {
     /// <summary>
@@ -68,6 +71,65 @@ namespace Microsoft.Azure.ServiceBus
         public static string Format​Transfer​Dead​Letter​Path(string entityPath)
         {
             return string.Concat(entityPath, PathDelimiter, TransferDeadLetterQueueName);
+        }
+
+        // TODO: Should the specific check methods be made public for customers to use?
+        // That way customers don't have to re-implement this kind of checks in their own code
+
+        internal static void CheckValidQueueName(string queueName, string paramName = "queueName")
+        {
+            CheckValidEntityName(queueName, ManagementClientConstants.QueueNameMaximumLength, true, paramName);
+        }
+
+        internal static void CheckValidTopicName(string topicName, string paramName = "topicName")
+        {
+            CheckValidEntityName(topicName, ManagementClientConstants.TopicNameMaximumLength, true, paramName);
+        }
+
+        internal static void CheckValidSubscriptionName(string subscriptionName, string paramName = "subscriptionName")
+        {
+            CheckValidEntityName(subscriptionName, ManagementClientConstants.SubscriptionNameMaximumLength, false, paramName);
+        }
+
+        internal static void CheckValidRuleName(string ruleName, string paramName = "ruleName")
+        {
+            CheckValidEntityName(ruleName, ManagementClientConstants.RuleNameMaximumLength, false, paramName);
+        }
+
+        private static void CheckValidEntityName(string entityName, int maxEntityNameLength, bool allowSeparator, string paramName)
+        {
+            if (string.IsNullOrWhiteSpace(entityName))
+            {
+                throw new ArgumentNullException(paramName);
+            }
+
+            // and "\" will be converted to "/" on the REST path anyway. Gateway/REST do not
+            // have to worry about the begin/end slash problem, so this is purely a client side check.
+            var tmpName = entityName.Replace(@"\", Constants.PathDelimiter);
+            if (tmpName.Length > maxEntityNameLength)
+            {
+                throw new ArgumentOutOfRangeException(paramName, $@"Entity path '{entityName}' exceeds the '{maxEntityNameLength}' character limit.");
+            }
+
+            if (tmpName.StartsWith(Constants.PathDelimiter, StringComparison.OrdinalIgnoreCase) ||
+                tmpName.EndsWith(Constants.PathDelimiter, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($@"The entity name/path cannot contain '/' as prefix or suffix. The supplied value is '{entityName}'", paramName);
+            }
+
+            if (!allowSeparator && tmpName.Contains(Constants.PathDelimiter))
+            {
+                throw new ArgumentException($@"The entity name/path contains an invalid character '{Constants.PathDelimiter}'", paramName);
+            }
+
+            string[] uriSchemeKeys = { "@", "?", "#" };
+            foreach (var uriSchemeKey in uriSchemeKeys)
+            {
+                if (entityName.Contains(uriSchemeKey))
+                {
+                    throw new ArgumentException($@"'{entityName}' contains character '{uriSchemeKey}' which is not allowed because it is reserved in the Uri scheme.", paramName);
+                }
+            }
         }
     }
 }

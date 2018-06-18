@@ -48,7 +48,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         readonly ConcurrentExpiringSet<Guid> requestResponseLockedMessages;
         readonly bool isSessionReceiver;
         readonly object messageReceivePumpSyncLock;
-        readonly bool ownsConnection;
         readonly ActiveClientLinkManager clientLinkManager;
         readonly ServiceBusDiagnosticSource diagnosticSource;
 
@@ -99,7 +98,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
             }
             
-            this.ownsConnection = true;
+            this.OwnsConnection = true;
         }
 
         /// <summary>
@@ -124,7 +123,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             int prefetchCount = Constants.DefaultClientPrefetchCount)
             : this(entityPath, null, receiveMode, new ServiceBusConnection(endpoint, transportType, retryPolicy) {TokenProvider = tokenProvider}, null, retryPolicy, prefetchCount)
         {
-            this.ownsConnection = true;
+            this.OwnsConnection = true;
         }
 
         /// <summary>
@@ -145,7 +144,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             int prefetchCount = Constants.DefaultClientPrefetchCount)
             : this(entityPath, null, receiveMode, serviceBusConnection, null, retryPolicy, prefetchCount)
         {
-            this.ownsConnection = false;
+            this.OwnsConnection = false;
         }
 
         internal MessageReceiver(
@@ -1009,7 +1008,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             await this.ReceiveLinkManager.CloseAsync().ConfigureAwait(false);
             await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
 
-            if (this.ownsConnection)
+            if (this.OwnsConnection)
             {
                 await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
             }
@@ -1083,8 +1082,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                         this.OperationTimeout,
                         null);
 
-                ReceivingAmqpLink receiveLink;
-                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out var receiveLink))
                 {
                     amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
                 }
@@ -1140,8 +1138,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             try
             {
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.ReceiveBySequenceNumberOperation, this.OperationTimeout, null);
-                ReceivingAmqpLink receiveLink;
-                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out var receiveLink))
                 {
                     amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
                 }
@@ -1238,8 +1236,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 // Create an AmqpRequest Message to renew  lock
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewLockOperation, this.OperationTimeout, null);
-                ReceivingAmqpLink receiveLink;
-                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out var receiveLink))
                 {
                     amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
                 }
@@ -1438,8 +1436,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 // Create an AmqpRequest Message to update disposition
                 var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.UpdateDispositionOperation, this.OperationTimeout, null);
-                ReceivingAmqpLink receiveLink;
-                if (this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out var receiveLink))
                 {
                     amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
                 }

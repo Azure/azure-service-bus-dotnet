@@ -49,12 +49,7 @@ namespace Microsoft.Azure.ServiceBus
         [Obsolete("This constructor will be removed in next version, please use RuleDescription(string, Filter) instead.")]
         public RuleDescription(Filter filter)
         {
-            if (filter == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(filter));
-            }
-
-            this.Filter = filter;
+            this.Filter = filter ?? throw Fx.Exception.ArgumentNull(nameof(filter));
         }
 
         /// <summary>
@@ -63,12 +58,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="filter">The filter expression used to match messages.</param>
         public RuleDescription(string name, Filter filter)
         {
-            if (filter == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(filter));
-            }
-
-            this.Filter = filter;
+            this.Filter = filter ?? throw Fx.Exception.ArgumentNull(nameof(filter));
             this.Name = name;
         }
 
@@ -81,15 +71,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             get => this.filter;
 
-            set
-            {
-                if (value == null)
-                {
-                    throw Fx.Exception.ArgumentNull(nameof(this.Filter));
-                }
-
-                this.filter = value;
-            }
+            set => this.filter = value ?? throw Fx.Exception.ArgumentNull(nameof(this.Filter));
         }
 
         /// <summary>
@@ -124,140 +106,10 @@ namespace Microsoft.Azure.ServiceBus
             get; set;
         }
 
-        internal void ValidateDescriptionName()
-        {
-            if (string.IsNullOrWhiteSpace(this.name))
-            {
-                throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.name));
-            }
-
-            if (this.name.Length > Constants.RuleNameMaximumLength)
-            {
-                throw Fx.Exception.ArgumentOutOfRange(
-                    nameof(this.name),
-                    this.name,
-                    Resources.EntityNameLengthExceedsLimit.FormatForUser(this.name, Constants.RuleNameMaximumLength));
-            }
-
-            if (this.name.Contains(Constants.PathDelimiter) || this.name.Contains(@"\"))
-            {
-                throw Fx.Exception.Argument(
-                    nameof(this.name),
-                    Resources.InvalidCharacterInEntityName.FormatForUser(Constants.PathDelimiter, this.name));
-            }
-
-            string[] uriSchemeKeys = { "@", "?", "#" };
-            foreach (var uriSchemeKey in uriSchemeKeys)
-            {
-                if (this.name.Contains(uriSchemeKey))
-                {
-                    throw Fx.Exception.Argument(
-                        nameof(this.name),
-                        Resources.CharacterReservedForUriScheme.FormatForUser(nameof(this.name), uriSchemeKey));
-                }
-            }
-        }
-
-        static internal RuleDescription ParseFromContent(string xml)
-        {
-            var xDoc = XElement.Parse(xml);
-            if (!xDoc.IsEmpty)
-            {
-                if (xDoc.Name.LocalName == "entry")
-                {
-                    return ParseFromEntryElement(xDoc);
-                }
-            }
-
-            throw new MessagingEntityNotFoundException("Rule was not found");
-        }
-
-        static internal IList<RuleDescription> ParseCollectionFromContent(string xml)
-        {
-            var xDoc = XElement.Parse(xml);
-            if (!xDoc.IsEmpty)
-            {
-                if (xDoc.Name.LocalName == "feed")
-                {
-                    var rules = new List<RuleDescription>();
-
-                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClientConstants.AtomNs));
-                    foreach (var entry in entryList)
-                    {
-                        rules.Add(ParseFromEntryElement(entry));
-                    }
-
-                    return rules;
-                }
-            }
-
-            throw new MessagingEntityNotFoundException("Rule was not found");
-        }
-
-        static private RuleDescription ParseFromEntryElement(XElement xEntry)
-        {
-            try
-            {
-                var name = xEntry.Element(XName.Get("title", ManagementClientConstants.AtomNs)).Value;
-                var ruleDescription = new RuleDescription();
-
-                var rdXml = xEntry.Element(XName.Get("content", ManagementClientConstants.AtomNs))?
-                    .Element(XName.Get("RuleDescription", ManagementClientConstants.SbNs));
-
-                if (rdXml == null)
-                {
-                    throw new MessagingEntityNotFoundException("Rule was not found");
-                }
-
-                foreach (var element in rdXml.Elements())
-                {
-                    switch (element.Name.LocalName)
-                    {
-                        case "Name":
-                            ruleDescription.Name = element.Value;
-                            break;
-                        case "Filter":
-                            ruleDescription.Filter = Filter.ParseFromXElement(element);
-                            break;
-                        case "Action":
-                            ruleDescription.Action = RuleAction.ParseFromXElement(element);
-                            break;
-                        case "CreatedAt":
-                            ruleDescription.CreatedAt = DateTime.Parse(element.Value);
-                            break;
-                    }
-                }
-
-                return ruleDescription;
-            }
-            catch (Exception ex) when (!(ex is ServiceBusException))
-            {
-                throw new ServiceBusException(false, ex);
-            }
-        }
-
-        internal XDocument Serialize()
-        {
-            XDocument doc = new XDocument(
-                   new XElement(XName.Get("entry", ManagementClientConstants.AtomNs),
-                       new XElement(XName.Get("content", ManagementClientConstants.AtomNs),
-                           new XAttribute("type", "application/xml"),
-                           this.SerializeRule())));
-
-            return doc;
-        }
-
-        internal XElement SerializeRule(string elementName = "RuleDescription")
-        {
-            return new XElement(
-                XName.Get(elementName, ManagementClientConstants.SbNs),
-                this.Filter?.Serialize(),
-                this.Action?.Serialize(),
-                new XElement(XName.Get("Name", ManagementClientConstants.SbNs), this.Name));
-        }
-
         public bool Equals(RuleDescription other)
         {
+            // TODO: other could be null
+
             if (string.Equals(this.Name, other.Name, StringComparison.OrdinalIgnoreCase)
                 && (this.Filter == null || this.Filter.Equals(other.Filter))
                 && (this.Action == null || this.Action.Equals(other.Action)))
