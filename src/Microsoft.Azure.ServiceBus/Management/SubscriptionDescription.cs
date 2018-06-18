@@ -71,7 +71,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.topicPath;
             set
             {
-                ManagementClient.CheckValidTopicName(value, nameof(TopicPath));
+                EntityNameHelper.CheckValidTopicName(value, nameof(TopicPath));
                 this.topicPath = value;
             }
         }
@@ -81,7 +81,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.subscriptionName;
             set
             {
-                ManagementClient.CheckValidSubscriptionName(value, nameof(SubscriptionName));
+                EntityNameHelper.CheckValidSubscriptionName(value, nameof(SubscriptionName));
                 this.subscriptionName = value;
             }
         }
@@ -114,7 +114,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     return;
                 }
 
-                ManagementClient.CheckValidQueueName(value, nameof(ForwardTo));
+                EntityNameHelper.CheckValidQueueName(value, nameof(ForwardTo));
                 if (this.topicPath.Equals(value, StringComparison.CurrentCultureIgnoreCase))
                 {
                     throw new InvalidOperationException("Entity cannot have auto-forwarding policy to itself");
@@ -135,7 +135,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     return;
                 }
 
-                ManagementClient.CheckValidQueueName(value, nameof(ForwardDeadLetteredMessagesTo));
+                EntityNameHelper.CheckValidQueueName(value, nameof(ForwardDeadLetteredMessagesTo));
                 if (this.topicPath.Equals(value, StringComparison.CurrentCultureIgnoreCase))
                 {
                     throw new InvalidOperationException("Entity cannot have auto-forwarding policy to itself");

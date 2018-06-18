@@ -50,7 +50,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             };
 
             qd.AuthorizationRules.Add(new SharedAccessAuthorizationRule(
-                "allClaims", 
+                "allClaims",
                 new[] { AccessRights.Manage, AccessRights.Send, AccessRights.Listen }));
 
             var finalQ = await client.CreateQueueAsync(qd);
@@ -459,16 +459,16 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             await client.DeleteTopicAsync(topicName);
         }
 
-        public static IEnumerable<object[]> TestData_EntityNameValidationTest
-            => new[] {
-                new object[] { "qq@", true },
-                new object[] { "qq/", true },
-                new object[] { "/qq", true },
-                new object[] { "qq\\", true },
-                new object[] { "q/q", false },
-                new object[] { "qq?", true },
-                new object[] { "qq#", true },
-            };
+        public static IEnumerable<object[]> TestData_EntityNameValidationTest => new[]
+        {
+            new object[] {"qq@", true},
+            new object[] {"qq/", true},
+            new object[] {"/qq", true},
+            new object[] {"qq\\", true},
+            new object[] {"q/q", false},
+            new object[] {"qq?", true},
+            new object[] {"qq#", true},
+        };
         [Theory]
         [MemberData(nameof(TestData_EntityNameValidationTest))]
         [DisplayTestMethodName]
@@ -479,11 +479,11 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 {
                     if (isPathSeparatorAllowed)
                     {
-                        ManagementClient.CheckValidQueueName(entityName);
+                        EntityNameHelper.CheckValidQueueName(entityName);
                     }
                     else
                     {
-                        ManagementClient.CheckValidSubscriptionName(entityName);
+                        EntityNameHelper.CheckValidSubscriptionName(entityName);
                     }
                 });
         }
@@ -503,15 +503,15 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 {
                     ForwardDeadLetteredMessagesTo = dlqDestinationName
                 });
-            
+
             var qd = new QueueDescription(queueName)
             {
-                ForwardTo = destinationName                
+                ForwardTo = destinationName
             };
             var baseQ = await client.CreateQueueAsync(qd);
 
             var sender = new MessageSender(this.ConnectionString, queueName);
-            await sender.SendAsync(new Message() { MessageId = "mid" }); 
+            await sender.SendAsync(new Message() { MessageId = "mid" });
 
             var receiver = new MessageReceiver(this.ConnectionString, destinationName);
             var msg = await receiver.ReceiveAsync();

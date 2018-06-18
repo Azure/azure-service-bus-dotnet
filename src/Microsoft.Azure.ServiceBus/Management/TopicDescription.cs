@@ -69,7 +69,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.path;
             set
             {
-                ManagementClient.CheckValidTopicName(value, nameof(Path));
+                EntityNameHelper.CheckValidTopicName(value, nameof(Path));
                 this.path = value;
             }
         }
