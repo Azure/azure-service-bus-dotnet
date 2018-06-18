@@ -19,11 +19,11 @@
         }
 
         // TODO: Populate params
-        public static XElement Serialize(this SqlFilter filter)
+        public static XElement Serialize(this SqlFilter filter, string filterName)
         {
             return new XElement(
                 XName.Get("Filter", ManagementClientConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(SqlFilter)),
+                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), filterName),
                 new XElement(XName.Get("SqlExpression", ManagementClientConstants.SbNs), filter.SqlExpression));
         }
     }

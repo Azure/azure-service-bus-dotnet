@@ -33,7 +33,17 @@
             switch (filter)
             {
                 case SqlFilter sqlFilter:
-                    return sqlFilter.Serialize();
+                    switch (sqlFilter)
+                    {
+                        case TrueFilter _:
+                            return sqlFilter.Serialize(nameof(TrueFilter));
+
+                        case FalseFilter _:
+                            return sqlFilter.Serialize(nameof(FalseFilter));
+
+                        default:
+                            return sqlFilter.Serialize(nameof(SqlFilter));
+                    }
 
                 case CorrelationFilter correlationFilter:
                     return correlationFilter.Serialize();
