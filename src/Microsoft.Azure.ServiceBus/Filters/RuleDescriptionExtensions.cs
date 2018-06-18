@@ -104,7 +104,7 @@
                             ruleDescription.Filter = FilterExtensions.ParseFromXElement(element);
                             break;
                         case "Action":
-                            ruleDescription.Action = RuleAction.ParseFromXElement(element);
+                            ruleDescription.Action = RuleActionExtensions.ParseFromXElement(element);
                             break;
                         case "CreatedAt":
                             ruleDescription.CreatedAt = DateTime.Parse(element.Value);

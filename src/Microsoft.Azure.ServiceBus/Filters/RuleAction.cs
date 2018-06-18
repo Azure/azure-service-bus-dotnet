@@ -25,27 +25,6 @@ namespace Microsoft.Azure.ServiceBus
             // only to prevent external assemblies inheriting from it.
         }
 
-        internal static RuleAction ParseFromXElement(XElement xElement)
-        {
-            var attribute = xElement.Attribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs));
-            if (attribute == null)
-            {
-                return null;
-            }
-
-            switch (attribute.Value)
-            {
-                case "SqlRuleAction":
-                    return SqlRuleAction.ParseFromXElement(xElement);
-                case "EmptyRuleAction":
-                    return null;
-                default:
-                    return null;
-            }
-        }
-
         public abstract bool Equals(RuleAction other);
-
-        internal abstract XElement Serialize();
     }
 }
