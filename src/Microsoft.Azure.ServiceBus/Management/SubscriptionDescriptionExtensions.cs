@@ -71,7 +71,6 @@
             throw new MessagingEntityNotFoundException("Subscription was not found");
         }
 
-        // TODO: Authorization
         public static SubscriptionDescription ParseFromEntryElement(string topicName, XElement xEntry)
         {
             try
@@ -138,7 +137,6 @@
             }
         }
 
-        // TODO: Authorization rules
         public static XDocument Serialize(this SubscriptionDescription description)
         {
             return new XDocument(
@@ -151,6 +149,7 @@
                             description.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementClientConstants.SbNs), XmlConvert.ToString(description.DefaultMessageTimeToLive)) : null,
                             new XElement(XName.Get("DeadLetteringOnMessageExpiration", ManagementClientConstants.SbNs), XmlConvert.ToString(description.EnableDeadLetteringOnMessageExpiration)),
                             new XElement(XName.Get("DeadLetteringOnFilterEvaluationExceptions", ManagementClientConstants.SbNs), XmlConvert.ToString(description.EnableDeadLetteringOnFilterEvaluationExceptions)),
+                            description.DefaultRuleDescription != null ? description.DefaultRuleDescription.SerializeRule("DefaultRuleDescription") : null,
                             new XElement(XName.Get("MaxDeliveryCount", ManagementClientConstants.SbNs), XmlConvert.ToString(description.MaxDeliveryCount)),
                             new XElement(XName.Get("Status", ManagementClientConstants.SbNs), description.Status.ToString()),
                             description.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementClientConstants.SbNs), description.ForwardTo) : null,
