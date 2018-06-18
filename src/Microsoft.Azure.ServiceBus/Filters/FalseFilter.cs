@@ -11,8 +11,6 @@ namespace Microsoft.Azure.ServiceBus
     /// </summary>
     public sealed class FalseFilter : SqlFilter
     {
-        internal static readonly FalseFilter Default = new FalseFilter();
-
         /// <summary>
         /// Initializes a new instance of the <see cref="FalseFilter" /> class.
         /// </summary>
