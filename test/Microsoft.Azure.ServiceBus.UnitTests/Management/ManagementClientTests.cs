@@ -200,7 +200,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             var subscriptionName = Guid.NewGuid().ToString("D").Substring(0, 8);
 
             await client.CreateTopicAsync(topicName);
-            await client.CreateSubscriptionAsync(topicName, subscriptionName);
+            await client.CreateSubscriptionAsync(
+                new SubscriptionDescription(topicName, subscriptionName),
+                new RuleDescription("rule0", new FalseFilter()));
 
             var sqlFilter = new SqlFilter("1=1");
             sqlFilter.Parameters.Add("stringParam", "string");
@@ -237,7 +239,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 
             var rules = await client.GetRulesAsync(topicName, subscriptionName);
             Assert.True(rules.Count == 3);
-            Assert.Equal(RuleDescription.DefaultRuleName, rules[0].Name);
+            Assert.Equal("rule0", rules[0].Name);
             Assert.Equal(rule1, rules[1]);
             Assert.Equal(rule2, rules[2]);
 
@@ -245,13 +247,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             var updatedRule2 = await client.UpdateRuleAsync(topicName, subscriptionName, rule2);
             Assert.Equal(rule2, updatedRule2);
 
-            var defaultRule = await client.GetRuleAsync(topicName, subscriptionName, RuleDescription.DefaultRuleName);
+            var defaultRule = await client.GetRuleAsync(topicName, subscriptionName, "rule0");
             Assert.NotNull(defaultRule);
-            await client.DeleteRuleAsync(topicName, subscriptionName, RuleDescription.DefaultRuleName);
+            await client.DeleteRuleAsync(topicName, subscriptionName, "rule0");
             await Assert.ThrowsAsync<MessagingEntityNotFoundException>(
                     async () =>
                     {
-                        await client.GetRuleAsync(topicName, subscriptionName, RuleDescription.DefaultRuleName);
+                        await client.GetRuleAsync(topicName, subscriptionName, "rule0");
                     });
 
             await client.DeleteTopicAsync(topicName);
