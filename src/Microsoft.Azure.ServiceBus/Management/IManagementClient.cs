@@ -62,6 +62,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         Task<SubscriptionDescription> UpdateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default);
 
+        Task<RuleDescription> UpdateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default);
+
         // Exists check
         Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default);
 
