@@ -28,45 +28,7 @@ namespace Microsoft.Azure.ServiceBus
             // This is intentionally left blank. This constructor exists
             // only to prevent external assemblies inheriting from it.
         }
-
-        internal static Filter ParseFromXElement(XElement xElement)
-        {
-            var attribute = xElement.Attribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs));
-            if (attribute == null)
-            {
-                return null;
-            }
-
-            switch (attribute.Value)
-            {
-                case "SqlFilter":
-                    return SqlFilterExtensions.ParseFromXElement(xElement);
-                case "CorrelationFilter":
-                    return CorrelationFilterExtensions.ParseFromXElement(xElement);
-                case "TrueFilter":
-                    return new TrueFilter();
-                case "FalseFilter":
-                    return new FalseFilter();
-                default:
-                    return null;
-            }
-        }
-
-        internal XElement Serialize()
-        {
-            switch (this)
-            {
-                case SqlFilter sqlFilter:
-                    return SqlFilterExtensions.Serialize(sqlFilter);
-
-                case CorrelationFilter correlationFilter:
-                    return CorrelationFilterExtensions.Serialize(correlationFilter);
-
-                default:
-                    return null;
-            }
-        }
-
+        
         public abstract bool Equals(Filter other);
     }
 }

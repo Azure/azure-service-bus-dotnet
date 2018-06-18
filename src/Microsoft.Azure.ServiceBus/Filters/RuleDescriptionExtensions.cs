@@ -101,7 +101,7 @@
                             ruleDescription.Name = element.Value;
                             break;
                         case "Filter":
-                            ruleDescription.Filter = Filter.ParseFromXElement(element);
+                            ruleDescription.Filter = FilterExtensions.ParseFromXElement(element);
                             break;
                         case "Action":
                             ruleDescription.Action = RuleAction.ParseFromXElement(element);
