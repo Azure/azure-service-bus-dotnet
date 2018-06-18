@@ -605,12 +605,12 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         // TODO: Operation timeout as token timeout??? :O
         // TODO: token caching?
-        public Task<string> GetToken(Uri requestUri)
+        Task<string> GetToken(Uri requestUri)
         {
             return this.GetToken(requestUri.GetLeftPart(UriPartial.Path));
         }
 
-        public async Task<string> GetToken(string requestUri)
+        async Task<string> GetToken(string requestUri)
         {
             var token = await this.tokenProvider.GetTokenAsync(requestUri, this.operationTimeout).ConfigureAwait(false);
             return token.TokenValue;
