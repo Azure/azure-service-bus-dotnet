@@ -61,28 +61,30 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public Task DeleteQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
-            CheckValidQueueName(queueName);
+            EntityNameHelper.CheckValidQueueName(queueName);
             return DeleteEntity(queueName, cancellationToken);
         }
 
         public Task DeleteTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidTopicName(topicName);
             return DeleteEntity(topicName, cancellationToken);
         }
 
         public Task DeleteSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
-            CheckValidSubscriptionName(subscriptionName);
+            EntityNameHelper.CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
+
             return DeleteEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), cancellationToken);
         }
 
         public Task DeleteRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
-            CheckValidSubscriptionName(subscriptionName);
-            CheckValidRuleName(ruleName);
+            EntityNameHelper.CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
+            EntityNameHelper.CheckValidRuleName(ruleName);
+
             return DeleteEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", cancellationToken);
         }
 
@@ -111,7 +113,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<QueueDescription> GetQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
-            CheckValidQueueName(queueName);
+            EntityNameHelper.CheckValidQueueName(queueName);
 
             var content = await GetEntity(queueName, null, false, cancellationToken).ConfigureAwait(false);
 
@@ -120,7 +122,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<TopicDescription> GetTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidTopicName(topicName);
 
             var content = await GetEntity(topicName, null, false, cancellationToken).ConfigureAwait(false);
 
@@ -129,17 +131,19 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<SubscriptionDescription> GetSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
-            CheckValidSubscriptionName(subscriptionName);
+            EntityNameHelper.CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
+
             var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), null, false, cancellationToken).ConfigureAwait(false);
+
             return SubscriptionDescriptionExtensions.ParseFromContent(topicName, content);
         }
 
         public async Task<RuleDescription> GetRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
-            CheckValidSubscriptionName(subscriptionName);
-            CheckValidRuleName(ruleName);
+            EntityNameHelper.CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
+            EntityNameHelper.CheckValidRuleName(ruleName);
 
             var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules/{ruleName}", null, false, cancellationToken).ConfigureAwait(false);
 
@@ -152,23 +156,29 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<QueueRuntimeInfo> GetQueueRuntimeInfoAsync(string queueName, CancellationToken cancellationToken = default)
         {
-            CheckValidQueueName(queueName);
+            EntityNameHelper.CheckValidQueueName(queueName);
+
             var content = await GetEntity(queueName, null, true, cancellationToken).ConfigureAwait(false);
+
             return QueueRuntimeInfo.ParseFromContent(content);
         }
 
         public async Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidTopicName(topicName);
+
             var content = await GetEntity(topicName, null, true, cancellationToken).ConfigureAwait(false);
+
             return TopicRuntimeInfo.ParseFromContent(content);
         }
 
         public async Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
-            CheckValidSubscriptionName(subscriptionName);
+            EntityNameHelper.CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
+
             var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), null, true, cancellationToken).ConfigureAwait(false);
+
             return SubscriptionRuntimeInfo.ParseFromContent(topicName, content);
         }
 
@@ -191,7 +201,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidTopicName(topicName);
 
             var content = await GetEntity($"{topicName}/Subscriptions", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
 
@@ -200,8 +210,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<IList<RuleDescription>> GetRulesAsync(string topicName, string subscriptionName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
-            CheckValidSubscriptionName(subscriptionName);
+            EntityNameHelper.CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
 
             var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
 
@@ -294,8 +304,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
-            CheckValidSubscriptionName(topicName);
+            EntityNameHelper.CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidSubscriptionName(topicName);
 
             var atomRequest = ruleDescription.Serialize().ToString();
 
@@ -306,6 +316,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 null, 
                 null,
                 cancellationToken).ConfigureAwait(false);
+
             return RuleDescriptionExtensions.ParseFromContent(content);
         }
 
@@ -355,7 +366,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<RuleDescription> UpdateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
         {
-            CheckValidRuleName(ruleDescription.Name);
+            EntityNameHelper.CheckValidRuleName(ruleDescription.Name);
+
             var atomRequest = ruleDescription.Serialize().ToString();
             var content = await PutEntity(
                 EntityNameHelper.FormatRulePath(topicName, subscriptionName, ruleDescription.Name),
@@ -363,6 +375,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 true,
                 null, null,
                 cancellationToken).ConfigureAwait(false);
+
             return RuleDescriptionExtensions.ParseFromContent(content);
         }
 
@@ -416,7 +429,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default)
         {
-            CheckValidQueueName(queueName);
+            EntityNameHelper.CheckValidQueueName(queueName);
             
             try
             {
@@ -433,7 +446,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<bool> TopicExistsAsync(string topicName, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidTopicName(topicName);
             
             try
             {
@@ -450,8 +463,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<bool> SubscriptionExistsAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
-            CheckValidTopicName(topicName);
-            CheckValidSubscriptionName(subscriptionName);
+            EntityNameHelper.CheckValidTopicName(topicName);
+            EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
 
             try
             {
@@ -587,62 +600,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             catch (Exception)
             {
                 return content;
-            }
-        }
-
-        internal static void CheckValidQueueName(string queueName, string paramName = "queueName")
-        {
-            CheckValidEntityName(queueName, ManagementClientConstants.QueueNameMaximumLength, true, paramName);
-        }
-
-        internal static void CheckValidTopicName(string topicName, string paramName = "topicName")
-        {
-            CheckValidEntityName(topicName, ManagementClientConstants.TopicNameMaximumLength, true, paramName);
-        }
-
-        internal static void CheckValidSubscriptionName(string subscriptionName, string paramName = "subscriptionName")
-        {
-            CheckValidEntityName(subscriptionName, ManagementClientConstants.SubscriptionNameMaximumLength, false, paramName);
-        }
-
-        internal static void CheckValidRuleName(string ruleName, string paramName = "ruleName")
-        {
-            CheckValidEntityName(ruleName, ManagementClientConstants.RuleNameMaximumLength, false, paramName);
-        }
-
-        private static void CheckValidEntityName(string entityName, int maxEntityNameLength, bool allowSeparator, string paramName)
-        {
-            if (string.IsNullOrWhiteSpace(entityName))
-            {
-                throw new ArgumentNullException(paramName);
-            }
-
-            // and "\" will be converted to "/" on the REST path anyway. Gateway/REST do not
-            // have to worry about the begin/end slash problem, so this is purely a client side check.
-            var tmpName = entityName.Replace(@"\", Constants.PathDelimiter);
-            if (tmpName.Length > maxEntityNameLength)
-            {
-                throw new ArgumentOutOfRangeException(paramName, $@"Entity path '{entityName}' exceeds the '{maxEntityNameLength}' character limit.");
-            }
-
-            if (tmpName.StartsWith(Constants.PathDelimiter, StringComparison.OrdinalIgnoreCase) || 
-                tmpName.EndsWith(Constants.PathDelimiter, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException($@"The entity name/path cannot contain '/' as prefix or suffix. The supplied value is '{entityName}'", paramName);
-            }
-
-            if (!allowSeparator && tmpName.Contains(Constants.PathDelimiter))
-            {
-                throw new ArgumentException($@"The entity name/path contains an invalid character '{Constants.PathDelimiter}'", paramName);
-            }
-
-            string[] uriSchemeKeys = { "@", "?", "#" };
-            foreach (var uriSchemeKey in uriSchemeKeys)
-            {
-                if (entityName.Contains(uriSchemeKey))
-                {
-                    throw new ArgumentException($@"'{entityName}' contains character '{uriSchemeKey}' which is not allowed because it is reserved in the Uri scheme.", paramName);
-                }
             }
         }
 
