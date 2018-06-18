@@ -19,7 +19,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
     {
         internal string ConnectionString = TestUtility.NamespaceConnectionString;
         //internal string ConnectionString = "Endpoint=sb://contoso.servicebus.onebox.windows-int.net/;SharedAccessKeyName=DefaultNamespaceSasAllKeyName;SharedAccessKey=8864/auVd3qDC75iTjBL1GJ4D2oXC6bIttRd0jzDZ+g=";
-        ManagementClient client;
+        IManagementClient client;
 
         public ManagementClientTests()
         {
