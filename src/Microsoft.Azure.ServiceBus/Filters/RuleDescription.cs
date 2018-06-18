@@ -49,12 +49,7 @@ namespace Microsoft.Azure.ServiceBus
         [Obsolete("This constructor will be removed in next version, please use RuleDescription(string, Filter) instead.")]
         public RuleDescription(Filter filter)
         {
-            if (filter == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(filter));
-            }
-
-            this.Filter = filter;
+            this.Filter = filter ?? throw Fx.Exception.ArgumentNull(nameof(filter));
         }
 
         /// <summary>
@@ -63,12 +58,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="filter">The filter expression used to match messages.</param>
         public RuleDescription(string name, Filter filter)
         {
-            if (filter == null)
-            {
-                throw Fx.Exception.ArgumentNull(nameof(filter));
-            }
-
-            this.Filter = filter;
+            this.Filter = filter ?? throw Fx.Exception.ArgumentNull(nameof(filter));
             this.Name = name;
         }
 
@@ -81,15 +71,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             get => this.filter;
 
-            set
-            {
-                if (value == null)
-                {
-                    throw Fx.Exception.ArgumentNull(nameof(this.Filter));
-                }
-
-                this.filter = value;
-            }
+            set => this.filter = value ?? throw Fx.Exception.ArgumentNull(nameof(this.Filter));
         }
 
         /// <summary>
