@@ -63,30 +63,6 @@ namespace Microsoft.Azure.ServiceBus
             return string.Format(CultureInfo.InvariantCulture, "SqlRuleAction: {0}", this.SqlExpression);
         }
 
-        internal new static RuleAction ParseFromXElement(XElement xElement)
-        {
-            var expression = xElement.Element(XName.Get("SqlExpression", ManagementClientConstants.SbNs))?.Value;
-            if (string.IsNullOrWhiteSpace(expression))
-            {
-                return null;
-            }
-
-            var action = new SqlRuleAction(expression);
-            // TODO: populate parameters
-            return action;
-        }
-
-        // TODO: Parameters
-        internal override XElement Serialize()
-        {
-            XElement action = new XElement(
-                XName.Get("Action", ManagementClientConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(SqlRuleAction)),
-                new XElement(XName.Get("SqlExpression", ManagementClientConstants.SbNs), this.SqlExpression));
-
-            return action;
-        }
-
         //TODO: parameters
         public override bool Equals(RuleAction other)
         {

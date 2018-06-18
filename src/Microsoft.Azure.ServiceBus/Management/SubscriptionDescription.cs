@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Xml;
-using System.Xml.Linq;
 using Microsoft.Azure.ServiceBus.Primitives;
 
 namespace Microsoft.Azure.ServiceBus.Management
@@ -74,7 +71,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.topicPath;
             set
             {
-                ManagementClient.CheckValidTopicName(value, nameof(TopicPath));
+                EntityNameHelper.CheckValidTopicName(value, nameof(TopicPath));
                 this.topicPath = value;
             }
         }
@@ -84,7 +81,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             get => this.subscriptionName;
             set
             {
-                ManagementClient.CheckValidSubscriptionName(value, nameof(SubscriptionName));
+                EntityNameHelper.CheckValidSubscriptionName(value, nameof(SubscriptionName));
                 this.subscriptionName = value;
             }
         }
@@ -117,7 +114,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     return;
                 }
 
-                ManagementClient.CheckValidQueueName(value, nameof(ForwardTo));
+                EntityNameHelper.CheckValidQueueName(value, nameof(ForwardTo));
                 if (this.topicPath.Equals(value, StringComparison.CurrentCultureIgnoreCase))
                 {
                     throw new InvalidOperationException("Entity cannot have auto-forwarding policy to itself");
@@ -138,7 +135,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                     return;
                 }
 
-                ManagementClient.CheckValidQueueName(value, nameof(ForwardDeadLetteredMessagesTo));
+                EntityNameHelper.CheckValidQueueName(value, nameof(ForwardDeadLetteredMessagesTo));
                 if (this.topicPath.Equals(value, StringComparison.CurrentCultureIgnoreCase))
                 {
                     throw new InvalidOperationException("Entity cannot have auto-forwarding policy to itself");
@@ -148,165 +145,9 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        internal void NormalizeDescription(string baseAddress)
+        public bool Equals(SubscriptionDescription otherDescription)
         {
-            if (!string.IsNullOrWhiteSpace(this.ForwardTo))
-            {
-                this.ForwardTo = NormalizeForwardToAddress(this.ForwardTo, baseAddress);
-            }
-
-            if (!string.IsNullOrWhiteSpace(this.ForwardDeadLetteredMessagesTo))
-            {
-                this.ForwardDeadLetteredMessagesTo = NormalizeForwardToAddress(this.ForwardDeadLetteredMessagesTo, baseAddress);
-            }
-        }
-
-        private static string NormalizeForwardToAddress(string forwardTo, string baseAddress)
-        {
-            Uri forwardToUri;
-            if (!Uri.TryCreate(forwardTo, UriKind.Absolute, out forwardToUri))
-            {
-                if (!baseAddress.EndsWith("/", StringComparison.Ordinal))
-                {
-                    baseAddress += "/";
-                }
-
-                forwardToUri = new Uri(new Uri(baseAddress), forwardTo);
-            }
-
-            return forwardToUri.AbsoluteUri;
-        }
-
-        static internal SubscriptionDescription ParseFromContent(string topicName, string xml)
-        {
-            var xDoc = XElement.Parse(xml);
-            if (!xDoc.IsEmpty)
-            {
-                if (xDoc.Name.LocalName == "entry")
-                {
-                    return ParseFromEntryElement(topicName, xDoc);
-                }
-            }
-
-            throw new MessagingEntityNotFoundException("Subscription was not found");
-        }
-
-        static internal IList<SubscriptionDescription> ParseCollectionFromContent(string topicName, string xml)
-        {
-            var xDoc = XElement.Parse(xml);
-            if (!xDoc.IsEmpty)
-            {
-                if (xDoc.Name.LocalName == "feed")
-                {
-                    var subscriptionList = new List<SubscriptionDescription>();
-
-                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClientConstants.AtomNs));
-                    foreach (var entry in entryList)
-                    {
-                        subscriptionList.Add(ParseFromEntryElement(topicName, entry));
-                    }
-
-                    return subscriptionList;
-                }
-            }
-
-            throw new MessagingEntityNotFoundException("Subscription was not found");
-        }
-
-        // TODO: Authorization
-        static private SubscriptionDescription ParseFromEntryElement(string topicName, XElement xEntry)
-        {
-            try
-            {
-                var name = xEntry.Element(XName.Get("title", ManagementClientConstants.AtomNs)).Value;
-                var subscriptionDesc = new SubscriptionDescription(topicName, name);
-
-                var qdXml = xEntry.Element(XName.Get("content", ManagementClientConstants.AtomNs))?
-                    .Element(XName.Get("SubscriptionDescription", ManagementClientConstants.SbNs));
-
-                if (qdXml == null)
-                {
-                    throw new MessagingEntityNotFoundException("Subscription was not found");
-                }
-
-                foreach (var element in qdXml.Elements())
-                {
-                    switch (element.Name.LocalName)
-                    {
-                        case "RequiresSession":
-                            subscriptionDesc.RequiresSession = bool.Parse(element.Value);
-                            break;
-                        case "DeadLetteringOnMessageExpiration":
-                            subscriptionDesc.EnableDeadLetteringOnMessageExpiration = bool.Parse(element.Value);
-                            break;
-                        case "DeadLetteringOnFilterEvaluationExceptions":
-                            subscriptionDesc.EnableDeadLetteringOnFilterEvaluationExceptions = bool.Parse(element.Value);
-                            break;
-                        case "LockDuration":
-                            subscriptionDesc.LockDuration = XmlConvert.ToTimeSpan(element.Value);
-                            break;
-                        case "DefaultMessageTimeToLive":
-                            subscriptionDesc.DefaultMessageTimeToLive = XmlConvert.ToTimeSpan(element.Value);
-                            break;
-                        case "MaxDeliveryCount":
-                            subscriptionDesc.MaxDeliveryCount = int.Parse(element.Value);
-                            break;
-                        case "Status":
-                            subscriptionDesc.Status = (EntityStatus)Enum.Parse(typeof(EntityStatus), element.Value);
-                            break;
-                        case "AutoDeleteOnIdle":
-                            subscriptionDesc.AutoDeleteOnIdle = XmlConvert.ToTimeSpan(element.Value);
-                            break;
-                        case "ForwardTo":
-                            if (!string.IsNullOrWhiteSpace(element.Value))
-                            {
-                                subscriptionDesc.ForwardTo = element.Value;
-                            }
-                            break;
-                        case "ForwardDeadLetteredMessagesTo":
-                            if (!string.IsNullOrWhiteSpace(element.Value))
-                            {
-                                subscriptionDesc.ForwardDeadLetteredMessagesTo = element.Value;
-                            }
-                            break;
-                    }
-                }
-
-                return subscriptionDesc;
-            }
-            catch (Exception ex) when (!(ex is ServiceBusException))
-            {
-                throw new ServiceBusException(false, ex);
-            }
-        }
-
-        // TODO: Authorization rules
-        internal XDocument Serialize()
-        {
-            XDocument doc = new XDocument(
-                new XElement(XName.Get("entry", ManagementClientConstants.AtomNs),
-                    new XElement(XName.Get("content", ManagementClientConstants.AtomNs),
-                        new XAttribute("type", "application/xml"),
-                        new XElement(XName.Get("SubscriptionDescription", ManagementClientConstants.SbNs),
-                            new XElement(XName.Get("LockDuration", ManagementClientConstants.SbNs), XmlConvert.ToString(this.LockDuration)),
-                            new XElement(XName.Get("RequiresSession", ManagementClientConstants.SbNs), XmlConvert.ToString(this.RequiresSession)),
-                            this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementClientConstants.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
-                            new XElement(XName.Get("DeadLetteringOnMessageExpiration", ManagementClientConstants.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnMessageExpiration)),
-                            new XElement(XName.Get("DeadLetteringOnFilterEvaluationExceptions", ManagementClientConstants.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnFilterEvaluationExceptions)),
-                            new XElement(XName.Get("MaxDeliveryCount", ManagementClientConstants.SbNs), XmlConvert.ToString(this.MaxDeliveryCount)),
-                            new XElement(XName.Get("Status", ManagementClientConstants.SbNs), this.Status.ToString()),
-                            this.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementClientConstants.SbNs), this.ForwardTo) : null,
-                            this.ForwardDeadLetteredMessagesTo != null ? new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementClientConstants.SbNs), this.ForwardDeadLetteredMessagesTo) : null,
-                            this.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementClientConstants.SbNs), XmlConvert.ToString(this.AutoDeleteOnIdle)) : null
-                        ))
-                    ));
-
-            return doc;
-        }
-
-        public bool Equals(SubscriptionDescription other)
-        {
-            if (this.SubscriptionName.Equals(other.SubscriptionName, StringComparison.OrdinalIgnoreCase)
+            if (otherDescription is SubscriptionDescription other && this.SubscriptionName.Equals(other.SubscriptionName, StringComparison.OrdinalIgnoreCase)
                 && this.TopicPath.Equals(other.TopicPath, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)

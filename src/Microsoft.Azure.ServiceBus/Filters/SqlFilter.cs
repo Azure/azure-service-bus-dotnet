@@ -69,30 +69,6 @@ namespace Microsoft.Azure.ServiceBus
             return string.Format(CultureInfo.InvariantCulture, "SqlFilter: {0}", this.SqlExpression);
         }
 
-        internal new static Filter ParseFromXElement(XElement xElement)
-        {
-            var expression = xElement.Element(XName.Get("SqlExpression", ManagementClientConstants.SbNs))?.Value;
-            if (string.IsNullOrWhiteSpace(expression))
-            {
-                return null;
-            }
-
-            var filter = new SqlFilter(expression);
-            // TODO: populate parameters
-            return filter;
-        }
-
-        // TODO: Populate params
-        internal override XElement Serialize()
-        {
-            XElement filter = new XElement(
-                XName.Get("Filter", ManagementClientConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(SqlFilter)),
-                new XElement(XName.Get("SqlExpression", ManagementClientConstants.SbNs), this.SqlExpression));
-
-            return filter;
-        }
-
         // TODO: params
         public override bool Equals(Filter other)
         {
