@@ -112,8 +112,10 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<QueueDescription> GetQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
             CheckValidQueueName(queueName);
+
             var content = await GetEntity(queueName, null, false, cancellationToken).ConfigureAwait(false);
-            return QueueDescription.ParseFromContent(content);
+
+            return QueueDescriptionExtensions.ParseFromContent(content);
         }
 
         public async Task<TopicDescription> GetTopicAsync(string topicName, CancellationToken cancellationToken = default)
@@ -173,7 +175,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             var content = await GetEntity("$Resources/queues", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
-            return QueueDescription.ParseCollectionFromContent(content);
+            return QueueDescriptionExtensions.ParseCollectionFromContent(content);
         }
 
         public async Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
@@ -244,7 +246,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 queueDescription.ForwardTo, 
                 queueDescription.ForwardDeadLetteredMessagesTo, 
                 cancellationToken).ConfigureAwait(false);
-            return QueueDescription.ParseFromContent(content);
+            return QueueDescriptionExtensions.ParseFromContent(content);
         }
 
         public Task<TopicDescription> CreateTopicAsync(string topicName, CancellationToken cancellationToken = default)
@@ -301,7 +303,9 @@ namespace Microsoft.Azure.ServiceBus.Management
         public async Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
         {
             queueDescription.NormalizeDescription(this.endpointFQDN);
+
             var atomRequest = queueDescription.Serialize().ToString();
+
             var content = await PutEntity(
                 queueDescription.Path, 
                 atomRequest, 
@@ -309,7 +313,8 @@ namespace Microsoft.Azure.ServiceBus.Management
                 queueDescription.ForwardTo,
                 queueDescription.ForwardDeadLetteredMessagesTo, 
                 cancellationToken).ConfigureAwait(false);
-            return QueueDescription.ParseFromContent(content);
+
+            return QueueDescriptionExtensions.ParseFromContent(content);
         }
 
         public async Task<TopicDescription> UpdateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
