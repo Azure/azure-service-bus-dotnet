@@ -272,10 +272,15 @@ namespace Microsoft.Azure.ServiceBus.Management
             return this.CreateSubscriptionAsync(new SubscriptionDescription(topicName, subscriptionName), cancellationToken);
         }
 
-        // TODO: Expose CreateSubscriptionWithRule()
-        public async Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
+        public Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
+        {
+            return this.CreateSubscriptionAsync(subscriptionDescription, null, cancellationToken);
+        }
+
+        public async Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, RuleDescription defaultRule, CancellationToken cancellationToken = default)
         {
             subscriptionDescription.NormalizeDescription(this.csBuilder.Endpoint);
+            subscriptionDescription.DefaultRuleDescription = defaultRule;
             var atomRequest = subscriptionDescription.Serialize().ToString();
             var content = await PutEntity(
                 EntityNameHelper.FormatSubscriptionPath(subscriptionDescription.TopicPath, subscriptionDescription.SubscriptionName),

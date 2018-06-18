@@ -242,13 +242,18 @@ namespace Microsoft.Azure.ServiceBus
                    new XElement(XName.Get("entry", ManagementClientConstants.AtomNs),
                        new XElement(XName.Get("content", ManagementClientConstants.AtomNs),
                            new XAttribute("type", "application/xml"),
-                           new XElement(
-                                XName.Get("RuleDescription", ManagementClientConstants.SbNs),
-                                this.Filter?.Serialize(),
-                                this.Action?.Serialize(),
-                                new XElement(XName.Get("Name", ManagementClientConstants.SbNs), this.Name)))));
+                           this.SerializeRule())));
 
             return doc;
+        }
+
+        internal XElement SerializeRule(string elementName = "RuleDescription")
+        {
+            return new XElement(
+                XName.Get(elementName, ManagementClientConstants.SbNs),
+                this.Filter?.Serialize(),
+                this.Action?.Serialize(),
+                new XElement(XName.Get("Name", ManagementClientConstants.SbNs), this.Name));
         }
 
         public bool Equals(RuleDescription other)

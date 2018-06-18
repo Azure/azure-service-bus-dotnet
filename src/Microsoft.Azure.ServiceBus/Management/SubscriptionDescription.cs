@@ -148,6 +148,8 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        internal RuleDescription DefaultRuleDescription { get; set; }
+
         internal void NormalizeDescription(string baseAddress)
         {
             if (!string.IsNullOrWhiteSpace(this.ForwardTo))
@@ -213,7 +215,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new MessagingEntityNotFoundException("Subscription was not found");
         }
 
-        // TODO: Authorization
         static private SubscriptionDescription ParseFromEntryElement(string topicName, XElement xEntry)
         {
             try
@@ -280,7 +281,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        // TODO: Authorization rules
         internal XDocument Serialize()
         {
             XDocument doc = new XDocument(
@@ -293,6 +293,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                             this.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementClientConstants.SbNs), XmlConvert.ToString(this.DefaultMessageTimeToLive)) : null,
                             new XElement(XName.Get("DeadLetteringOnMessageExpiration", ManagementClientConstants.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnMessageExpiration)),
                             new XElement(XName.Get("DeadLetteringOnFilterEvaluationExceptions", ManagementClientConstants.SbNs), XmlConvert.ToString(this.EnableDeadLetteringOnFilterEvaluationExceptions)),
+                            this.DefaultRuleDescription != null ? this.DefaultRuleDescription.SerializeRule("DefaultRuleDescription") : null,
                             new XElement(XName.Get("MaxDeliveryCount", ManagementClientConstants.SbNs), XmlConvert.ToString(this.MaxDeliveryCount)),
                             new XElement(XName.Get("Status", ManagementClientConstants.SbNs), this.Status.ToString()),
                             this.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementClientConstants.SbNs), this.ForwardTo) : null,

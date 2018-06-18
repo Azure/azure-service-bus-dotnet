@@ -79,7 +79,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
                 foreach (var element in qdXml.Elements())
                 {
-                    // TODO: Alphabetical ordering
                     switch (element.Name.LocalName)
                     {
                         case "AccessedAt":
