@@ -36,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             //this.internalClient = new InternalClient(nameof(ManagementClient), string.Empty, retryPolicy ?? RetryPolicy.Default, connectionStringBuilder);
             this.endpointFQDN = connectionStringBuilder.Endpoint;
-            this.retryPolicy = retryPolicy;
+            this.retryPolicy = retryPolicy ?? RetryPolicy.Default;
             this.tokenProvider = tokenProvider ?? CreateTokenProvider(connectionStringBuilder);
             this.operationTimeout = Constants.DefaultOperationTimeout;
         }
