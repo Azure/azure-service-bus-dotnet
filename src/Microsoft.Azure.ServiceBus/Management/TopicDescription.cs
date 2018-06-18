@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
@@ -102,11 +99,9 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool EnableBatchedOperations { get; set; } = true;
 
-        public bool Equals(TopicDescription other)
+        public bool Equals(TopicDescription otherDescription)
         {
-            // TODO: other could be null
-
-            if (this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
+            if (otherDescription is TopicDescription other && this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
                 && this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow)

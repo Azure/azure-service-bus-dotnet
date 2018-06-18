@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Xml;
-using System.Xml.Linq;
 using Microsoft.Azure.ServiceBus.Primitives;
 
 namespace Microsoft.Azure.ServiceBus.Management
@@ -172,11 +169,9 @@ namespace Microsoft.Azure.ServiceBus.Management
         public bool EnablePartitioning { get; set; } = false;
 
 
-        public bool Equals(QueueDescription other)
+        public bool Equals(QueueDescription otherDescription)
         {
-            // TODO: other could be null
-
-            if (this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
+            if (otherDescription is QueueDescription other && this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
                 && this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow)

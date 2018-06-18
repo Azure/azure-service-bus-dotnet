@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Xml;
-using System.Xml.Linq;
 using Microsoft.Azure.ServiceBus.Primitives;
 
 namespace Microsoft.Azure.ServiceBus.Management
@@ -148,9 +145,9 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        public bool Equals(SubscriptionDescription other)
+        public bool Equals(SubscriptionDescription otherDescription)
         {
-            if (this.SubscriptionName.Equals(other.SubscriptionName, StringComparison.OrdinalIgnoreCase)
+            if (otherDescription is SubscriptionDescription other && this.SubscriptionName.Equals(other.SubscriptionName, StringComparison.OrdinalIgnoreCase)
                 && this.TopicPath.Equals(other.TopicPath, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
