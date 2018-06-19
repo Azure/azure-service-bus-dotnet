@@ -20,29 +20,6 @@
             throw new MessagingEntityNotFoundException("Subscription was not found");
         }
 
-        // TODO: is this used?
-        static IList<SubscriptionRuntimeInfo> ParseCollectionFromContent(string topicName, string xml)
-        {
-            var xDoc = XElement.Parse(xml);
-            if (!xDoc.IsEmpty)
-            {
-                if (xDoc.Name.LocalName == "feed")
-                {
-                    var subscriptionList = new List<SubscriptionRuntimeInfo>();
-
-                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClientConstants.AtomNs));
-                    foreach (var entry in entryList)
-                    {
-                        subscriptionList.Add(ParseFromEntryElement(topicName, entry));
-                    }
-
-                    return subscriptionList;
-                }
-            }
-
-            throw new MessagingEntityNotFoundException("Subscription was not found");
-        }
-
         static SubscriptionRuntimeInfo ParseFromEntryElement(string topicName, XElement xEntry)
         {
             try
