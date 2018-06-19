@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using System.Xml.Linq;
-using Microsoft.Azure.ServiceBus.Management;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.ServiceBus.Filters
 {
+    using System;
+    using System.Xml;
+    using System.Xml.Linq;
+    using Microsoft.Azure.ServiceBus.Management;
+
     internal class XmlObjectConvertor
     {
         internal static object ParseValueObject(XElement element)

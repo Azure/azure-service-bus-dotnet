@@ -1,20 +1,19 @@
-﻿using Xunit;
-using Microsoft.Azure.ServiceBus.Management;
-using System;
-using System.Threading.Tasks;
-using Microsoft.Azure.ServiceBus.Core;
-using System.Linq;
-using System.Collections.Generic;
-using Microsoft.Azure.ServiceBus.Primitives;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Microsoft.Azure.ServiceBus.Core;
+    using Microsoft.Azure.ServiceBus.Management;
+    using Xunit;
+
     // TODO
-    // What if default value in service is different from client.
     // Update non-updatable property
     // Get more than 100 queues - manual test.
     // test with cancellation token
-    // test connection issues???
     public class ManagementClientTests : IDisposable
     {
         internal string ConnectionString = TestUtility.NamespaceConnectionString;
