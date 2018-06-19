@@ -7,7 +7,7 @@
     {
         public static Filter ParseFromXElement(XElement xElement)
         {
-            var attribute = xElement.Attribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs));
+            var attribute = xElement.Attribute(XName.Get("type", ManagementClientConstants.XmlSchemaInstanceNs));
             if (attribute == null)
             {
                 return null;

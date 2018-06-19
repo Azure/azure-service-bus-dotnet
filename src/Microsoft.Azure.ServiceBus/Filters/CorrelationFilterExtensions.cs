@@ -1,6 +1,7 @@
 ﻿namespace Microsoft.Azure.ServiceBus
 {
     using System.Xml.Linq;
+    using Microsoft.Azure.ServiceBus.Filters;
     using Microsoft.Azure.ServiceBus.Management;
 
     internal static class CorrelationFilterExtensions
@@ -37,7 +38,12 @@
                         correlationFilter.ContentType = element.Value;
                         break;
                     case "Properties":
-                        // TODO
+                        foreach (var prop in element.Elements(XName.Get("KeyValueOfstringanyType", ManagementClientConstants.SbNs)))
+                        {
+                            var key = prop.Element(XName.Get("Key", ManagementClientConstants.SbNs))?.Value;
+                            var value = XmlObjectConvertor.ParseValueObject(prop.Element(XName.Get("Value", ManagementClientConstants.SbNs)));
+                            correlationFilter.Properties.Add(key, value);
+                        }
                         break;
                 }
             }
@@ -47,9 +53,22 @@
 
         public static XElement Serialize(this CorrelationFilter filter)
         {
+            XElement parameterElement = null;
+            if (filter.properties != null)
+            {
+                parameterElement = new XElement(XName.Get("Properties", ManagementClientConstants.SbNs));
+                foreach (var param in filter.properties)
+                {
+                    parameterElement.Add(
+                        new XElement(XName.Get("KeyValueOfstringanyType", ManagementClientConstants.SbNs),
+                            new XElement(XName.Get("Key", ManagementClientConstants.SbNs), param.Key),
+                            XmlObjectConvertor.SerializeObject(param.Value)));
+                }
+            }
+
             return new XElement(
                 XName.Get("Filter", ManagementClientConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(CorrelationFilter)),
+                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaInstanceNs), nameof(CorrelationFilter)),
                 string.IsNullOrWhiteSpace(filter.CorrelationId) ? null :
                     new XElement(XName.Get("CorrelationId", ManagementClientConstants.SbNs), filter.CorrelationId),
                 string.IsNullOrWhiteSpace(filter.MessageId) ? null :
@@ -66,8 +85,7 @@
                     new XElement(XName.Get("ReplyToSessionId", ManagementClientConstants.SbNs), filter.ReplyToSessionId),
                 string.IsNullOrWhiteSpace(filter.ContentType) ? null :
                     new XElement(XName.Get("ContentType", ManagementClientConstants.SbNs), filter.ContentType),
-                // todo
-                null);
+                parameterElement);
         }
     }
 }

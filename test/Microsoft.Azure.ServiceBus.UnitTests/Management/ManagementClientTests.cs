@@ -550,6 +550,62 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             Assert.Equal(qd, qd2);
         }
 
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task SqlFilterParamsTest()
+        {
+            var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            var subscriptionName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            await client.CreateTopicAsync(topicName);
+            await client.CreateSubscriptionAsync(topicName, subscriptionName);
+
+            SqlFilter sqlFilter = new SqlFilter(
+                "PROPERTY(@propertyName) = @stringPropertyValue " +
+                "AND PROPERTY(intProperty) = @intPropertyValue " +
+                "AND PROPERTY(longProperty) = @longPropertyValue " +
+                "AND PROPERTY(boolProperty) = @boolPropertyValue " +
+                "AND PROPERTY(doubleProperty) = @doublePropertyValue ")
+            {
+                Parameters =
+                   {
+                        { "@propertyName", "MyProperty" },
+                        { "@stringPropertyValue", "string" },
+                        { "@intPropertyValue", 3 },
+                        { "@longPropertyValue", 3L },
+                        { "@boolPropertyValue", true },
+                        { "@doublePropertyValue", (double)3.0 },
+                   }
+            };
+
+            var rule = await client.CreateRuleAsync(topicName, subscriptionName, new RuleDescription("rule1", sqlFilter));
+            Assert.Equal(sqlFilter, rule.Filter);
+
+            await client.DeleteTopicAsync(topicName);
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task CorrelationFilterPropertiesTest()
+        {
+            var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            var subscriptionName = Guid.NewGuid().ToString("D").Substring(0, 8);
+            await client.CreateTopicAsync(topicName);
+            await client.CreateSubscriptionAsync(topicName, subscriptionName);
+
+            var sClient = new SubscriptionClient(ConnectionString, topicName, subscriptionName);
+            var filter = new CorrelationFilter();
+            filter.Properties.Add("stringKey", "stringVal");
+            filter.Properties.Add("intKey", 5);
+            filter.Properties.Add("dateTimeKey", DateTime.UtcNow);
+
+            var rule = await client.CreateRuleAsync(topicName, subscriptionName, new RuleDescription("rule1", filter));
+            Assert.True(filter.Properties.Count == 3);
+            Assert.Equal(filter, rule.Filter);
+
+            await client.DeleteTopicAsync(topicName);
+        }
+
+
         public void Dispose()
         {
             client.CloseAsync().Wait();

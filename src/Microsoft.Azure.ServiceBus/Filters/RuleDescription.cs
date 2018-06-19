@@ -106,11 +106,10 @@ namespace Microsoft.Azure.ServiceBus
             get; set;
         }
 
-        public bool Equals(RuleDescription other)
+        public bool Equals(RuleDescription otherRule)
         {
-            // TODO: other could be null
-
-            if (string.Equals(this.Name, other.Name, StringComparison.OrdinalIgnoreCase)
+            if (otherRule is RuleDescription other
+                && string.Equals(this.Name, other.Name, StringComparison.OrdinalIgnoreCase)
                 && (this.Filter == null || this.Filter.Equals(other.Filter))
                 && (this.Action == null || this.Action.Equals(other.Action)))
             {

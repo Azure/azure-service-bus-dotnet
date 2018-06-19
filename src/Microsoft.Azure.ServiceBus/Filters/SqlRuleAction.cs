@@ -15,7 +15,7 @@ namespace Microsoft.Azure.ServiceBus
     /// </summary>
     public sealed class SqlRuleAction : RuleAction
     {
-        PropertyDictionary parameters;
+        internal PropertyDictionary parameters;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SqlRuleAction" /> class with the specified SQL expression.
@@ -63,13 +63,32 @@ namespace Microsoft.Azure.ServiceBus
             return string.Format(CultureInfo.InvariantCulture, "SqlRuleAction: {0}", this.SqlExpression);
         }
 
-        //TODO: parameters
         public override bool Equals(RuleAction other)
         {
             if (other is SqlRuleAction sqlAction)
             {
-                if (string.Equals(this.SqlExpression, sqlAction.SqlExpression, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(this.SqlExpression, sqlAction.SqlExpression, StringComparison.OrdinalIgnoreCase)
+                    && (this.parameters != null && sqlAction.parameters != null
+                        || this.parameters == null && sqlAction.parameters == null))
                 {
+                    if (this.parameters != null)
+                    {
+                        if (this.parameters.Count != sqlAction.parameters.Count)
+                        {
+                            return false;
+                        }
+
+                        foreach (var param in this.parameters)
+                        {
+                            if (!sqlAction.parameters.TryGetValue(param.Key, out var otherParamValue) ||
+                                (param.Value == null ^ otherParamValue == null) ||
+                                (param.Value != null && !param.Value.Equals(otherParamValue)))
+                            {
+                                return false;
+                            }
+                        }
+                    }
+
                     return true;
                 }
             }

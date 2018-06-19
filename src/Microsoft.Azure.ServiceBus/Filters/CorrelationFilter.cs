@@ -33,7 +33,7 @@ namespace Microsoft.Azure.ServiceBus
     /// </remarks>
     public sealed class CorrelationFilter : Filter
     {
-        private PropertyDictionary properties;
+        internal PropertyDictionary properties;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CorrelationFilter" /> class with default values.
@@ -213,8 +213,28 @@ namespace Microsoft.Azure.ServiceBus
                     && string.Equals(this.Label, correlationFilter.Label, StringComparison.OrdinalIgnoreCase)
                     && string.Equals(this.SessionId, correlationFilter.SessionId, StringComparison.OrdinalIgnoreCase)
                     && string.Equals(this.ReplyToSessionId, correlationFilter.ReplyToSessionId, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(this.ContentType, correlationFilter.ContentType, StringComparison.OrdinalIgnoreCase))
+                    && string.Equals(this.ContentType, correlationFilter.ContentType, StringComparison.OrdinalIgnoreCase)
+                    && (this.properties != null && correlationFilter.properties != null
+                        || this.properties == null && correlationFilter.properties == null))
                 {
+                    if (this.properties != null)
+                    {
+                        if (this.properties.Count != correlationFilter.properties.Count)
+                        {
+                            return false;
+                        }
+
+                        foreach (var param in this.properties)
+                        {
+                            if (!correlationFilter.properties.TryGetValue(param.Key, out var otherParamValue) ||
+                                (param.Value == null ^ otherParamValue == null) ||
+                                (param.Value != null && !param.Value.Equals(otherParamValue)))
+                            {
+                                return false;
+                            }
+                        }
+                    }
+
                     return true;
                 }
             }

@@ -282,7 +282,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             XElement rule = new XElement(
                 XName.Get("AuthorizationRule", ManagementClientConstants.SbNs),
-                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaNs), nameof(SharedAccessAuthorizationRule)),
+                new XAttribute(XName.Get("type", ManagementClientConstants.XmlSchemaInstanceNs), nameof(SharedAccessAuthorizationRule)),
                 new XElement(XName.Get("ClaimType", ManagementClientConstants.SbNs), this.ClaimType),
                 new XElement(XName.Get("ClaimValue", ManagementClientConstants.SbNs), this.ClaimValue),
                 new XElement(XName.Get("Rights", ManagementClientConstants.SbNs),
