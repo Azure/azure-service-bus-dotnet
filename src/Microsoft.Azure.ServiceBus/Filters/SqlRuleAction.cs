@@ -104,5 +104,26 @@ namespace Microsoft.Azure.ServiceBus
 
             return false;
         }
+
+        public static bool operator ==(SqlRuleAction o1, SqlRuleAction o2)
+        {
+            if (ReferenceEquals(o1, o2))
+            {
+                return true;
+            }
+            else if ((o1 == null) || (o2 == null))
+            {
+                return false;
+            }
+            else
+            {
+                return o1.Equals(o2);
+            }
+        }
+
+        public static bool operator !=(SqlRuleAction o1, SqlRuleAction o2)
+        {
+            return !(o1 == o2);
+        }
     }
 }
