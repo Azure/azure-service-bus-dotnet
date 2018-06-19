@@ -61,6 +61,17 @@ namespace Microsoft.Azure.ServiceBus
             return string.Format(CultureInfo.InvariantCulture, "SqlRuleAction: {0}", this.SqlExpression);
         }
 
+        public override int GetHashCode()
+        {
+            return this.SqlExpression?.GetHashCode() ?? base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as RuleAction;
+            return this.Equals(other);
+        }
+
         public override bool Equals(RuleAction other)
         {
             if (other is SqlRuleAction sqlAction)

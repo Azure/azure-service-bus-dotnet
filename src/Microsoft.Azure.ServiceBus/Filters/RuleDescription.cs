@@ -106,6 +106,23 @@ namespace Microsoft.Azure.ServiceBus
             get; set;
         }
 
+        public override int GetHashCode()
+        {
+            int hash = 13;
+            unchecked
+            {
+                hash = (hash * 7) + this.filter?.GetHashCode() ?? 0;
+                hash = (hash * 7) + this.Action?.GetHashCode() ?? 0; 
+            }
+            return hash;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as RuleDescription;
+            return this.Equals(other);
+        }
+
         public bool Equals(RuleDescription otherRule)
         {
             if (otherRule is RuleDescription other

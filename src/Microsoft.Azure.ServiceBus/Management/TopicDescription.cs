@@ -102,6 +102,17 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool EnableBatchedOperations { get; set; } = true;
 
+        public override int GetHashCode()
+        {
+            return this.Path?.GetHashCode() ?? base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as TopicDescription;
+            return this.Equals(other);
+        }
+
         public bool Equals(TopicDescription otherDescription)
         {
             if (otherDescription is TopicDescription other && this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)

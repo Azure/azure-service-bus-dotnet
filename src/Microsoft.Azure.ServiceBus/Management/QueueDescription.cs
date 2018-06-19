@@ -171,10 +171,25 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool EnablePartitioning { get; set; } = false;
 
-
-        public bool Equals(QueueDescription otherDescription)
+        public override int GetHashCode()
         {
-            if (otherDescription is QueueDescription other && this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
+            return this.Path?.GetHashCode() ?? base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as QueueDescription;
+            return this.Equals(other);
+        }
+
+        public bool Equals(QueueDescription other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            if (this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
                 && this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow)

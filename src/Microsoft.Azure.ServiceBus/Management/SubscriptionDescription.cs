@@ -150,9 +150,28 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         internal RuleDescription DefaultRuleDescription { get; set; }
 
+        public override int GetHashCode()
+        {
+            int hash = 7;
+            unchecked
+            {
+                hash = (hash * 7) + this.TopicPath?.GetHashCode() ?? 0;
+                hash = (hash * 7) + this.SubscriptionName?.GetHashCode() ?? 0;
+            }
+
+            return hash;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as SubscriptionDescription;
+            return this.Equals(other);
+        }
+
         public bool Equals(SubscriptionDescription otherDescription)
         {
-            if (otherDescription is SubscriptionDescription other && this.SubscriptionName.Equals(other.SubscriptionName, StringComparison.OrdinalIgnoreCase)
+            if (otherDescription is SubscriptionDescription other
+                && this.SubscriptionName.Equals(other.SubscriptionName, StringComparison.OrdinalIgnoreCase)
                 && this.TopicPath.Equals(other.TopicPath, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)

@@ -199,6 +199,25 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
+        public override int GetHashCode()
+        {
+            int hash = 13;
+            unchecked
+            {
+                hash = (hash * 7) + this.CorrelationId?.GetHashCode() ?? 0;
+                hash = (hash * 7) + this.MessageId?.GetHashCode() ?? 0;
+                hash = (hash * 7) + this.SessionId?.GetHashCode() ?? 0; 
+            }
+
+            return hash;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as CorrelationFilter;
+            return this.Equals(other);
+        }
+
         public override bool Equals(Filter other)
         {
             if (other is CorrelationFilter correlationFilter)

@@ -27,6 +27,16 @@ namespace Microsoft.Azure.ServiceBus
             return "TrueFilter";
         }
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is TrueFilter;
+        }
+
         public override bool Equals(Filter other)
         {
             return other is TrueFilter;
