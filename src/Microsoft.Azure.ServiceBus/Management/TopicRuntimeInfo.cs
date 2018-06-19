@@ -4,8 +4,6 @@
 namespace Microsoft.Azure.ServiceBus.Management
 {
     using System;
-    using System.Collections.Generic;
-    using System.Xml.Linq;
 
     public class TopicRuntimeInfo
     {
