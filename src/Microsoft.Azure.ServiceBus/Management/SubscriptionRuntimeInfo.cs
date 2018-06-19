@@ -19,7 +19,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public long MessageCount { get; internal set; }
 
-        public MessageCountDetails MessageCountDetails { get; set; }
+        public MessageCountDetails MessageCountDetails { get; internal set; }
 
         public DateTime AccessedAt { get; internal set; }
 
