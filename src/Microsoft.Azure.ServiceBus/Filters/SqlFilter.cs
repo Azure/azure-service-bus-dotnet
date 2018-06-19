@@ -22,7 +22,7 @@ namespace Microsoft.Azure.ServiceBus
     /// </remarks>
     public class SqlFilter : Filter
     {
-        PropertyDictionary parameters;
+        internal PropertyDictionary parameters;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SqlFilter" /> class using the specified SQL expression.
@@ -56,6 +56,7 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>
         /// Sets the value of a filter expression.
+        /// Allowed types: string, int, long, bool, double
         /// </summary>
         /// <value>The value of a filter expression.</value>
         public IDictionary<string, object> Parameters => this.parameters ?? (this.parameters = new PropertyDictionary());
@@ -69,13 +70,32 @@ namespace Microsoft.Azure.ServiceBus
             return string.Format(CultureInfo.InvariantCulture, "SqlFilter: {0}", this.SqlExpression);
         }
 
-        // TODO: params
         public override bool Equals(Filter other)
         {
             if (other is SqlFilter sqlFilter)
             {
-                if (string.Equals(this.SqlExpression, sqlFilter.SqlExpression, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(this.SqlExpression, sqlFilter.SqlExpression, StringComparison.OrdinalIgnoreCase)
+                    && (this.parameters != null && sqlFilter.parameters != null
+                        || this.parameters == null && sqlFilter.parameters == null))
                 {
+                    if (this.parameters != null)
+                    {
+                        if (this.parameters.Count != sqlFilter.parameters.Count)
+                        {
+                            return false;
+                        }
+
+                        foreach (var param in this.parameters)
+                        {
+                            if (!sqlFilter.parameters.TryGetValue(param.Key, out var otherParamValue) ||
+                                (param.Value == null ^ otherParamValue == null) ||
+                                (param.Value != null && !param.Value.Equals(otherParamValue)))
+                            {
+                                return false;
+                            }
+                        }
+                    }
+
                     return true;
                 }
             }
