@@ -52,8 +52,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 return new SharedAccessSignatureTokenProvider(builder.SasKeyName, builder.SasKey);
             }
 
-            // TODO: is this even possible?
-            throw new Exception("Could not create token provider from the provided connection string.");
+            throw new Exception("Could not create token provider. Either ITokenProvider has to be passed into constructor or connection string should contain information such as SAS token / SAS key name and SAS key.");
         }
 
         #region DeleteEntity
