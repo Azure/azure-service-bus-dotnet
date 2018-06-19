@@ -1,33 +1,12 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-namespace Microsoft.Azure.ServiceBus.Management
+﻿namespace Microsoft.Azure.ServiceBus.Management
 {
     using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
-    public class QueueRuntimeInfo
+
+    internal static class QueueRuntimeInfoExtensions
     {
-        public QueueRuntimeInfo(string path)
-        {
-            this.Path = path;
-        }
-
-        public string Path { get; internal set; }
-
-        public long MessageCount { get; internal set; }
-
-        public MessageCountDetails MessageCountDetails { get; internal set; }
-
-        public long SizeInBytes { get; internal set; }
-
-        public DateTime CreatedAt { get; internal set; }
-
-        public DateTime UpdatedAt { get; internal set; }
-
-        public DateTime AccessedAt { get; internal set; }
-
-        static internal QueueRuntimeInfo ParseFromContent(string xml)
+        public static QueueRuntimeInfo ParseFromContent(string xml)
         {
             var xDoc = XElement.Parse(xml);
             if (!xDoc.IsEmpty)
@@ -41,7 +20,8 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new MessagingEntityNotFoundException("Queue was not found");
         }
 
-        static internal IList<QueueRuntimeInfo> ParseCollectionFromContent(string xml)
+        // TODO: is this used?
+        static IList<QueueRuntimeInfo> ParseCollectionFromContent(string xml)
         {
             var xDoc = XElement.Parse(xml);
             if (!xDoc.IsEmpty)
@@ -63,15 +43,12 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new MessagingEntityNotFoundException("Queue was not found");
         }
 
-        static private QueueRuntimeInfo ParseFromEntryElement(XElement xEntry)
+        static QueueRuntimeInfo ParseFromEntryElement(XElement xEntry)
         {
             try
             {
                 var name = xEntry.Element(XName.Get("title", ManagementClientConstants.AtomNs)).Value;
-                var qRuntime = new QueueRuntimeInfo()
-                {
-                    Path = name
-                };
+                var qRuntime = new QueueRuntimeInfo(name);
 
                 var qdXml = xEntry.Element(XName.Get("content", ManagementClientConstants.AtomNs))?
                     .Element(XName.Get("QueueDescription", ManagementClientConstants.SbNs));

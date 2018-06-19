@@ -1,34 +1,12 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-namespace Microsoft.Azure.ServiceBus.Management
+﻿namespace Microsoft.Azure.ServiceBus.Management
 {
     using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
 
-    public class TopicRuntimeInfo
+    internal static class TopicRuntimeInfoExtensions
     {
-        public TopicRuntimeInfo(string path)
-        {
-            this.Path = path;
-        }
-
-        public string Path { get; internal set; }
-
-        public MessageCountDetails MessageCountDetails { get; internal set; }
-
-        public DateTime AccessedAt { get; internal set; }
-
-        public DateTime CreatedAt { get; internal set; }
-
-        public DateTime UpdatedAt { get; internal set; }
-
-        public long SizeInBytes { get; internal set; }
-
-        public int SubscriptionCount { get; internal set; }
-
-        static internal TopicRuntimeInfo ParseFromContent(string xml)
+        public static TopicRuntimeInfo ParseFromContent(string xml)
         {
             var xDoc = XElement.Parse(xml);
             if (!xDoc.IsEmpty)
@@ -42,9 +20,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new MessagingEntityNotFoundException("Topic was not found");
         }
 
-        static internal IList<TopicRuntimeInfo> ParseCollectionFromContent(string xml)
+        // TODO: is this used?
+        static IList<TopicRuntimeInfo> ParseCollectionFromContent(string xml)
         {
             var xDoc = XElement.Parse(xml);
+
             if (!xDoc.IsEmpty)
             {
                 if (xDoc.Name.LocalName == "feed")
@@ -64,7 +44,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             throw new MessagingEntityNotFoundException("Topic was not found");
         }
 
-        static private TopicRuntimeInfo ParseFromEntryElement(XElement xEntry)
+        static TopicRuntimeInfo ParseFromEntryElement(XElement xEntry)
         {
             try
             {
