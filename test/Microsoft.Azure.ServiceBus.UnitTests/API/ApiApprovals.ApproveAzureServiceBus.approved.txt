@@ -281,7 +281,7 @@ namespace Microsoft.Azure.ServiceBus
         public Microsoft.Azure.ServiceBus.RuleAction Action { get; set; }
         public Microsoft.Azure.ServiceBus.Filter Filter { get; set; }
         public string Name { get; set; }
-        public bool Equals(Microsoft.Azure.ServiceBus.RuleDescription other) { }
+        public bool Equals(Microsoft.Azure.ServiceBus.RuleDescription otherRule) { }
     }
     public sealed class ServerBusyException : Microsoft.Azure.ServiceBus.ServiceBusException
     {
@@ -640,6 +640,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, Microsoft.Azure.ServiceBus.RuleDescription ruleDescription, System.Threading.CancellationToken cancellationToken = null);
         System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Management.SubscriptionDescription> CreateSubscriptionAsync(string topicName, string subscriptionName, System.Threading.CancellationToken cancellationToken = null);
         System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Management.SubscriptionDescription> CreateSubscriptionAsync(Microsoft.Azure.ServiceBus.Management.SubscriptionDescription subscriptionDescription, System.Threading.CancellationToken cancellationToken = null);
+        System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Management.SubscriptionDescription> CreateSubscriptionAsync(Microsoft.Azure.ServiceBus.Management.SubscriptionDescription subscriptionDescription, Microsoft.Azure.ServiceBus.RuleDescription defaultRule, System.Threading.CancellationToken cancellationToken = null);
         System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Management.TopicDescription> CreateTopicAsync(string topicName, System.Threading.CancellationToken cancellationToken = null);
         System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Management.TopicDescription> CreateTopicAsync(Microsoft.Azure.ServiceBus.Management.TopicDescription topicDescription, System.Threading.CancellationToken cancellationToken = null);
         System.Threading.Tasks.Task DeleteQueueAsync(string queueName, System.Threading.CancellationToken cancellationToken = null);
@@ -676,6 +677,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, Microsoft.Azure.ServiceBus.RuleDescription ruleDescription, System.Threading.CancellationToken cancellationToken = null) { }
         public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Management.SubscriptionDescription> CreateSubscriptionAsync(string topicName, string subscriptionName, System.Threading.CancellationToken cancellationToken = null) { }
         public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Management.SubscriptionDescription> CreateSubscriptionAsync(Microsoft.Azure.ServiceBus.Management.SubscriptionDescription subscriptionDescription, System.Threading.CancellationToken cancellationToken = null) { }
+        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Management.SubscriptionDescription> CreateSubscriptionAsync(Microsoft.Azure.ServiceBus.Management.SubscriptionDescription subscriptionDescription, Microsoft.Azure.ServiceBus.RuleDescription defaultRule, System.Threading.CancellationToken cancellationToken = null) { }
         public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Management.TopicDescription> CreateTopicAsync(string topicName, System.Threading.CancellationToken cancellationToken = null) { }
         public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Management.TopicDescription> CreateTopicAsync(Microsoft.Azure.ServiceBus.Management.TopicDescription topicDescription, System.Threading.CancellationToken cancellationToken = null) { }
         public System.Threading.Tasks.Task DeleteQueueAsync(string queueName, System.Threading.CancellationToken cancellationToken = null) { }
@@ -738,12 +740,12 @@ namespace Microsoft.Azure.ServiceBus.Management
     }
     public class QueueRuntimeInfo
     {
-        public QueueRuntimeInfo() { }
+        public QueueRuntimeInfo(string path) { }
         public System.DateTime AccessedAt { get; }
         public System.DateTime CreatedAt { get; }
         public long MessageCount { get; }
         public Microsoft.Azure.ServiceBus.Management.MessageCountDetails MessageCountDetails { get; }
-        public string Path { get; set; }
+        public string Path { get; }
         public long SizeInBytes { get; }
         public System.DateTime UpdatedAt { get; }
     }
@@ -779,13 +781,13 @@ namespace Microsoft.Azure.ServiceBus.Management
     }
     public class SubscriptionRuntimeInfo
     {
-        public SubscriptionRuntimeInfo(string topicName, string subscriptionName) { }
+        public SubscriptionRuntimeInfo(string topicPath, string subscriptionName) { }
         public System.DateTime AccessedAt { get; }
         public System.DateTime CreatedAt { get; }
         public long MessageCount { get; }
         public Microsoft.Azure.ServiceBus.Management.MessageCountDetails MessageCountDetails { get; set; }
-        public string SubscriptionName { get; set; }
-        public string TopicPath { get; set; }
+        public string SubscriptionName { get; }
+        public string TopicPath { get; }
         public System.DateTime UpdatedAt { get; }
     }
     public class TopicDescription : System.IEquatable<Microsoft.Azure.ServiceBus.Management.TopicDescription>
@@ -806,11 +808,11 @@ namespace Microsoft.Azure.ServiceBus.Management
     }
     public class TopicRuntimeInfo
     {
-        public TopicRuntimeInfo(string name) { }
+        public TopicRuntimeInfo(string path) { }
         public System.DateTime AccessedAt { get; }
         public System.DateTime CreatedAt { get; }
         public Microsoft.Azure.ServiceBus.Management.MessageCountDetails MessageCountDetails { get; }
-        public string Path { get; set; }
+        public string Path { get; }
         public long SizeInBytes { get; }
         public int SubscriptionCount { get; }
         public System.DateTime UpdatedAt { get; }
