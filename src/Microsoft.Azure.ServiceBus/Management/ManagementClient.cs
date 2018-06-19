@@ -189,23 +189,47 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public async Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
+            if (count > 100 || count < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count), "Value should be between 1 and 100");
+            }
+            if (skip < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Value cannot be negative");
+            }
+
             var content = await GetEntity("$Resources/queues", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
             return QueueDescriptionExtensions.ParseCollectionFromContent(content);
         }
 
         public async Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
-            var content = await GetEntity("$Resources/topics", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
+            if (count > 100 || count < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count), "Value should be between 1 and 100");
+            }
+            if (skip < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Value cannot be negative");
+            }
 
+            var content = await GetEntity("$Resources/topics", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
             return TopicDescriptionExtensions.ParseCollectionFromContent(content);
         }
 
         public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicName);
+            if (count > 100 || count < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count), "Value should be between 1 and 100");
+            }
+            if (skip < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Value cannot be negative");
+            }
 
             var content = await GetEntity($"{topicName}/Subscriptions", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
-
             return SubscriptionDescriptionExtensions.ParseCollectionFromContent(topicName, content);
         }
 
@@ -213,9 +237,16 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             EntityNameHelper.CheckValidTopicName(topicName);
             EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
+            if (count > 100 || count < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count), "Value should be between 1 and 100");
+            }
+            if (skip < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Value cannot be negative");
+            }
 
             var content = await GetEntity($"{topicName}/Subscriptions/{subscriptionName}/rules", $"$skip={skip}&$top={count}", false, cancellationToken).ConfigureAwait(false);
-
             return RuleDescriptionExtensions.ParseCollectionFromContent(content);
         }
 

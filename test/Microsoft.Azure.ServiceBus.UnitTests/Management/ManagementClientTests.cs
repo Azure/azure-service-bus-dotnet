@@ -10,14 +10,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
     using Microsoft.Azure.ServiceBus.Management;
     using Xunit;
 
-    // TODO
-    // Update non-updatable property
-    // Get more than 100 queues - manual test.
-    // test with cancellation token
     public class ManagementClientTests : IDisposable
     {
         internal string ConnectionString = TestUtility.NamespaceConnectionString;
-        //internal string ConnectionString = "Endpoint=sb://contoso.servicebus.onebox.windows-int.net/;SharedAccessKeyName=DefaultNamespaceSasAllKeyName;SharedAccessKey=8864/auVd3qDC75iTjBL1GJ4D2oXC6bIttRd0jzDZ+g=";
         IManagementClient client;
 
         public ManagementClientTests()
@@ -603,7 +598,6 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 
             await client.DeleteTopicAsync(topicName);
         }
-
 
         public void Dispose()
         {
