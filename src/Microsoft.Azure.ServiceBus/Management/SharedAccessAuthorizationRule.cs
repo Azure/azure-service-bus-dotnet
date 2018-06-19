@@ -227,6 +227,27 @@ namespace Microsoft.Azure.ServiceBus.Management
             return true;
         }
 
+        public static bool operator ==(SharedAccessAuthorizationRule o1, SharedAccessAuthorizationRule o2)
+        {
+            if (ReferenceEquals(o1, o2))
+            {
+                return true;
+            }
+            else if ((o1 == null) || (o2 == null))
+            {
+                return false;
+            }
+            else
+            {
+                return o1.Equals(o2);
+            }
+        }
+
+        public static bool operator !=(SharedAccessAuthorizationRule o1, SharedAccessAuthorizationRule o2)
+        {
+            return !(o1 == o2);
+        }
+
         /// <summary>Generates the random key for the authorization rule.</summary>        
         private static string GenerateRandomKey()
         {

@@ -72,5 +72,26 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             return true;
         }
+
+        public static bool operator ==(AuthorizationRules o1, AuthorizationRules o2)
+        {
+            if (ReferenceEquals(o1, o2))
+            {
+                return true;
+            }
+            else if ((o1 == null) || (o2 == null))
+            {
+                return false;
+            }
+            else
+            {
+                return o1.Equals(o2);
+            }
+        }
+
+        public static bool operator !=(AuthorizationRules o1, AuthorizationRules o2)
+        {
+            return !(o1 == o2);
+        }
     }
 }
