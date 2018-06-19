@@ -1,4 +1,7 @@
-﻿namespace Microsoft.Azure.ServiceBus.Management
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.Azure.ServiceBus.Management
 {
     using System.Xml.Linq;
     using System;
@@ -49,7 +52,6 @@
             throw new MessagingEntityNotFoundException("Queue was not found");
         }
 
-        // TODO: Revisit all properties and ensure they are populated.
         static QueueDescription ParseFromEntryElement(XElement xEntry)
         {
             try

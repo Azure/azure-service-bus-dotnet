@@ -1,15 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using Microsoft.Azure.ServiceBus.Primitives;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Net;
+    using System.Net.Http;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using System.Xml.Linq;
+    using Microsoft.Azure.ServiceBus.Primitives;
+
     // TODO: Document all exceptions that might be thrown
     public class ManagementClient : IManagementClient
     {
@@ -606,8 +609,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        // TODO: Operation timeout as token timeout??? :O
-        // TODO: token caching?
         Task<string> GetToken(Uri requestUri)
         {
             return this.GetToken(requestUri.GetLeftPart(UriPartial.Path));
@@ -615,7 +616,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         async Task<string> GetToken(string requestUri)
         {
-            var token = await this.tokenProvider.GetTokenAsync(requestUri, this.operationTimeout).ConfigureAwait(false);
+            var token = await this.tokenProvider.GetTokenAsync(requestUri, TimeSpan.FromHours(1)).ConfigureAwait(false);
             return token.TokenValue;
         }
     }

@@ -1,14 +1,14 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
-using Microsoft.Azure.ServiceBus.Management;
-using Microsoft.Azure.ServiceBus.Primitives;
-
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Xml.Linq;
+    using Microsoft.Azure.ServiceBus.Management;
+    using Microsoft.Azure.ServiceBus.Primitives;
+
     /// <summary>
     /// Represents a description of a rule.
     /// </summary>

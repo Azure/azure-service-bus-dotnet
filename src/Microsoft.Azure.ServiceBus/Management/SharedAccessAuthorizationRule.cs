@@ -1,15 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Web;
-using System.Xml;
-using System.Xml.Linq;
-using Microsoft.Azure.ServiceBus.Primitives;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Security.Cryptography;
+    using System.Text;
+    using System.Web;
+    using System.Xml;
+    using System.Xml.Linq;
+    using Microsoft.Azure.ServiceBus.Primitives;
+    
     public class SharedAccessAuthorizationRule : AuthorizationRule
     {
         const int SupportedSASKeyLength = 44;

@@ -73,9 +73,6 @@ namespace Microsoft.Azure.ServiceBus
             return string.Concat(entityPath, PathDelimiter, TransferDeadLetterQueueName);
         }
 
-        // TODO: Should the specific check methods be made public for customers to use?
-        // That way customers don't have to re-implement this kind of checks in their own code
-
         internal static void CheckValidQueueName(string queueName, string paramName = "queueName")
         {
             CheckValidEntityName(queueName, ManagementClientConstants.QueueNameMaximumLength, true, paramName);
