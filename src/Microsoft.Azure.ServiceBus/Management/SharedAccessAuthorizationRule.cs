@@ -172,12 +172,21 @@ namespace Microsoft.Azure.ServiceBus.Management
         public override int GetHashCode()
         {
             int hash = 13;
-            hash = (hash * 7) + this.KeyName?.GetHashCode() ?? 0;
-            hash = (hash * 7) + this.PrimaryKey?.GetHashCode() ?? 0;
-            hash = (hash * 7) + this.SecondaryKey?.GetHashCode() ?? 0;
-            hash = (hash * 7) + this.Rights.GetHashCode();
+            unchecked
+            {
+                hash = (hash * 7) + this.KeyName?.GetHashCode() ?? 0;
+                hash = (hash * 7) + this.PrimaryKey?.GetHashCode() ?? 0;
+                hash = (hash * 7) + this.SecondaryKey?.GetHashCode() ?? 0;
+                hash = (hash * 7) + this.Rights.GetHashCode(); 
+            }
 
             return hash;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as AuthorizationRule;
+            return this.Equals(other);
         }
 
         /// <summary>Determines whether the specified object is equal to the current object.</summary>

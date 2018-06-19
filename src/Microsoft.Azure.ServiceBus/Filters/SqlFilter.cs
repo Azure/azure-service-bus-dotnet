@@ -68,6 +68,17 @@ namespace Microsoft.Azure.ServiceBus
             return string.Format(CultureInfo.InvariantCulture, "SqlFilter: {0}", this.SqlExpression);
         }
 
+        public override int GetHashCode()
+        {
+            return this.SqlExpression?.GetHashCode() ?? base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as Filter;
+            return this.Equals(other);
+        }
+
         public override bool Equals(Filter other)
         {
             if (other is SqlFilter sqlFilter)

@@ -29,6 +29,26 @@ namespace Microsoft.Azure.ServiceBus.Management
             return rules;
         }
 
+        public override int GetHashCode()
+        {
+            int hash = 7;
+            unchecked
+            {    
+                foreach (var rule in this)
+                {
+                    hash = (hash * 7) + rule.GetHashCode();
+                } 
+            }
+
+            return hash;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as AuthorizationRules;
+            return this.Equals(other);
+        }
+
         public bool Equals(AuthorizationRules other)
         {
             if (other == null || this.Count != other.Count)
