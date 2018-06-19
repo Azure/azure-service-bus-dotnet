@@ -161,7 +161,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             var content = await GetEntity(queueName, null, true, cancellationToken).ConfigureAwait(false);
 
-            return QueueRuntimeInfo.ParseFromContent(content);
+            return QueueRuntimeInfoExtensions.ParseFromContent(content);
         }
 
         public async Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicName, CancellationToken cancellationToken = default)
@@ -170,7 +170,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             var content = await GetEntity(topicName, null, true, cancellationToken).ConfigureAwait(false);
 
-            return TopicRuntimeInfo.ParseFromContent(content);
+            return TopicRuntimeInfoExtensions.ParseFromContent(content);
         }
 
         public async Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
@@ -180,7 +180,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             var content = await GetEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), null, true, cancellationToken).ConfigureAwait(false);
 
-            return SubscriptionRuntimeInfo.ParseFromContent(topicName, content);
+            return SubscriptionRuntimeInfoExtensions.ParseFromContent(topicName, content);
         }
 
         #endregion
