@@ -20,29 +20,6 @@
             throw new MessagingEntityNotFoundException("Queue was not found");
         }
 
-        // TODO: is this used?
-        static IList<QueueRuntimeInfo> ParseCollectionFromContent(string xml)
-        {
-            var xDoc = XElement.Parse(xml);
-            if (!xDoc.IsEmpty)
-            {
-                if (xDoc.Name.LocalName == "feed")
-                {
-                    var queueList = new List<QueueRuntimeInfo>();
-
-                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClientConstants.AtomNs));
-                    foreach (var entry in entryList)
-                    {
-                        queueList.Add(ParseFromEntryElement(entry));
-                    }
-
-                    return queueList;
-                }
-            }
-
-            throw new MessagingEntityNotFoundException("Queue was not found");
-        }
-
         static QueueRuntimeInfo ParseFromEntryElement(XElement xEntry)
         {
             try

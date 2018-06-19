@@ -20,30 +20,6 @@
             throw new MessagingEntityNotFoundException("Topic was not found");
         }
 
-        // TODO: is this used?
-        static IList<TopicRuntimeInfo> ParseCollectionFromContent(string xml)
-        {
-            var xDoc = XElement.Parse(xml);
-
-            if (!xDoc.IsEmpty)
-            {
-                if (xDoc.Name.LocalName == "feed")
-                {
-                    var topicList = new List<TopicRuntimeInfo>();
-
-                    var entryList = xDoc.Elements(XName.Get("entry", ManagementClientConstants.AtomNs));
-                    foreach (var entry in entryList)
-                    {
-                        topicList.Add(ParseFromEntryElement(entry));
-                    }
-
-                    return topicList;
-                }
-            }
-
-            throw new MessagingEntityNotFoundException("Topic was not found");
-        }
-
         static TopicRuntimeInfo ParseFromEntryElement(XElement xEntry)
         {
             try
