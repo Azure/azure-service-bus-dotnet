@@ -48,14 +48,13 @@ namespace Microsoft.Azure.ServiceBus
             {
                 return true;
             }
-            else if ((o1 == null) || (o2 == null))
+
+            if ((o1 == null) || (o2 == null))
             {
                 return false;
             }
-            else
-            {
-                return o1.Equals(o2);
-            }
+
+            return o1.Equals(o2);
         }
 
         public static bool operator !=(TrueFilter o1, TrueFilter o2)
