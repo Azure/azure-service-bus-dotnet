@@ -140,14 +140,13 @@ namespace Microsoft.Azure.ServiceBus.Management
             {
                 return true;
             }
-            else if ((o1 == null) || (o2 == null))
+
+            if ((o1 == null) || (o2 == null))
             {
                 return false;
             }
-            else
-            {
-                return o1.Equals(o2);
-            }
+
+            return o1.Equals(o2);
         }
 
         public static bool operator !=(TopicDescription o1, TopicDescription o2)
