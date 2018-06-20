@@ -36,7 +36,9 @@ namespace Microsoft.Azure.ServiceBus
         public string ReplyToSessionId { get; set; }
         public string SessionId { get; set; }
         public string To { get; set; }
+        public override bool Equals(object obj) { }
         public override bool Equals(Microsoft.Azure.ServiceBus.Filter other) { }
+        public override int GetHashCode() { }
         public override string ToString() { }
     }
     public class static EntityNameHelper
@@ -74,7 +76,9 @@ namespace Microsoft.Azure.ServiceBus
     public sealed class FalseFilter : Microsoft.Azure.ServiceBus.SqlFilter
     {
         public FalseFilter() { }
+        public override bool Equals(object obj) { }
         public override bool Equals(Microsoft.Azure.ServiceBus.Filter other) { }
+        public override int GetHashCode() { }
         public override string ToString() { }
     }
     public abstract class Filter : System.IEquatable<Microsoft.Azure.ServiceBus.Filter>
@@ -281,7 +285,9 @@ namespace Microsoft.Azure.ServiceBus
         public Microsoft.Azure.ServiceBus.RuleAction Action { get; set; }
         public Microsoft.Azure.ServiceBus.Filter Filter { get; set; }
         public string Name { get; set; }
+        public override bool Equals(object obj) { }
         public bool Equals(Microsoft.Azure.ServiceBus.RuleDescription otherRule) { }
+        public override int GetHashCode() { }
     }
     public sealed class ServerBusyException : Microsoft.Azure.ServiceBus.ServiceBusException
     {
@@ -382,7 +388,9 @@ namespace Microsoft.Azure.ServiceBus
         public SqlFilter(string sqlExpression) { }
         public System.Collections.Generic.IDictionary<string, object> Parameters { get; }
         public string SqlExpression { get; }
+        public override bool Equals(object obj) { }
         public override bool Equals(Microsoft.Azure.ServiceBus.Filter other) { }
+        public override int GetHashCode() { }
         public override string ToString() { }
     }
     public sealed class SqlRuleAction : Microsoft.Azure.ServiceBus.RuleAction
@@ -390,7 +398,9 @@ namespace Microsoft.Azure.ServiceBus
         public SqlRuleAction(string sqlExpression) { }
         public System.Collections.Generic.IDictionary<string, object> Parameters { get; }
         public string SqlExpression { get; }
+        public override bool Equals(object obj) { }
         public override bool Equals(Microsoft.Azure.ServiceBus.RuleAction other) { }
+        public override int GetHashCode() { }
         public override string ToString() { }
     }
     public class SubscriptionClient : Microsoft.Azure.ServiceBus.ClientEntity, Microsoft.Azure.ServiceBus.Core.IReceiverClient, Microsoft.Azure.ServiceBus.IClientEntity, Microsoft.Azure.ServiceBus.ISubscriptionClient
@@ -451,7 +461,9 @@ namespace Microsoft.Azure.ServiceBus
     public sealed class TrueFilter : Microsoft.Azure.ServiceBus.SqlFilter
     {
         public TrueFilter() { }
+        public override bool Equals(object obj) { }
         public override bool Equals(Microsoft.Azure.ServiceBus.Filter other) { }
+        public override int GetHashCode() { }
         public override string ToString() { }
     }
     public sealed class UnauthorizedException : Microsoft.Azure.ServiceBus.ServiceBusException
@@ -617,6 +629,7 @@ namespace Microsoft.Azure.ServiceBus.Management
     public class AuthorizationRules : System.Collections.Generic.List<Microsoft.Azure.ServiceBus.Management.AuthorizationRule>, System.IEquatable<Microsoft.Azure.ServiceBus.Management.AuthorizationRules>
     {
         public AuthorizationRules() { }
+        public override bool Equals(object obj) { }
         public bool Equals(Microsoft.Azure.ServiceBus.Management.AuthorizationRules other) { }
     }
     public enum EntityStatus
@@ -736,7 +749,9 @@ namespace Microsoft.Azure.ServiceBus.Management
         public bool RequiresDuplicateDetection { get; set; }
         public bool RequiresSession { get; set; }
         public Microsoft.Azure.ServiceBus.Management.EntityStatus Status { get; set; }
-        public bool Equals(Microsoft.Azure.ServiceBus.Management.QueueDescription otherDescription) { }
+        public override bool Equals(object obj) { }
+        public bool Equals(Microsoft.Azure.ServiceBus.Management.QueueDescription other) { }
+        public override int GetHashCode() { }
     }
     public class QueueRuntimeInfo
     {
@@ -759,6 +774,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         public string PrimaryKey { get; set; }
         public override System.Collections.Generic.List<Microsoft.Azure.ServiceBus.Management.AccessRights> Rights { get; set; }
         public string SecondaryKey { get; set; }
+        public override bool Equals(object obj) { }
         public override bool Equals(Microsoft.Azure.ServiceBus.Management.AuthorizationRule other) { }
         public override int GetHashCode() { }
     }
@@ -777,7 +793,9 @@ namespace Microsoft.Azure.ServiceBus.Management
         public Microsoft.Azure.ServiceBus.Management.EntityStatus Status { get; set; }
         public string SubscriptionName { get; set; }
         public string TopicPath { get; set; }
+        public override bool Equals(object obj) { }
         public bool Equals(Microsoft.Azure.ServiceBus.Management.SubscriptionDescription otherDescription) { }
+        public override int GetHashCode() { }
     }
     public class SubscriptionRuntimeInfo
     {
@@ -785,7 +803,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         public System.DateTime AccessedAt { get; }
         public System.DateTime CreatedAt { get; }
         public long MessageCount { get; }
-        public Microsoft.Azure.ServiceBus.Management.MessageCountDetails MessageCountDetails { get; set; }
+        public Microsoft.Azure.ServiceBus.Management.MessageCountDetails MessageCountDetails { get; }
         public string SubscriptionName { get; }
         public string TopicPath { get; }
         public System.DateTime UpdatedAt { get; }
@@ -804,7 +822,9 @@ namespace Microsoft.Azure.ServiceBus.Management
         public bool RequiresDuplicateDetection { get; set; }
         public Microsoft.Azure.ServiceBus.Management.EntityStatus Status { get; set; }
         public bool SupportOrdering { get; set; }
+        public override bool Equals(object obj) { }
         public bool Equals(Microsoft.Azure.ServiceBus.Management.TopicDescription otherDescription) { }
+        public override int GetHashCode() { }
     }
     public class TopicRuntimeInfo
     {
