@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using Microsoft.Azure.ServiceBus.Management;
-
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
+    using Microsoft.Azure.ServiceBus.Management;
+
     /// <summary>
     /// This class can be used to format the path for different Service Bus entity types.
     /// </summary>
