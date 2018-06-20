@@ -22,7 +22,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         private readonly ITokenProvider tokenProvider;
         private readonly TimeSpan operationTimeout;
         private readonly int port;
-        private string clientId;
+        private readonly string clientId;
 
         public ManagementClient(string connectionString, RetryPolicy retryPolicy = default)
             : this(new ServiceBusConnectionStringBuilder(connectionString), retryPolicy:retryPolicy)
@@ -556,7 +556,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
             catch (HttpRequestException exception)
             {
-                MessagingEventSource.Log.ManagementOperationException(this.clientId, exception);
+                MessagingEventSource.Log.ManagementOperationException(this.clientId, nameof(SendHttpRequest), exception);
                 throw new ServiceBusException(true, exception);
             }
 
@@ -567,7 +567,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
             else
             {
-                MessagingEventSource.Log.ManagementOperationException(this.clientId, exceptionReturned);
+                MessagingEventSource.Log.ManagementOperationException(this.clientId, nameof(SendHttpRequest), exceptionReturned);
                 throw exceptionReturned;
             }
         }

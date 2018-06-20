@@ -1349,11 +1349,11 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void ManagementOperationException(string clientId, Exception exception)
+        public void ManagementOperationException(string clientId, string operationName, Exception exception)
         {
             if (this.IsEnabled())
             {
-                this.ManagementOperationException(clientId, exception.ToString());
+                this.ManagementOperationException(clientId, operationName, exception.ToString());
             }
         }
 
