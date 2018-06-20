@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
     using System.Xml.Linq;
     using Microsoft.Azure.ServiceBus.Filters;
     using Microsoft.Azure.ServiceBus.Management;
@@ -22,8 +23,13 @@ namespace Microsoft.Azure.ServiceBus
                 case "SqlRuleAction":
                     return ParseFromXElementSqlRuleAction(xElement);
 
-                // anything else, including "EmptyRuleAction", should return null
+                case "EmptyRuleAction":
+                    return null;
+
                 default:
+                    MessagingEventSource.Log.ManagementSerializationException(
+                        $"{nameof(RuleActionExtensions)}_{nameof(ParseFromXElement)}",
+                        xElement.ToString());
                     return null;
             }
         }
@@ -76,8 +82,10 @@ namespace Microsoft.Azure.ServiceBus
                         new XElement(XName.Get("SqlExpression", ManagementClientConstants.SbNs), sqlRuleAction.SqlExpression),
                         parameterElement);
             }
-
-            return null;
+            else
+            {
+                throw new NotImplementedException($"Rule action of type {action.GetType().Name} is not implemented");
+            }
         }
     }
 }

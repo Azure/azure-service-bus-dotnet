@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
     using System.Xml.Linq;
     using Microsoft.Azure.ServiceBus.Management;
 
@@ -27,6 +28,9 @@ namespace Microsoft.Azure.ServiceBus
                 case "FalseFilter":
                     return new FalseFilter();
                 default:
+                    MessagingEventSource.Log.ManagementSerializationException(
+                        $"{nameof(FilterExtensions)}_{nameof(ParseFromXElement)}",
+                        xElement.ToString());
                     return null;
             }
         }
@@ -52,7 +56,7 @@ namespace Microsoft.Azure.ServiceBus
                     return correlationFilter.Serialize();
 
                 default:
-                    return null;
+                    throw new NotImplementedException($"filter type {filter.GetType().Name} is not supported.");
             }
         }
     }

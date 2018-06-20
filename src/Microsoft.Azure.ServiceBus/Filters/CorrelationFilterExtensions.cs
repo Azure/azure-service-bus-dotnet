@@ -48,6 +48,11 @@ namespace Microsoft.Azure.ServiceBus
                             correlationFilter.Properties.Add(key, value);
                         }
                         break;
+                    default:
+                        MessagingEventSource.Log.ManagementSerializationException(
+                            $"{nameof(CorrelationFilterExtensions)}_{nameof(ParseFromXElement)}",
+                            element.ToString());
+                        break;
                 }
             }
 

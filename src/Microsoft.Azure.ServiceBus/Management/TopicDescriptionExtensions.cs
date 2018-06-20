@@ -21,7 +21,6 @@ namespace Microsoft.Azure.ServiceBus.Management
                 }
             }
 
-            // TODO: Log
             throw new MessagingEntityNotFoundException("Topic was not found");
         }
 
