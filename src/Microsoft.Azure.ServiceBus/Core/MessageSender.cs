@@ -92,7 +92,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             TransportType transportType = TransportType.Amqp,
             RetryPolicy retryPolicy = null)
             : this(entityPath, null, null, new ServiceBusConnection(endpoint, transportType, retryPolicy) {TokenProvider = tokenProvider}, null, retryPolicy)
-        {
+        {            
             this.OwnsConnection = true;
         }
 
@@ -149,11 +149,16 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
             }
-
+            
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
             this.Path = entityPath;
             this.TransferDestinationPath = transferDestinationPath;
             this.EntityType = entityType;
+
+            if (ServiceBusConnection.IsClosedOrClosing)
+            {
+                throw new ObjectDisposedException($"{nameof(serviceBusConnection)} has already been closed. Please create a new {typeof(ServiceBusConnection)} ");
+            }
 
             if (cbsTokenProvider != null)
             {
