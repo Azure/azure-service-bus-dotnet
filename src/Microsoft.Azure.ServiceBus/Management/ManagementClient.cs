@@ -22,6 +22,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         private readonly ITokenProvider tokenProvider;
         private readonly TimeSpan operationTimeout;
         private readonly int port;
+        private string clientId;
 
         public ManagementClient(string connectionString, RetryPolicy retryPolicy = default)
             : this(new ServiceBusConnectionStringBuilder(connectionString), retryPolicy:retryPolicy)
@@ -41,6 +42,9 @@ namespace Microsoft.Azure.ServiceBus.Management
             this.tokenProvider = tokenProvider ?? CreateTokenProvider(connectionStringBuilder);
             this.operationTimeout = Constants.DefaultOperationTimeout;
             this.port = GetPort(connectionStringBuilder.Endpoint);
+            this.clientId = nameof(ManagementClient) + Guid.NewGuid().ToString("N").Substring(0, 6);
+
+            MessagingEventSource.Log.ManagementClientCreated(this.clientId, this.operationTimeout.TotalSeconds, this.tokenProvider.ToString(), this.retryPolicy.ToString());
         }
 
         private static ITokenProvider CreateTokenProvider(ServiceBusConnectionStringBuilder builder)
@@ -91,6 +95,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         private async Task DeleteEntity(string path, CancellationToken cancellationToken)
         {
+            MessagingEventSource.Log.ManagementOperationStart(this.clientId, nameof(DeleteEntity), path);
+
             var uri = new UriBuilder(this.endpointFQDN)
             {
                 Path = path,
@@ -106,6 +112,8 @@ namespace Microsoft.Azure.ServiceBus.Management
                 {
                     await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
                 }, this.operationTimeout).ConfigureAwait(false);
+
+            MessagingEventSource.Log.ManagementOperationEnd(this.clientId, nameof(DeleteEntity), path);
         }
 
         #endregion
@@ -252,6 +260,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         private async Task<string> GetEntity(string path, string query, bool enrich, CancellationToken cancellationToken)
         {
+            MessagingEventSource.Log.ManagementOperationStart(this.clientId, nameof(GetEntity), $"path:{path},query:{query},enrich:{enrich}");
+
             var queryString = $"{ManagementClientConstants.apiVersionQuery}&enrich={enrich}";
             if (query!=null)
             {
@@ -274,7 +284,10 @@ namespace Microsoft.Azure.ServiceBus.Management
                     response = await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
                 }, this.operationTimeout).ConfigureAwait(false);
 
-            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            MessagingEventSource.Log.ManagementOperationEnd(this.clientId, nameof(GetEntity), $"path:{path},query:{query},enrich:{enrich}");
+            return result;
         }
 
         #endregion
@@ -418,6 +431,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         private async Task<string> PutEntity(string path, string requestBody, bool isUpdate, string forwardTo, string fwdDeadLetterTo, CancellationToken cancellationToken)
         {
+            MessagingEventSource.Log.ManagementOperationStart(this.clientId, nameof(PutEntity), $"path:{path},isUpdate:{isUpdate}");
+
             var uri = new UriBuilder(this.endpointFQDN)
             {
                 Path = path,
@@ -457,7 +472,10 @@ namespace Microsoft.Azure.ServiceBus.Management
                     response = await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
                 }, this.operationTimeout).ConfigureAwait(false);
 
-            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            MessagingEventSource.Log.ManagementOperationEnd(this.clientId, nameof(PutEntity), $"path:{path},isUpdate:{isUpdate}");
+            return result;
         }
 
         #endregion
@@ -538,11 +556,20 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
             catch (HttpRequestException exception)
             {
+                MessagingEventSource.Log.ManagementOperationException(this.clientId, exception);
                 throw new ServiceBusException(true, exception);
             }
 
-            await ValidateHttpResponse(response).ConfigureAwait(false);
-            return response;
+            var exceptionReturned = await ValidateHttpResponse(response).ConfigureAwait(false);
+            if (exceptionReturned == null)
+            {
+                return response;
+            }
+            else
+            {
+                MessagingEventSource.Log.ManagementOperationException(this.clientId, exceptionReturned);
+                throw exceptionReturned;
+            }
         }
 
         private static int GetPort(string endpoint)
@@ -556,11 +583,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             return -1;
         }
 
-        private static async Task ValidateHttpResponse(HttpResponseMessage response)
+        private static async Task<Exception> ValidateHttpResponse(HttpResponseMessage response)
         {
             if (response.IsSuccessStatusCode)
             {
-                return;
+                return null;
             }
 
             var exceptionMessage = await response.Content?.ReadAsStringAsync();
@@ -568,56 +595,56 @@ namespace Microsoft.Azure.ServiceBus.Management
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                throw new UnauthorizedException(exceptionMessage);
+                return new UnauthorizedException(exceptionMessage);
             }
 
             if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.NoContent)
             {
-                throw new MessagingEntityNotFoundException(exceptionMessage);
+                return new MessagingEntityNotFoundException(exceptionMessage);
             }
 
             if (response.StatusCode == HttpStatusCode.Conflict)
             {
                 if (response.RequestMessage.Method.Equals(HttpMethod.Delete))
                 {
-                    throw new ServiceBusException(true, exceptionMessage);
+                    return new ServiceBusException(true, exceptionMessage);
                 }
 
                 if (response.RequestMessage.Method.Equals(HttpMethod.Put) && response.RequestMessage.Headers.IfMatch.Count > 0)
                 {
                     // response.RequestMessage.Headers.IfMatch.Count > 0 is true for UpdateEntity scenario
-                    throw new ServiceBusException(true, exceptionMessage);
+                    return new ServiceBusException(true, exceptionMessage);
                 }
 
                 if (exceptionMessage.Contains(ManagementClientConstants.ConflictOperationInProgressSubCode))
                 {
-                    throw new ServiceBusException(true, exceptionMessage);
+                    return new ServiceBusException(true, exceptionMessage);
                 }
 
-                throw new MessagingEntityAlreadyExistsException(exceptionMessage);
+                return new MessagingEntityAlreadyExistsException(exceptionMessage);
             }
 
             if (response.StatusCode == HttpStatusCode.Forbidden)
             {
                 if (exceptionMessage.Contains(ManagementClientConstants.ForbiddenInvalidOperationSubCode))
                 {
-                    throw new InvalidOperationException(exceptionMessage);
+                    return new InvalidOperationException(exceptionMessage);
                 }
-                
-                throw new QuotaExceededException(exceptionMessage);
+
+                return new QuotaExceededException(exceptionMessage);
             }
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
             {
-                throw new ServiceBusException(false, new ArgumentException(exceptionMessage));
+                return new ServiceBusException(false, new ArgumentException(exceptionMessage));
             }
 
             if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
             {
-                throw new ServerBusyException(exceptionMessage);
+                return new ServerBusyException(exceptionMessage);
             }
 
-            throw new ServiceBusException(true, exceptionMessage);
+            return new ServiceBusException(true, exceptionMessage + "; response status code: " + response.StatusCode);
         }
 
         private static string ParseDetailIfAvailable(string content)

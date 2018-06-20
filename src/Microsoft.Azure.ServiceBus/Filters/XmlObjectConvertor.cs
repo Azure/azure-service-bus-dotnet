@@ -29,7 +29,10 @@ namespace Microsoft.Azure.ServiceBus.Filters
                 case "dateTime":
                     return XmlConvert.ToDateTime(element.Value, XmlDateTimeSerializationMode.Utc);
                 default:
-                    return null;
+                    MessagingEventSource.Log.ManagementSerializationException(
+                            $"{nameof(XmlObjectConvertor)}_{nameof(ParseValueObject)}",
+                            element.ToString());
+                    return element.Value;
             }
         }
 
@@ -63,7 +66,13 @@ namespace Microsoft.Azure.ServiceBus.Filters
             }
             else
             {
-                return null;
+                var unknownType = value.GetType().Name;
+                MessagingEventSource.Log.ManagementSerializationException(
+                            $"{nameof(XmlObjectConvertor)}_{nameof(SerializeObject)}",
+                            unknownType);
+
+                throw new ServiceBusException(false, "Object is not of supported type: " + unknownType + ". " +
+                    "Only following types are supported through HTTP: string,int,long,bool,double,DateTime");
             }
 
             var element = new XElement(XName.Get("Value", ManagementClientConstants.SbNs),
