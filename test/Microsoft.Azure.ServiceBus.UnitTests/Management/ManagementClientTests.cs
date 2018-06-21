@@ -147,6 +147,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 AutoDeleteOnIdle = TimeSpan.FromHours(1),
                 DefaultMessageTimeToLive = TimeSpan.FromDays(2),
                 EnableDeadLetteringOnMessageExpiration = true,
+                EnableBatchedOperations = false,
                 ForwardDeadLetteredMessagesTo = null,
                 ForwardTo = null,
                 LockDuration = TimeSpan.FromSeconds(45),

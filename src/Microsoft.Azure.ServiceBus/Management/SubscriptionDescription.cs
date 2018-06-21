@@ -148,6 +148,8 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        public bool EnableBatchedOperations { get; set; } = true;
+
         internal RuleDescription DefaultRuleDescription { get; set; }
 
         public override int GetHashCode()
@@ -175,6 +177,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && this.TopicPath.Equals(other.TopicPath, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
+                && this.EnableBatchedOperations == other.EnableBatchedOperations
                 && this.EnableDeadLetteringOnMessageExpiration == other.EnableDeadLetteringOnMessageExpiration
                 && this.EnableDeadLetteringOnFilterEvaluationExceptions == other.EnableDeadLetteringOnFilterEvaluationExceptions
                 && string.Equals(this.ForwardDeadLetteredMessagesTo, other.ForwardDeadLetteredMessagesTo, StringComparison.OrdinalIgnoreCase)
