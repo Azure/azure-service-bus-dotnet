@@ -114,6 +114,9 @@ namespace Microsoft.Azure.ServiceBus.Management
                         case "Status":
                             subscriptionDesc.Status = (EntityStatus)Enum.Parse(typeof(EntityStatus), element.Value);
                             break;
+                        case "EnableBatchedOperations":
+                            subscriptionDesc.EnableBatchedOperations = bool.Parse(element.Value);
+                            break;
                         case "AutoDeleteOnIdle":
                             subscriptionDesc.AutoDeleteOnIdle = XmlConvert.ToTimeSpan(element.Value);
                             break;
@@ -154,6 +157,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                             new XElement(XName.Get("DeadLetteringOnFilterEvaluationExceptions", ManagementClientConstants.SbNs), XmlConvert.ToString(description.EnableDeadLetteringOnFilterEvaluationExceptions)),
                             description.DefaultRuleDescription != null ? description.DefaultRuleDescription.SerializeRule("DefaultRuleDescription") : null,
                             new XElement(XName.Get("MaxDeliveryCount", ManagementClientConstants.SbNs), XmlConvert.ToString(description.MaxDeliveryCount)),
+                            new XElement(XName.Get("EnableBatchedOperations", ManagementClientConstants.SbNs), XmlConvert.ToString(description.EnableBatchedOperations)),
                             new XElement(XName.Get("Status", ManagementClientConstants.SbNs), description.Status.ToString()),
                             description.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementClientConstants.SbNs), description.ForwardTo) : null,
                             description.ForwardDeadLetteredMessagesTo != null ? new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementClientConstants.SbNs), description.ForwardDeadLetteredMessagesTo) : null,
