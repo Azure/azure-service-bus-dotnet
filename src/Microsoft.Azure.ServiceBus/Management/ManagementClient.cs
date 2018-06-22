@@ -64,18 +64,49 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         #region DeleteEntity
 
+        /// <summary>
+        /// Deletes the queue described by the name relative to the service namespace base address.
+        /// </summary>
+        /// <param name="queueName">The name of the queue relative to the service namespace base address.</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentException"><paramref name="queueName"/> is empty or null, or path starts or ends with "/".</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The length of name is greater than 260.</exception>
+        /// <exception cref="ServiceBusTimeoutException">The operation times out. The timeout period is initialized through the <see cref="ServiceBusConnection"/> class. You may need to increase the value of timeout to avoid this exception if the timeout value is relatively low.</exception>
+        /// <exception cref="MessagingEntityNotFoundException">Queue with this name does not exist.</exception>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         public Task DeleteQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidQueueName(queueName);
             return DeleteEntity(queueName, cancellationToken);
         }
 
+        /// <summary>
+        /// Deletes the topic described by the name relative to the service namespace base address.
+        /// </summary>
+        /// <param name="topicName">The name of the topic relative to the service namespace base address.</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentException"><paramref name="topicName"/> is empty or null, or path starts or ends with "/".</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The length of name is greater than 260.</exception>
+        /// <exception cref="ServiceBusTimeoutException">The operation times out. The timeout period is initialized through the <see cref="ServiceBusConnection"/> class. You may need to increase the value of timeout to avoid this exception if the timeout value is relatively low.</exception>
+        /// <exception cref="MessagingEntityNotFoundException">Topic with this name does not exist.</exception>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         public Task DeleteTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicName);
             return DeleteEntity(topicName, cancellationToken);
         }
 
+        /// <summary>
+        /// Deletes the subscription with the specified topic and subscription name.
+        /// </summary>
+        /// <param name="topicName">The name of the topic relative to the service namespace base address.</param>
+        /// <param name="subscriptionName">The name of the subscription to delete.</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentException"><paramref name="topicName"/> or <paramref name="subscriptionName"/> is empty or null, or path starts or ends with "/".</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The length of name is greater than 260.</exception>
+        /// <exception cref="ServiceBusTimeoutException">The operation times out. The timeout period is initialized through the <see cref="ServiceBusConnection"/> class. You may need to increase the value of timeout to avoid this exception if the timeout value is relatively low.</exception>
+        /// <exception cref="MessagingEntityNotFoundException">Subscription with this name does not exist.</exception>
+        /// <exception cref="UnauthorizedAccessException"></exception>
         public Task DeleteSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicName);
@@ -84,6 +115,14 @@ namespace Microsoft.Azure.ServiceBus.Management
             return DeleteEntity(EntityNameHelper.FormatSubscriptionPath(topicName, subscriptionName), cancellationToken);
         }
 
+        /// <summary>
+        /// Deletes the rule described by <paramref name="ruleName"/> from <paramref name="subscriptionName" under <paramref name="topicName"/>./>
+        /// </summary>
+        /// <param name="topicName">The name of the topic relative to the service namespace base address.</param>
+        /// <param name="subscriptionName">The name of the subscription to delete.</param>
+        /// <param name="ruleName">The name of the rule to delete.</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="topicName"/>, <paramref name="subscriptionName"/>, or <paramref name="ruleName"/> is null, white space empty or not in the right format.</exception>
         public Task DeleteRuleAsync(string topicName, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicName);
