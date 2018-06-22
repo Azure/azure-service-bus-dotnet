@@ -116,7 +116,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         }
 
         /// <summary>
-        /// Deletes the rule described by <paramref name="ruleName"/> from <paramref name="subscriptionName" under <paramref name="topicName"/>./>
+        /// Deletes the rule described by <paramref name="ruleName"/> from <paramref name="subscriptionName"/> under <paramref name="topicName"/>.
         /// </summary>
         /// <param name="topicName">The name of the topic relative to the service namespace base address.</param>
         /// <param name="subscriptionName">The name of the subscription to delete.</param>
@@ -447,7 +447,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// </remarks>
         public async Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, RuleDescription defaultRule, CancellationToken cancellationToken = default)
         {
-            subscriptionDescription.NormalizeDescription(this.csBuilder.Endpoint);
+            subscriptionDescription.NormalizeDescription(endpointFQDN);
             subscriptionDescription.DefaultRuleDescription = defaultRule;
             var atomRequest = subscriptionDescription.Serialize().ToString();
             var content = await PutEntity(
