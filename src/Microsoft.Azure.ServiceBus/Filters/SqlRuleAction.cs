@@ -112,7 +112,7 @@ namespace Microsoft.Azure.ServiceBus
                 return true;
             }
 
-            if ((o1 == null) || (o2 == null))
+            if (ReferenceEquals(o1, null) || ReferenceEquals(o2, null))
             {
                 return false;
             }

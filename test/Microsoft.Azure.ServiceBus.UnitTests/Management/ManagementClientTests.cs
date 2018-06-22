@@ -40,7 +40,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 MaxDeliveryCount = 8,
                 MaxSizeInMB = 2048,
                 RequiresDuplicateDetection = true,
-                RequiresSession = true
+                RequiresSession = true,
+                UserMetadata = nameof(BasicQueueCrudTest)
             };
 
             qd.AuthorizationRules.Add(new SharedAccessAuthorizationRule(
@@ -96,7 +97,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 EnableBatchedOperations = true,
                 EnablePartitioning = false,
                 MaxSizeInMB = 2048,
-                RequiresDuplicateDetection = true
+                RequiresDuplicateDetection = true,
+                UserMetadata = nameof(BasicTopicCrudTest)
             };
 
             td.AuthorizationRules.Add(new SharedAccessAuthorizationRule(
@@ -152,7 +154,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
                 ForwardTo = null,
                 LockDuration = TimeSpan.FromSeconds(45),
                 MaxDeliveryCount = 8,
-                RequiresSession = true
+                RequiresSession = true,
+                UserMetadata = nameof(BasicSubscriptionCrudTest)
             };
 
             var createdS = await client.CreateSubscriptionAsync(sd);

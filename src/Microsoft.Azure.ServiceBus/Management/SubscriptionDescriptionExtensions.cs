@@ -117,6 +117,9 @@ namespace Microsoft.Azure.ServiceBus.Management
                         case "EnableBatchedOperations":
                             subscriptionDesc.EnableBatchedOperations = bool.Parse(element.Value);
                             break;
+                        case "UserMetadata":
+                            subscriptionDesc.UserMetadata = element.Value;
+                            break;
                         case "AutoDeleteOnIdle":
                             subscriptionDesc.AutoDeleteOnIdle = XmlConvert.ToTimeSpan(element.Value);
                             break;
@@ -160,6 +163,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                             new XElement(XName.Get("EnableBatchedOperations", ManagementClientConstants.SbNs), XmlConvert.ToString(description.EnableBatchedOperations)),
                             new XElement(XName.Get("Status", ManagementClientConstants.SbNs), description.Status.ToString()),
                             description.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementClientConstants.SbNs), description.ForwardTo) : null,
+                            description.UserMetadata != null ? new XElement(XName.Get("UserMetadata", ManagementClientConstants.SbNs), description.UserMetadata) : null,
                             description.ForwardDeadLetteredMessagesTo != null ? new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementClientConstants.SbNs), description.ForwardDeadLetteredMessagesTo) : null,
                             description.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementClientConstants.SbNs), XmlConvert.ToString(description.AutoDeleteOnIdle)) : null
                         ))

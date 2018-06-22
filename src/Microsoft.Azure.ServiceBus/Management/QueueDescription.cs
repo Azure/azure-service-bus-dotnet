@@ -17,6 +17,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         string forwardTo = null;
         string forwardDeadLetteredMessagesTo = null;
         AuthorizationRules authorizationRules = null;
+        string userMetadata = null;
 
         public QueueDescription(string path)
         {
@@ -171,6 +172,25 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool EnablePartitioning { get; set; } = false;
 
+        public string UserMetadata
+        {
+            get => this.userMetadata;
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(UserMetadata), $"Value cannot be null");
+                }
+
+                if (value.Length > ManagementClientConstants.MaxUserMetadataLength)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(UserMetadata), $"Length cannot cross {ManagementClientConstants.MaxUserMetadataLength} characters");
+                }
+
+                this.userMetadata = value;
+            }
+        }
+
         public override int GetHashCode()
         {
             return this.Path?.GetHashCode() ?? base.GetHashCode();
@@ -204,6 +224,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && this.RequiresDuplicateDetection.Equals(other.RequiresDuplicateDetection)
                 && this.RequiresSession.Equals(other.RequiresSession)
                 && this.Status.Equals(other.Status)
+                && string.Equals(this.userMetadata, other.userMetadata, StringComparison.OrdinalIgnoreCase)
                 && (this.authorizationRules != null && other.authorizationRules != null
                     || this.authorizationRules == null && other.authorizationRules == null)
                 && this.authorizationRules != null && this.AuthorizationRules.Equals(other.AuthorizationRules))
@@ -221,7 +242,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 return true;
             }
 
-            if ((o1 == null) || (o2 == null))
+            if (ReferenceEquals(o1, null) || ReferenceEquals(o2, null))
             {
                 return false;
             }

@@ -83,6 +83,9 @@ namespace Microsoft.Azure.ServiceBus.Management
                         case "Status":
                             topicDesc.Status = (EntityStatus)Enum.Parse(typeof(EntityStatus), element.Value);
                             break;
+                        case "UserMetadata":
+                            topicDesc.UserMetadata = element.Value;
+                            break;
                         case "AutoDeleteOnIdle":
                             topicDesc.AutoDeleteOnIdle = XmlConvert.ToTimeSpan(element.Value);
                             break;
@@ -113,18 +116,19 @@ namespace Microsoft.Azure.ServiceBus.Management
                     new XElement(XName.Get("content", ManagementClientConstants.AtomNs),
                         new XAttribute("type", "application/xml"),
                         new XElement(XName.Get("TopicDescription", ManagementClientConstants.SbNs),
+                            description.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementClientConstants.SbNs), XmlConvert.ToString(description.DefaultMessageTimeToLive)) : null,
                             new XElement(XName.Get("MaxSizeInMegabytes", ManagementClientConstants.SbNs), XmlConvert.ToString(description.MaxSizeInMB)),
                             new XElement(XName.Get("RequiresDuplicateDetection", ManagementClientConstants.SbNs), XmlConvert.ToString(description.RequiresDuplicateDetection)),
-                            description.DefaultMessageTimeToLive != TimeSpan.MaxValue ? new XElement(XName.Get("DefaultMessageTimeToLive", ManagementClientConstants.SbNs), XmlConvert.ToString(description.DefaultMessageTimeToLive)) : null,
-                            description.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementClientConstants.SbNs), XmlConvert.ToString(description.AutoDeleteOnIdle)) : null,
                             description.RequiresDuplicateDetection && description.DuplicateDetectionHistoryTimeWindow != default ?
                                 new XElement(XName.Get("DuplicateDetectionHistoryTimeWindow", ManagementClientConstants.SbNs), XmlConvert.ToString(description.DuplicateDetectionHistoryTimeWindow))
                                 : null,
+                            new XElement(XName.Get("EnableBatchedOperations", ManagementClientConstants.SbNs), XmlConvert.ToString(description.EnableBatchedOperations)),
                             description.AuthorizationRules?.Serialize(),
                             new XElement(XName.Get("Status", ManagementClientConstants.SbNs), description.Status.ToString()),
-                            new XElement(XName.Get("EnablePartitioning", ManagementClientConstants.SbNs), XmlConvert.ToString(description.EnablePartitioning)),
-                            new XElement(XName.Get("EnableBatchedOperations", ManagementClientConstants.SbNs), XmlConvert.ToString(description.EnableBatchedOperations)),
-                            new XElement(XName.Get("SupportOrdering", ManagementClientConstants.SbNs), XmlConvert.ToString(description.SupportOrdering))
+                            description.UserMetadata != null ? new XElement(XName.Get("UserMetadata", ManagementClientConstants.SbNs), description.UserMetadata) : null,
+                            new XElement(XName.Get("SupportOrdering", ManagementClientConstants.SbNs), XmlConvert.ToString(description.SupportOrdering)),
+                            description.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementClientConstants.SbNs), XmlConvert.ToString(description.AutoDeleteOnIdle)) : null,
+                            new XElement(XName.Get("EnablePartitioning", ManagementClientConstants.SbNs), XmlConvert.ToString(description.EnablePartitioning))
                         ))
                     ));
 
