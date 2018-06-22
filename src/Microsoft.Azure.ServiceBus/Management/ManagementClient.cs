@@ -294,11 +294,40 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         #region CreateEntity
 
+        /// <summary>
+        /// Creates a new queue in the service namespace with the given name.
+        /// </summary>
+        /// <remarks>Throws if a queue already exists.</remarks>
+        /// <param name="queueName">The name of the queue relative to the service namespace base address.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>The <see cref="QueueDescription"/> of the newly created queue.</returns>
+        /// <exception cref="ArgumentNullException">Queue name is null or empty.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The length of <paramref name="queueName"/> is greater than 260 characters.</exception>
+        /// <exception cref="MessagingEntityAlreadyExistsException">A queue with the same nameexists under the same service namespace.</exception>
+        /// <exception cref="ServiceBusTimeoutException">The operation times out.</exception>
+        /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
+        /// <exception cref="ServerBusyException">The server is overloaded with logical operations. You can consider any of the following actions:Wait and retry calling this function.Remove entities before retry (for example, receive messages before sending any more).</exception>
+        /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
         public Task<QueueDescription> CreateQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
             return this.CreateQueueAsync(new QueueDescription(queueName), cancellationToken);
         }
 
+        /// <summary>
+        /// Creates a new queue in the service namespace with the given name.
+        /// </summary>
+        /// <remarks>Throws if a queue already exists.</remarks>
+        /// <param name="queueDescription">A <see cref="QueueDescription"/> object describing the attributes with which the new queue will be created.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>The <see cref="QueueDescription"/> of the newly created queue.</returns>
+        /// <exception cref="ArgumentNullException">Queue name is null or empty.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The length of name is greater than 260 characters.</exception>
+        /// <exception cref="MessagingEntityAlreadyExistsException">A queue with the same nameexists under the same service namespace.</exception>
+        /// <exception cref="ServiceBusTimeoutException">The operation times out.</exception>
+        /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
+        /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
+        /// <exception cref="ServerBusyException">The server is overloaded with logical operations. You can consider any of the following actions:Wait and retry calling this function.Remove entities before retry (for example, receive messages before sending any more).</exception>
+        /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
         public async Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
         {
             queueDescription.NormalizeDescription(this.endpointFQDN);
@@ -313,11 +342,28 @@ namespace Microsoft.Azure.ServiceBus.Management
             return QueueDescriptionExtensions.ParseFromContent(content);
         }
 
+
+        /// <summary>
+        /// Creates a new topic inside the service namespace with the given name.
+        /// </summary>
+        /// <param name="topicName">The name of the topic relative to the service namespace base address.</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentException"><paramref name="topicName"/> is null or empty, or path begins or ends with "/".</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Length of <paramref name="topicName"/> is greater than 260 characters.</exception>
+        /// <exception cref="ServiceBusTimeoutException">The operation times out. The timeout period is initialized through the <see cref="ServiceBusConnection"/> class. You may need to increase the value to avoid this exception if the timeout value is relatively low.</exception>
+        /// <exception cref="MessagingEntityAlreadyExistsException">A topic with the same name exists under the same service namespace.</exception>
         public Task<TopicDescription> CreateTopicAsync(string topicName, CancellationToken cancellationToken = default)
         {
             return this.CreateTopicAsync(new TopicDescription(topicName), cancellationToken);
         }
 
+        /// <summary>
+        /// Creates a new topic inside the service namespace with the given name.
+        /// </summary>
+        /// <param name="topicDescription">A <see cref="TopicDescription"/> object describing the attributes with which the new topic will be created.</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ServiceBusTimeoutException">The operation times out. The timeout period is initialized through the <see cref="ServiceBusConnection"/> class. You may need to increase the value to avoid this exception if the timeout value is relatively low.</exception>
+        /// <exception cref="MessagingEntityAlreadyExistsException">A topic with the same name exists under the same service namespace.</exception>
         public async Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
         {
             var atomRequest = topicDescription.Serialize().ToString();
@@ -327,16 +373,39 @@ namespace Microsoft.Azure.ServiceBus.Management
             return TopicDescriptionExtensions.ParseFromContent(content);
         }
 
+        /// <summary>
+        /// Creates a new subscription in the service namespace with the specified topic and subscription name.
+        /// </summary>
+        /// <param name="topicName">The topic name relative to the service namespace base address.</param>
+        /// <param name="subscriptionName">The name of the subscription.</param>
+        /// <param name="cancellationToken"></param>
+        /// <remarks>Be default, A "pass-through" filter is created for this subscription, which means it will allow all message to go to this subscription. The name of the filter is represented by <see cref="RuleDescription.DefaultRuleName"/>.</remarks>
         public Task<SubscriptionDescription> CreateSubscriptionAsync(string topicName, string subscriptionName, CancellationToken cancellationToken = default)
         {
             return this.CreateSubscriptionAsync(new SubscriptionDescription(topicName, subscriptionName), cancellationToken);
         }
 
+        /// <summary>
+        /// Creates a new subscription in the service namespace with the specified subscription description.
+        /// </summary>
+        /// <param name="subscriptionDescription">A <see cref="SubscriptionDescription"/> object describing the attributes with which the new subscription will be created.</param>
+        /// <param name="cancellationToken"></param>
+        /// <remarks>Be default, A "pass-through" filter is created for this subscription, which means it will allow all message to go to this subscription. The name of the filter is represented by <see cref="RuleDescription.DefaultRuleName"/>.</remarks>
         public Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
         {
             return this.CreateSubscriptionAsync(subscriptionDescription, null, cancellationToken);
         }
 
+        /// <summary>
+        /// Creates a new subscription in the service namespace with the specified subscription description and rule description.
+        /// </summary>
+        /// <param name="subscriptionDescription">A <see cref="SubscriptionDescription"/> object describing the attributes with which the new subscription will be created.</param>
+        /// <param name="defaultRule">A <see cref="RuleDescription"/> object describing the attributes with which the messages are matched and acted upon.</param>
+        /// <param name="cancellationToken"></param>
+        /// <remarks>
+        /// A default rule will be created using data from ruleDescription. If Name is null or white space, then the name of the rule created will be <see cref="RuleDescription.DefaultRuleName"/>.
+        /// To avoid "pass-through" filter, pass <see cref="FalseFilter"/>.
+        /// </remarks>
         public async Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, RuleDescription defaultRule, CancellationToken cancellationToken = default)
         {
             subscriptionDescription.NormalizeDescription(this.csBuilder.Endpoint);
@@ -352,6 +421,14 @@ namespace Microsoft.Azure.ServiceBus.Management
             return SubscriptionDescriptionExtensions.ParseFromContent(subscriptionDescription.TopicPath, content);
         }
 
+        /// <summary>
+        /// Adds a new rule to the subscription under given topic.
+        /// </summary>
+        /// <param name="topicName">The topic name relative to the service namespace base address.</param>
+        /// <param name="subscriptionName">The name of the subscription.</param>
+        /// <param name="ruleDescription">A <see cref="RuleDescription"/> object describing the attributes with which the messages are matched and acted upon.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicName);

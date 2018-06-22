@@ -13,22 +13,7 @@ namespace Microsoft.Azure.ServiceBus.Management
     {
         // Create if not exist. Else throw.
 
-        /// <summary>
-        /// Creates a new queue in the service namespace with the given name.
-        /// </summary>
-        /// <remarks>Throws if a queue already exists.</remarks>
-        /// <param name="queueName">The name of the queue relative to the service namespace base address.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns>The <see cref="QueueDescription"/> of the newly created queue.</returns>
-        /// <exception cref="ArgumentNullException">Queue name is null or empty.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">The length of name is greater than 260 characters.</exception>
-        /// <exception cref="MessagingEntityAlreadyExistsException">A queue with the same nameexists under the same service namespace.</exception>
-        /// <exception cref="ServiceBusTimeoutException">The operation times out.</exception>
-        /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
-        /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
-        /// <exception cref="ServerBusyException">The server is overloaded with logical operations. You can consider any of the following actions:Wait and retry calling this function.Remove entities before retry (for example, receive messages before sending any more).</exception>
-        /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        Task<QueueDescription> CreateQueueAsync(string queueName, CancellationToken cancellationToken = default);
+       Task<QueueDescription> CreateQueueAsync(string queueName, CancellationToken cancellationToken = default);
 
         Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default);
 
