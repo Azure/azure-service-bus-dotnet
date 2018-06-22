@@ -16,6 +16,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         int maxDeliveryCount = 10;
         string forwardTo = null;
         string forwardDeadLetteredMessagesTo = null;
+        string userMetadata = null;
 
         public SubscriptionDescription(string topicPath, string subscriptionName)
         {
@@ -150,6 +151,25 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool EnableBatchedOperations { get; set; } = true;
 
+        public string UserMetadata
+        {
+            get => this.userMetadata;
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(UserMetadata), $"Value cannot be null");
+                }
+
+                if (value.Length > ManagementClientConstants.MaxUserMetadataLength)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(UserMetadata), $"Length cannot cross {ManagementClientConstants.MaxUserMetadataLength} characters");
+                }
+
+                this.userMetadata = value;
+            }
+        }
+
         internal RuleDescription DefaultRuleDescription { get; set; }
 
         public override int GetHashCode()
@@ -185,7 +205,8 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && this.LockDuration.Equals(other.LockDuration)
                 && this.MaxDeliveryCount == other.MaxDeliveryCount
                 && this.RequiresSession.Equals(other.RequiresSession)
-                && this.Status.Equals(other.Status))
+                && this.Status.Equals(other.Status)
+                && string.Equals(this.userMetadata, other.userMetadata, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -200,7 +221,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 return true;
             }
 
-            if ((o1 == null) || (o2 == null))
+            if (ReferenceEquals(o1, null) || ReferenceEquals(o2, null))
             {
                 return false;
             }

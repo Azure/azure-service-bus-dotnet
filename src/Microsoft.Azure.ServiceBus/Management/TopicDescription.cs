@@ -12,6 +12,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         TimeSpan autoDeleteOnIdle = TimeSpan.MaxValue;
         TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(30);
         AuthorizationRules authorizationRules = null;
+        string userMetadata = null;
 
         public TopicDescription(string path)
         {
@@ -102,6 +103,25 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool EnableBatchedOperations { get; set; } = true;
 
+        public string UserMetadata
+        {
+            get => this.userMetadata;
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(UserMetadata), $"Value cannot be null");
+                }
+
+                if (value.Length > ManagementClientConstants.MaxUserMetadataLength)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(UserMetadata), $"Length cannot cross {ManagementClientConstants.MaxUserMetadataLength} characters");
+                }
+
+                this.userMetadata = value;
+            }
+        }
+
         public override int GetHashCode()
         {
             return this.Path?.GetHashCode() ?? base.GetHashCode();
@@ -124,6 +144,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && this.MaxSizeInMB == other.MaxSizeInMB
                 && this.RequiresDuplicateDetection.Equals(other.RequiresDuplicateDetection)
                 && this.Status.Equals(other.Status)
+                && string.Equals(this.userMetadata, other.userMetadata, StringComparison.OrdinalIgnoreCase)
                 && (this.authorizationRules != null && other.authorizationRules != null
                     || this.authorizationRules == null && other.authorizationRules == null)
                 && this.authorizationRules != null && this.AuthorizationRules.Equals(other.AuthorizationRules))
@@ -141,7 +162,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 return true;
             }
 
-            if ((o1 == null) || (o2 == null))
+            if (ReferenceEquals(o1, null) || ReferenceEquals(o2, null))
             {
                 return false;
             }

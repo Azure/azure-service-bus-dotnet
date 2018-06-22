@@ -31,6 +31,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                             description.AuthorizationRules?.Serialize(),
                             new XElement(XName.Get("Status", ManagementClientConstants.SbNs), description.Status.ToString()),
                             description.ForwardTo != null ? new XElement(XName.Get("ForwardTo", ManagementClientConstants.SbNs), description.ForwardTo) : null,
+                            description.UserMetadata != null ? new XElement(XName.Get("UserMetadata", ManagementClientConstants.SbNs), description.UserMetadata) : null,
                             description.AutoDeleteOnIdle != TimeSpan.MaxValue ? new XElement(XName.Get("AutoDeleteOnIdle", ManagementClientConstants.SbNs), XmlConvert.ToString(description.AutoDeleteOnIdle)) : null,
                             new XElement(XName.Get("EnablePartitioning", ManagementClientConstants.SbNs), XmlConvert.ToString(description.EnablePartitioning)),
                             description.ForwardDeadLetteredMessagesTo != null ? new XElement(XName.Get("ForwardDeadLetteredMessagesTo", ManagementClientConstants.SbNs), description.ForwardDeadLetteredMessagesTo) : null
@@ -106,6 +107,9 @@ namespace Microsoft.Azure.ServiceBus.Management
                             break;
                         case "EnablePartitioning":
                             qd.EnablePartitioning = bool.Parse(element.Value);
+                            break;
+                        case "UserMetadata":
+                            qd.UserMetadata = element.Value;
                             break;
                         case "ForwardTo":
                             if (!string.IsNullOrWhiteSpace(element.Value))
