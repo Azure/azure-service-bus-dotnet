@@ -306,7 +306,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                             sbMessage.SystemProperties.SequenceNumber = (long)pair.Value;
                             break;
                         case EnqueueSequenceNumberName:
-                            sbMessage.SystemProperties.EnqueuedSequenceNumber = long.Parse((string)pair.Value);
+                            sbMessage.SystemProperties.EnqueuedSequenceNumber = (long)pair.Value;
                             break;
                         case LockedUntilName:
                             sbMessage.SystemProperties.LockedUntilUtc = (DateTime)pair.Value;
