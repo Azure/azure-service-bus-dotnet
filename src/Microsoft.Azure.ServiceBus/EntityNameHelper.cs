@@ -3,13 +3,17 @@
 
 namespace Microsoft.Azure.ServiceBus
 {
+    using System;
+    using Microsoft.Azure.ServiceBus.Management;
+
     /// <summary>
     /// This class can be used to format the path for different Service Bus entity types.
     /// </summary>
     public static class EntityNameHelper
     {
         private const string PathDelimiter = @"/";
-        private const string Subscriptions = "Subscriptions";
+        private const string SubscriptionsSubPath = "Subscriptions";
+        private const string RulesSubPath = "Rules";
         private const string SubQueuePrefix = "$";
         private const string DeadLetterQueueSuffix = "DeadLetterQueue";
         private const string DeadLetterQueueName = SubQueuePrefix + DeadLetterQueueSuffix;
@@ -40,9 +44,25 @@ namespace Microsoft.Azure.ServiceBus
         /// Formats the subscription path, based on the topic path and subscription name.
         /// </summary>
         /// <param name="topicPath">The name of the topic, including slashes.</param>
+        /// <param name="subscriptionName">The name of the subscription.</param>
         public static string FormatSubscriptionPath(string topicPath, string subscriptionName)
         {
-            return string.Concat(topicPath, PathDelimiter, Subscriptions, PathDelimiter, subscriptionName);
+            return string.Concat(topicPath, PathDelimiter, SubscriptionsSubPath, PathDelimiter, subscriptionName);
+        }
+
+        /// <summary>
+        /// Formats the rule path, based on the topic path and subscription name.
+        /// </summary>
+        /// <param name="topicPath">The name of the topic, including slashes.</param>
+        /// <param name="subscriptionName">The name of the subscription.</param>
+        /// <param name="ruleName">The name of the rule</param>
+        public static string FormatRulePath(string topicPath, string subscriptionName, string ruleName)
+        {
+            return string.Concat(
+                topicPath, PathDelimiter, 
+                SubscriptionsSubPath, PathDelimiter, 
+                subscriptionName, PathDelimiter, 
+                RulesSubPath, PathDelimiter, ruleName);
         }
 
         /// <summary>
@@ -51,6 +71,62 @@ namespace Microsoft.Azure.ServiceBus
         public static string Format​Transfer​Dead​Letter​Path(string entityPath)
         {
             return string.Concat(entityPath, PathDelimiter, TransferDeadLetterQueueName);
+        }
+
+        internal static void CheckValidQueueName(string queueName, string paramName = "queueName")
+        {
+            CheckValidEntityName(queueName, ManagementClientConstants.QueueNameMaximumLength, true, paramName);
+        }
+
+        internal static void CheckValidTopicName(string topicName, string paramName = "topicName")
+        {
+            CheckValidEntityName(topicName, ManagementClientConstants.TopicNameMaximumLength, true, paramName);
+        }
+
+        internal static void CheckValidSubscriptionName(string subscriptionName, string paramName = "subscriptionName")
+        {
+            CheckValidEntityName(subscriptionName, ManagementClientConstants.SubscriptionNameMaximumLength, false, paramName);
+        }
+
+        internal static void CheckValidRuleName(string ruleName, string paramName = "ruleName")
+        {
+            CheckValidEntityName(ruleName, ManagementClientConstants.RuleNameMaximumLength, false, paramName);
+        }
+
+        private static void CheckValidEntityName(string entityName, int maxEntityNameLength, bool allowSeparator, string paramName)
+        {
+            if (string.IsNullOrWhiteSpace(entityName))
+            {
+                throw new ArgumentNullException(paramName);
+            }
+
+            // and "\" will be converted to "/" on the REST path anyway. Gateway/REST do not
+            // have to worry about the begin/end slash problem, so this is purely a client side check.
+            var tmpName = entityName.Replace(@"\", Constants.PathDelimiter);
+            if (tmpName.Length > maxEntityNameLength)
+            {
+                throw new ArgumentOutOfRangeException(paramName, $@"Entity path '{entityName}' exceeds the '{maxEntityNameLength}' character limit.");
+            }
+
+            if (tmpName.StartsWith(Constants.PathDelimiter, StringComparison.OrdinalIgnoreCase) ||
+                tmpName.EndsWith(Constants.PathDelimiter, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($@"The entity name/path cannot contain '/' as prefix or suffix. The supplied value is '{entityName}'", paramName);
+            }
+
+            if (!allowSeparator && tmpName.Contains(Constants.PathDelimiter))
+            {
+                throw new ArgumentException($@"The entity name/path contains an invalid character '{Constants.PathDelimiter}'", paramName);
+            }
+
+            string[] uriSchemeKeys = { "@", "?", "#" };
+            foreach (var uriSchemeKey in uriSchemeKeys)
+            {
+                if (entityName.Contains(uriSchemeKey))
+                {
+                    throw new ArgumentException($@"'{entityName}' contains character '{uriSchemeKey}' which is not allowed because it is reserved in the Uri scheme.", paramName);
+                }
+            }
         }
     }
 }
