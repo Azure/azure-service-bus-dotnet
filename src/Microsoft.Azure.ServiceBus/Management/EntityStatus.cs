@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 {
     using System.Runtime.Serialization;
 
+    /// <summary>The status of the messaging entity.</summary>
     public enum EntityStatus
     {
         /// <summary>The status of the messaging entity is active.</summary>

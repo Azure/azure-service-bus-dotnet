@@ -13,6 +13,9 @@ namespace Microsoft.Azure.ServiceBus.Management
     using System.Xml.Linq;
     using Microsoft.Azure.ServiceBus.Primitives;
     
+    /// <summary>
+    /// Defines the authorization rule for an entity using SAS.
+    /// </summary>
     public class SharedAccessAuthorizationRule : AuthorizationRule
     {
         const int SupportedSASKeyLength = 44;
@@ -23,9 +26,6 @@ namespace Microsoft.Azure.ServiceBus.Management
         private string internalSecondaryKey;
         private List<AccessRights> internalRights;
 
-        /// <summary>
-        /// This is done to help json and other deserializers
-        /// </summary>
         internal SharedAccessAuthorizationRule()
         {
         }
@@ -303,7 +303,6 @@ namespace Microsoft.Azure.ServiceBus.Management
                         }
                         rule.Rights = rights;
                         break;
-                    // TODO: default: LOG in every class
                 }
             }
 

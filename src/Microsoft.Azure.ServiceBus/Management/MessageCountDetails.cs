@@ -3,16 +3,34 @@
 
 namespace Microsoft.Azure.ServiceBus.Management
 {
+    /// <summary>
+    /// Message count details of the sub-queues of the entity.
+    /// </summary>
     public class MessageCountDetails
     {
-        public long ActiveMessageCount { get; set; }
+        /// <summary>
+        /// The number of active messages in the entity.
+        /// </summary>
+        public long ActiveMessageCount { get; internal set; }
 
-        public long DeadLetterMessageCount { get; set; }
+        /// <summary>
+        /// The number of dead-lettered messages in the entity.
+        /// </summary>
+        public long DeadLetterMessageCount { get; internal set; }
 
-        public long ScheduledMessageCount { get; set; }
+        /// <summary>
+        /// The number of messages which are yet to be scheduled.
+        /// </summary>
+        public long ScheduledMessageCount { get; internal set; }
 
-        public long TransferMessageCount { get; set; }
+        /// <summary>
+        /// The number of messages which are yet to be transferred/forwarded to destination entity.
+        /// </summary>
+        public long TransferMessageCount { get; internal set; }
 
-        public long TransferDeadLetterMessageCount { get; set; }
+        /// <summary>
+        /// The number of messages transfer-messages which are dead-lettered into transfer-dead-letter sub-queue.
+        /// </summary>
+        public long TransferDeadLetterMessageCount { get; internal set; }
     }
 }
