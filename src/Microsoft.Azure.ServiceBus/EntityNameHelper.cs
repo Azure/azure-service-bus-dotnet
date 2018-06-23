@@ -73,12 +73,12 @@ namespace Microsoft.Azure.ServiceBus
             return string.Concat(entityPath, PathDelimiter, TransferDeadLetterQueueName);
         }
 
-        internal static void CheckValidQueueName(string queueName, string paramName = "queueName")
+        internal static void CheckValidQueueName(string queueName, string paramName = "queuePath")
         {
             CheckValidEntityName(queueName, ManagementClientConstants.QueueNameMaximumLength, true, paramName);
         }
 
-        internal static void CheckValidTopicName(string topicName, string paramName = "topicName")
+        internal static void CheckValidTopicName(string topicName, string paramName = "topicPath")
         {
             CheckValidEntityName(topicName, ManagementClientConstants.TopicNameMaximumLength, true, paramName);
         }

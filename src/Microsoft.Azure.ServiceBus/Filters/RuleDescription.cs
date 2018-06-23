@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
+    using Microsoft.Azure.ServiceBus.Management;
     using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>
@@ -88,11 +89,7 @@ namespace Microsoft.Azure.ServiceBus
 
             set
             {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    throw Fx.Exception.ArgumentNullOrWhiteSpace(nameof(this.Name));
-                }
-
+                EntityNameHelper.CheckValidRuleName(value);
                 this.name = value;
             }
         }
