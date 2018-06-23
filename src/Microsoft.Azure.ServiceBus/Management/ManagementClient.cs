@@ -13,7 +13,7 @@ namespace Microsoft.Azure.ServiceBus.Management
     using System.Xml.Linq;
     using Microsoft.Azure.ServiceBus.Primitives;
 
-    public class ManagementClient : IManagementClient
+    public class ManagementClient
     {
         private HttpClient httpClient;
         private readonly RetryPolicy retryPolicy;
@@ -92,7 +92,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
-        public Task DeleteQueueAsync(string queuePath, CancellationToken cancellationToken = default)
+        public virtual Task DeleteQueueAsync(string queuePath, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidQueueName(queuePath);
             return DeleteEntity(queuePath, cancellationToken);
@@ -110,7 +110,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
-        public Task DeleteTopicAsync(string topicPath, CancellationToken cancellationToken = default)
+        public virtual Task DeleteTopicAsync(string topicPath, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
             return DeleteEntity(topicPath, cancellationToken);
@@ -129,7 +129,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
-        public Task DeleteSubscriptionAsync(string topicPath, string subscriptionName, CancellationToken cancellationToken = default)
+        public virtual Task DeleteSubscriptionAsync(string topicPath, string subscriptionName, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
             EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
@@ -151,7 +151,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
-        public Task DeleteRuleAsync(string topicPath, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
+        public virtual Task DeleteRuleAsync(string topicPath, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
             EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
@@ -200,7 +200,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
-        public async Task<QueueDescription> GetQueueAsync(string queuePath, CancellationToken cancellationToken = default)
+        public virtual async Task<QueueDescription> GetQueueAsync(string queuePath, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidQueueName(queuePath);
 
@@ -222,7 +222,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
-        public async Task<TopicDescription> GetTopicAsync(string topicPath, CancellationToken cancellationToken = default)
+        public virtual async Task<TopicDescription> GetTopicAsync(string topicPath, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
 
@@ -245,7 +245,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
-        public async Task<SubscriptionDescription> GetSubscriptionAsync(string topicPath, string subscriptionName, CancellationToken cancellationToken = default)
+        public virtual async Task<SubscriptionDescription> GetSubscriptionAsync(string topicPath, string subscriptionName, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
             EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
@@ -270,7 +270,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
-        public async Task<RuleDescription> GetRuleAsync(string topicPath, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
+        public virtual async Task<RuleDescription> GetRuleAsync(string topicPath, string subscriptionName, string ruleName, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
             EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
@@ -297,7 +297,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
-        public async Task<QueueRuntimeInfo> GetQueueRuntimeInfoAsync(string queuePath, CancellationToken cancellationToken = default)
+        public virtual async Task<QueueRuntimeInfo> GetQueueRuntimeInfoAsync(string queuePath, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidQueueName(queuePath);
 
@@ -319,7 +319,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
-        public async Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicPath, CancellationToken cancellationToken = default)
+        public virtual async Task<TopicRuntimeInfo> GetTopicRuntimeInfoAsync(string topicPath, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
 
@@ -342,7 +342,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
-        public async Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicPath, string subscriptionName, CancellationToken cancellationToken = default)
+        public virtual async Task<SubscriptionRuntimeInfo> GetSubscriptionRuntimeInfoAsync(string topicPath, string subscriptionName, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
             EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
@@ -369,7 +369,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
         /// <remarks>You can simulate pages of list of entities by manipulating <paramref name="count"/> and <paramref name="skip"/>.
         /// skip(0)+count(100) gives first 100 entities. skip(100)+count(100) gives the next 100 entities.</remarks>
-        public async Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
+        public virtual async Task<IList<QueueDescription>> GetQueuesAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             if (count > 100 || count < 1)
             {
@@ -398,7 +398,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
         /// <remarks>You can simulate pages of list of entities by manipulating <paramref name="count"/> and <paramref name="skip"/>.
         /// skip(0)+count(100) gives first 100 entities. skip(100)+count(100) gives the next 100 entities.</remarks>
-        public async Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
+        public virtual async Task<IList<TopicDescription>> GetTopicsAsync(int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             if (count > 100 || count < 1)
             {
@@ -428,7 +428,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
         /// <remarks>You can simulate pages of list of entities by manipulating <paramref name="count"/> and <paramref name="skip"/>.
         /// skip(0)+count(100) gives first 100 entities. skip(100)+count(100) gives the next 100 entities.</remarks>
-        public async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicPath, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
+        public virtual async Task<IList<SubscriptionDescription>> GetSubscriptionsAsync(string topicPath, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
             if (count > 100 || count < 1)
@@ -460,7 +460,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="ServiceBusException">An internal error or an unexpected exception occured.</exception>
         /// <remarks>You can simulate pages of list of entities by manipulating <paramref name="count"/> and <paramref name="skip"/>.
         /// skip(0)+count(100) gives first 100 entities. skip(100)+count(100) gives the next 100 entities.</remarks>
-        public async Task<IList<RuleDescription>> GetRulesAsync(string topicPath, string subscriptionName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
+        public virtual async Task<IList<RuleDescription>> GetRulesAsync(string topicPath, string subscriptionName, int count = 100, int skip = 0, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
             EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
@@ -528,7 +528,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public Task<QueueDescription> CreateQueueAsync(string queuePath, CancellationToken cancellationToken = default)
+        public virtual Task<QueueDescription> CreateQueueAsync(string queuePath, CancellationToken cancellationToken = default)
         {
             return this.CreateQueueAsync(new QueueDescription(queuePath), cancellationToken);
         }
@@ -547,7 +547,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public async Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
+        public virtual async Task<QueueDescription> CreateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
         {
             queueDescription = queueDescription ?? throw new ArgumentNullException(nameof(queueDescription));
             queueDescription.NormalizeDescription(this.endpointFQDN);
@@ -578,7 +578,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public Task<TopicDescription> CreateTopicAsync(string topicPath, CancellationToken cancellationToken = default)
+        public virtual Task<TopicDescription> CreateTopicAsync(string topicPath, CancellationToken cancellationToken = default)
         {
             return this.CreateTopicAsync(new TopicDescription(topicPath), cancellationToken);
         }
@@ -597,7 +597,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public async Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
+        public virtual async Task<TopicDescription> CreateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
         {
             topicDescription = topicDescription ?? throw new ArgumentNullException(nameof(topicDescription));
             var atomRequest = topicDescription.Serialize().ToString();
@@ -625,7 +625,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public Task<SubscriptionDescription> CreateSubscriptionAsync(string topicPath, string subscriptionName, CancellationToken cancellationToken = default)
+        public virtual Task<SubscriptionDescription> CreateSubscriptionAsync(string topicPath, string subscriptionName, CancellationToken cancellationToken = default)
         {
             return this.CreateSubscriptionAsync(new SubscriptionDescription(topicPath, subscriptionName), cancellationToken);
         }
@@ -646,7 +646,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
+        public virtual Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
         {
             subscriptionDescription = subscriptionDescription ?? throw new ArgumentNullException(nameof(subscriptionDescription));
             return this.CreateSubscriptionAsync(subscriptionDescription, null, cancellationToken);
@@ -667,7 +667,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public async Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, RuleDescription defaultRule, CancellationToken cancellationToken = default)
+        public virtual async Task<SubscriptionDescription> CreateSubscriptionAsync(SubscriptionDescription subscriptionDescription, RuleDescription defaultRule, CancellationToken cancellationToken = default)
         {
             subscriptionDescription = subscriptionDescription ?? throw new ArgumentNullException(nameof(subscriptionDescription));
             subscriptionDescription.NormalizeDescription(this.endpointFQDN);
@@ -698,7 +698,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
         /// <returns><see cref="RuleDescription"/> of the recently created rule.</returns>
-        public async Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
+        public virtual async Task<RuleDescription> CreateRuleAsync(string topicName, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicName);
             EntityNameHelper.CheckValidSubscriptionName(topicName);
@@ -733,7 +733,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public async Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
+        public virtual async Task<QueueDescription> UpdateQueueAsync(QueueDescription queueDescription, CancellationToken cancellationToken = default)
         {
             queueDescription = queueDescription ?? throw new ArgumentNullException(nameof(queueDescription));
             queueDescription.NormalizeDescription(this.endpointFQDN);
@@ -764,7 +764,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public async Task<TopicDescription> UpdateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
+        public virtual async Task<TopicDescription> UpdateTopicAsync(TopicDescription topicDescription, CancellationToken cancellationToken = default)
         {
             topicDescription = topicDescription ?? throw new ArgumentNullException(nameof(topicDescription));
             var atomRequest = topicDescription.Serialize().ToString();
@@ -787,7 +787,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public async Task<SubscriptionDescription> UpdateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
+        public virtual async Task<SubscriptionDescription> UpdateSubscriptionAsync(SubscriptionDescription subscriptionDescription, CancellationToken cancellationToken = default)
         {
             subscriptionDescription = subscriptionDescription ?? throw new ArgumentNullException(nameof(subscriptionDescription));
             subscriptionDescription.NormalizeDescription(this.endpointFQDN);
@@ -817,7 +817,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="QuotaExceededException">Either the specified size in the description is not supported or the maximum allowable quota has been reached. You must specify one of the supported size values, delete existing entities, or increase your quota size.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public async Task<RuleDescription> UpdateRuleAsync(string topicPath, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
+        public virtual async Task<RuleDescription> UpdateRuleAsync(string topicPath, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
         {
             ruleDescription = ruleDescription ?? throw new ArgumentNullException(nameof(ruleDescription));
             EntityNameHelper.CheckValidTopicName(topicPath);
@@ -897,7 +897,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public async Task<bool> QueueExistsAsync(string queuePath, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> QueueExistsAsync(string queuePath, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidQueueName(queuePath);
             
@@ -925,7 +925,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public async Task<bool> TopicExistsAsync(string topicPath, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> TopicExistsAsync(string topicPath, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
             
@@ -954,7 +954,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <exception cref="UnauthorizedAccessException">No sufficient permission to perform this operation. You should check to ensure that your <see cref="ManagementClient"/> has the correct <see cref="TokenProvider"/> credentials to perform this operation.</exception>
         /// <exception cref="ServerBusyException">The server is busy. You should wait before you retry the operation.</exception>
         /// <exception cref="ServiceBusException">An internal error or unexpected exception occurs.</exception>
-        public async Task<bool> SubscriptionExistsAsync(string topicPath, string subscriptionName, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> SubscriptionExistsAsync(string topicPath, string subscriptionName, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
             EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
