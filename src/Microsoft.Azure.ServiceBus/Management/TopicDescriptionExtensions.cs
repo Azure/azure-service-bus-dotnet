@@ -72,7 +72,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                             topicDesc.RequiresDuplicateDetection = bool.Parse(element.Value);
                             break;
                         case "DuplicateDetectionHistoryTimeWindow":
-                            topicDesc.DuplicateDetectionHistoryTimeWindow = XmlConvert.ToTimeSpan(element.Value);
+                            topicDesc.duplicateDetectionHistoryTimeWindow = XmlConvert.ToTimeSpan(element.Value);
                             break;
                         case "DefaultMessageTimeToLive":
                             topicDesc.DefaultMessageTimeToLive = XmlConvert.ToTimeSpan(element.Value);

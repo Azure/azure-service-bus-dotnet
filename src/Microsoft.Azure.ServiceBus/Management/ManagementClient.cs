@@ -13,9 +13,6 @@ namespace Microsoft.Azure.ServiceBus.Management
     using System.Xml.Linq;
     using Microsoft.Azure.ServiceBus.Primitives;
 
-    /// <summary>
-    /// 
-    /// </summary>
     public class ManagementClient : IManagementClient
     {
         private HttpClient httpClient;

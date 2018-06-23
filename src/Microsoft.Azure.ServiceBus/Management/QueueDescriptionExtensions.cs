@@ -85,7 +85,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                             qd.EnableDeadLetteringOnMessageExpiration = Boolean.Parse(element.Value);
                             break;
                         case "DuplicateDetectionHistoryTimeWindow":
-                            qd.DuplicateDetectionHistoryTimeWindow = XmlConvert.ToTimeSpan(element.Value);
+                            qd.duplicateDetectionHistoryTimeWindow = XmlConvert.ToTimeSpan(element.Value);
                             break;
                         case "LockDuration":
                             qd.LockDuration = XmlConvert.ToTimeSpan(element.Value);

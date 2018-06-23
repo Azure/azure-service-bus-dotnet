@@ -5,25 +5,37 @@ namespace Microsoft.Azure.ServiceBus.Management
 {
     using System;
     using Microsoft.Azure.ServiceBus.Primitives;
-    
+
+    /// <summary>
+    /// Represents the metadata description of the queue.
+    /// </summary>
     public class QueueDescription : IEquatable<QueueDescription>
     {
-        string path;
+        internal TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(30);
+        internal string path;
         TimeSpan lockDuration = TimeSpan.FromSeconds(60);
         TimeSpan defaultMessageTimeToLive = TimeSpan.MaxValue;
         TimeSpan autoDeleteOnIdle = TimeSpan.MaxValue;
-        TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(30);
         int maxDeliveryCount = 10;
         string forwardTo = null;
         string forwardDeadLetteredMessagesTo = null;
         AuthorizationRules authorizationRules = null;
         string userMetadata = null;
 
+        /// <summary>
+        /// Initializes a new instance of QueueDescription class with the specified relative path.
+        /// </summary>
+        /// <param name="path">Path of the queue relative to the namespace base address.</param>
         public QueueDescription(string path)
         {
             this.Path = path;
         }
 
+        /// <summary>
+        /// Path of the queue relative to the namespace base address.
+        /// </summary>
+        /// <remarks>Max length is 260 chars. Cannot start or end with a slash. 
+        /// Cannot have restricted characters: '@','?','#','*'</remarks>
         public string Path
         {
             get => this.path;
@@ -34,6 +46,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// Duration of a peek lock receive. i.e., the amount of time that the message is locked by a given receiver so that
+        /// no other receiver receives the same message.
+        /// </summary>
+        /// <remarks>Max value is 5 minutes. Default value is 60 seconds.</remarks>
         public TimeSpan LockDuration
         {
             get => this.lockDuration;
@@ -44,12 +61,38 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// The maximum size of the queue in megabytes, which is the size of memory allocated for the queue.
+        /// </summary>
+        /// <remarks>Default value is 1024.</remarks>
         public long MaxSizeInMB { get; set; } = 1024;
 
+        /// <summary>
+        /// This value indicates if the queue requires guard against duplicate messages. If true, duplicate messages having same
+        /// <see cref="Message.MessageId"/> and sent to queue within duration of <see cref="DuplicateDetectionHistoryTimeWindow"/>
+        /// will be discarded.
+        /// </summary>
+        /// <remarks>Defaults to false.</remarks>
         public bool RequiresDuplicateDetection { get; set; } = false;
 
+        /// <summary>
+        /// This indicates whether the queue supports the concept of session. Sessionful-messages follow FIFO ordering.
+        /// </summary>
+        /// <remarks>
+        /// If true, the receiver can only recieve messages using <see cref="SessionClient.AcceptMessageSessionAsync()"/>.
+        /// Defaults to false. 
+        /// </remarks>
         public bool RequiresSession { get; set; } = false;
 
+        /// <summary>
+        /// The default time to live value for the messages. This is the duration after which the message expires, starting from when
+        /// the message is sent to Service Bus. </summary>
+        /// <remarks>
+        /// This is the default value used when <see cref="Message.TimeToLive"/> is not set on a
+        ///  message itself. Messages older than their TimeToLive value will expire and no longer be retained in the message store.
+        ///  Subscribers will be unable to receive expired messages. 
+        ///  Default value is <see cref="TimeSpan.MaxValue"/>.
+        ///  </remarks>
         public TimeSpan DefaultMessageTimeToLive
         {
             get => this.defaultMessageTimeToLive;
@@ -65,6 +108,10 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// The <see cref="TimeSpan"/> idle interval after which the queue is automatically deleted.
+        /// </summary>
+        /// <remarks>The minimum duration is 5 minutes. Default value is <see cref="TimeSpan.MaxValue"/>.</remarks>
         public TimeSpan AutoDeleteOnIdle
         {
             get => this.autoDeleteOnIdle;
@@ -80,8 +127,18 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// Indicates whether this queue has dead letter support when a message expires.
+        /// </summary>
+        /// <remarks>If true, the expired messages are moved to dead-letter sub-queue. Default value is false.</remarks>
         public bool EnableDeadLetteringOnMessageExpiration { get; set; } = false;
 
+        /// <summary>
+        /// The <see cref="TimeSpan"/> duration of duplicate detection history that is maintained by the service.
+        /// </summary>
+        /// <remarks>
+        /// The default value is 30 seconds. Max value is 1 day and minimum is 20 seconds.
+        /// </remarks>
         public TimeSpan DuplicateDetectionHistoryTimeWindow
         {
             get => this.duplicateDetectionHistoryTimeWindow;
@@ -97,6 +154,12 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// The maximum delivery count of a message before it is dead-lettered.
+        /// </summary>
+        /// <remarks>The delivery count is increased when a message is received in <see cref="ReceiveMode.PeekLock"/> mode 
+        /// and didn't complete the message before the message lock expired.
+        /// Default value is 10. Minimum value is 1.</remarks>
         public int MaxDeliveryCount
         {
             get => this.maxDeliveryCount;
@@ -112,8 +175,15 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// Indicates whether server-side batched operations are enabled.
+        /// </summary>
+        /// <remarks>Defaults to true.</remarks>
         public bool EnableBatchedOperations { get; set; } = true;
 
+        /// <summary>
+        /// The <see cref="AuthorizationRules"/> on the queue to control user access at entity level.
+        /// </summary>
         public AuthorizationRules AuthorizationRules
         {
             get
@@ -126,8 +196,17 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// The current status of the queue (Enabled / Disabled).
+        /// </summary>
+        /// <remarks>When an entity is disabled, that entity cannot send or receive messages.</remarks>
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
+        /// <summary>
+        /// The path of the recipient entity to which all the messages sent to the queue are forwarded to.
+        /// </summary>
+        /// <remarks>If set, user cannot manually receive messages from this queue. The destination entity 
+        /// must be an already existing entity.</remarks>
         public string ForwardTo
         {
             get => this.forwardTo;
@@ -149,6 +228,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// The path of the recipient entity to which all the dead-lettered messages of this queue are forwarded to.
+        /// </summary>
+        /// <remarks>If set, user cannot manually receive dead-lettered messages from this queue. The destination
+        /// entity must already exist.</remarks>
         public string ForwardDeadLetteredMessagesTo
         {
             get => this.forwardDeadLetteredMessagesTo;
@@ -170,8 +254,16 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// Indicates whether the queue is to be partitioned across multiple message brokers.
+        /// </summary>
+        /// <remarks>Defaults to false.</remarks>
         public bool EnablePartitioning { get; set; } = false;
 
+        /// <summary>
+        /// Custom metdata that user can associate with the description.
+        /// </summary>
+        /// <remarks>Cannot be null. Max length is 1024 chars.</remarks>
         public string UserMetadata
         {
             get => this.userMetadata;

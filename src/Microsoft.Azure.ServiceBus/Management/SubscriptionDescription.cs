@@ -6,6 +6,9 @@ namespace Microsoft.Azure.ServiceBus.Management
     using System;
     using Microsoft.Azure.ServiceBus.Primitives;
 
+    /// <summary>
+    /// Represents the metadata description of the subscription.
+    /// </summary>
     public class SubscriptionDescription : IEquatable<SubscriptionDescription>
     {
         string topicPath, subscriptionName;
@@ -18,12 +21,22 @@ namespace Microsoft.Azure.ServiceBus.Management
         string forwardDeadLetteredMessagesTo = null;
         string userMetadata = null;
 
+        /// <summary>
+        /// Initializes a new instance of SubscriptionDescription class with the specified name and topic path.
+        /// </summary>
+        /// <param name="topicPath">Path of the topic relative to the namespace base address.</param>
+        /// <param name="subscriptionName">Name of the subscription.</param>
         public SubscriptionDescription(string topicPath, string subscriptionName)
         {
             this.TopicPath = topicPath;
             this.SubscriptionName = subscriptionName;
         }
 
+        /// <summary>
+        /// Duration of a peek lock receive. i.e., the amount of time that the message is locked by a given receiver so that
+        /// no other receiver receives the same message.
+        /// </summary>
+        /// <remarks>Max value is 5 minutes. Default value is 60 seconds.</remarks>
         public TimeSpan LockDuration
         {
             get => this.lockDuration;
@@ -34,8 +47,24 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// This indicates whether the subscription supports the concept of session. Sessionful-messages follow FIFO ordering.
+        /// </summary>
+        /// <remarks>
+        /// If true, the receiver can only recieve messages using <see cref="SessionClient.AcceptMessageSessionAsync()"/>.
+        /// Defaults to false. 
+        /// </remarks>
         public bool RequiresSession { get; set; } = false;
 
+        /// <summary>
+        /// The default time to live value for the messages. This is the duration after which the message expires, starting from when
+        /// the message is sent to Service Bus. </summary>
+        /// <remarks>
+        /// This is the default value used when <see cref="Message.TimeToLive"/> is not set on a
+        ///  message itself. Messages older than their TimeToLive value will expire and no longer be retained in the message store.
+        ///  Subscribers will be unable to receive expired messages. 
+        ///  Default value is <see cref="TimeSpan.MaxValue"/>.
+        ///  </remarks>
         public TimeSpan DefaultMessageTimeToLive
         {
             get => this.defaultMessageTimeToLive;
@@ -51,6 +80,10 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// The <see cref="TimeSpan"/> idle interval after which the subscription is automatically deleted.
+        /// </summary>
+        /// <remarks>The minimum duration is 5 minutes. Default value is <see cref="TimeSpan.MaxValue"/>.</remarks>
         public TimeSpan AutoDeleteOnIdle
         {
             get => this.autoDeleteOnIdle;
@@ -66,10 +99,23 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// Indicates whether this subscription has dead letter support when a message expires.
+        /// </summary>
+        /// <remarks>If true, the expired messages are moved to dead-letter sub-queue. Default value is false.</remarks>
         public bool EnableDeadLetteringOnMessageExpiration { get; set; } = false;
 
+        /// <summary>
+        /// indicates whether messages need to be forwarded to dead-letter sub queue when subscription rule evaluation fails.
+        /// </summary>
+        /// <remarks>Defaults to true.</remarks>
         public bool EnableDeadLetteringOnFilterEvaluationExceptions { get; set; } = true;
 
+        /// <summary>
+        /// Path of the topic under which subscription exists.
+        /// </summary>
+        /// <remarks>Value cannot be null or empty. Value cannot exceed 260 chars. Cannot start or end with a slash. 
+        /// Cannot have restricted characters: '@','?','#','*'</remarks>
         public string TopicPath
         {
             get => this.topicPath;
@@ -80,6 +126,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// Name of the subscription.
+        /// </summary>
+        /// <remarks>Value cannot be null or empty. Value cannot exceed 50 chars.
+        /// Cannot have restricted characters: '@','?','#','*','/','\'</remarks>
         public string SubscriptionName
         {
             get => this.subscriptionName;
@@ -90,6 +141,12 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// The maximum delivery count of a message before it is dead-lettered.
+        /// </summary>
+        /// <remarks>The delivery count is increased when a message is received in <see cref="ReceiveMode.PeekLock"/> mode 
+        /// and didn't complete the message before the message lock expired.
+        /// Default value is 10. Minimum value is 1.</remarks>
         public int MaxDeliveryCount
         {
             get => this.maxDeliveryCount;
@@ -105,8 +162,17 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// The current status of the subscription (Enabled / Disabled).
+        /// </summary>
+        /// <remarks>When an entity is disabled, that entity cannot send or receive messages.</remarks>
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
+        /// <summary>
+        /// The path of the recipient entity to which all the messages sent to the subscription are forwarded to.
+        /// </summary>
+        /// <remarks>If set, user cannot manually receive messages from this subscription. The destination entity 
+        /// must be an already existing entity.</remarks>
         public string ForwardTo
         {
             get => this.forwardTo;
@@ -128,6 +194,11 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// The path of the recipient entity to which all the dead-lettered messages of this subscription are forwarded to.
+        /// </summary>
+        /// <remarks>If set, user cannot manually receive dead-lettered messages from this subscription. The destination
+        /// entity must already exist.</remarks>
         public string ForwardDeadLetteredMessagesTo
         {
             get => this.forwardDeadLetteredMessagesTo;
@@ -149,8 +220,16 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// Indicates whether server-side batched operations are enabled.
+        /// </summary>
+        /// <remarks>Defaults to true.</remarks>
         public bool EnableBatchedOperations { get; set; } = true;
 
+        /// <summary>
+        /// Custom metdata that user can associate with the description.
+        /// </summary>
+        /// <remarks>Cannot be null. Max length is 1024 chars.</remarks>
         public string UserMetadata
         {
             get => this.userMetadata;

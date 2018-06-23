@@ -119,10 +119,10 @@ namespace Microsoft.Azure.ServiceBus
                 throw new ArgumentException($@"The entity name/path contains an invalid character '{Constants.PathDelimiter}'", paramName);
             }
 
-            string[] uriSchemeKeys = { "@", "?", "#" };
+            char[] uriSchemeKeys = { '@', '?', '#', '*' };
             foreach (var uriSchemeKey in uriSchemeKeys)
             {
-                if (entityName.Contains(uriSchemeKey))
+                if (entityName.IndexOf(uriSchemeKey) >= 0)
                 {
                     throw new ArgumentException($@"'{entityName}' contains character '{uriSchemeKey}' which is not allowed because it is reserved in the Uri scheme.", paramName);
                 }
