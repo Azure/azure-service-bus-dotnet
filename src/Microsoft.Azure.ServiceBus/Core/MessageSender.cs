@@ -155,11 +155,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.TransferDestinationPath = transferDestinationPath;
             this.EntityType = entityType;
 
-            if (ServiceBusConnection.IsClosedOrClosing)
-            {
-                throw new ObjectDisposedException($"{nameof(serviceBusConnection)} has already been closed. Please create a new {typeof(ServiceBusConnection)} ");
-            }
-
             if (cbsTokenProvider != null)
             {
                 this.CbsTokenProvider = cbsTokenProvider;

@@ -424,5 +424,40 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await receiver.CloseAsync().ConfigureAwait(false);
             }
         }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task ClientsUseGlobalConnectionCloseFirstClientSecoundClientShouldSendMessage()
+        {
+            var csb = new ServiceBusConnectionStringBuilder(TestUtility.NamespaceConnectionString);
+            var connection = new ServiceBusConnection(csb);
+            var sender = new MessageSender(connection, TestConstants.PartitionedQueueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
+            try
+            {
+                var messageBody = Encoding.UTF8.GetBytes("Message");
+                var message = new Message(messageBody);
+
+                await sender.SendAsync(message);
+                await sender.CloseAsync();
+
+                var recivedMessage = await receiver.ReceiveAsync().ConfigureAwait(false);
+                Assert.True(Encoding.UTF8.GetString(recivedMessage.Body) == Encoding.UTF8.GetString(messageBody));
+
+                connection = sender.ServiceBusConnection;
+                sender = new MessageSender(connection, TestConstants.PartitionedQueueName);
+                messageBody = Encoding.UTF8.GetBytes("Message 2");
+                message = new Message(messageBody);
+                await sender.SendAsync(message);
+                recivedMessage = await receiver.ReceiveAsync().ConfigureAwait(false);
+                Assert.True(Encoding.UTF8.GetString(recivedMessage.Body) == Encoding.UTF8.GetString(messageBody));
+
+            }
+            finally
+            {
+                await sender.CloseAsync().ConfigureAwait(false);
+                await receiver.CloseAsync().ConfigureAwait(false);
+            }
+        }
     }
 }
