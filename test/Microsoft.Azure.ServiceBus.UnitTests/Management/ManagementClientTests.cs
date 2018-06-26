@@ -13,7 +13,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
     public class ManagementClientTests : IDisposable
     {
         internal string ConnectionString = TestUtility.NamespaceConnectionString;
-        IManagementClient client;
+        ManagementClient client;
 
         public ManagementClientTests()
         {

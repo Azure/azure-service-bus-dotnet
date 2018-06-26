@@ -27,7 +27,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// Initializes a new <see cref="ManagementClient"/> which can be used to perform management opertions on ServiceBus entities.
         /// </summary>
         /// <param name="connectionString">Namespace connection string.</param>
-        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.NoRetry"/></param>
         public ManagementClient(string connectionString, RetryPolicy retryPolicy = default)
             : this(new ServiceBusConnectionStringBuilder(connectionString), retryPolicy:retryPolicy)
         {
@@ -38,7 +38,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// </summary>
         /// <param name="endpoint">Fully qualified domain name for Service Bus. Most likely, {yournamespace}.servicebus.windows.net</param>
         /// <param name="tokenProvider">Token provider which will generate security tokens for authorization.</param>
-        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.NoRetry"/></param>
         public ManagementClient(string endpoint, ITokenProvider tokenProvider, RetryPolicy retryPolicy = default )
             : this(new ServiceBusConnectionStringBuilder { Endpoint = endpoint}, tokenProvider, retryPolicy)
         {
@@ -49,12 +49,12 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// </summary>
         /// <param name="connectionStringBuilder"><see cref="ServiceBusConnectionStringBuilder"/> having endpoint information.</param>
         /// <param name="tokenProvider">Token provider which will generate security tokens for authorization.</param>
-        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.Default"/></param>
+        /// <param name="retryPolicy">Retry policy for queue operations. Defaults to <see cref="RetryPolicy.NoRetry"/></param>
         public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, ITokenProvider tokenProvider = default, RetryPolicy retryPolicy = default)
         {
             this.httpClient = new HttpClient();
             this.endpointFQDN = connectionStringBuilder.Endpoint;
-            this.retryPolicy = retryPolicy ?? RetryPolicy.Default;
+            this.retryPolicy = retryPolicy ?? RetryPolicy.NoRetry;
             this.tokenProvider = tokenProvider ?? CreateTokenProvider(connectionStringBuilder);
             this.operationTimeout = Constants.DefaultOperationTimeout;
             this.port = GetPort(connectionStringBuilder.Endpoint);
@@ -984,9 +984,19 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         private async Task<HttpResponseMessage> SendHttpRequest(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var token = await this.GetToken(request.RequestUri).ConfigureAwait(false);
-            request.Headers.Add("Authorization", token);
-            request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementClientConstants.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
+            if (request.Headers.Authorization == null)
+            {
+                // First attempt.
+                var token = await this.GetToken(request.RequestUri).ConfigureAwait(false);
+                request.Headers.Add("Authorization", token);
+                request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementClientConstants.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
+            }
+            else
+            {
+                // This is a retried request.
+                request = CloneRequest(request);
+            }
+
             HttpResponseMessage response;
             try
             {
@@ -1114,6 +1124,26 @@ namespace Microsoft.Azure.ServiceBus.Management
         {
             var token = await this.tokenProvider.GetTokenAsync(requestUri, TimeSpan.FromHours(1)).ConfigureAwait(false);
             return token.TokenValue;
+        }
+
+        public static HttpRequestMessage CloneRequest(HttpRequestMessage req)
+        {
+            HttpRequestMessage clone = new HttpRequestMessage(req.Method, req.RequestUri);
+
+            clone.Content = req.Content;
+            clone.Version = req.Version;
+
+            foreach (KeyValuePair<string, object> prop in req.Properties)
+            {
+                clone.Properties.Add(prop);
+            }
+
+            foreach (KeyValuePair<string, IEnumerable<string>> header in req.Headers)
+            {
+                clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            }
+
+            return clone;
         }
     }
 }
