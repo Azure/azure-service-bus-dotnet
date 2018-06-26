@@ -137,6 +137,8 @@ namespace Microsoft.Azure.ServiceBus
             this.QueueName = entityPath;
             this.ReceiveMode = receiveMode;
             this.OwnsConnection = false;
+            this.ServiceBusConnection.ThrowIfClosed();
+
             if (this.ServiceBusConnection.TokenProvider != null)
             {
                 this.CbsTokenProvider = new TokenProviderAdapter(this.ServiceBusConnection.TokenProvider, this.ServiceBusConnection.OperationTimeout);

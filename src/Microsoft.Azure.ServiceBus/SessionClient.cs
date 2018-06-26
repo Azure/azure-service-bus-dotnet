@@ -182,6 +182,7 @@ namespace Microsoft.Azure.ServiceBus
             this.EntityType = entityType;
             this.ReceiveMode = receiveMode;
             this.PrefetchCount = prefetchCount;
+            this.ServiceBusConnection.ThrowIfClosed();
 
             if (cbsTokenProvider != null)
             {

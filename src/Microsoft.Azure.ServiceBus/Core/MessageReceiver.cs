@@ -158,7 +158,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             string sessionId = null,
             bool isSessionReceiver = false)
             : base(nameof(MessageReceiver), entityPath, retryPolicy ?? RetryPolicy.Default)
-        {
+        {        
             MessagingEventSource.Log.MessageReceiverCreateStart(serviceBusConnection?.Endpoint.Authority, entityPath, receiveMode.ToString());
 
             if (string.IsNullOrWhiteSpace(entityPath))
@@ -170,6 +170,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ReceiveMode = receiveMode;
             this.Path = entityPath;
             this.EntityType = entityType;
+            this.ServiceBusConnection.ThrowIfClosed();
 
             if (cbsTokenProvider != null)
             {

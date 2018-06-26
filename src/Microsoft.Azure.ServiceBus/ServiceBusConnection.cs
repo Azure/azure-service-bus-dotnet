@@ -149,6 +149,17 @@ namespace Microsoft.Azure.ServiceBus
         internal FaultTolerantAmqpObject<Controller> TransactionController { get; set; }
 
         /// <summary>
+        /// Throw an OperationCanceledException if the object is Closing.
+        /// </summary>
+        internal virtual void ThrowIfClosed()
+        {
+            if (this.IsClosedOrClosing)
+            {
+                throw new ObjectDisposedException($"{nameof(ServiceBusConnection)} has already been closed. Please create a new instance");
+            }
+        }
+
+        /// <summary>
         /// Closes the connection.
         /// </summary>
         public async Task CloseAsync()
@@ -281,5 +292,6 @@ namespace Microsoft.Azure.ServiceBus
                 port: port,
                 useSslStreamSecurity: true);
         }
+
     }
 }

@@ -154,6 +154,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.Path = entityPath;
             this.TransferDestinationPath = transferDestinationPath;
             this.EntityType = entityType;
+            this.ServiceBusConnection.ThrowIfClosed();
 
             if (cbsTokenProvider != null)
             {
