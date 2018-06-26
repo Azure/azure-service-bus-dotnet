@@ -149,7 +149,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(entityPath);
             }
-            
+
             this.ServiceBusConnection = serviceBusConnection ?? throw new ArgumentNullException(nameof(serviceBusConnection));
             this.Path = entityPath;
             this.TransferDestinationPath = transferDestinationPath;
@@ -447,11 +447,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.clientLinkManager.Close();
             await this.SendLinkManager.CloseAsync().ConfigureAwait(false);
             await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
-
-            if (this.OwnsConnection)
-            {
-                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
-            }
         }
 
         static int ValidateMessages(IList<Message> messageList)

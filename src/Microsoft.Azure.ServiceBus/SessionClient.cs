@@ -394,12 +394,9 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        protected override async Task OnClosingAsync()
+        protected override Task OnClosingAsync()
         {
-            if (this.OwnsConnection)
-            {
-                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
-            }
+            return Task.CompletedTask;
         }
     }
 }

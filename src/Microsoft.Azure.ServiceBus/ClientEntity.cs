@@ -98,7 +98,10 @@ namespace Microsoft.Azure.ServiceBus
             if (callClose)
             {
                 await this.OnClosingAsync().ConfigureAwait(false);
-                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+                if (OwnsConnection && this.ServiceBusConnection.IsClosedOrClosing == false)
+                {
+                    await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+                }
             }
         }
 
