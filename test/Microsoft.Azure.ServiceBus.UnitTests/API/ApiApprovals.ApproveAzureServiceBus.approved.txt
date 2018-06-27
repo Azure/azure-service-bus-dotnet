@@ -650,9 +650,9 @@ namespace Microsoft.Azure.ServiceBus.Management
     }
     public class ManagementClient
     {
-        public ManagementClient(string connectionString, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null) { }
-        public ManagementClient(string endpoint, Microsoft.Azure.ServiceBus.Primitives.ITokenProvider tokenProvider, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null) { }
-        public ManagementClient(Microsoft.Azure.ServiceBus.ServiceBusConnectionStringBuilder connectionStringBuilder, Microsoft.Azure.ServiceBus.Primitives.ITokenProvider tokenProvider = null, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy = null) { }
+        public ManagementClient(string connectionString) { }
+        public ManagementClient(string endpoint, Microsoft.Azure.ServiceBus.Primitives.ITokenProvider tokenProvider) { }
+        public ManagementClient(Microsoft.Azure.ServiceBus.ServiceBusConnectionStringBuilder connectionStringBuilder, Microsoft.Azure.ServiceBus.Primitives.ITokenProvider tokenProvider = null) { }
         public static System.Net.Http.HttpRequestMessage CloneRequest(System.Net.Http.HttpRequestMessage req) { }
         public System.Threading.Tasks.Task CloseAsync() { }
         public virtual System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Management.QueueDescription> CreateQueueAsync(string queuePath, System.Threading.CancellationToken cancellationToken = null) { }
