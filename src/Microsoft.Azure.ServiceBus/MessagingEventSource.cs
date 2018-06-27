@@ -1363,12 +1363,12 @@ namespace Microsoft.Azure.ServiceBus
             this.WriteEvent(115, clientId, operationName, exception);
         }
 
-        [Event(116, Level = EventLevel.Informational, Message = "{0}: Management client created with operationTimeout:{1}, tokenProvider:{2}, retryPolicy:{3}.")]
-        public void ManagementClientCreated(string clientId, double operationTimeout, string tokenProvider, string retryPolicy)
+        [Event(116, Level = EventLevel.Informational, Message = "{0}: Management client created with operationTimeout:{1}, tokenProvider:{2}.")]
+        public void ManagementClientCreated(string clientId, double operationTimeout, string tokenProvider)
         {
             if (this.IsEnabled())
             {
-                this.WriteEvent(116, clientId, operationTimeout, tokenProvider, retryPolicy);
+                this.WriteEvent(116, clientId, operationTimeout, tokenProvider);
             }
         }
 
