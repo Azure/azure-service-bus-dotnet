@@ -11,7 +11,7 @@ namespace Microsoft.Azure.ServiceBus.Management
     /// </summary>
     public class QueueDescription : IEquatable<QueueDescription>
     {
-        internal TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(30);
+        internal TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromMinutes(1);
         internal string path;
         TimeSpan lockDuration = TimeSpan.FromSeconds(60);
         TimeSpan defaultMessageTimeToLive = TimeSpan.MaxValue;
@@ -137,7 +137,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// The <see cref="TimeSpan"/> duration of duplicate detection history that is maintained by the service.
         /// </summary>
         /// <remarks>
-        /// The default value is 30 seconds. Max value is 1 day and minimum is 20 seconds.
+        /// The default value is 1 minute. Max value is 1 day and minimum is 20 seconds.
         /// </remarks>
         public TimeSpan DuplicateDetectionHistoryTimeWindow
         {

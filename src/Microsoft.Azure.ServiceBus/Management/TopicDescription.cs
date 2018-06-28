@@ -10,7 +10,7 @@ namespace Microsoft.Azure.ServiceBus.Management
     /// </summary>
     public class TopicDescription : IEquatable<TopicDescription>
     {
-        internal TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromSeconds(30);
+        internal TimeSpan duplicateDetectionHistoryTimeWindow = TimeSpan.FromMinutes(1);
         internal string path;
         TimeSpan defaultMessageTimeToLive = TimeSpan.MaxValue;
         TimeSpan autoDeleteOnIdle = TimeSpan.MaxValue;
@@ -87,7 +87,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// The <see cref="TimeSpan"/> duration of duplicate detection history that is maintained by the service.
         /// </summary>
         /// <remarks>
-        /// The default value is 30 seconds. Max value is 1 day and minimum is 20 seconds.
+        /// The default value is 1 minute. Max value is 1 day and minimum is 20 seconds.
         /// </remarks>
         public TimeSpan DuplicateDetectionHistoryTimeWindow
         {
