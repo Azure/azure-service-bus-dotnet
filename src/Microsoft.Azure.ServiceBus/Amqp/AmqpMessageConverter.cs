@@ -379,10 +379,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             var filter = GetFilter(amqpDescription.Filter);
             var ruleAction = GetRuleAction(amqpDescription.Action);
 
-            var ruleDescription = new RuleDescription(filter)
+            var ruleDescription = new RuleDescription(amqpDescription.RuleName, filter)
             {
-                Action = ruleAction,
-                Name = amqpDescription.RuleName
+                Action = ruleAction
             };
 
             return ruleDescription;
