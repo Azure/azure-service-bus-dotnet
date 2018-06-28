@@ -38,6 +38,8 @@ namespace Microsoft.Azure.ServiceBus.Management
         public static readonly int MinAllowedMaxDeliveryCount = 1;
         public static readonly int MaxUserMetadataLength = 1024;
 
+        public static char[] InvalidEntityPathCharacters = { '@', '?', '#', '*' };
+
         // Authorization constants
         public static readonly int SupportedClaimsCount = 3;
 

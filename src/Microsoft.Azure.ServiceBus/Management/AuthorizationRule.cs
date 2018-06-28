@@ -17,10 +17,6 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <value>The claim type.</value>
         public abstract string ClaimType { get; }
 
-        /// <summary>Gets or sets the claim value which is either ‘Send’, ‘Listen’, or ‘Manage’.</summary>
-        /// <value>The claim value which is either ‘Send’, ‘Listen’, or ‘Manage’.</value>
-        internal abstract string ClaimValue { get; }
-
         /// <summary>Gets or sets the list of rights.</summary>
         /// <value>The list of rights.</value>
         public abstract List<AccessRights> Rights { get; set; }
@@ -36,6 +32,10 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <summary>Gets or sets the date and time when the authorization rule was modified.</summary>
         /// <value>The date and time when the authorization rule was modified.</value>
         public DateTime ModifiedTime { get; internal set; }
+
+        /// <summary>Gets or sets the claim value which is either ‘Send’, ‘Listen’, or ‘Manage’.</summary>
+        /// <value>The claim value which is either ‘Send’, ‘Listen’, or ‘Manage’.</value>
+        internal abstract string ClaimValue { get; }
 
         public abstract bool Equals(AuthorizationRule comparand);
 

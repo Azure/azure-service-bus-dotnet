@@ -37,7 +37,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <param name="endpoint">Fully qualified domain name for Service Bus. Most likely, {yournamespace}.servicebus.windows.net</param>
         /// <param name="tokenProvider">Token provider which will generate security tokens for authorization.</param>
         public ManagementClient(string endpoint, ITokenProvider tokenProvider)
-            : this(new ServiceBusConnectionStringBuilder { Endpoint = endpoint}, tokenProvider)
+            : this(new ServiceBusConnectionStringBuilder {Endpoint = endpoint}, tokenProvider)
         {
         }
 
@@ -58,19 +58,24 @@ namespace Microsoft.Azure.ServiceBus.Management
             MessagingEventSource.Log.ManagementClientCreated(this.clientId, this.operationTimeout.TotalSeconds, this.tokenProvider.ToString());
         }
 
-        private static ITokenProvider CreateTokenProvider(ServiceBusConnectionStringBuilder builder)
+        public static HttpRequestMessage CloneRequest(HttpRequestMessage req)
         {
-            if (builder.SasToken != null)
+            HttpRequestMessage clone = new HttpRequestMessage(req.Method, req.RequestUri);
+
+            clone.Content = req.Content;
+            clone.Version = req.Version;
+
+            foreach (KeyValuePair<string, object> prop in req.Properties)
             {
-                return new SharedAccessSignatureTokenProvider(builder.SasToken);
+                clone.Properties.Add(prop);
             }
 
-            if (builder.SasKeyName != null || builder.SasKey != null)
+            foreach (KeyValuePair<string, IEnumerable<string>> header in req.Headers)
             {
-                return new SharedAccessSignatureTokenProvider(builder.SasKeyName, builder.SasKey);
+                clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
 
-            throw new Exception("Could not create token provider. Either ITokenProvider has to be passed into constructor or connection string should contain information such as SAS token / SAS key name and SAS key.");
+            return clone;
         }
 
         #region DeleteEntity
@@ -152,24 +157,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
             EntityNameHelper.CheckValidRuleName(ruleName);
 
-            return DeleteEntity($"{topicPath}/Subscriptions/{subscriptionName}/rules/{ruleName}", cancellationToken);
-        }
-
-        private async Task DeleteEntity(string path, CancellationToken cancellationToken)
-        {
-            MessagingEventSource.Log.ManagementOperationStart(this.clientId, nameof(DeleteEntity), path);
-
-            var uri = new UriBuilder(this.endpointFQDN)
-            {
-                Path = path,
-                Scheme = Uri.UriSchemeHttps,
-                Port = this.port,
-                Query = $"{ManagementClientConstants.apiVersionQuery}&enrich=false"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Delete, uri);
-            await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
-            MessagingEventSource.Log.ManagementOperationEnd(this.clientId, nameof(DeleteEntity), path);
+            return DeleteEntity(EntityNameHelper.FormatRulePath(topicPath, subscriptionName, ruleName), cancellationToken);
         }
 
         #endregion
@@ -265,7 +253,7 @@ namespace Microsoft.Azure.ServiceBus.Management
             EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
             EntityNameHelper.CheckValidRuleName(ruleName);
 
-            var content = await GetEntity($"{topicPath}/Subscriptions/{subscriptionName}/rules/{ruleName}", null, false, cancellationToken).ConfigureAwait(false);
+            var content = await GetEntity(EntityNameHelper.FormatRulePath(topicPath, subscriptionName, ruleName), null, false, cancellationToken).ConfigureAwait(false);
 
             return RuleDescriptionExtensions.ParseFromContent(content);
         }
@@ -466,31 +454,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             return RuleDescriptionExtensions.ParseCollectionFromContent(content);
         }
 
-        private async Task<string> GetEntity(string path, string query, bool enrich, CancellationToken cancellationToken)
-        {
-            MessagingEventSource.Log.ManagementOperationStart(this.clientId, nameof(GetEntity), $"path:{path},query:{query},enrich:{enrich}");
-
-            var queryString = $"{ManagementClientConstants.apiVersionQuery}&enrich={enrich}";
-            if (query!=null)
-            {
-                queryString = queryString + "&" + query;
-            }
-            var uri = new UriBuilder(this.endpointFQDN)
-            {
-                Path = path,
-                Scheme = Uri.UriSchemeHttps,
-                Port = this.port,
-                Query = queryString
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            HttpResponseMessage response = await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
-            var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-            MessagingEventSource.Log.ManagementOperationEnd(this.clientId, nameof(GetEntity), $"path:{path},query:{query},enrich:{enrich}");
-            return result;
-        }
-
         #endregion
 
         #region CreateEntity
@@ -543,7 +506,6 @@ namespace Microsoft.Azure.ServiceBus.Management
                 cancellationToken).ConfigureAwait(false);
             return QueueDescriptionExtensions.ParseFromContent(content);
         }
-
 
         /// <summary>
         /// Creates a new topic in the service namespace with the given name.
@@ -816,49 +778,6 @@ namespace Microsoft.Azure.ServiceBus.Management
             return RuleDescriptionExtensions.ParseFromContent(content);
         }
 
-        private async Task<string> PutEntity(string path, string requestBody, bool isUpdate, string forwardTo, string fwdDeadLetterTo, CancellationToken cancellationToken)
-        {
-            MessagingEventSource.Log.ManagementOperationStart(this.clientId, nameof(PutEntity), $"path:{path},isUpdate:{isUpdate}");
-
-            var uri = new UriBuilder(this.endpointFQDN)
-            {
-                Path = path,
-                Port = this.port,
-                Scheme = Uri.UriSchemeHttps,
-                Query = $"{ManagementClientConstants.apiVersionQuery}"
-            }.Uri;
-
-            var request = new HttpRequestMessage(HttpMethod.Put, uri);
-            request.Content = new StringContent(
-                requestBody,
-                Encoding.UTF8,
-                ManagementClientConstants.AtomContentType
-            );
-
-            if (isUpdate)
-            {
-                request.Headers.Add("If-Match", "*"); 
-            }
-
-            if (!string.IsNullOrWhiteSpace(forwardTo))
-            {
-                var token = await this.GetToken(forwardTo).ConfigureAwait(false);
-                request.Headers.Add(ManagementClientConstants.ServiceBusSupplementartyAuthorizationHeaderName, token);
-            }
-
-            if (!string.IsNullOrWhiteSpace(fwdDeadLetterTo))
-            {
-                var token = await this.GetToken(fwdDeadLetterTo).ConfigureAwait(false);
-                request.Headers.Add(ManagementClientConstants.ServiceBusDlqSupplementaryAuthorizationHeaderName, token);
-            }
-
-            HttpResponseMessage response = await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
-            var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-            MessagingEventSource.Log.ManagementOperationEnd(this.clientId, nameof(PutEntity), $"path:{path},isUpdate:{isUpdate}");
-            return result;
-        }
-
         #endregion
 
         #region Exists
@@ -958,44 +877,6 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         #endregion
 
-        private async Task<HttpResponseMessage> SendHttpRequest(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            if (request.Headers.Authorization == null)
-            {
-                // First attempt.
-                var token = await this.GetToken(request.RequestUri).ConfigureAwait(false);
-                request.Headers.Add("Authorization", token);
-                request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementClientConstants.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
-            }
-            else
-            {
-                // This is a retried request.
-                request = CloneRequest(request);
-            }
-
-            HttpResponseMessage response;
-            try
-            {
-                response = await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                MessagingEventSource.Log.ManagementOperationException(this.clientId, nameof(SendHttpRequest), exception);
-                throw new ServiceBusException(true, exception);
-            }
-
-            var exceptionReturned = await ValidateHttpResponse(response).ConfigureAwait(false);
-            if (exceptionReturned == null)
-            {
-                return response;
-            }
-            else
-            {
-                MessagingEventSource.Log.ManagementOperationException(this.clientId, nameof(SendHttpRequest), exceptionReturned);
-                throw exceptionReturned;
-            }
-        }
-
         private static int GetPort(string endpoint)
         {
             // used for internal testing
@@ -1091,35 +972,153 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
-        Task<string> GetToken(Uri requestUri)
+        private static ITokenProvider CreateTokenProvider(ServiceBusConnectionStringBuilder builder)
+        {
+            if (builder.SasToken != null)
+            {
+                return new SharedAccessSignatureTokenProvider(builder.SasToken);
+            }
+
+            if (builder.SasKeyName != null && builder.SasKey != null)
+            {
+                return new SharedAccessSignatureTokenProvider(builder.SasKeyName, builder.SasKey);
+            }
+
+            throw new Exception("Could not create token provider. Either ITokenProvider has to be passed into constructor or connection string should contain information such as SAS token / SAS key name and SAS key.");
+        }
+
+        private Task<string> GetToken(Uri requestUri)
         {
             return this.GetToken(requestUri.GetLeftPart(UriPartial.Path));
         }
 
-        async Task<string> GetToken(string requestUri)
+        private async Task<string> GetToken(string requestUri)
         {
             var token = await this.tokenProvider.GetTokenAsync(requestUri, TimeSpan.FromHours(1)).ConfigureAwait(false);
             return token.TokenValue;
         }
-
-        public static HttpRequestMessage CloneRequest(HttpRequestMessage req)
+        
+        private async Task<string> GetEntity(string path, string query, bool enrich, CancellationToken cancellationToken)
         {
-            HttpRequestMessage clone = new HttpRequestMessage(req.Method, req.RequestUri);
+            MessagingEventSource.Log.ManagementOperationStart(this.clientId, nameof(GetEntity), $"path:{path},query:{query},enrich:{enrich}");
 
-            clone.Content = req.Content;
-            clone.Version = req.Version;
-
-            foreach (KeyValuePair<string, object> prop in req.Properties)
+            var queryString = $"{ManagementClientConstants.apiVersionQuery}&enrich={enrich}";
+            if (query != null)
             {
-                clone.Properties.Add(prop);
+                queryString = queryString + "&" + query;
+            }
+            var uri = new UriBuilder(this.endpointFQDN)
+            {
+                Path = path,
+                Scheme = Uri.UriSchemeHttps,
+                Port = this.port,
+                Query = queryString
+            }.Uri;
+
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            HttpResponseMessage response = await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
+            var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            MessagingEventSource.Log.ManagementOperationEnd(this.clientId, nameof(GetEntity), $"path:{path},query:{query},enrich:{enrich}");
+            return result;
+        }
+
+        private async Task<string> PutEntity(string path, string requestBody, bool isUpdate, string forwardTo, string fwdDeadLetterTo, CancellationToken cancellationToken)
+        {
+            MessagingEventSource.Log.ManagementOperationStart(this.clientId, nameof(PutEntity), $"path:{path},isUpdate:{isUpdate}");
+
+            var uri = new UriBuilder(this.endpointFQDN)
+            {
+                Path = path,
+                Port = this.port,
+                Scheme = Uri.UriSchemeHttps,
+                Query = $"{ManagementClientConstants.apiVersionQuery}"
+            }.Uri;
+
+            var request = new HttpRequestMessage(HttpMethod.Put, uri);
+            request.Content = new StringContent(
+                requestBody,
+                Encoding.UTF8,
+                ManagementClientConstants.AtomContentType
+            );
+
+            if (isUpdate)
+            {
+                request.Headers.Add("If-Match", "*");
             }
 
-            foreach (KeyValuePair<string, IEnumerable<string>> header in req.Headers)
+            if (!string.IsNullOrWhiteSpace(forwardTo))
             {
-                clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                var token = await this.GetToken(forwardTo).ConfigureAwait(false);
+                request.Headers.Add(ManagementClientConstants.ServiceBusSupplementartyAuthorizationHeaderName, token);
             }
 
-            return clone;
+            if (!string.IsNullOrWhiteSpace(fwdDeadLetterTo))
+            {
+                var token = await this.GetToken(fwdDeadLetterTo).ConfigureAwait(false);
+                request.Headers.Add(ManagementClientConstants.ServiceBusDlqSupplementaryAuthorizationHeaderName, token);
+            }
+
+            HttpResponseMessage response = await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
+            var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            MessagingEventSource.Log.ManagementOperationEnd(this.clientId, nameof(PutEntity), $"path:{path},isUpdate:{isUpdate}");
+            return result;
+        }
+
+        private async Task DeleteEntity(string path, CancellationToken cancellationToken)
+        {
+            MessagingEventSource.Log.ManagementOperationStart(this.clientId, nameof(DeleteEntity), path);
+
+            var uri = new UriBuilder(this.endpointFQDN)
+            {
+                Path = path,
+                Scheme = Uri.UriSchemeHttps,
+                Port = this.port,
+                Query = $"{ManagementClientConstants.apiVersionQuery}&enrich=false"
+            }.Uri;
+
+            var request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            await SendHttpRequest(request, cancellationToken).ConfigureAwait(false);
+            MessagingEventSource.Log.ManagementOperationEnd(this.clientId, nameof(DeleteEntity), path);
+        }
+
+        private async Task<HttpResponseMessage> SendHttpRequest(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.Headers.Authorization == null)
+            {
+                // First attempt.
+                var token = await this.GetToken(request.RequestUri).ConfigureAwait(false);
+                request.Headers.Add("Authorization", token);
+                request.Headers.Add("UserAgent", $"SERVICEBUS/{ManagementClientConstants.ApiVersion}(api-origin={ClientInfo.Framework};os={ClientInfo.Platform};version={ClientInfo.Version};product={ClientInfo.Product})");
+            }
+            else
+            {
+                // This is a retried request.
+                request = CloneRequest(request);
+            }
+
+            HttpResponseMessage response;
+            try
+            {
+                response = await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            }
+            catch (HttpRequestException exception)
+            {
+                MessagingEventSource.Log.ManagementOperationException(this.clientId, nameof(SendHttpRequest), exception);
+                throw new ServiceBusException(true, exception);
+            }
+
+            var exceptionReturned = await ValidateHttpResponse(response).ConfigureAwait(false);
+            if (exceptionReturned == null)
+            {
+                return response;
+            }
+            else
+            {
+                MessagingEventSource.Log.ManagementOperationException(this.clientId, nameof(SendHttpRequest), exceptionReturned);
+                throw exceptionReturned;
+            }
         }
     }
 }
