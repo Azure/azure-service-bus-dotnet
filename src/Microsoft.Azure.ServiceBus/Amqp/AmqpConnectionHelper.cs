@@ -80,7 +80,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             var tcpTransportSettings = new TcpTransportSettings
             {
                 Host = networkHost,
-                Port = port < 0 ? AmqpConstants.DefaultSecurePort : port,
+                Port = port < Constants.WellKnownPublicPortsLimit ? AmqpConstants.DefaultSecurePort : port,
                 ReceiveBufferSize = AmqpConstants.TransportBufferSize,
                 SendBufferSize = AmqpConstants.TransportBufferSize
             };
@@ -103,7 +103,11 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             string hostName,
             int port)
         {
-            var uriBuilder = new UriBuilder(WebSocketConstants.WebSocketSecureScheme, networkHost, port < 0 ? WebSocketConstants.WebSocketSecurePort : port, WebSocketConstants.WebSocketDefaultPath);
+            var uriBuilder = new UriBuilder(
+                WebSocketConstants.WebSocketSecureScheme,
+                networkHost,
+                port < Constants.WellKnownPublicPortsLimit ? WebSocketConstants.WebSocketSecurePort : port,
+                WebSocketConstants.WebSocketDefaultPath);
             var webSocketTransportSettings = new WebSocketTransportSettings
             {
                 Uri = uriBuilder.Uri,
