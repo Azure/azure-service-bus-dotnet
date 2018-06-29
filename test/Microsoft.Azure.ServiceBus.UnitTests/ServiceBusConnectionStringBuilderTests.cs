@@ -5,6 +5,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Microsoft.Azure.ServiceBus.Core;
     using Xunit;
 
     public class ServiceBusConnectionStringBuilderTests
@@ -131,6 +133,23 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             var csBuilder = new ServiceBusConnectionStringBuilder("SharedAccessSignature=" + token+";Endpoint=sb://contoso.servicebus.windows.net");
             Assert.Equal("sb://contoso.servicebus.windows.net", csBuilder.Endpoint);
             Assert.Equal(token, csBuilder.SasToken);
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task NonAmqpUriSchemesShouldWorkAsExpected()
+        {
+            var csb = new ServiceBusConnectionStringBuilder(TestUtility.NamespaceConnectionString);
+            csb.Endpoint = new UriBuilder(csb.Endpoint)
+            {
+                Scheme = Uri.UriSchemeHttps
+            }.Uri.ToString();
+            csb.EntityPath = TestConstants.NonPartitionedQueueName;
+
+            var receiver = new MessageReceiver(csb);
+            var msg = await receiver.ReceiveAsync(TimeSpan.FromSeconds(5));
+
+            await receiver.CloseAsync();
         }
     }
 }
