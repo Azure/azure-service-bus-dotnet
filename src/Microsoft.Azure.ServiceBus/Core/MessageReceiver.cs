@@ -1010,7 +1010,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 }
             }
 
-            await messagePumpTask;
+            await messagePumpTask.ConfigureAwait(false);
 
             await this.ReceiveLinkManager.CloseAsync().ConfigureAwait(false);
             await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
