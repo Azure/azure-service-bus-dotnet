@@ -13,9 +13,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     public class SenderReceiverTests : SenderReceiverClientTestBase
     {
-        private static TimeSpan TwoSeconds = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan TwoSeconds = TimeSpan.FromSeconds(2);
 
-        public static IEnumerable<object[]> TestPermutations => new object[][]
+        public static IEnumerable<object[]> TestPermutations => new[]
         {
             new object[] {TestConstants.NonPartitionedQueueName},
             new object[] {TestConstants.PartitionedQueueName}

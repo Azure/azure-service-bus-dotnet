@@ -252,7 +252,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 var processedMessages = await this.ProcessMessages(messageList).ConfigureAwait(false);
 
-                sendTask = this.RetryPolicy.RunOperation(() => this.OnSendAsync(processedMessages), this.OperationTimeout);
+                sendTask = this.RetryPolicy.RunOperation(() => this.OnSendAsync(() => AmqpMessageConverter.BatchSBMessagesAsAmqpMessage(processedMessages)), this.OperationTimeout);
                 await sendTask.ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -271,6 +271,41 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             MessagingEventSource.Log.MessageSendStop(this.ClientId);
+        }
+        public async Task SendAsync(Batch batch)
+        {
+            this.ThrowIfClosed();
+
+            //var count = MessageSender.ValidateMessages(messageList);
+//            MessagingEventSource.Log.MessageSendStart(this.ClientId, count);
+
+//            var isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+//            var activity = isDiagnosticSourceEnabled ? this.diagnosticSource.SendStart(messageList) : null;
+            Task sendTask = null;
+
+            try
+            {
+                //var processedMessages = await this.ProcessMessages(messageList).ConfigureAwait(false);
+
+                sendTask = this.RetryPolicy.RunOperation(() => this.OnSendAsync(batch.ToAmqpMessage), this.OperationTimeout);
+                await sendTask.ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+//                if (isDiagnosticSourceEnabled)
+//                {
+//                    this.diagnosticSource.ReportException(exception);
+//                }
+
+                MessagingEventSource.Log.MessageSendException(this.ClientId, exception);
+                throw;
+            }
+            finally
+            {
+//                this.diagnosticSource.SendStop(activity, messageList, sendTask?.Status);
+            }
+
+//            MessagingEventSource.Log.MessageSendStop(this.ClientId);
         }
 
         /// <summary>
@@ -526,10 +561,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             return processedMessageList;
         }
 
-        async Task OnSendAsync(IList<Message> messageList)
+        async Task OnSendAsync(Func<AmqpMessage> amqpMessageProvider)
         {
             var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-            using (var amqpMessage = AmqpMessageConverter.BatchSBMessagesAsAmqpMessage(messageList))
+            using (var amqpMessage = amqpMessageProvider())
             {
                 SendingAmqpLink amqpLink = null;
                 try
