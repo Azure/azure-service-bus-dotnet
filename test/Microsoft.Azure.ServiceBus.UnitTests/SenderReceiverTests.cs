@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq;
+
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
@@ -470,9 +472,25 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             try
             {
-                await sender.SendAsync(new List<Message>());
-                var message = await receiver.ReceiveAsync(TimeSpan.FromSeconds(3));
-                Assert.True(message == null, "Expected not to find any messages, but a message was received.");
+                var message1 = new Message(Encoding.UTF8.GetBytes("Hello Neeraj"));
+                var message2 = new Message(Encoding.UTF8.GetBytes("from"));
+                var message3 = new Message(Encoding.UTF8.GetBytes("Sean Feldman"));
+
+                var batch = new Batch(100);
+                Assert.True(batch.TryAdd(message1), "Couldn't add first message");
+                Assert.True(batch.TryAdd(message2), "Couldn't add second message");
+                Assert.False(batch.TryAdd(message3), "Shouldn't be able to add third message");
+                await sender.SendAsync(batch);
+                batch.Dispose();
+                await sender.CloseAsync();
+
+                var receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, 2);
+                var bodies = receivedMessages.Select(m => Encoding.UTF8.GetString(m.Body));
+                Assert.Collection(bodies, item => Assert.Contains("Hello Neeraj", item),
+                                          item => Assert.Contains("from", item));
+
+                var extraMessage = await TestUtility.PeekMessageAsync(receiver);
+                Assert.True(extraMessage == null, "Should not have any messages other than the two, but an extra message is found");
             }
             finally
             {
