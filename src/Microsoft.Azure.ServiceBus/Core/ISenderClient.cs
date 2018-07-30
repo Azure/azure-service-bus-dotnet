@@ -25,6 +25,12 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         Task SendAsync(IList<Message> messageList);
 
+// TODO: extract method into this interface for the next major version
+//        /// <summary>
+//        /// Sends a <see cref="Batch"/> of messages to Service Bus.
+//        /// </summary>
+//        Task SendAsync(Batch batch);
+
         /// <summary>
         /// Schedules a message to appear on Service Bus.
         /// </summary>

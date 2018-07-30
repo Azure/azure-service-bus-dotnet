@@ -89,7 +89,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
             }
-            
+
             this.OwnsConnection = true;
         }
 
@@ -328,7 +328,7 @@ namespace Microsoft.Azure.ServiceBus
                 return this.sessionPumpHost;
             }
         }
-        
+
         ICbsTokenProvider CbsTokenProvider { get; }
 
         /// <summary>
@@ -347,6 +347,16 @@ namespace Microsoft.Azure.ServiceBus
             this.ThrowIfClosed();
 
             return this.InnerSender.SendAsync(messageList);
+        }
+
+        /// <summary>
+        /// Sends a <see cref="Batch"/> of messages to Service Bus.
+        /// </summary>
+        public Task SendAsync(Batch batch)
+        {
+            this.ThrowIfClosed();
+
+            return this.innerSender.SendAsync(batch);
         }
 
         /// <summary>
