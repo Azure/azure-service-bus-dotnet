@@ -498,6 +498,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     public class Batch : System.IDisposable
     {
         public Batch(long maximumBatchSize) { }
+        public int Length { get; }
         public void Dispose() { }
         public Microsoft.Azure.Amqp.AmqpMessage ToAmqpMessage() { }
         public bool TryAdd(Microsoft.Azure.ServiceBus.Message message) { }

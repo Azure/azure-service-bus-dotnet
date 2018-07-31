@@ -41,5 +41,21 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
                 Assert.Throws<ArgumentException>(() => batch.TryAdd(message));
             }
         }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(3)]
+        public void Should_report_how_many_messages_are_in_batch(int numberOfMessages)
+        {
+            using (var batch = new Batch(100))
+            {
+                for (var i = 0; i < numberOfMessages; i++)
+                {
+                    batch.TryAdd(new Message());
+                }
+
+                Assert.Equal(numberOfMessages, batch.Length);
+            }
+        }
     }
 }

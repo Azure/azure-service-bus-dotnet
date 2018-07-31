@@ -63,10 +63,16 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         }
 
+        /// <summary>
+        /// Number of messages in batch.
+        /// </summary>
+        public int Length => datas.Count;
+
         private long Size => result.SerializedMessageSize;
 
+
         /// <summary>
-        /// Convert batch to AMQP message
+        /// Convert batch to AMQP message.
         /// </summary>
         /// <returns></returns>
         public AmqpMessage ToAmqpMessage()

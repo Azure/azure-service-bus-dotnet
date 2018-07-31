@@ -277,7 +277,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             this.ThrowIfClosed();
 
-//            MessagingEventSource.Log.MessageSendStart(this.ClientId, count);
+            MessagingEventSource.Log.MessageSendStart(this.ClientId, batch.Length);
 
 //            var isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
 //            var activity = isDiagnosticSourceEnabled ? this.diagnosticSource.SendStart(messageList) : null;
