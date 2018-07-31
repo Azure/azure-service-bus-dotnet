@@ -31,7 +31,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
         }
 
         [Fact]
-        public void Should_throw_when_trying_add_received_message_to_batch()
+        public void Should_throw_when_trying_to_add_an_already_received_message_to_batch()
         {
             using (var batch = new Batch(100))
             {

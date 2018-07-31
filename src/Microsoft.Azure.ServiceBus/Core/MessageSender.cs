@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.ServiceBus.Diagnostics;
-
 namespace Microsoft.Azure.ServiceBus.Core
 {
     using System;
@@ -17,6 +15,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.ServiceBus.Amqp;
     using Microsoft.Azure.ServiceBus.Primitives;
+    using Microsoft.Azure.ServiceBus.Diagnostics;
 
 
     /// <summary>
