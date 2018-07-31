@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Linq;
-
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
+    using System.Linq;
     using System.Text;
     using System.Collections.Generic;
     using System.Threading;
@@ -472,9 +471,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             try
             {
-                var message1 = new Message(Encoding.UTF8.GetBytes("Hello Neeraj"));
-                var message2 = new Message(Encoding.UTF8.GetBytes("from"));
-                var message3 = new Message(Encoding.UTF8.GetBytes("Sean Feldman"));
+                var message1 = new Message("Hello Neeraj".GetBytes());
+                var message2 = new Message("from".GetBytes());
+                var message3 = new Message("Sean Feldman".GetBytes());
 
                 var batch = new Batch(100);
                 Assert.True(batch.TryAdd(message1), "Couldn't add first message");
@@ -485,12 +484,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await sender.CloseAsync();
 
                 var receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, 2);
-                var bodies = receivedMessages.Select(m => Encoding.UTF8.GetString(m.Body));
-                Assert.Collection(bodies, item => Assert.Contains("Hello Neeraj", item),
-                                          item => Assert.Contains("from", item));
+                var bodies = receivedMessages.Select(m => m.Body.GetString());
+                var bodiesArray = bodies as string[] ?? bodies.ToArray();
+                Assert.True(bodiesArray.Contains("Hello Neeraj") && bodiesArray.Contains("from"));
 
                 var extraMessage = await TestUtility.PeekMessageAsync(receiver);
-                Assert.True(extraMessage == null, "Should not have any messages other than the two, but an extra message is found");
+                Assert.True(extraMessage == null, $"Should not have any messages other than the two, but an extra message is found. Body='{extraMessage?.Body.GetString()}'");
             }
             finally
             {
