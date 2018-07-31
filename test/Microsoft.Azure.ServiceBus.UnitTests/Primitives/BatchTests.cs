@@ -29,5 +29,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
                 Assert.Throws<Exception>(() => batch.TryAdd(new Message()));
             }
         }
+
+        [Fact]
+        public void Should_throw_when_trying_add_received_message_to_batch()
+        {
+            using (var batch = new Batch(100))
+            {
+                var message = new Message("test".GetBytes());
+                message.SystemProperties.LockTokenGuid = Guid.NewGuid();
+
+                Assert.Throws<ArgumentException>(() => batch.TryAdd(message));
+            }
+        }
     }
 }

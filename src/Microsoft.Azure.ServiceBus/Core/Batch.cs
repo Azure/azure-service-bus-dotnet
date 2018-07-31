@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Microsoft.Azure.Amqp;
 using Microsoft.Azure.Amqp.Framing;
 using Microsoft.Azure.ServiceBus.Amqp;
+using Microsoft.Azure.ServiceBus.Diagnostics;
 
 namespace Microsoft.Azure.ServiceBus.Core
 {
@@ -35,6 +36,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         public bool TryAdd(Message message)
         {
             ThrowIfDisposed();
+
+            message.VerifyMessageIsNotPreviouslyReceived();
 
             var amqpMessage = AmqpMessageConverter.SBMessageToAmqpMessage(message);
 
