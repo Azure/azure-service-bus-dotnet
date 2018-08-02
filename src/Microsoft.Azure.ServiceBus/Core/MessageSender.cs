@@ -316,7 +316,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             if (maxMessageSize != 0)
             {
-                return new Batch(maxMessageSize);
+                return new Batch(maxMessageSize, ProcessMessage);
             }
 
             var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
@@ -335,7 +335,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
                 maxMessageSize = amqpLink.Settings.MaxMessageSize.Value;
 
-                return new Batch(maxMessageSize);
+                return new Batch(maxMessageSize, ProcessMessage);
             }
             catch (Exception exception)
             {

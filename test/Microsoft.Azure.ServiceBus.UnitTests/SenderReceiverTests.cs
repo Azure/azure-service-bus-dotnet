@@ -474,10 +474,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 var message2 = new Message("from".GetBytes());
                 var message3 = new Message("Sean Feldman".GetBytes());
 
-                var batch = new Batch(100);
-                Assert.True(batch.TryAdd(message1), "Couldn't add first message");
-                Assert.True(batch.TryAdd(message2), "Couldn't add second message");
-                Assert.False(batch.TryAdd(message3), "Shouldn't be able to add third message");
+                var batch = new Batch(100, Task.FromResult);
+                Assert.True(await batch.TryAdd(message1), "Couldn't add first message");
+                Assert.True(await batch.TryAdd(message2), "Couldn't add second message");
+                Assert.False(await batch.TryAdd(message3), "Shouldn't be able to add third message");
                 await sender.SendAsync(batch);
                 batch.Dispose();
                 await sender.CloseAsync();
@@ -508,8 +508,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 var message = new Message("Hello Neeraj".GetBytes());
                 message.UserProperties["custom"] = "value";
 
-                var batch = new Batch(100);
-                Assert.True(batch.TryAdd(message), "Couldn't add  message");
+                var batch = new Batch(100, Task.FromResult);
+                Assert.True(await batch.TryAdd(message), "Couldn't add  message");
                 await sender.SendAsync(batch);
                 batch.Dispose();
                 await sender.CloseAsync();
@@ -544,5 +544,48 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await sender.CloseAsync().ConfigureAwait(false);
             }
         }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task Batch_should_go_through_outgoing_plugins()
+        {
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
+
+            sender.RegisterPlugin(new RemoveVowelsPlugin());
+            try
+            {
+                var batch = await sender.CreateBatch();
+                await batch.TryAdd(new Message("Hello Neeraj".GetBytes()));
+                await batch.TryAdd(new Message("from".GetBytes()));
+                await batch.TryAdd(new Message("Sean Feldman".GetBytes()));
+
+                await sender.SendAsync(batch);
+                batch.Dispose();
+                await sender.CloseAsync();
+
+                var receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, 3);
+                var bodies = receivedMessages.Select(m => m.Body.GetString());
+                var bodiesArray = bodies as string[] ?? bodies.ToArray();
+                Assert.True(bodiesArray.Contains("Hll Nrj") && bodiesArray.Contains("frm") && bodiesArray.Contains("Sn Fldmn"));
+            }
+            finally
+            {
+                await sender.CloseAsync().ConfigureAwait(false);
+                await receiver.CloseAsync().ConfigureAwait(false);
+            }
+        }
+
+        class RemoveVowelsPlugin : ServiceBusPlugin
+        {
+            public override string Name { get; } = nameof(RemoveVowelsPlugin);
+
+            public override Task<Message> BeforeMessageSend(Message message)
+            {
+                message.Body = new string(message.Body.GetString().Where( x => "aeiouy".Contains(x) == false).ToArray()).GetBytes();
+                return Task.FromResult(message);
+            }
+        }
+
     }
 }

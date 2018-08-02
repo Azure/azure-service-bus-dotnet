@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Threading.Tasks;
+
 namespace Microsoft.Azure.ServiceBus.Core
 {
     using System;
@@ -15,18 +17,25 @@ namespace Microsoft.Azure.ServiceBus.Core
     public class Batch : IDisposable
     {
         internal readonly ulong maximumBatchSize;
+        private readonly Func<Message, Task<Message>> pluginsCallback;
         private AmqpMessage firstMessage;
         private readonly List<Data> datas;
         private AmqpMessage result;
         private (string messageId, string sessionId, string partitionKey, string viaPartitionKey) originalMessageData;
 
         /// <summary>
-        /// Construct a new batch with a maximum batch size.
+        /// Construct a new batch with a maximum batch size and outgoing plugins callback.
+        /// <remarks>
+        /// To construct a batch at run-time, use <see cref="MessageSender"/>, <see cref="QueueClient"/>, or <see cref="TopicClient"/>.
+        /// Use this constructor for testing and custom implementations.
+        /// </remarks>
         /// </summary>
         /// <param name="maximumBatchSize">Maximum batch size allowed for batch.</param>
-        public Batch(ulong maximumBatchSize)
+        /// <param name="pluginsCallback">Plugins callback to invoke on outgoing messages regisered with batch.</param>
+        public Batch(ulong maximumBatchSize, Func<Message, Task<Message>> pluginsCallback)
         {
             this.maximumBatchSize = maximumBatchSize;
+            this.pluginsCallback = pluginsCallback;
             this.datas = new List<Data>();
             this.result = AmqpMessage.Create(datas);
         }
@@ -36,17 +45,19 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         /// <param name="message"><see cref="Message"/> to add to the batch.</param>
         /// <returns></returns>
-        public bool TryAdd(Message message)
+        public async Task<bool> TryAdd(Message message)
         {
             ThrowIfDisposed();
 
             message.VerifyMessageIsNotPreviouslyReceived();
 
-            var amqpMessage = AmqpMessageConverter.SBMessageToAmqpMessage(message);
+            var processedMessage = await pluginsCallback(message);
+
+            var amqpMessage = AmqpMessageConverter.SBMessageToAmqpMessage(processedMessage);
 
             if (firstMessage == null)
             {
-                originalMessageData = (message.MessageId, message.SessionId, message.PartitionKey, message.ViaPartitionKey);
+                originalMessageData = (processedMessage.MessageId, processedMessage.SessionId, processedMessage.PartitionKey, processedMessage.ViaPartitionKey);
                 firstMessage = amqpMessage;
             }
 

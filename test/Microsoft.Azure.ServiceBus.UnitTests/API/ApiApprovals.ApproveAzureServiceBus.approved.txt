@@ -499,11 +499,11 @@ namespace Microsoft.Azure.ServiceBus.Core
     [System.Diagnostics.DebuggerDisplayAttribute("{DebuggerDisplay,nq}")]
     public class Batch : System.IDisposable
     {
-        public Batch(ulong maximumBatchSize) { }
+        public Batch(ulong maximumBatchSize, System.Func<Microsoft.Azure.ServiceBus.Message, System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Message>> pluginsCallback) { }
         public int Length { get; }
         public void Dispose() { }
         public Microsoft.Azure.Amqp.AmqpMessage ToAmqpMessage() { }
-        public bool TryAdd(Microsoft.Azure.ServiceBus.Message message) { }
+        public System.Threading.Tasks.Task<bool> TryAdd(Microsoft.Azure.ServiceBus.Message message) { }
     }
     public interface IMessageReceiver : Microsoft.Azure.ServiceBus.Core.IReceiverClient, Microsoft.Azure.ServiceBus.IClientEntity
     {
