@@ -43,6 +43,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         readonly ServiceBusDiagnosticSource diagnosticSource;
         readonly bool isViaSender;
         readonly string transferDestinationPath;
+        private ulong maxMessageSize = 0;
 
         /// <summary>
         /// Creates a new AMQP MessageSender.
@@ -306,6 +307,40 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
 //            MessagingEventSource.Log.MessageSendStop(this.ClientId);
+        }
+
+        /// <summary>
+        /// Create a new <see cref="Batch"/> setting maximum size to the maximum message size allowed by the underlying namespace.
+        /// </summary>
+        public async Task<Batch> CreateBatch()
+        {
+            if (maxMessageSize != 0)
+            {
+                return new Batch(maxMessageSize);
+            }
+
+            var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
+            SendingAmqpLink amqpLink = null;
+            try
+            {
+                if (!this.SendLinkManager.TryGetOpenedObject(out amqpLink))
+                {
+                    amqpLink = await this.SendLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                }
+
+                if (!amqpLink.Settings.MaxMessageSize.HasValue)
+                {
+                    throw new Exception("Broker didn't provide maximum message size. Batch requires maximum message size to operate.");
+                }
+
+                maxMessageSize = amqpLink.Settings.MaxMessageSize.Value;
+
+                return new Batch(maxMessageSize);
+            }
+            catch (Exception exception)
+            {
+                throw AmqpExceptionHelper.GetClientException(exception, amqpLink?.GetTrackingId(), null, amqpLink?.Session.IsClosing() ?? false);
+            }
         }
 
         /// <summary>

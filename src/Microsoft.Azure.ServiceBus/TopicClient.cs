@@ -195,6 +195,16 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
+        /// Create a new <see cref="Batch"/> setting maximum size to the maximum message size allowed by the underlying namespace.
+        /// </summary>
+        public Task<Batch> CreateBatch()
+        {
+            this.ThrowIfClosed();
+
+            return this.innerSender.CreateBatch();
+        }
+
+        /// <summary>
         /// Schedules a message to appear on Service Bus at a later time.
         /// </summary>
         /// <param name="message">The <see cref="Message"/> that needs to be scheduled.</param>

@@ -360,6 +360,17 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
+        /// Create a new <see cref="Batch"/> setting maximum size to the maximum message size allowed by the underlying namespace.
+        /// </summary>
+        public Task<Batch> CreateBatch()
+        {
+            this.ThrowIfClosed();
+
+            return this.innerSender.CreateBatch();
+        }
+
+
+        /// <summary>
         /// Completes a <see cref="Message"/> using its lock token. This will delete the message from the queue.
         /// </summary>
         /// <param name="lockToken">The lock token of the corresponding message to complete.</param>

@@ -464,9 +464,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [InlineData(TestConstants.NonPartitionedQueueName)]
         [DisplayTestMethodName]
-        async Task MessageSenderShouldNotThrowWhenSendingEmptyCollection(string queueName)
-        {
-            var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName);
+                var receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, 1);
             var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
 
             try
@@ -498,5 +497,52 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task Sending_batch_with_properties()
+        {
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
+            try
+            {
+                var message = new Message("Hello Neeraj".GetBytes());
+                message.UserProperties["custom"] = "value";
+
+                var batch = new Batch(100);
+                Assert.True(batch.TryAdd(message), "Couldn't add  message");
+                await sender.SendAsync(batch);
+                batch.Dispose();
+                await sender.CloseAsync();
+
+                var receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, 1);
+                var receivedMessage = receivedMessages.FirstOrDefault();
+                Assert.NotNull(receivedMessage);
+                Assert.Equal("value", receivedMessage.UserProperties["custom"]);
+            }
+            finally
+            {
+                await sender.CloseAsync().ConfigureAwait(false);
+                await receiver.CloseAsync().ConfigureAwait(false);
+            }
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task Batch_should_have_maximum_size_set()
+        {
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName);
+            try
+            {
+                using (var batch = await sender.CreateBatch())
+                {
+                    Assert.True(batch.maximumBatchSize == 256 * 1024 || batch.maximumBatchSize == 1024 * 1024,
+                        $"Maximum batch size was expected to be 256KB or 1MB, but it wasn't. Reported size: {batch.maximumBatchSize}");
+                }
+            }
+            finally
+            {
+                await sender.CloseAsync().ConfigureAwait(false);
+            }
+        }
     }
 }

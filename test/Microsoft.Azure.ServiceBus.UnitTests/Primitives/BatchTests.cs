@@ -67,7 +67,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
 
                 batch.TryAdd(message);
 
-                Assert.Equal(24, batch.Size);
+                Assert.Equal((ulong)24, batch.Size);
             }
 
             using (var batch = new Batch(100))
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
 
                 batch.TryAdd(message);
 
-                Assert.Equal(45, batch.Size);
+                Assert.Equal((ulong)45, batch.Size);
             }
         }
     }

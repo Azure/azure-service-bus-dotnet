@@ -14,7 +14,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     [DebuggerDisplay("{" + nameof(DebuggerDisplay) + ",nq}")]
     public class Batch : IDisposable
     {
-        private readonly long maximumBatchSize;
+        internal readonly ulong maximumBatchSize;
         private AmqpMessage firstMessage;
         private readonly List<Data> datas;
         private AmqpMessage result;
@@ -24,7 +24,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Construct a new batch with a maximum batch size.
         /// </summary>
         /// <param name="maximumBatchSize">Maximum batch size allowed for batch.</param>
-        public Batch(long maximumBatchSize)
+        public Batch(ulong maximumBatchSize)
         {
             this.maximumBatchSize = maximumBatchSize;
             this.datas = new List<Data>();
@@ -68,7 +68,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         public int Length => datas.Count;
 
-        internal long Size => result.SerializedMessageSize;
+        internal ulong Size => (ulong) result.SerializedMessageSize;
 
 
         /// <summary>
@@ -128,6 +128,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
         }
 
-        private string DebuggerDisplay => $"Batch: size={Size} message count={datas.Count}";
+        private string DebuggerDisplay => $"Batch: size={Size} message count={datas.Count} maximum size={maximumBatchSize}";
     }
 }

@@ -230,6 +230,7 @@ namespace Microsoft.Azure.ServiceBus
         public System.Threading.Tasks.Task AbandonAsync(string lockToken, System.Collections.Generic.IDictionary<string, object> propertiesToModify = null) { }
         public System.Threading.Tasks.Task CancelScheduledMessageAsync(long sequenceNumber) { }
         public System.Threading.Tasks.Task CompleteAsync(string lockToken) { }
+        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Core.Batch> CreateBatch() { }
         public System.Threading.Tasks.Task DeadLetterAsync(string lockToken, System.Collections.Generic.IDictionary<string, object> propertiesToModify = null) { }
         public System.Threading.Tasks.Task DeadLetterAsync(string lockToken, string deadLetterReason, string deadLetterErrorDescription = null) { }
         protected override System.Threading.Tasks.Task OnClosingAsync() { }
@@ -463,6 +464,7 @@ namespace Microsoft.Azure.ServiceBus
         public override Microsoft.Azure.ServiceBus.ServiceBusConnection ServiceBusConnection { get; }
         public string TopicName { get; }
         public System.Threading.Tasks.Task CancelScheduledMessageAsync(long sequenceNumber) { }
+        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Core.Batch> CreateBatch() { }
         protected override System.Threading.Tasks.Task OnClosingAsync() { }
         public override void RegisterPlugin(Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin serviceBusPlugin) { }
         public System.Threading.Tasks.Task<long> ScheduleMessageAsync(Microsoft.Azure.ServiceBus.Message message, System.DateTimeOffset scheduleEnqueueTimeUtc) { }
@@ -497,7 +499,7 @@ namespace Microsoft.Azure.ServiceBus.Core
     [System.Diagnostics.DebuggerDisplayAttribute("{DebuggerDisplay,nq}")]
     public class Batch : System.IDisposable
     {
-        public Batch(long maximumBatchSize) { }
+        public Batch(ulong maximumBatchSize) { }
         public int Length { get; }
         public void Dispose() { }
         public Microsoft.Azure.Amqp.AmqpMessage ToAmqpMessage() { }
@@ -599,6 +601,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         public override Microsoft.Azure.ServiceBus.ServiceBusConnection ServiceBusConnection { get; }
         public string TransferDestinationPath { get; }
         public System.Threading.Tasks.Task CancelScheduledMessageAsync(long sequenceNumber) { }
+        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Core.Batch> CreateBatch() { }
         protected override System.Threading.Tasks.Task OnClosingAsync() { }
         public override void RegisterPlugin(Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin serviceBusPlugin) { }
         public System.Threading.Tasks.Task<long> ScheduleMessageAsync(Microsoft.Azure.ServiceBus.Message message, System.DateTimeOffset scheduleEnqueueTimeUtc) { }
