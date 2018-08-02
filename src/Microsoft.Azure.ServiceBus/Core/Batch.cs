@@ -68,7 +68,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         public int Length => datas.Count;
 
-        private long Size => result.SerializedMessageSize;
+        internal long Size => result.SerializedMessageSize;
 
 
         /// <summary>

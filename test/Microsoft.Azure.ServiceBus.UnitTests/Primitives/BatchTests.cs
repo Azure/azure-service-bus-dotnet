@@ -57,5 +57,28 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
                 Assert.Equal(numberOfMessages, batch.Length);
             }
         }
+
+        [Fact]
+        public void Should_show_reflect_property_in_batch_size()
+        {
+            using (var batch = new Batch(100))
+            {
+                var message = new Message();
+
+                batch.TryAdd(message);
+
+                Assert.Equal(24, batch.Size);
+            }
+
+            using (var batch = new Batch(100))
+            {
+                var message = new Message();
+                message.UserProperties["custom"] = "value";
+
+                batch.TryAdd(message);
+
+                Assert.Equal(45, batch.Size);
+            }
+        }
     }
 }
