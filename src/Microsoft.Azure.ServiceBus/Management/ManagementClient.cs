@@ -645,7 +645,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         public virtual async Task<RuleDescription> CreateRuleAsync(string topicPath, string subscriptionName, RuleDescription ruleDescription, CancellationToken cancellationToken = default)
         {
             EntityNameHelper.CheckValidTopicName(topicPath);
-            EntityNameHelper.CheckValidSubscriptionName(topicPath);
+            EntityNameHelper.CheckValidSubscriptionName(subscriptionName);
             ruleDescription = ruleDescription ?? throw new ArgumentNullException(nameof(ruleDescription));
 
             var atomRequest = ruleDescription.Serialize().ToString();
