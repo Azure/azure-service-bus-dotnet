@@ -37,7 +37,6 @@ namespace Microsoft.Azure.ServiceBus.Core
     public class MessageSender : ClientEntity, IMessageSender
     {
         int deliveryCount;
-        readonly bool ownsConnection;
         readonly ActiveClientLinkManager clientLinkManager;
         readonly ServiceBusDiagnosticSource diagnosticSource;
         readonly bool isViaSender;
@@ -74,7 +73,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
             }
 
-            this.ownsConnection = true;
+            this.OwnsConnection = true;
         }
 
         /// <summary>
@@ -94,7 +93,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             RetryPolicy retryPolicy = null)
             : this(entityPath, null, null, new ServiceBusConnection(endpoint, transportType, retryPolicy) {TokenProvider = tokenProvider}, null, retryPolicy)
         {
-            this.ownsConnection = true;
+            this.OwnsConnection = true;
         }
 
         /// <summary>
@@ -109,7 +108,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             RetryPolicy retryPolicy = null)
             : this(entityPath, null, null, serviceBusConnection, null, retryPolicy)
         {
-            this.ownsConnection = false;
+            this.OwnsConnection = false;
         }
 
         /// <summary>
@@ -120,9 +119,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <param name="viaEntityPath">The first destination of the message.</param>
         /// <param name="retryPolicy">The <see cref="RetryPolicy"/> that will be used when communicating with Service Bus. Defaults to <see cref="RetryPolicy.Default"/></param>
         /// <remarks>
-        /// This is mainly to be used when sending messages in a transaction. 
+        /// This is mainly to be used when sending messages in a transaction.
         /// When messages need to be sent across entities in a single transaction, this can be used to ensure
-        /// all the messages land initially in the same entity/partition for local transactions, and then 
+        /// all the messages land initially in the same entity/partition for local transactions, and then
         /// let service bus handle transferring the message to the actual destination.
         /// </remarks>
         public MessageSender(
@@ -132,7 +131,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             RetryPolicy retryPolicy = null)
             :this(viaEntityPath, entityPath, null, serviceBusConnection, null, retryPolicy)
         {
-            this.ownsConnection = false;
+            this.OwnsConnection = false;
         }
 
         internal MessageSender(
@@ -155,6 +154,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.Path = entityPath;
             this.TransferDestinationPath = transferDestinationPath;
             this.EntityType = entityType;
+            this.ServiceBusConnection.ThrowIfClosed();
 
             if (cbsTokenProvider != null)
             {
@@ -443,11 +443,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.clientLinkManager.Close();
             await this.SendLinkManager.CloseAsync().ConfigureAwait(false);
             await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
-
-            if (this.ownsConnection)
-            {
-                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
-            }
         }
 
         static int ValidateMessages(IList<Message> messageList)
@@ -529,7 +524,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         async Task OnSendAsync(IList<Message> messageList)
         {
             var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-            using (var amqpMessage = AmqpMessageConverter.BatchSBMessagesAsAmqpMessage(messageList, true))
+            using (var amqpMessage = AmqpMessageConverter.BatchSBMessagesAsAmqpMessage(messageList))
             {
                 SendingAmqpLink amqpLink = null;
                 try
@@ -610,22 +605,26 @@ namespace Microsoft.Azure.ServiceBus.Core
                         {
                             entry[ManagementConstants.Properties.ViaPartitionKey] = message.ViaPartitionKey;
                         }
-                }
+                    }
 
                     request.Map[ManagementConstants.Properties.Messages] = new List<AmqpMap> { entry };
 
-                    IEnumerable<long> sequenceNumbers = null;
                     var response = await this.ExecuteRequestResponseAsync(request).ConfigureAwait(false);
                     if (response.StatusCode == AmqpResponseStatusCode.OK)
                     {
-                        sequenceNumbers = response.GetValue<long[]>(ManagementConstants.Properties.SequenceNumbers);
+                        var sequenceNumbers = response.GetValue<long[]>(ManagementConstants.Properties.SequenceNumbers);
+                        if (sequenceNumbers == null || sequenceNumbers.Length < 1)
+                        {
+                            throw new ServiceBusException(true, "Could not schedule message successfully.");
+                        }
+
+                        return sequenceNumbers[0];
+
                     }
                     else
                     {
-                        response.ToMessagingContractException();
+                        throw response.ToMessagingContractException();
                     }
-
-                    return sequenceNumbers?.FirstOrDefault() ?? 0;
                 }
                 catch (Exception exception)
                 {

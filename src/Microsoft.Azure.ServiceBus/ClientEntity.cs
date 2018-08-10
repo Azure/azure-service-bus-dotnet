@@ -55,6 +55,11 @@ namespace Microsoft.Azure.ServiceBus
         public abstract ServiceBusConnection ServiceBusConnection { get; }
 
         /// <summary>
+        /// Returns true if connection is owned and false if connection is shared.
+        /// </summary>
+        public bool OwnsConnection { get; internal set; }
+
+        /// <summary>
         /// Gets the name of the entity.
         /// </summary>
         public abstract string Path { get; }
@@ -93,6 +98,10 @@ namespace Microsoft.Azure.ServiceBus
             if (callClose)
             {
                 await this.OnClosingAsync().ConfigureAwait(false);
+                if (OwnsConnection && this.ServiceBusConnection.IsClosedOrClosing == false)
+                {
+                    await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
+                }
             }
         }
 
@@ -134,10 +143,11 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         protected virtual void ThrowIfClosed()
         {
+            this.ServiceBusConnection.ThrowIfClosed();
             if (this.IsClosedOrClosing)
             {
                 throw new ObjectDisposedException($"{this.clientTypeName} with Id '{this.ClientId}' has already been closed. Please create a new {this.clientTypeName}.");
-            }
+            }            
         }
 
         /// <summary>

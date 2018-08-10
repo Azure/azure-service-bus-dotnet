@@ -54,7 +54,6 @@ namespace Microsoft.Azure.ServiceBus
     /// It uses AMQP protocol for communicating with servicebus.</remarks>
     public class QueueClient : ClientEntity, IQueueClient
     {
-        readonly bool ownsConnection;
         readonly object syncLock;
 
         int prefetchCount;
@@ -91,7 +90,7 @@ namespace Microsoft.Azure.ServiceBus
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
             }
             
-            this.ownsConnection = true;
+            this.OwnsConnection = true;
         }
 
         /// <summary>
@@ -113,7 +112,7 @@ namespace Microsoft.Azure.ServiceBus
             RetryPolicy retryPolicy = null)
             : this(new ServiceBusConnection(endpoint, transportType, retryPolicy) {TokenProvider = tokenProvider}, entityPath, receiveMode, retryPolicy)
         {
-            this.ownsConnection = true;
+            this.OwnsConnection = true;
         }
 
         /// <summary>
@@ -137,7 +136,9 @@ namespace Microsoft.Azure.ServiceBus
             this.syncLock = new object();
             this.QueueName = entityPath;
             this.ReceiveMode = receiveMode;
-            this.ownsConnection = false;
+            this.OwnsConnection = false;
+            this.ServiceBusConnection.ThrowIfClosed();
+
             if (this.ServiceBusConnection.TokenProvider != null)
             {
                 this.CbsTokenProvider = new TokenProviderAdapter(this.ServiceBusConnection.TokenProvider, this.ServiceBusConnection.OperationTimeout);
@@ -533,11 +534,6 @@ namespace Microsoft.Azure.ServiceBus
             if (this.sessionClient != null)
             {
                 await this.sessionClient.CloseAsync().ConfigureAwait(false);
-            }
-
-            if (this.ownsConnection)
-            {
-                await this.ServiceBusConnection.CloseAsync().ConfigureAwait(false);
             }
         }
     }

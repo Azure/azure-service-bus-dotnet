@@ -20,7 +20,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         const string EnqueuedTimeUtcName = "x-opt-enqueued-time";
         const string ScheduledEnqueueTimeUtcName = "x-opt-scheduled-enqueue-time";
         const string SequenceNumberName = "x-opt-sequence-number";
-        const string OffsetName = "x-opt-offset";
+        const string EnqueueSequenceNumberName = "x-opt-enqueue-sequence-number";
         const string LockedUntilName = "x-opt-locked-until";
         const string PublisherName = "x-opt-publisher";
         const string PartitionKeyName = "x-opt-partition-key";
@@ -32,7 +32,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         const string DateTimeOffsetName = AmqpConstants.Vendor + ":datetime-offset";
         const int GuidSize = 16;
 
-        public static AmqpMessage BatchSBMessagesAsAmqpMessage(IEnumerable<SBMessage> sbMessages, bool batchable)
+        public static AmqpMessage BatchSBMessagesAsAmqpMessage(IEnumerable<SBMessage> sbMessages)
         {
             if (sbMessages == null)
             {
@@ -66,7 +66,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
             if (messageCount == 1 && firstAmqpMessage != null)
             {
-                firstAmqpMessage.Batchable = batchable;
+                firstAmqpMessage.Batchable = true;
                 return firstAmqpMessage;
             }
 
@@ -94,7 +94,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     firstMessage.ViaPartitionKey;
             }
 
-            amqpMessage.Batchable = batchable;
+            amqpMessage.Batchable = true;
             return amqpMessage;
         }
 
@@ -305,8 +305,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                         case SequenceNumberName:
                             sbMessage.SystemProperties.SequenceNumber = (long)pair.Value;
                             break;
-                        case OffsetName:
-                            sbMessage.SystemProperties.EnqueuedSequenceNumber = long.Parse((string)pair.Value);
+                        case EnqueueSequenceNumberName:
+                            sbMessage.SystemProperties.EnqueuedSequenceNumber = (long)pair.Value;
                             break;
                         case LockedUntilName:
                             sbMessage.SystemProperties.LockedUntilUtc = (DateTime)pair.Value;
@@ -379,10 +379,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             var filter = GetFilter(amqpDescription.Filter);
             var ruleAction = GetRuleAction(amqpDescription.Action);
 
-            var ruleDescription = new RuleDescription(filter)
+            var ruleDescription = new RuleDescription(amqpDescription.RuleName, filter)
             {
-                Action = ruleAction,
-                Name = amqpDescription.RuleName
+                Action = ruleAction
             };
 
             return ruleDescription;
