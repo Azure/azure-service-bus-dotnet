@@ -280,33 +280,31 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             MessagingEventSource.Log.MessageSendStart(this.ClientId, batch.Length);
 
-//            var isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
-//            var activity = isDiagnosticSourceEnabled ? this.diagnosticSource.SendStart(messageList) : null;
-            Task sendTask = null;
+            var isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            // var activity = isDiagnosticSourceEnabled ? this.diagnosticSource.SendStart(messageList) : null;
+            Task sendTask;
 
             try
             {
-                //var processedMessages = await this.ProcessMessages(messageList).ConfigureAwait(false);
-
                 sendTask = this.RetryPolicy.RunOperation(() => this.OnSendAsync(batch.ToAmqpMessage), this.OperationTimeout);
                 await sendTask.ConfigureAwait(false);
             }
             catch (Exception exception)
             {
-//                if (isDiagnosticSourceEnabled)
-//                {
-//                    this.diagnosticSource.ReportException(exception);
-//                }
+                if (isDiagnosticSourceEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
 
                 MessagingEventSource.Log.MessageSendException(this.ClientId, exception);
                 throw;
             }
-            finally
-            {
-//                this.diagnosticSource.SendStop(activity, messageList, sendTask?.Status);
-            }
+            // finally
+            // {
+            //     this.diagnosticSource.SendStop(activity, messageList, sendTask?.Status);
+            // }
 
-//            MessagingEventSource.Log.MessageSendStop(this.ClientId);
+            // MessagingEventSource.Log.MessageSendStop(this.ClientId);
         }
 
         /// <summary>
