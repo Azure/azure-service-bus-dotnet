@@ -281,6 +281,8 @@ namespace Microsoft.Azure.ServiceBus.Core
             MessagingEventSource.Log.MessageSendStart(this.ClientId, batch.Length);
 
             var isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            // TODO: diagnostics (Start/Stop) is currently not possible. Requires change in how Diagnostics works.
+            // See https://github.com/SeanFeldman/azure-service-bus-dotnet/pull/1#issuecomment-415515524 for details.
             // var activity = isDiagnosticSourceEnabled ? this.diagnosticSource.SendStart(messageList) : null;
             Task sendTask;
 
