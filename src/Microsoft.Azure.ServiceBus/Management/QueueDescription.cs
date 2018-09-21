@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus.Management
 {
     using System;
+    using System.Collections.Generic;
     using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>
@@ -282,6 +283,12 @@ namespace Microsoft.Azure.ServiceBus.Management
                 this.userMetadata = value;
             }
         }
+
+        /// <summary>
+        /// List of properties that were retrieved using GetQueue but is not understood by this version of client is stored here.
+        /// These will be sent back to the service as-is when UpdateQueue is called on this QueueDescription.
+        /// </summary>
+        internal List<object> UnknownProperties { get; set; }
 
         public override int GetHashCode()
         {

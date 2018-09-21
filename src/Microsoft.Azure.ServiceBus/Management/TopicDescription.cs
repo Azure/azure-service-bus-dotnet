@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus.Management
 {
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// Represents the metadata description of the topic.
@@ -186,6 +187,12 @@ namespace Microsoft.Azure.ServiceBus.Management
                 this.userMetadata = value;
             }
         }
+
+        /// <summary>
+        /// List of properties that were retrieved using GetTopic but is not understood by this version of client is stored here.
+        /// These will be sent back to the service as-is when UpdateTopic is called on this TopicDescription.
+        /// </summary>
+        internal List<object> UnknownProperties { get; set; }
 
         public override int GetHashCode()
         {
