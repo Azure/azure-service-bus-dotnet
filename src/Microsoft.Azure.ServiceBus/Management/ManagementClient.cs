@@ -899,7 +899,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 return null;
             }
 
-            var exceptionMessage = await response.Content?.ReadAsStringAsync();
+            var exceptionMessage = await (response.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
             exceptionMessage = ParseDetailIfAvailable(exceptionMessage) ?? response.ReasonPhrase;
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
