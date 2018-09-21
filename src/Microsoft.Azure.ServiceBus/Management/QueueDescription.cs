@@ -294,14 +294,10 @@ namespace Microsoft.Azure.ServiceBus.Management
             return this.Equals(other);
         }
 
-        public bool Equals(QueueDescription other)
+        public bool Equals(QueueDescription otherDescription)
         {
-            if (other == null)
-            {
-                return false;
-            }
-
-            if (this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
+            if (otherDescription is QueueDescription other
+                && this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
                 && (!this.RequiresDuplicateDetection || this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow))

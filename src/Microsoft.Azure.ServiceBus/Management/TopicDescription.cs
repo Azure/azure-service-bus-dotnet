@@ -200,7 +200,8 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool Equals(TopicDescription otherDescription)
         {
-            if (otherDescription is TopicDescription other && this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
+            if (otherDescription is TopicDescription other 
+                && this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
                 && (!this.RequiresDuplicateDetection || this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow))
