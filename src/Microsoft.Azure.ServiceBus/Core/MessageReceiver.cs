@@ -996,6 +996,8 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         protected override async Task OnClosingAsync()
         {
+            Task messagePumpTask = Task.CompletedTask;
+
             this.clientLinkManager.Close();
             lock (this.messageReceivePumpSyncLock)
             {
@@ -1003,9 +1005,13 @@ namespace Microsoft.Azure.ServiceBus.Core
                 {
                     this.receivePumpCancellationTokenSource.Cancel();
                     this.receivePumpCancellationTokenSource.Dispose();
+                    messagePumpTask = this.receivePump.MessagePumpTask;
                     this.receivePump = null;
                 }
             }
+
+//            await messagePumpTask.ConfigureAwait(false);
+
             await this.ReceiveLinkManager.CloseAsync().ConfigureAwait(false);
             await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
         }

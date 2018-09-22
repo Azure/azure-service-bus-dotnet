@@ -19,6 +19,9 @@ namespace Microsoft.Azure.ServiceBus
         readonly CancellationToken pumpCancellationToken;
         readonly SemaphoreSlim maxConcurrentCallsSemaphoreSlim;
         readonly ServiceBusDiagnosticSource diagnosticSource;
+        Task messagePumpTask;
+
+        public Task MessagePumpTask => messagePumpTask ?? Task.CompletedTask;
 
         public MessageReceivePump(IMessageReceiver messageReceiver,
             MessageHandlerOptions registerHandlerOptions,
@@ -37,7 +40,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public void StartPump()
         {
-            TaskExtensionHelper.Schedule(() => this.MessagePumpTaskAsync());
+            TaskExtensionHelper.Schedule(() => messagePumpTask = this.MessagePumpTaskAsync());
         }
 
         bool ShouldRenewLock()
