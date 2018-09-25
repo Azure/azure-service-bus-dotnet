@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus.Management
 {
     using System;
+    using System.Collections.Generic;
     using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>
@@ -283,6 +284,12 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// List of properties that were retrieved using GetQueue but are not understood by this version of client is stored here.
+        /// The list will be sent back when an already retrieved QueueDescription will be used in UpdateQueue call.
+        /// </summary>
+        internal List<object> UnknownProperties { get; set; }
+
         public override int GetHashCode()
         {
             return this.Path?.GetHashCode() ?? base.GetHashCode();
@@ -294,17 +301,13 @@ namespace Microsoft.Azure.ServiceBus.Management
             return this.Equals(other);
         }
 
-        public bool Equals(QueueDescription other)
+        public bool Equals(QueueDescription otherDescription)
         {
-            if (other == null)
-            {
-                return false;
-            }
-
-            if (this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
+            if (otherDescription is QueueDescription other
+                && this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
-                && this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow)
+                && (!this.RequiresDuplicateDetection || this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow))
                 && this.EnableBatchedOperations == other.EnableBatchedOperations
                 && this.EnableDeadLetteringOnMessageExpiration == other.EnableDeadLetteringOnMessageExpiration
                 && this.EnablePartitioning == other.EnablePartitioning
@@ -319,7 +322,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && string.Equals(this.userMetadata, other.userMetadata, StringComparison.OrdinalIgnoreCase)
                 && (this.authorizationRules != null && other.authorizationRules != null
                     || this.authorizationRules == null && other.authorizationRules == null)
-                && this.authorizationRules != null && this.AuthorizationRules.Equals(other.AuthorizationRules))
+                && (this.authorizationRules == null || this.AuthorizationRules.Equals(other.AuthorizationRules)))
             {
                 return true;
             }

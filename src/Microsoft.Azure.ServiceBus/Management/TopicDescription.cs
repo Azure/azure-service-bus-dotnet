@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus.Management
 {
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// Represents the metadata description of the topic.
@@ -187,6 +188,12 @@ namespace Microsoft.Azure.ServiceBus.Management
             }
         }
 
+        /// <summary>
+        /// List of properties that were retrieved using GetTopic but are not understood by this version of client is stored here.
+        /// The list will be sent back when an already retrieved TopicDescription will be used in UpdateTopic call. 
+        /// </summary>
+        internal List<object> UnknownProperties { get; set; }
+
         public override int GetHashCode()
         {
             return this.Path?.GetHashCode() ?? base.GetHashCode();
@@ -200,10 +207,11 @@ namespace Microsoft.Azure.ServiceBus.Management
 
         public bool Equals(TopicDescription otherDescription)
         {
-            if (otherDescription is TopicDescription other && this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
+            if (otherDescription is TopicDescription other 
+                && this.Path.Equals(other.Path, StringComparison.OrdinalIgnoreCase)
                 && this.AutoDeleteOnIdle.Equals(other.AutoDeleteOnIdle)
                 && this.DefaultMessageTimeToLive.Equals(other.DefaultMessageTimeToLive)
-                && this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow)
+                && (!this.RequiresDuplicateDetection || this.DuplicateDetectionHistoryTimeWindow.Equals(other.DuplicateDetectionHistoryTimeWindow))
                 && this.EnableBatchedOperations == other.EnableBatchedOperations
                 && this.EnablePartitioning == other.EnablePartitioning
                 && this.MaxSizeInMB == other.MaxSizeInMB
@@ -212,7 +220,7 @@ namespace Microsoft.Azure.ServiceBus.Management
                 && string.Equals(this.userMetadata, other.userMetadata, StringComparison.OrdinalIgnoreCase)
                 && (this.authorizationRules != null && other.authorizationRules != null
                     || this.authorizationRules == null && other.authorizationRules == null)
-                && this.authorizationRules != null && this.AuthorizationRules.Equals(other.AuthorizationRules))
+                && (this.authorizationRules == null || this.AuthorizationRules.Equals(other.AuthorizationRules)))
             {
                 return true;
             }

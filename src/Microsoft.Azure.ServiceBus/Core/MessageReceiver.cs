@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.ServiceBus.Core
@@ -911,7 +911,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
             if (this.RegisteredPlugins.Any(p => p.Name == serviceBusPlugin.Name))
             {
-                throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(nameof(serviceBusPlugin)));
+                throw new ArgumentException(nameof(serviceBusPlugin), Resources.PluginAlreadyRegistered.FormatForUser(serviceBusPlugin.Name));
             }
             this.RegisteredPlugins.Add(serviceBusPlugin);
         }
@@ -1141,6 +1141,10 @@ namespace Microsoft.Azure.ServiceBus.Core
                 }
                 amqpRequestMessage.Map[ManagementConstants.Properties.SequenceNumbers] = sequenceNumbers;
                 amqpRequestMessage.Map[ManagementConstants.Properties.ReceiverSettleMode] = (uint)(this.ReceiveMode == ReceiveMode.ReceiveAndDelete ? 0 : 1);
+                if (!string.IsNullOrWhiteSpace(this.SessionIdInternal))
+                {
+                    amqpRequestMessage.Map[ManagementConstants.Properties.SessionId] = this.SessionIdInternal;
+                }
 
                 var response = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
 
