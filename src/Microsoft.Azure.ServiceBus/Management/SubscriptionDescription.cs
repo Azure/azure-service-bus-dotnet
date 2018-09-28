@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus.Management
 {
     using System;
+    using System.Collections.Generic;
     using Microsoft.Azure.ServiceBus.Primitives;
 
     /// <summary>
@@ -247,6 +248,12 @@ namespace Microsoft.Azure.ServiceBus.Management
                 this.userMetadata = value;
             }
         }
+
+        /// <summary>
+        /// List of properties that were retrieved using GetSubscription but are not understood by this version of client is stored here.
+        /// The list will be sent back when an already retrieved SubscriptionDescription will be used in UpdateSubscription call.
+        /// </summary>
+        internal List<object> UnknownProperties { get; set; }
 
         internal RuleDescription DefaultRuleDescription { get; set; }
 
