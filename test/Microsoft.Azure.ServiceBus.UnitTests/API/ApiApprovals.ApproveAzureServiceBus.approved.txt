@@ -3,7 +3,7 @@
 [assembly: System.Runtime.InteropServices.GuidAttribute("a042adf0-ef65-4f87-b634-322a409f3d61")]
 namespace Microsoft.Azure.ServiceBus
 {
-
+    
     public abstract class ClientEntity : Microsoft.Azure.ServiceBus.IClientEntity
     {
         protected ClientEntity(string clientTypeName, string postfix, Microsoft.Azure.ServiceBus.RetryPolicy retryPolicy) { }
@@ -476,7 +476,7 @@ namespace Microsoft.Azure.ServiceBus
 }
 namespace Microsoft.Azure.ServiceBus.Core
 {
-
+    
     public interface IMessageReceiver : Microsoft.Azure.ServiceBus.Core.IReceiverClient, Microsoft.Azure.ServiceBus.IClientEntity
     {
         long LastPeekedSequenceNumber { get; }
@@ -591,7 +591,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 }
 namespace Microsoft.Azure.ServiceBus.Diagnostics
 {
-
+    
     public class static MessageExtensions
     {
         public static System.Diagnostics.Activity ExtractActivity(this Microsoft.Azure.ServiceBus.Message message, string activityName = null) { }
@@ -599,9 +599,9 @@ namespace Microsoft.Azure.ServiceBus.Diagnostics
 }
 namespace Microsoft.Azure.ServiceBus.InteropExtensions
 {
-
+    
     public class static DataContractBinarySerializer<T>
-
+    
     {
         public static readonly System.Runtime.Serialization.XmlObjectSerializer Instance;
     }
@@ -612,7 +612,7 @@ namespace Microsoft.Azure.ServiceBus.InteropExtensions
 }
 namespace Microsoft.Azure.ServiceBus.Management
 {
-
+    
     public enum AccessRights
     {
         Manage = 0,
@@ -811,7 +811,7 @@ namespace Microsoft.Azure.ServiceBus.Management
 }
 namespace Microsoft.Azure.ServiceBus.Primitives
 {
-
+    
     public class AzureActiveDirectoryTokenProvider : Microsoft.Azure.ServiceBus.Primitives.TokenProvider
     {
         public override System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Primitives.SecurityToken> GetTokenAsync(string appliesTo, System.TimeSpan timeout) { }
