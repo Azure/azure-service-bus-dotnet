@@ -634,7 +634,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <summary>
         /// Adds a new rule to the subscription under given topic.
         /// </summary>
-        /// <param name="topicPath">The topic name relative to the service namespace base address.</param>
+        /// <param name="topicPath">The topic path relative to the service namespace base address.</param>
         /// <param name="subscriptionName">The name of the subscription.</param>
         /// <param name="ruleDescription">A <see cref="RuleDescription"/> object describing the attributes with which the messages are matched and acted upon.</param>
         /// <param name="cancellationToken"></param>
