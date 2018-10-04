@@ -27,13 +27,13 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         // TODO: extract methods into this interface for the next major version
         //        /// <summary>
-        //        /// Sends a <see cref="Batch"/> of messages to Service Bus.
+        //        /// Sends a <see cref="MessageBatch"/> of messages to Service Bus.
         //        /// </summary>
-        //        Task SendAsync(Batch batch);
+        //        Task SendAsync(MessageBatch batch);
         //        /// <summary>
-        //        /// Create a new <see cref="Batch"/> setting maximum size to the maximum message size allowed by the underlying namespace.
+        //        /// Create a new <see cref="MessageBatch"/> setting maximum size to the maximum message size allowed by the underlying namespace.
         //        /// </summary>
-        //        Task<Batch> CreateBatch();
+        //        Task<MessageBatch> CreateBatch();
 
         /// <summary>
         /// Schedules a message to appear on Service Bus.

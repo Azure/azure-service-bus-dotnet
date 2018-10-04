@@ -17,7 +17,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
         [Fact]
         public async Task Should_return_false_when_is_about_to_exceed_max_batch_size()
         {
-            using (var batch = new Batch(1, fakePluginsCallback))
+            using (var batch = new MessageBatch(1, fakePluginsCallback))
             {
                 var wasAdded = await batch.TryAdd(new Message(Encoding.UTF8.GetBytes("hello")));
                 Assert.False(wasAdded, "Message should not have been added, but it was.");
@@ -27,7 +27,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
         [Fact]
         public void Should_throw_if_batch_disposed()
         {
-            using (var batch = new Batch(1, fakePluginsCallback))
+            using (var batch = new MessageBatch(1, fakePluginsCallback))
             {
                 batch.Dispose();
                 Assert.ThrowsAsync<Exception>(() => batch.TryAdd(new Message()));
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
         [Fact]
         public void Should_throw_when_trying_to_add_an_already_received_message_to_batch()
         {
-            using (var batch = new Batch(100, fakePluginsCallback))
+            using (var batch = new MessageBatch(100, fakePluginsCallback))
             {
                 var message = new Message("test".GetBytes());
                 message.SystemProperties.LockTokenGuid = Guid.NewGuid();
@@ -51,7 +51,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
         [InlineData(3)]
         public async Task Should_report_how_many_messages_are_in_batch(int numberOfMessages)
         {
-            using (var batch = new Batch(100, fakePluginsCallback))
+            using (var batch = new MessageBatch(100, fakePluginsCallback))
             {
                 for (var i = 0; i < numberOfMessages; i++)
                 {
@@ -65,7 +65,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
         [Fact]
         public async Task Should_reflect_property_in_batch_size()
         {
-            using (var batch = new Batch(100, fakePluginsCallback))
+            using (var batch = new MessageBatch(100, fakePluginsCallback))
             {
                 var message = new Message();
 
@@ -74,7 +74,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
                 Assert.Equal((ulong)24, batch.Size);
             }
 
-            using (var batch = new Batch(100, fakePluginsCallback))
+            using (var batch = new MessageBatch(100, fakePluginsCallback))
             {
                 var message = new Message();
                 message.UserProperties["custom"] = "value";

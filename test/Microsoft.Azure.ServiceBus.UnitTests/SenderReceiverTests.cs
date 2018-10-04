@@ -474,7 +474,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 var message2 = new Message("from".GetBytes());
                 var message3 = new Message("Sean Feldman".GetBytes());
 
-                var batch = new Batch(100, Task.FromResult);
+                var batch = new MessageBatch(100, Task.FromResult);
                 Assert.True(await batch.TryAdd(message1), "Couldn't add first message");
                 Assert.True(await batch.TryAdd(message2), "Couldn't add second message");
                 Assert.False(await batch.TryAdd(message3), "Shouldn't be able to add third message");
@@ -508,7 +508,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 var message = new Message("Hello Neeraj".GetBytes());
                 message.UserProperties["custom"] = "value";
 
-                var batch = new Batch(100, Task.FromResult);
+                var batch = new MessageBatch(100, Task.FromResult);
                 Assert.True(await batch.TryAdd(message), "Couldn't add  message");
                 await sender.SendAsync(batch);
                 batch.Dispose();

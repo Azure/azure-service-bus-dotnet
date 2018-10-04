@@ -1,20 +1,19 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Threading.Tasks;
-
 namespace Microsoft.Azure.ServiceBus.Core
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.ServiceBus.Amqp;
     using Microsoft.Azure.ServiceBus.Diagnostics;
 
     [DebuggerDisplay("{" + nameof(DebuggerDisplay) + ",nq}")]
-    public class Batch : IDisposable
+    public class MessageBatch : IDisposable
     {
         internal readonly ulong maximumBatchSize;
         private readonly Func<Message, Task<Message>> pluginsCallback;
@@ -32,7 +31,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         /// <param name="maximumBatchSize">Maximum batch size allowed for batch.</param>
         /// <param name="pluginsCallback">Plugins callback to invoke on outgoing messages regisered with batch.</param>
-        public Batch(ulong maximumBatchSize, Func<Message, Task<Message>> pluginsCallback)
+        internal MessageBatch(ulong maximumBatchSize, Func<Message, Task<Message>> pluginsCallback)
         {
             this.maximumBatchSize = maximumBatchSize;
             this.pluginsCallback = pluginsCallback;
@@ -86,7 +85,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Convert batch to AMQP message.
         /// </summary>
         /// <returns></returns>
-        public AmqpMessage ToAmqpMessage()
+        internal AmqpMessage ToAmqpMessage()
         {
             ThrowIfDisposed();
 
@@ -135,10 +134,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             if (result == null)
             {
-                throw new Exception("Batch is has been disposed and cannot be re-used.");
+                throw new Exception("MessageBatch is has been disposed and cannot be re-used.");
             }
         }
 
-        private string DebuggerDisplay => $"Batch: size={Size} message count={datas.Count} maximum size={maximumBatchSize}";
+        private string DebuggerDisplay => $"MessageBatch: size={Size}, message count={datas.Count}, maximum size={maximumBatchSize}.";
     }
 }

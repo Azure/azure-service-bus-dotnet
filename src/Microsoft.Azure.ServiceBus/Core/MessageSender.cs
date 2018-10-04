@@ -272,13 +272,13 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>
-        /// Sends a <see cref="Batch"/> of messages to Service Bus.
+        /// Sends a <see cref="MessageBatch"/> of messages to Service Bus.
         /// </summary>
-        public async Task SendAsync(Batch batch)
+        public async Task SendAsync(MessageBatch messageBatch)
         {
             this.ThrowIfClosed();
 
-            MessagingEventSource.Log.MessageSendStart(this.ClientId, batch.Length);
+            MessagingEventSource.Log.MessageSendStart(this.ClientId, messageBatch.Length);
 
             var isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
             // TODO: diagnostics (Start/Stop) is currently not possible. Requires change in how Diagnostics works.
@@ -288,7 +288,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             try
             {
-                sendTask = this.RetryPolicy.RunOperation(() => this.OnSendAsync(batch.ToAmqpMessage), this.OperationTimeout);
+                sendTask = this.RetryPolicy.RunOperation(() => this.OnSendAsync(messageBatch.ToAmqpMessage), this.OperationTimeout);
                 await sendTask.ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -310,13 +310,13 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>
-        /// Create a new <see cref="Batch"/> setting maximum size to the maximum message size allowed by the underlying namespace.
+        /// Create a new <see cref="MessageBatch"/> setting maximum size to the maximum message size allowed by the underlying namespace.
         /// </summary>
-        public async Task<Batch> CreateBatch()
+        public async Task<MessageBatch> CreateBatch()
         {
             if (maxMessageSize != 0)
             {
-                return new Batch(maxMessageSize, ProcessMessage);
+                return new MessageBatch(maxMessageSize, ProcessMessage);
             }
 
             var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
@@ -330,12 +330,12 @@ namespace Microsoft.Azure.ServiceBus.Core
 
                 if (!amqpLink.Settings.MaxMessageSize.HasValue)
                 {
-                    throw new Exception("Broker didn't provide maximum message size. Batch requires maximum message size to operate.");
+                    throw new Exception("Broker didn't provide maximum message size. MessageBatch requires maximum message size to operate.");
                 }
 
                 maxMessageSize = amqpLink.Settings.MaxMessageSize.Value;
 
-                return new Batch(maxMessageSize, ProcessMessage);
+                return new MessageBatch(maxMessageSize, ProcessMessage);
             }
             catch (Exception exception)
             {

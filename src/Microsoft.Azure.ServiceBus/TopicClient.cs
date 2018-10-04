@@ -185,19 +185,19 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
-        /// Sends a <see cref="Batch"/> of messages to Service Bus.
+        /// Sends a <see cref="MessageBatch"/> of messages to Service Bus.
         /// </summary>
-        public Task SendAsync(Batch batch)
+        public Task SendAsync(MessageBatch messageBatch)
         {
             this.ThrowIfClosed();
 
-            return this.innerSender.SendAsync(batch);
+            return this.innerSender.SendAsync(messageBatch);
         }
 
         /// <summary>
-        /// Create a new <see cref="Batch"/> setting maximum size to the maximum message size allowed by the underlying namespace.
+        /// Create a new <see cref="MessageBatch"/> setting maximum size to the maximum message size allowed by the underlying namespace.
         /// </summary>
-        public Task<Batch> CreateBatch()
+        public Task<MessageBatch> CreateBatch()
         {
             this.ThrowIfClosed();
 
