@@ -17,6 +17,8 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
     static class AmqpMessageConverter
     {
+        internal const string PartitionKeyName = "x-opt-partition-key";
+        internal const string ViaPartitionKeyName = "x-opt-via-partition-key";
         const string EnqueuedTimeUtcName = "x-opt-enqueued-time";
         const string ScheduledEnqueueTimeUtcName = "x-opt-scheduled-enqueue-time";
         const string SequenceNumberName = "x-opt-sequence-number";
@@ -24,8 +26,6 @@ namespace Microsoft.Azure.ServiceBus.Amqp
         const string LockedUntilName = "x-opt-locked-until";
         const string PublisherName = "x-opt-publisher";
         const string PartitionIdName = "x-opt-partition-id";
-        internal const string PartitionKeyName = "x-opt-partition-key";
-        internal const string ViaPartitionKeyName = "x-opt-via-partition-key";
         const string DeadLetterSourceName = "x-opt-deadletter-source";
         const string TimeSpanName = AmqpConstants.Vendor + ":timespan";
         const string UriName = AmqpConstants.Vendor + ":uri";

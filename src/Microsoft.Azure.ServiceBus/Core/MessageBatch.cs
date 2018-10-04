@@ -134,10 +134,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             if (result == null)
             {
-                throw new ObjectDisposedException("MessageBatch is has been disposed and cannot be re-used.");
+                throw new ObjectDisposedException("MessageBatch has been disposed and cannot be re-used.");
             }
         }
 
-        private string DebuggerDisplay => $"MessageBatch: size={Size}, message count={datas.Count}, maximum size={maximumBatchSize}.";
+        private string DebuggerDisplay => $"MessageBatch: size={Size}; message count={datas.Count}; maximum size={maximumBatchSize}.";
     }
 }
