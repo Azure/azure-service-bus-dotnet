@@ -20,7 +20,6 @@ namespace Microsoft.Azure.ServiceBus.Core
         private AmqpMessage firstMessage;
         private readonly List<Data> datas;
         private AmqpMessage result;
-        private (string messageId, string sessionId, string partitionKey, string viaPartitionKey) originalMessageData;
 
         /// <summary>
         /// Construct a new batch with a maximum batch size and outgoing plugins callback.
@@ -56,8 +55,27 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             if (firstMessage == null)
             {
-                originalMessageData = (processedMessage.MessageId, processedMessage.SessionId, processedMessage.PartitionKey, processedMessage.ViaPartitionKey);
                 firstMessage = amqpMessage;
+
+                if (processedMessage.MessageId != null)
+                {
+                    result.Properties.MessageId = processedMessage.MessageId;
+                }
+
+                if (processedMessage.SessionId != null)
+                {
+                    result.Properties.GroupId = processedMessage.SessionId;
+                }
+
+                if (processedMessage.PartitionKey != null)
+                {
+                    result.MessageAnnotations.Map[AmqpMessageConverter.PartitionKeyName] = processedMessage.PartitionKey;
+                }
+
+                if (processedMessage.ViaPartitionKey != null)
+                {
+                    result.MessageAnnotations.Map[AmqpMessageConverter.ViaPartitionKeyName] = processedMessage.ViaPartitionKey;
+                }
             }
 
             var data = AmqpMessageConverter.ToData(amqpMessage);
@@ -93,26 +111,6 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 firstMessage.Batchable = true;
                 return firstMessage;
-            }
-
-            if (originalMessageData.messageId != null)
-            {
-                result.Properties.MessageId = originalMessageData.messageId;
-            }
-
-            if (originalMessageData.sessionId != null)
-            {
-                result.Properties.GroupId = originalMessageData.sessionId;
-            }
-
-            if (originalMessageData.partitionKey != null)
-            {
-                result.MessageAnnotations.Map[AmqpMessageConverter.PartitionKeyName] = originalMessageData.partitionKey;
-            }
-
-            if (originalMessageData.viaPartitionKey != null)
-            {
-                result.MessageAnnotations.Map[AmqpMessageConverter.ViaPartitionKeyName] = originalMessageData.viaPartitionKey;
             }
 
             result.MessageFormat = AmqpConstants.AmqpBatchedMessageFormat;
