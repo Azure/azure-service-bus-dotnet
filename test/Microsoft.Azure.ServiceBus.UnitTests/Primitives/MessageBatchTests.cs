@@ -10,9 +10,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
     using Microsoft.Azure.ServiceBus.Core;
     using Xunit;
 
-    public class BatchTests
+    public class MessageBatchTests
     {
-        private Func<Message, Task<Message>> fakePluginsCallback = Task.FromResult;
+        private readonly Func<Message, Task<Message>> fakePluginsCallback = Task.FromResult;
 
         [Fact]
         public async Task Should_return_false_when_is_about_to_exceed_max_batch_size()
@@ -25,24 +25,24 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Primitives
         }
 
         [Fact]
-        public void Should_throw_if_batch_disposed()
+        public async Task Should_throw_if_batch_disposed()
         {
             using (var batch = new MessageBatch(1, fakePluginsCallback))
             {
                 batch.Dispose();
-                Assert.ThrowsAsync<Exception>(() => batch.TryAdd(new Message()));
+                await Assert.ThrowsAsync<ObjectDisposedException>(() => batch.TryAdd(new Message()));
             }
         }
 
         [Fact]
-        public void Should_throw_when_trying_to_add_an_already_received_message_to_batch()
+        public async Task Should_throw_when_trying_to_add_an_already_received_message_to_batch()
         {
             using (var batch = new MessageBatch(100, fakePluginsCallback))
             {
                 var message = new Message("test".GetBytes());
                 message.SystemProperties.LockTokenGuid = Guid.NewGuid();
 
-                Assert.ThrowsAsync<ArgumentException>(() => batch.TryAdd(message));
+                await Assert.ThrowsAsync<ArgumentException>(() => batch.TryAdd(message));
             }
         }
 
