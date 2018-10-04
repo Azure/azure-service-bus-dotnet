@@ -134,7 +134,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             if (result == null)
             {
-                throw new Exception("MessageBatch is has been disposed and cannot be re-used.");
+                throw new ObjectDisposedException("MessageBatch is has been disposed and cannot be re-used.");
             }
         }
 
