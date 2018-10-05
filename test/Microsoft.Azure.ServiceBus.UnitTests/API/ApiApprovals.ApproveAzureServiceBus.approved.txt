@@ -230,7 +230,7 @@ namespace Microsoft.Azure.ServiceBus
         public System.Threading.Tasks.Task AbandonAsync(string lockToken, System.Collections.Generic.IDictionary<string, object> propertiesToModify = null) { }
         public System.Threading.Tasks.Task CancelScheduledMessageAsync(long sequenceNumber) { }
         public System.Threading.Tasks.Task CompleteAsync(string lockToken) { }
-        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Core.Batch> CreateBatch() { }
+        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Core.MessageBatch> CreateBatch() { }
         public System.Threading.Tasks.Task DeadLetterAsync(string lockToken, System.Collections.Generic.IDictionary<string, object> propertiesToModify = null) { }
         public System.Threading.Tasks.Task DeadLetterAsync(string lockToken, string deadLetterReason, string deadLetterErrorDescription = null) { }
         protected override System.Threading.Tasks.Task OnClosingAsync() { }
@@ -242,7 +242,7 @@ namespace Microsoft.Azure.ServiceBus
         public System.Threading.Tasks.Task<long> ScheduleMessageAsync(Microsoft.Azure.ServiceBus.Message message, System.DateTimeOffset scheduleEnqueueTimeUtc) { }
         public System.Threading.Tasks.Task SendAsync(Microsoft.Azure.ServiceBus.Message message) { }
         public System.Threading.Tasks.Task SendAsync(System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message> messageList) { }
-        public System.Threading.Tasks.Task SendAsync(Microsoft.Azure.ServiceBus.Core.Batch batch) { }
+        public System.Threading.Tasks.Task SendAsync(Microsoft.Azure.ServiceBus.Core.MessageBatch messageBatch) { }
         public override void UnregisterPlugin(string serviceBusPluginName) { }
     }
     public sealed class QuotaExceededException : Microsoft.Azure.ServiceBus.ServiceBusException
@@ -464,13 +464,13 @@ namespace Microsoft.Azure.ServiceBus
         public override Microsoft.Azure.ServiceBus.ServiceBusConnection ServiceBusConnection { get; }
         public string TopicName { get; }
         public System.Threading.Tasks.Task CancelScheduledMessageAsync(long sequenceNumber) { }
-        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Core.Batch> CreateBatch() { }
+        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Core.MessageBatch> CreateBatch() { }
         protected override System.Threading.Tasks.Task OnClosingAsync() { }
         public override void RegisterPlugin(Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin serviceBusPlugin) { }
         public System.Threading.Tasks.Task<long> ScheduleMessageAsync(Microsoft.Azure.ServiceBus.Message message, System.DateTimeOffset scheduleEnqueueTimeUtc) { }
         public System.Threading.Tasks.Task SendAsync(Microsoft.Azure.ServiceBus.Message message) { }
         public System.Threading.Tasks.Task SendAsync(System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message> messageList) { }
-        public System.Threading.Tasks.Task SendAsync(Microsoft.Azure.ServiceBus.Core.Batch batch) { }
+        public System.Threading.Tasks.Task SendAsync(Microsoft.Azure.ServiceBus.Core.MessageBatch messageBatch) { }
         public override void UnregisterPlugin(string serviceBusPluginName) { }
     }
     public enum TransportType
@@ -496,15 +496,6 @@ namespace Microsoft.Azure.ServiceBus
 }
 namespace Microsoft.Azure.ServiceBus.Core
 {
-    [System.Diagnostics.DebuggerDisplayAttribute("{DebuggerDisplay,nq}")]
-    public class Batch : System.IDisposable
-    {
-        public Batch(ulong maximumBatchSize, System.Func<Microsoft.Azure.ServiceBus.Message, System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Message>> pluginsCallback) { }
-        public int Length { get; }
-        public void Dispose() { }
-        public Microsoft.Azure.Amqp.AmqpMessage ToAmqpMessage() { }
-        public System.Threading.Tasks.Task<bool> TryAdd(Microsoft.Azure.ServiceBus.Message message) { }
-    }
     public interface IMessageReceiver : Microsoft.Azure.ServiceBus.Core.IReceiverClient, Microsoft.Azure.ServiceBus.IClientEntity
     {
         long LastPeekedSequenceNumber { get; }
@@ -541,6 +532,13 @@ namespace Microsoft.Azure.ServiceBus.Core
         System.Threading.Tasks.Task<long> ScheduleMessageAsync(Microsoft.Azure.ServiceBus.Message message, System.DateTimeOffset scheduleEnqueueTimeUtc);
         System.Threading.Tasks.Task SendAsync(Microsoft.Azure.ServiceBus.Message message);
         System.Threading.Tasks.Task SendAsync(System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message> messageList);
+    }
+    [System.Diagnostics.DebuggerDisplayAttribute("{DebuggerDisplay,nq}")]
+    public class MessageBatch : System.IDisposable
+    {
+        public int Length { get; }
+        public void Dispose() { }
+        public System.Threading.Tasks.Task<bool> TryAdd(Microsoft.Azure.ServiceBus.Message message) { }
     }
     public class MessageReceiver : Microsoft.Azure.ServiceBus.ClientEntity, Microsoft.Azure.ServiceBus.Core.IMessageReceiver, Microsoft.Azure.ServiceBus.Core.IReceiverClient, Microsoft.Azure.ServiceBus.IClientEntity
     {
@@ -601,13 +599,13 @@ namespace Microsoft.Azure.ServiceBus.Core
         public override Microsoft.Azure.ServiceBus.ServiceBusConnection ServiceBusConnection { get; }
         public string TransferDestinationPath { get; }
         public System.Threading.Tasks.Task CancelScheduledMessageAsync(long sequenceNumber) { }
-        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Core.Batch> CreateBatch() { }
+        public System.Threading.Tasks.Task<Microsoft.Azure.ServiceBus.Core.MessageBatch> CreateBatch() { }
         protected override System.Threading.Tasks.Task OnClosingAsync() { }
         public override void RegisterPlugin(Microsoft.Azure.ServiceBus.Core.ServiceBusPlugin serviceBusPlugin) { }
         public System.Threading.Tasks.Task<long> ScheduleMessageAsync(Microsoft.Azure.ServiceBus.Message message, System.DateTimeOffset scheduleEnqueueTimeUtc) { }
         public System.Threading.Tasks.Task SendAsync(Microsoft.Azure.ServiceBus.Message message) { }
         public System.Threading.Tasks.Task SendAsync(System.Collections.Generic.IList<Microsoft.Azure.ServiceBus.Message> messageList) { }
-        public System.Threading.Tasks.Task SendAsync(Microsoft.Azure.ServiceBus.Core.Batch batch) { }
+        public System.Threading.Tasks.Task SendAsync(Microsoft.Azure.ServiceBus.Core.MessageBatch messageBatch) { }
         public override void UnregisterPlugin(string serviceBusPluginName) { }
     }
     public abstract class ServiceBusPlugin
