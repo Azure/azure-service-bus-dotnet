@@ -605,6 +605,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
             await client.DeleteTopicAsync(topicName);
         }
 
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task GetNamespaceInfoTest()
+        {
+            var nsInfo = await client.GetNamespaceInfoAsync();
+            Assert.NotNull(nsInfo);
+        }
+
         public void Dispose()
         {
             client.CloseAsync().Wait();
