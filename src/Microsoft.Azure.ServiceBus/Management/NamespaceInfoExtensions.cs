@@ -54,6 +54,9 @@ namespace Microsoft.Azure.ServiceBus.Management
                     case "Name":
                         nsInfo.Name = element.Value;
                         break;
+                    case "Alias":
+                        nsInfo.Alias = element.Value;
+                        break;
                     case "NamespaceType":
                         if (Enum.TryParse<NamespaceType>(element.Value, out var nsType))
                         {
