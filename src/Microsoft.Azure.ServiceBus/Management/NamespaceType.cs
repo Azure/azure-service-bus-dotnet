@@ -9,9 +9,9 @@ namespace Microsoft.Azure.ServiceBus.Management
     public enum NamespaceType
     {
         /// <summary>
-        /// Namespace contains messaging entities (queues, topics)
+        /// Namespace contains service bus entities (queues, topics)
         /// </summary>
-        Messaging = 0,
+        ServiceBus = 0,
 
         /// <summary>
         /// Supported only for backward compatibility.
@@ -20,8 +20,8 @@ namespace Microsoft.Azure.ServiceBus.Management
         Mixed = 2,
 
         /// <summary>
-        /// Unknown
+        /// Other type of resource.
         /// </summary>
-        Unknown = 100,
+        Others = 99,
     }
 }

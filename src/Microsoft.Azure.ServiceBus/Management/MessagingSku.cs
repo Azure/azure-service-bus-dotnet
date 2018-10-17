@@ -21,6 +21,11 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <summary>
         /// Premium namespace. Dedicated Resource. Queues and topics.
         /// </summary>
-        Premium = 3
+        Premium = 3,
+
+        /// <summary>
+        /// Other SKUs.
+        /// </summary>
+        Others = 99
     }
 }

@@ -64,13 +64,17 @@ namespace Microsoft.Azure.ServiceBus.Management
                         }
                         else
                         {
-                            nsInfo.NamespaceType = NamespaceType.Unknown;
+                            nsInfo.NamespaceType = NamespaceType.Others;
                         }
                         break;
                     case "MessagingSKU":
                         if (Enum.TryParse<MessagingSku>(element.Value, out var nsSku))
                         {
                             nsInfo.MessagingSku = nsSku;
+                        }
+                        else
+                        {
+                            nsInfo.MessagingSku = MessagingSku.Others;
                         }
                         break;
                 }
