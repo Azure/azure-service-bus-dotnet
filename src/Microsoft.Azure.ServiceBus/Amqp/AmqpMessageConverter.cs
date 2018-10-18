@@ -227,9 +227,9 @@ namespace Microsoft.Azure.ServiceBus.Amqp
                     sbMessage.TimeToLive = TimeSpan.FromMilliseconds(amqpMessage.Header.Ttl.Value);
                 }
 
-                if (amqpMessage.Header.DeliveryCount != null && isPeeked == false)
+                if (amqpMessage.Header.DeliveryCount != null)
                 {
-                    sbMessage.SystemProperties.DeliveryCount = (int)(amqpMessage.Header.DeliveryCount.Value + 1);
+                    sbMessage.SystemProperties.DeliveryCount = isPeeked ? (int)(amqpMessage.Header.DeliveryCount.Value) : (int)(amqpMessage.Header.DeliveryCount.Value + 1);
                 }
             }
 
