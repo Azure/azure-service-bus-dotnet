@@ -148,5 +148,22 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             Assert.Equal(2, sbMessage.SystemProperties.DeliveryCount);
         }
+
+        [Fact]
+        [DisplayTestMethodName]
+        void When_message_is_received_should_have_delivery_count_increased()
+        {
+            var messageBody = Encoding.UTF8.GetBytes("message1");
+
+            var amqpValue = new AmqpValue();
+            amqpValue.Value = new ArraySegment<byte>(messageBody);
+            var amqpMessage = AmqpMessage.Create(amqpValue);
+            amqpMessage.Header.DeliveryCount = 2;
+
+            var sbMessage = AmqpMessageConverter.AmqpMessageToSBMessage(amqpMessage, isPeeked: false);
+            sbMessage.SystemProperties.SequenceNumber = 1L;
+
+            Assert.Equal(3, sbMessage.SystemProperties.DeliveryCount);
+        }
     }
 }
