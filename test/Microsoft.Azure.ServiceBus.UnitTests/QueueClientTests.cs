@@ -55,6 +55,28 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        async Task PeekLockDeliveryCountTest(string queueName)
+        {
+            var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName);
+            try
+            {
+                await TestUtility.SendMessagesAsync(queueClient.InnerSender, 1);
+
+                var messages = await TestUtility.ReceiveMessagesAsync(queueClient.InnerReceiver, 1);
+
+                await TestUtility.CompleteMessagesAsync(queueClient.InnerReceiver, messages);
+
+                Assert.Equal(1, messages.First().SystemProperties.DeliveryCount);
+            }
+            finally
+            {
+                await queueClient.CloseAsync();
+            }
+        }
+
 
         [Theory]
         [MemberData(nameof(TestPermutations))]
