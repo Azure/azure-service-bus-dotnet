@@ -306,7 +306,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             //     this.diagnosticSource.SendStop(activity, messageList, sendTask?.Status);
             // }
 
-            // MessagingEventSource.Log.MessageSendStop(this.ClientId);
+            MessagingEventSource.Log.MessageSendStop(this.ClientId);
         }
 
         /// <summary>
