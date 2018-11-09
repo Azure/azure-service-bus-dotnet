@@ -64,8 +64,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions);
 
         /// <summary>
-        /// Stop receiving messages from the entity. Cancells the receiver pump token source and waits <see cref="MessageReceivePump.StopPump()"/>
-        /// util no messages been processed. 
+        /// Stop receiving messages from the entity. Cancels the receiver pump token source and waits <see cref="MessageReceivePump.StopPump()"/>
+        /// until no messages been processing. 
         /// </summary>
         void StopReceiving();
 
