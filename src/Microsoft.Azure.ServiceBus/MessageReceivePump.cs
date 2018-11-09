@@ -19,6 +19,8 @@ namespace Microsoft.Azure.ServiceBus
         readonly CancellationToken pumpCancellationToken;
         readonly SemaphoreSlim maxConcurrentCallsSemaphoreSlim;
         readonly ServiceBusDiagnosticSource diagnosticSource;
+        int activeMessages = 0;
+        object activeMessageSyncLock;
 
         public MessageReceivePump(IMessageReceiver messageReceiver,
             MessageHandlerOptions registerHandlerOptions,
@@ -33,11 +35,33 @@ namespace Microsoft.Azure.ServiceBus
             this.pumpCancellationToken = pumpCancellationToken;
             this.maxConcurrentCallsSemaphoreSlim = new SemaphoreSlim(this.registerHandlerOptions.MaxConcurrentCalls);
             this.diagnosticSource = new ServiceBusDiagnosticSource(messageReceiver.Path, endpoint);
+            this.activeMessageSyncLock = new object();
         }
 
         public void StartPump()
         {
             TaskExtensionHelper.Schedule(() => this.MessagePumpTaskAsync());
+        }
+
+		public void StopPump()
+        {
+			while(this.activeMessages > 0) { }
+        }
+
+		void IncreaseActiveMessages()
+        {
+            lock (activeMessageSyncLock)
+            {
+                this.activeMessages++;
+            };
+        }
+
+		void DecreaseActiveMessages()
+        {
+            lock (activeMessageSyncLock)
+            {
+                this.activeMessages--;
+            };
         }
 
         bool ShouldRenewLock()
@@ -65,6 +89,7 @@ namespace Microsoft.Azure.ServiceBus
 
                     if (message != null)
                     {
+                        this.IncreaseActiveMessages();
                         MessagingEventSource.Log.MessageReceiverPumpTaskStart(this.messageReceiver.ClientId, message, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
 
                         TaskExtensionHelper.Schedule(() =>
@@ -141,7 +166,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 MessagingEventSource.Log.MessageReceiverPumpUserCallbackStart(this.messageReceiver.ClientId, message);
                 await this.onMessageCallback(message, this.pumpCancellationToken).ConfigureAwait(false);
-
+                this.DecreaseActiveMessages();
                 MessagingEventSource.Log.MessageReceiverPumpUserCallbackStop(this.messageReceiver.ClientId, message);
             }
             catch (Exception exception)
@@ -161,6 +186,7 @@ namespace Microsoft.Azure.ServiceBus
                 }
                 // AbandonMessageIfNeededAsync should take care of not throwing exception
                 this.maxConcurrentCallsSemaphoreSlim.Release();
+                this.DecreaseActiveMessages();
 
                 return;
             }

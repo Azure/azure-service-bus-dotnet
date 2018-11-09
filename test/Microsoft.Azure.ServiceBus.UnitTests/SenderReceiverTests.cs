@@ -10,6 +10,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System.Threading.Tasks;
     using Core;
     using Xunit;
+    using System.Diagnostics;
 
     public class SenderReceiverTests : SenderReceiverClientTestBase
     {
@@ -96,6 +97,98 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await sender.CloseAsync().ConfigureAwait(false);
                 await receiver.CloseAsync().ConfigureAwait(false);
             }
+        }
+
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        async Task ReceiverShouldBeAbleToStopTheMessagePump(string queueName)
+        {
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, receiveMode: ReceiveMode.PeekLock);
+            var count = 0;
+
+            try
+            {	
+                await TestUtility.SendMessagesAsync(sender, 12);             
+
+                receiver.RegisterMessageHandler(
+                async (receivedMessage, token) =>
+                {
+                    Interlocked.Increment(ref count);
+                    Thread.Sleep(2000);
+                    await receiver.CompleteAsync(new[] { receivedMessage.SystemProperties.LockToken });
+                },
+                new MessageHandlerOptions(ExceptionReceivedHandler) { MaxConcurrentCalls = 4, AutoComplete = false});
+
+                Thread.Sleep(1900);
+                receiver.StopReceiving();              
+                Assert.Equal(4, count);                
+				
+                receiver.RegisterMessageHandler(
+                async (receivedMessage, token) =>
+                {
+                    Interlocked.Increment(ref count);                    
+                    await receiver.CompleteAsync(new[] { receivedMessage.SystemProperties.LockToken });
+                },
+                new MessageHandlerOptions(base.ExceptionReceivedHandler) { MaxConcurrentCalls = 4, AutoComplete = false });
+
+                var stopwatch = Stopwatch.StartNew();
+                while (stopwatch.Elapsed.TotalSeconds <= 20)
+                {
+                    if (count == 12)
+                    {
+                        TestUtility.Log($"All messages Received.");
+                        break;
+                    }
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                }
+
+                Assert.Equal(12, count);
+            }
+            finally
+            {
+                await sender.CloseAsync().ConfigureAwait(false);
+                await receiver.CloseAsync().ConfigureAwait(false);
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        void StopReceivingShouldThrowWhenNoPumpRegistered(string queueName)
+        {
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, receiveMode: ReceiveMode.PeekLock);
+
+            Assert.Throws<NullReferenceException>(() => receiver.StopReceiving());
+        }
+
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        void StopReceivingShouldThrowWhenAlreadyStopped(string queueName)
+        {
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, receiveMode: ReceiveMode.PeekLock);
+            receiver.RegisterMessageHandler(
+                async (receivedMessage, token) =>
+                {
+                    await Task.CompletedTask;                   
+                },
+                new MessageHandlerOptions(ExceptionReceivedHandler) { MaxConcurrentCalls = 4, AutoComplete = false });
+
+            receiver.StopReceiving();
+			
+            Assert.Throws<ObjectDisposedException>(() => receiver.StopReceiving());
+        }
+
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        async Task StopReceivingShouldThrowIfReceiverHasAlreadyBeenClosed(string queueName)
+        {
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, receiveMode: ReceiveMode.PeekLock);
+            await receiver.CloseAsync();
+            Assert.Throws<ObjectDisposedException>(() => receiver.StopReceiving());
         }
 
         [Theory]

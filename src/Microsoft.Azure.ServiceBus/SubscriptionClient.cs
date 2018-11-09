@@ -419,6 +419,14 @@ namespace Microsoft.Azure.ServiceBus
             this.InnerSubscriptionClient.InnerReceiver.RegisterMessageHandler(handler, messageHandlerOptions);
         }
 
+		/// <summary>
+        /// 
+        /// </summary>
+        public void StopReceiving()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Receive session messages continuously from the queue. Registers a message handler and begins a new thread to receive session-messages.
         /// This handler(<see cref="Func{IMessageSession, Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the subscription client.

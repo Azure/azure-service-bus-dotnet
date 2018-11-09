@@ -24,6 +24,8 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>CS1591;CS1573</NoWarn>
+    <AssemblyName>Microsoft.Azure.ServiceBus</AssemblyName>
+    <PackageId>U4.Microsoft.Azure.ServiceBus</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

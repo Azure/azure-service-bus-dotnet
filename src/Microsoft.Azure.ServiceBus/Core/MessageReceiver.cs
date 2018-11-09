@@ -899,6 +899,19 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.OnMessageHandler(messageHandlerOptions, handler);
         }
 
+		/// <summary>
+        /// Stop receiving messages from the entity. Cancells the receiver pump token source and waits <see cref="MessageReceivePump.StopPump()"/>
+        /// util no messages been processed. 
+        /// </summary>
+		public void StopReceiving()
+        {
+            this.ThrowIfClosed();
+            this.receivePumpCancellationTokenSource.Cancel();
+            this.receivePump.StopPump();
+            this.receivePumpCancellationTokenSource.Dispose();
+            this.receivePump = null;
+        }
+
         /// <summary>
         /// Registers a <see cref="ServiceBusPlugin"/> to be used with this receiver.
         /// </summary>
