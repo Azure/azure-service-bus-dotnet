@@ -5,7 +5,7 @@
     <Version>3.1.1</Version>
     <Authors>Microsoft</Authors>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <AssemblyOriginatorKeyFile>../../build/keyfile.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
