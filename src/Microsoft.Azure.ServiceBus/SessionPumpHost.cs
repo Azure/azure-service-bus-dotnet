@@ -40,7 +40,7 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         public void OnSessionHandler(
-            Func<IMessageSession, Message, CancellationToken, Task> callback,
+            Func<IMessageSession, Message, CancellationToken, ValueTask> callback,
             SessionHandlerOptions sessionHandlerOptions)
         {
             MessagingEventSource.Log.RegisterOnSessionHandlerStart(this.ClientId, sessionHandlerOptions);

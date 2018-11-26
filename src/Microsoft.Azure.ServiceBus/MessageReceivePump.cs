@@ -12,7 +12,7 @@ namespace Microsoft.Azure.ServiceBus
 
     sealed class MessageReceivePump
     {
-        readonly Func<Message, CancellationToken, Task> onMessageCallback;
+        readonly Func<Message, CancellationToken, ValueTask> onMessageCallback;
         readonly string endpoint;
         readonly MessageHandlerOptions registerHandlerOptions;
         readonly IMessageReceiver messageReceiver;
@@ -22,7 +22,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public MessageReceivePump(IMessageReceiver messageReceiver,
             MessageHandlerOptions registerHandlerOptions,
-            Func<Message, CancellationToken, Task> callback,
+            Func<Message, CancellationToken, ValueTask> callback,
             Uri endpoint,
             CancellationToken pumpCancellationToken)
         {
@@ -86,7 +86,7 @@ namespace Microsoft.Azure.ServiceBus
                     if (!(exception is ObjectDisposedException && this.pumpCancellationToken.IsCancellationRequested))
                     {
                         MessagingEventSource.Log.MessageReceivePumpTaskException(this.messageReceiver.ClientId, string.Empty, exception);
-                        await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Receive).ConfigureAwait(false); 
+                        await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Receive).ConfigureAwait(false);
                     }
                 }
                 finally

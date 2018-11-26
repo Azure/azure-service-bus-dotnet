@@ -224,7 +224,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// replenished in the background as space becomes available.If there are no messages available for delivery, the receive operation will drain the
         /// buffer and then wait or block as expected.
         /// </para>
-        /// <para>Prefetch also works equivalently with the <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, Func{ExceptionReceivedEventArgs, Task})"/> APIs.</para>
+        /// <para>Prefetch also works equivalently with the <see cref="RegisterMessageHandler(Func{Message,CancellationToken,ValueTask}, Func{ExceptionReceivedEventArgs, ValueTask})"/> APIs.</para>
         /// <para>Updates to this value take effect on the next receive call to the service.</para>
         /// </remarks>
         public int PrefetchCount
@@ -877,11 +877,11 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         /// <summary>
         /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
-        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
+        /// This handler(<see cref="Func{Message, CancellationToken, ValueTask}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
         /// <param name="handler">A <see cref="Func{T1, T2, TResult}"/> that processes messages.</param>
         /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is used to notify exceptions.</param>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        public void RegisterMessageHandler(Func<Message, CancellationToken, ValueTask> handler, Func<ExceptionReceivedEventArgs, ValueTask> exceptionReceivedHandler)
         {
             this.RegisterMessageHandler(handler, new MessageHandlerOptions(exceptionReceivedHandler));
         }
@@ -890,10 +890,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
         /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
-        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="handler">A <see cref="Func{Message, CancellationToken, ValueTask}"/> that processes messages.</param>
         /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
         /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
+        public void RegisterMessageHandler(Func<Message, CancellationToken, ValueTask> handler, MessageHandlerOptions messageHandlerOptions)
         {
             this.ThrowIfClosed();
             this.OnMessageHandler(messageHandlerOptions, handler);
@@ -1266,7 +1266,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary> </summary>
         protected virtual void OnMessageHandler(
             MessageHandlerOptions registerHandlerOptions,
-            Func<Message, CancellationToken, Task> callback)
+            Func<Message, CancellationToken, ValueTask> callback)
         {
             MessagingEventSource.Log.RegisterOnMessageHandlerStart(this.ClientId, registerHandlerOptions);
 

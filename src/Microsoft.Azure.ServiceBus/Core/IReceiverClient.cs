@@ -45,23 +45,23 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         /// <summary>
         /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
-        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
+        /// This handler(<see cref="Func{Message, CancellationToken, ValueTask}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
-        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="handler">A <see cref="Func{Message, CancellationToken, ValueTask}"/> that processes messages.</param>
         /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
         /// <remarks>Enable prefetch to speed up the receive rate.
-        /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
-        void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler);
+        /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,ValueTask}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
+        void RegisterMessageHandler(Func<Message, CancellationToken, ValueTask> handler, Func<ExceptionReceivedEventArgs, ValueTask> exceptionReceivedHandler);
 
         /// <summary>
         /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
-        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
+        /// This handler(<see cref="Func{Message, CancellationToken, ValueTask}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
-        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="handler">A <see cref="Func{Message, CancellationToken, ValueTask}"/> that processes messages.</param>
         /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
         /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
-        void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions);
+        void RegisterMessageHandler(Func<Message, CancellationToken, ValueTask> handler, MessageHandlerOptions messageHandlerOptions);
 
         /// <summary>
         /// Completes a <see cref="Message"/> using its lock token. This will delete the message from the queue.

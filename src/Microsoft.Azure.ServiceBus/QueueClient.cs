@@ -89,7 +89,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
             }
-            
+
             this.OwnsConnection = true;
         }
 
@@ -328,7 +328,7 @@ namespace Microsoft.Azure.ServiceBus
                 return this.sessionPumpHost;
             }
         }
-        
+
         ICbsTokenProvider CbsTokenProvider { get; }
 
         /// <summary>
@@ -420,14 +420,14 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>
         /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
-        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
+        /// This handler(<see cref="Func{Message, CancellationToken, ValueTask}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
-        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="handler">A <see cref="Func{Message, CancellationToken, ValueTask}"/> that processes messages.</param>
         /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
         /// <remarks>Enable prefetch to speed up the receive rate.
-        /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,ValueTask}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
+        public void RegisterMessageHandler(Func<Message, CancellationToken, ValueTask> handler, Func<ExceptionReceivedEventArgs, ValueTask> exceptionReceivedHandler)
         {
             this.RegisterMessageHandler(handler, new MessageHandlerOptions(exceptionReceivedHandler));
         }
@@ -439,7 +439,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
         /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
         /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
-        public void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
+        public void RegisterMessageHandler(Func<Message, CancellationToken, ValueTask> handler, MessageHandlerOptions messageHandlerOptions)
         {
             this.ThrowIfClosed();
             this.InnerReceiver.RegisterMessageHandler(handler, messageHandlerOptions);
@@ -454,8 +454,8 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
         /// <remarks>Enable prefetch to speed up the receive rate.
-        /// Use <see cref="RegisterSessionHandler(Func{IMessageSession,Message,CancellationToken,Task}, SessionHandlerOptions)"/> to configure the settings of the pump.</remarks>
-        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        /// Use <see cref="RegisterSessionHandler(Func{IMessageSession,Message,CancellationToken,ValueTask}, SessionHandlerOptions)"/> to configure the settings of the pump.</remarks>
+        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, ValueTask> handler, Func<ExceptionReceivedEventArgs, ValueTask> exceptionReceivedHandler)
         {
             var sessionHandlerOptions = new SessionHandlerOptions(exceptionReceivedHandler);
             this.RegisterSessionHandler(handler, sessionHandlerOptions);
@@ -469,7 +469,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <see cref="IMessageSession"/> contains the session information, and must be used to perform Complete/Abandon/Deadletter or other such operations on the <see cref="Message"/></param>
         /// <param name="sessionHandlerOptions">Options used to configure the settings of the session pump.</param>
         /// <remarks>Enable prefetch to speed up the receive rate. </remarks>
-        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, Task> handler, SessionHandlerOptions sessionHandlerOptions)
+        public void RegisterSessionHandler(Func<IMessageSession, Message, CancellationToken, ValueTask> handler, SessionHandlerOptions sessionHandlerOptions)
         {
             this.ThrowIfClosed();
             this.SessionPumpHost.OnSessionHandler(handler, sessionHandlerOptions);

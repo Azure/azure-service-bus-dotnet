@@ -9,8 +9,8 @@ namespace Microsoft.Azure.ServiceBus
     using Primitives;
 
     /// <summary>Provides options associated with message pump processing using
-    /// <see cref="QueueClient.RegisterMessageHandler(Func{Message, CancellationToken, Task}, MessageHandlerOptions)" /> and
-    /// <see cref="SubscriptionClient.RegisterMessageHandler(Func{Message, CancellationToken, Task}, MessageHandlerOptions)" />.</summary>
+    /// <see cref="QueueClient.RegisterMessageHandler(Func{Message, CancellationToken, ValueTask}, MessageHandlerOptions)" /> and
+    /// <see cref="SubscriptionClient.RegisterMessageHandler(Func{Message, CancellationToken, ValueTask}, MessageHandlerOptions)" />.</summary>
     public sealed class MessageHandlerOptions
     {
         int maxConcurrentCalls;
@@ -25,7 +25,7 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
-        public MessageHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        public MessageHandlerOptions(Func<ExceptionReceivedEventArgs, ValueTask> exceptionReceivedHandler)
         {
             this.MaxConcurrentCalls = 1;
             this.AutoComplete = true;
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>Occurs when an exception is received. Enables you to be notified of any errors encountered by the message pump.
         /// When errors are received calls will automatically be retried, so this is informational. </summary>
-        public Func<ExceptionReceivedEventArgs, Task> ExceptionReceivedHandler { get; }
+        public Func<ExceptionReceivedEventArgs, ValueTask> ExceptionReceivedHandler { get; }
 
         /// <summary>Gets or sets the maximum number of concurrent calls to the callback the message pump should initiate.</summary>
         /// <value>The maximum number of concurrent calls to the callback.</value>

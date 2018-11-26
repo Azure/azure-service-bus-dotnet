@@ -77,7 +77,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     {
                         exceptionReceivedHandlerCalled = true;
                     }
-                    return Task.CompletedTask;
+                    return default;
                 });
 
             try

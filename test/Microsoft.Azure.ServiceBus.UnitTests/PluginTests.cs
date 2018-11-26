@@ -185,9 +185,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                         Assert.Equal(sendMessage.Body, message.Body);
 
                         messageReceived = true;
-                        return Task.CompletedTask;
-                    },
-                    exceptionArgs => Task.CompletedTask);
+                        return default;
+                    }, args => default);
 
                 for (var i = 0; i < 20; i++)
                 {

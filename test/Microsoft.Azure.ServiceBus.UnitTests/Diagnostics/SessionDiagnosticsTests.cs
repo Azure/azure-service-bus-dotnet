@@ -144,9 +144,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             this.queueClient.RegisterSessionHandler((session, msg, ct) =>
                 {
                     processingDone.Set();
-                    return Task.CompletedTask;
+                    return default;
                 },
-                exArgs => Task.CompletedTask);
+                exArgs => default);
 
             processingDone.WaitOne(TimeSpan.FromSeconds(maxWaitSec));
 
@@ -212,7 +212,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             this.AssertCommonPayloadProperties(payload);
 
             var sessionId = this.GetPropertyValueFromAnonymousTypeInstance<string>(payload, "SessionId");
-            
+
             Assert.NotNull(activity);
             Assert.Null(activity.Parent);
             Assert.Equal(sessionId, activity.Tags.Single(t => t.Key == "SessionId").Value);
@@ -236,7 +236,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             this.AssertCommonPayloadProperties(payload);
 
             var sessionId = this.GetPropertyValueFromAnonymousTypeInstance<string>(payload, "SessionId");
-            
+
             Assert.NotNull(activity);
             Assert.Null(activity.Parent);
             Assert.Equal(sessionId, activity.Tags.Single(t => t.Key == "SessionId").Value);

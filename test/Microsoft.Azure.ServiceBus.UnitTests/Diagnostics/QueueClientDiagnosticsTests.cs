@@ -31,9 +31,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             this.queueClient.RegisterMessageHandler((msg, ct) => {
                     processActivity = Activity.Current;
                     processingDone.Set();
-                    return Task.CompletedTask;
+                    return default;
                 },
-                exArgs => Task.CompletedTask);
+                exArgs => default);
 
             processingDone.WaitOne(TimeSpan.FromSeconds(maxWaitSec));
             Assert.True(this.events.IsEmpty);
@@ -58,9 +58,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
                 {
                     processActivity = Activity.Current;
                     processingDone.Set();
-                    return Task.CompletedTask;
+                    return default;
                 },
-                exArgs => Task.CompletedTask);
+                exArgs => default);
 
             processingDone.WaitOne(TimeSpan.FromSeconds(maxWaitSec));
 
@@ -90,12 +90,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
                 {
                     processActivity = Activity.Current;
                     processingDone.Set();
-                    return Task.CompletedTask;
+                    return default;
                 },
                 exArgs =>
                 {
                     exceptionCalled = true;
-                    return Task.CompletedTask;
+                    return default;
                 });
 
             processingDone.WaitOne(TimeSpan.FromSeconds(maxWaitSec));
@@ -159,12 +159,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
                     }
 
                     processingDone.Set();
-                    return Task.CompletedTask;
+                    return default;
                 },
                 exArgs =>
                 {
                     exceptionCalled = true;
-                    return Task.CompletedTask;
+                    return default;
                 });
             processingDone.WaitOne(TimeSpan.FromSeconds(maxWaitSec));
             Assert.True(exceptionCalled);
@@ -454,9 +454,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             this.queueClient.RegisterMessageHandler((msg, ct) =>
                 {
                     processingDone.Set();
-                    return Task.CompletedTask;
+                    return default;
                 },
-                exArgs => Task.CompletedTask);
+                exArgs => default);
             processingDone.WaitOne(TimeSpan.FromSeconds(maxWaitSec));
 
             Assert.True(this.events.TryDequeue(out var sendStop));

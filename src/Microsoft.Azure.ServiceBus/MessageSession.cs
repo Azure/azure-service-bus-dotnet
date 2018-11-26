@@ -63,7 +63,7 @@ namespace Microsoft.Azure.ServiceBus
             return ServiceBusDiagnosticSource.IsEnabled() ? this.OnRenewSessionLockInstrumentedAsync() : this.OnRenewSessionLockAsync();
         }
 
-        protected override void OnMessageHandler(MessageHandlerOptions registerHandlerOptions, Func<Message, CancellationToken, Task> callback)
+        protected override void OnMessageHandler(MessageHandlerOptions registerHandlerOptions, Func<Message, CancellationToken, ValueTask> callback)
         {
             throw new InvalidOperationException($"{nameof(RegisterMessageHandler)} is not supported for Sessions.");
         }

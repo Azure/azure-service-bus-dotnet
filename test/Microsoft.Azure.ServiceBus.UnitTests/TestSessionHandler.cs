@@ -48,7 +48,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             await TestUtility.SendSessionMessagesAsync(this.sender, NumberOfSessions, MessagesPerSession);
         }
 
-        public async Task OnSessionHandler(IMessageSession session, Message message, CancellationToken token)
+        public async ValueTask OnSessionHandler(IMessageSession session, Message message, CancellationToken token)
         {
             Assert.NotNull(session);
             Assert.NotNull(message);
@@ -70,7 +70,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 else
                 {
                     this.sessionMessageMap[session.SessionId]++;
-                } 
+                }
             }
         }
 

@@ -111,14 +111,14 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 {
                     exceptionReceivedHandlerCalled = true;
                 }
-                return Task.CompletedTask;
+                return default;
             })
             { MaxConcurrentSessions = 1 };
 
             queueClient.RegisterSessionHandler(
                (session, message, token) =>
                {
-                   return Task.CompletedTask;
+                   return default;
                },
                sessionHandlerOptions);
 
@@ -172,10 +172,10 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
-        Task ExceptionReceivedHandler(ExceptionReceivedEventArgs eventArgs)
+        ValueTask ExceptionReceivedHandler(ExceptionReceivedEventArgs eventArgs)
         {
             TestUtility.Log($"Exception Received: ClientId: {eventArgs.ExceptionReceivedContext.ClientId}, EntityPath: {eventArgs.ExceptionReceivedContext.EntityPath}, Exception: {eventArgs.Exception.Message}");
-            return Task.CompletedTask;
+            return default;
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         readonly string clientId;
         readonly ISessionClient client;
-        readonly Func<IMessageSession, Message, CancellationToken, Task> userOnSessionCallback;
+        readonly Func<IMessageSession, Message, CancellationToken, ValueTask> userOnSessionCallback;
         readonly SessionHandlerOptions sessionHandlerOptions;
         readonly string endpoint;
         readonly string entityPath;
@@ -26,7 +26,7 @@ namespace Microsoft.Azure.ServiceBus
             ISessionClient client,
             ReceiveMode receiveMode,
             SessionHandlerOptions sessionHandlerOptions,
-            Func<IMessageSession, Message, CancellationToken, Task> callback,
+            Func<IMessageSession, Message, CancellationToken, ValueTask> callback,
             Uri endpoint,
             CancellationToken token)
         {
@@ -151,7 +151,7 @@ namespace Microsoft.Azure.ServiceBus
                     {
                         if (!(exception is ObjectDisposedException && this.pumpCancellationToken.IsCancellationRequested))
                         {
-                            await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.AcceptMessageSession).ConfigureAwait(false); 
+                            await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.AcceptMessageSession).ConfigureAwait(false);
                         }
                         if (!MessagingUtilities.ShouldRetry(exception))
                         {
@@ -205,7 +205,7 @@ namespace Microsoft.Azure.ServiceBus
 
                         if (!(exception is ObjectDisposedException && this.pumpCancellationToken.IsCancellationRequested))
                         {
-                            await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Receive).ConfigureAwait(false); 
+                            await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.Receive).ConfigureAwait(false);
                         }
                         break;
                     }
@@ -228,7 +228,7 @@ namespace Microsoft.Azure.ServiceBus
                         var callbackExceptionOccurred = false;
                         try
                         {
-                            processTask = this.userOnSessionCallback(session, message, this.pumpCancellationToken);
+                            processTask = this.userOnSessionCallback(session, message, this.pumpCancellationToken).AsTask();
                             await processTask.ConfigureAwait(false);
                         }
                         catch (Exception exception)
@@ -321,7 +321,7 @@ namespace Microsoft.Azure.ServiceBus
                     MessagingEventSource.Log.SessionReceivePumpSessionRenewLockException(this.clientId, session.SessionId, exception);
 
                     // TaskCanceled is expected here as renewTasks will be cancelled after the Complete call is made.
-                    // ObjectDisposedException should only happen here because the CancellationToken was disposed at which point 
+                    // ObjectDisposedException should only happen here because the CancellationToken was disposed at which point
                     // this renew exception is not relevant anymore. Lets not bother user with this exception.
                     if (!(exception is TaskCanceledException) && !(exception is ObjectDisposedException))
                     {

@@ -25,12 +25,12 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 queueClient.RegisterMessageHandler((message, token) =>
                     {
                         taskCompletionSource.SetResult(message);
-                        return Task.CompletedTask;
+                        return default;
                     },
                     exceptionReceivedArgs =>
                     {
                         taskCompletionSource.SetException(exceptionReceivedArgs.Exception);
-                        return Task.CompletedTask;
+                        return default;
                     });
                 await queueClient.SendAsync(new Message(contentAsBytes));
 
