@@ -50,11 +50,3 @@ In order to run the unit tests, you will need to do the following:
 1. Add an Environment Variable named `azure-service-bus-dotnet/connectionstring` and set the value as the connection string of the newly created namespace. **Please note that if you are using Visual Studio, you must restart Visual Studio in order to use new Environment Variables.**
 
 Once you have completed the above, you can run `dotnet test` from the `/test/Microsoft.Azure.ServiceBus.UnitTests` directory.
-
-### Can I manage Service Bus entities with this library?
-
-The standard way to manage Azure resources is by using [Azure Resource Manager](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview). In order to use functionality that previously existed in the .NET Framework Service Bus client library, you will need to use the `Microsoft.Azure.Management.ServiceBus` library. This will enable use cases that dynamically create/read/update/delete resources. The following links will provide more information on the new library and how to use it.
-
-* GitHub repo - [https://github.com/Azure/azure-sdk-for-net/tree/AutoRest/src/ResourceManagement/ServiceBus](https://github.com/Azure/azure-sdk-for-net/tree/AutoRest/src/ResourceManagement/ServiceBus)
-* NuGet package - [https://www.nuget.org/packages/Microsoft.Azure.Management.ServiceBus/](https://www.nuget.org/packages/Microsoft.Azure.Management.ServiceBus/)
-* Sample - [https://github.com/Azure-Samples/service-bus-dotnet-management](https://github.com/Azure-Samples/service-bus-dotnet-management)

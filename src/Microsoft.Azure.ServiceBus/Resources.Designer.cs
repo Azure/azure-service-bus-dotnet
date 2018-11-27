@@ -196,6 +196,15 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List of lock tokens cannot be empty.
+        /// </summary>
+        internal static string ListOfLockTokensCannotBeEmpty {
+            get {
+                return ResourceManager.GetString("ListOfLockTokensCannotBeEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified value &apos;{0}&apos; is invalid. &quot;maxConcurrentCalls&quot; must be greater than zero..
         /// </summary>
         internal static string MaxConcurrentCallsMustBeGreaterThanZero {
