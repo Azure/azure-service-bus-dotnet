@@ -12,6 +12,7 @@ namespace Microsoft.Azure.ServiceBus
     /// <summary>
     /// Represents an abstraction for retrying messaging operations. Users should not
     /// implement this class, and instead should use one of the provided implementations.
+    /// <remarks>RetryPolicy will not be applied when an ambient transaction is found.</remarks>
     /// </summary>
     public abstract class RetryPolicy
     {
