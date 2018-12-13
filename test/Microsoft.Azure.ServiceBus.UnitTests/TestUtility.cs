@@ -67,18 +67,27 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Log($"Sent {messageCount} messages");
         }
 
-        internal static async Task<IList<Message>> ReceiveMessagesAsync(IMessageReceiver messageReceiver, int messageCount)
+        internal static async Task<IList<Message>> ReceiveMessagesAsync(IMessageReceiver messageReceiver, int messageCount, TimeSpan timeout = default)
         {
             var receiveAttempts = 0;
             var messagesToReturn = new List<Message>();
+            var stopwatch = Stopwatch.StartNew();
 
-            while (receiveAttempts++ < TestConstants.MaxAttemptsCount && messagesToReturn.Count < messageCount)
+            if (timeout == default)
+            {
+                timeout = TimeSpan.Zero;
+            }
+
+            while (messagesToReturn.Count < messageCount && (receiveAttempts++ < TestConstants.MaxAttemptsCount || stopwatch.Elapsed < timeout))
             {
                 var messages = await messageReceiver.ReceiveAsync(messageCount - messagesToReturn.Count);
-                if (messages != null)
+                if (messages == null)
                 {
-                    messagesToReturn.AddRange(messages);
+                    await Task.Delay(TestConstants.WaitTimeBetweenAttempts);
+                    continue;
                 }
+
+                messagesToReturn.AddRange(messages);
             }
 
             VerifyUniqueMessages(messagesToReturn);
@@ -98,7 +107,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 var msg = await messageReceiver.ReceiveDeferredMessageAsync(sequenceNumber);
                 if (msg != null)
                 {
-                    messagesToReturn.Add(msg); 
+                    messagesToReturn.Add(msg);
                 }
             }
 
