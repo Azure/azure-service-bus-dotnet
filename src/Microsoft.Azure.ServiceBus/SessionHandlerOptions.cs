@@ -88,7 +88,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <value>true if the autocomplete option of the session handler is enabled; otherwise, false.</value>
         public bool AutoComplete { get; set; }
 
-        /// <summary>Gets or sets the optional session ID</summary>
+         /// <summary>Gets or sets the optional session ID.</summary>
         public string SessionId { get; set; }
 
         internal bool AutoRenewLock => this.MaxAutoRenewDuration > TimeSpan.Zero;
