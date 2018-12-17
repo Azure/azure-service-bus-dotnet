@@ -122,7 +122,13 @@ namespace Microsoft.Azure.ServiceBus
                     concurrentSessionSemaphoreAcquired = true;
 
                     await this.maxPendingAcceptSessionsSemaphoreSlim.WaitAsync(this.pumpCancellationToken).ConfigureAwait(false);
-                    var session = await this.client.AcceptMessageSessionAsync().ConfigureAwait(false);
+
+                    IMessageSession session;
+                    if(string.IsNullOrEmpty(sessionHandlerOptions.SessionId))
+                        session = await this.client.AcceptMessageSessionAsync().ConfigureAwait(false);
+                    else
+                        session = await this.client.AcceptMessageSessionAsync(sessionHandlerOptions.SessionId).ConfigureAwait(false);
+
                     if (session == null)
                     {
                         await Task.Delay(Constants.NoMessageBackoffTimeSpan, this.pumpCancellationToken).ConfigureAwait(false);
