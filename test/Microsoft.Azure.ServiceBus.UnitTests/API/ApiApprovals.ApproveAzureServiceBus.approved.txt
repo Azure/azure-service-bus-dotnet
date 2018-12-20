@@ -384,6 +384,7 @@ namespace Microsoft.Azure.ServiceBus
         public System.TimeSpan MaxAutoRenewDuration { get; set; }
         public int MaxConcurrentSessions { get; set; }
         public System.TimeSpan MessageWaitTimeout { get; set; }
+        public string SessionId { get; set; }
     }
     public sealed class SessionLockLostException : Microsoft.Azure.ServiceBus.ServiceBusException
     {
