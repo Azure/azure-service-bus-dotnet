@@ -123,7 +123,7 @@ namespace Microsoft.Azure.ServiceBus
 
                     await this.maxPendingAcceptSessionsSemaphoreSlim.WaitAsync(this.pumpCancellationToken).ConfigureAwait(false);
 
-                    var session = await this.client.AcceptMessageSessionAsync(this.sessionHandlerOptions.SessionId).ConfigureAwait(false);
+                    var session = await this.client.AcceptMessageSessionAsync().ConfigureAwait(false);
 
                     if (session == null)
                     {
