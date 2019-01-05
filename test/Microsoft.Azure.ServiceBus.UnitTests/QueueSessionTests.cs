@@ -250,6 +250,53 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             }
         }
 
+        [Fact]
+        [DisplayTestMethodName]
+        public async Task RegisterMessageHandlerForSessionClient()
+        {
+            var sessionClient = new SessionClient(TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName);
+
+            var sessionId = Guid.NewGuid().ToString();
+            var messageSession = await sessionClient.AcceptMessageSessionAsync(sessionId);
+            var messageId = Guid.NewGuid().ToString();
+            var sessionReceived = false;
+
+            try
+            {
+                messageSession.RegisterMessageHandler((message, token) =>
+                {
+                    Assert.True(message.SessionId == sessionId, "Session Id does not match");
+                    Assert.True(message.MessageId == messageId, "Message Id does not match");
+                    sessionReceived = true;
+                    return Task.CompletedTask;
+                }, args => Task.CompletedTask);
+            
+                var senderQueueClient = new QueueClient(TestUtility.NamespaceConnectionString, TestConstants.SessionNonPartitionedQueueName);
+            
+                await senderQueueClient.SendAsync(new Message
+                {
+                    SessionId = sessionId,
+                    MessageId = messageId
+                });
+
+                var tryCount = 0;
+
+                while (!sessionReceived && tryCount < 10)
+                {
+                    await Task.Delay(1000);
+                    tryCount++;
+                }
+
+                Assert.True(tryCount < 10, "Max try count exceeded");
+                Assert.True(sessionReceived, "No message received in session");
+            }
+            finally
+            {
+                await sessionClient.CloseAsync().ConfigureAwait(false);
+                await messageSession?.CloseAsync();
+            }
+        }
+
         async Task AcceptAndCompleteSessionsAsync(SessionClient sessionClient, string sessionId, string messageId)
         {
             var sessionReceiver = await sessionClient.AcceptMessageSessionAsync(sessionId);
