@@ -552,6 +552,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Management
 
         [Fact]
         [DisplayTestMethodName]
+        public async Task QueueDescriptionParsedFromResponseEqualityCheckTest()
+        {
+            var queueDescription = new QueueDescription("a");
+            var createdQueueDescription = await client.CreateQueueAsync(queueDescription);
+
+            var identicalQueueDescription = new QueueDescription("a");
+            Assert.Equal(identicalQueueDescription, createdQueueDescription);
+        }
+
+        [Fact]
+        [DisplayTestMethodName]
         public async Task SqlFilterParamsTest()
         {
             var topicName = Guid.NewGuid().ToString("D").Substring(0, 8);
