@@ -79,7 +79,7 @@ namespace Microsoft.Azure.ServiceBus.Management
         }
 
         /// <summary>
-        /// Gets information related to the namespace.
+        /// Gets information related to the currently used namespace.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns><see cref="NamespaceInfo"/> containing namespace information.</returns>
