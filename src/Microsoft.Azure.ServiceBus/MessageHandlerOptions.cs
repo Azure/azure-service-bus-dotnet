@@ -15,6 +15,7 @@ namespace Microsoft.Azure.ServiceBus
     {
         int maxConcurrentCalls;
         TimeSpan maxAutoRenewDuration;
+        int maxMessageCount;
 
         /// <summary>Initializes a new instance of the <see cref="MessageHandlerOptions" /> class.
         /// Default Values:
@@ -72,6 +73,23 @@ namespace Microsoft.Azure.ServiceBus
             {
                 TimeoutHelper.ThrowIfNegativeArgument(value, nameof(value));
                 this.maxAutoRenewDuration = value;
+            }
+        }
+
+        /// <summary>Gets or sets the maximum number of messages the message pump should receive.</summary>
+        /// <value>The maximum number of messages.</value>
+        public int MaxMessageCount
+        {
+            get => this.maxMessageCount;
+
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(Resources.MaxConcurrentCallsMustBeGreaterThanZero.FormatForUser(value));
+                }
+
+                this.maxMessageCount = value;
             }
         }
 

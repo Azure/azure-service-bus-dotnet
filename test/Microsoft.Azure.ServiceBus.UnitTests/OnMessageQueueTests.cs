@@ -6,6 +6,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Threading;
     using System.Threading.Tasks;
     using Xunit;
 
@@ -68,7 +69,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
             queueClient.RegisterMessageHandler(
-                (message, token) => throw new Exception("Unexpected exception: Did not expect messages here"),
+                (Message message, CancellationToken token) => throw new Exception("Unexpected exception: Did not expect messages here"),
                 (eventArgs) =>
                 {
                     Assert.NotNull(eventArgs);

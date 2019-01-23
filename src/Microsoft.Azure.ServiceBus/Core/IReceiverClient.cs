@@ -64,6 +64,27 @@ namespace Microsoft.Azure.ServiceBus.Core
         void RegisterMessageHandler(Func<Message, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions);
 
         /// <summary>
+        /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
+        /// </summary>
+        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
+        /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
+        /// <remarks>Enable prefetch to speed up the receive rate.
+        /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
+        void RegisterMessageHandler(Func<IEnumerable<Message>, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler);
+
+        /// <summary>
+        /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
+        /// </summary>
+        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
+        /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
+        void RegisterMessageHandler(Func<IEnumerable<Message>, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions);
+
+
+        /// <summary>
         /// Completes a <see cref="Message"/> using its lock token. This will delete the message from the queue.
         /// </summary>
         /// <param name="lockToken">The lock token of the corresponding message to complete.</param>
@@ -85,6 +106,18 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
         Task AbandonAsync(string lockToken, IDictionary<string, object> propertiesToModify = null);
+
+        /// <summary>
+        /// Abandons a list of <see cref="Message"/> using a lock tokens. This will make the messages available again for processing.
+        /// </summary>
+        /// <param name="lockTokens">The lock tokens of the corresponding messages to abandon.</param>
+        /// <param name="propertiesToModify">The properties of the message to modify while abandoning the message.</param>
+        /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
+        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
+        /// Abandoning a message will increase the delivery count on the message.
+        /// This operation can only be performed on messages that were received by this receiver.
+        /// </remarks>
+        Task AbandonAsync(IEnumerable<string> lockTokens, IDictionary<string, object> propertiesToModify = null);
 
         /// <summary>
         /// Moves a message to the deadletter sub-queue.

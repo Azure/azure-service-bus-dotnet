@@ -6,6 +6,7 @@ namespace Microsoft.Azure.ServiceBus
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.Tracing;
+    using System.Linq;
     using System.Reflection;
     using System.Text;
     using System.Threading.Tasks;
@@ -178,12 +179,22 @@ namespace Microsoft.Azure.ServiceBus
             this.WriteEvent(15, clientId, exception);
         }
 
-        [Event(16, Level = EventLevel.Informational, Message = "{0}: AbandonAsync start. MessageCount = {1}, LockToken = {2}")]
-        public void MessageAbandonStart(string clientId, int messageCount, string lockToken)
+        [NonEvent]
+        public void MessageAbandonStart(string clientId, int messageCount, IEnumerable<string> lockTokens)
         {
             if (this.IsEnabled())
             {
-                this.WriteEvent(16, clientId, messageCount, lockToken);
+                var formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
+                this.WriteEvent(16, clientId, messageCount, formattedLockTokens);
+            }
+        }
+
+        [Event(16, Level = EventLevel.Informational, Message = "{0}: AbandonAsync start. MessageCount = {1}, LockTokens = {2}")]
+        public void MessageAbandonStart(string clientId, int messageCount, string formattedLockTokens)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(16, clientId, messageCount, formattedLockTokens);
             }
         }
 
@@ -699,12 +710,12 @@ namespace Microsoft.Azure.ServiceBus
                 this.MessageReceiverPumpTaskStart(clientId, message?.SystemProperties.SequenceNumber ?? -1, currentSemaphoreCount);
             }
         }
-
+        
         [Event(66, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump PumpTask Started: Message: SequenceNumber: {1}, Available Semaphore Count: {2}")]
         void MessageReceiverPumpTaskStart(string clientId, long sequenceNumber, int currentSemaphoreCount)
         {
             this.WriteEvent(66, clientId, sequenceNumber, currentSemaphoreCount);
-        }
+        }       
 
         [Event(67, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump PumpTask done: Available Semaphore Count: {1}")]
         public void MessageReceiverPumpTaskStop(string clientId, int currentSemaphoreCount)
@@ -1379,6 +1390,191 @@ namespace Microsoft.Azure.ServiceBus
             {
                 this.WriteEvent(117, objectName, details);
             }
+        }
+
+        [NonEvent]
+        public void BatchMessageReceiverPumpTaskStart(string clientId, IEnumerable<long> sequenceNumbers, int currentSemaphoreCount)
+        {
+            if (this.IsEnabled())
+            {
+                var formattedSequenceNumbers = StringUtility.GetFormattedSequenceNumbers(sequenceNumbers);
+                this.BatchMessageReceiverPumpTaskStart(clientId, formattedSequenceNumbers, currentSemaphoreCount);
+            }
+        }
+
+        [Event(118, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump PumpTask Started: Message: SequenceNumbers: {1}, Available Semaphore Count: {2}")]
+        void BatchMessageReceiverPumpTaskStart(string clientId, string sequenceNumbers, int currentSemaphoreCount)
+        {
+            this.WriteEvent(118, clientId, sequenceNumbers, currentSemaphoreCount);
+        }
+
+        [NonEvent]
+        public void BatchMessageReceiverPumpRenewMessageStart(string clientId, TimeSpan renewAfterTimeSpan)
+        {
+            if (this.IsEnabled())
+            {
+                this.BatchMessageReceiverPumpRenewMessageStart(clientId, (long)renewAfterTimeSpan.TotalSeconds);
+            }
+        }
+
+        [Event(119, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump RenewMessage start: Message: RenewAfterTimeInSeconds: {1}")]
+        void BatchMessageReceiverPumpRenewMessageStart(string clientId, long renewAfterTimeSpanInSeconds)
+        {
+            this.WriteEvent(118, clientId, renewAfterTimeSpanInSeconds);
+        }
+
+        [Event(120, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump RenewMessage done.")]
+        public void BatchMessageReceiverPumpRenewMessageStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(119, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void BatchMessageRenewLockStart(string clientId, int messageCount, IEnumerable<string> lockTokens)
+        {
+            if (this.IsEnabled())
+            {
+                var formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
+                this.BatchMessageRenewLockStart(clientId, messageCount, formattedLockTokens);
+            }
+        }
+
+        [Event(129, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync start. MessageCount = {1}, LockTokens = {2}")]
+        void BatchMessageRenewLockStart(string clientId, int messageCount, string lockTokens)
+        {
+            this.WriteEvent(121, clientId, messageCount, lockTokens);
+        }
+        
+
+        [Event(122, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync done.")]
+        public void BatchMessageRenewLockStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(26, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void MessageRenewLocksException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageRenewLocksException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(123, Level = EventLevel.Error, Message = "{0}: RenewLocksAsync Exception: {1}.")]
+        void MessageRenewLocksException(string clientId, string exception)
+        {
+            this.WriteEvent(123, clientId, exception);
+        }
+
+        [NonEvent]
+        public void BatchMessageReceiverPumpRenewMessageException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.BatchMessageReceiverPumpRenewMessageException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(124, Level = EventLevel.Error, Message = "{0}: BatchMessageReceiverPump RenewMessage Exception: {2}")]
+        void BatchMessageReceiverPumpRenewMessageException(string clientId, string exception)
+        {
+            this.WriteEvent(124, clientId, exception);
+        }
+
+        [Event(125, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump UserCallback start")]
+        public void BatchMessageReceiverPumpUserCallbackStart(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(125, clientId);
+            }
+        }
+
+        [Event(126, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump UserCallback done")]
+        public void BatchMessageReceiverPumpUserCallbackStop(string clientId)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(126, clientId);
+            }
+        }
+
+        [NonEvent]
+        public void BatchMessageReceiverPumpUserCallbackException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.BatchMessageReceiverPumpUserCallbackException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(127, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump UserCallback Exception: Exception: {1}")]
+        void BatchMessageReceiverPumpUserCallbackException(string clientId, string exception)
+        {
+            this.WriteEvent(127, clientId, exception);
+        }
+
+        [NonEvent]
+        public void BatchMessageReceiverPumpDispatchTaskStart(string clientId, IEnumerable<Message> messages)
+        {
+            if (this.IsEnabled())
+            {
+                var formattedSequenceNumbers = StringUtility.GetFormattedSequenceNumbers(messages.Select(x => x.SystemProperties.SequenceNumber));
+                this.BatchMessageReceiverPumpDispatchTaskStart(clientId, messages.Count(), formattedSequenceNumbers);
+            }
+        }
+
+        [Event(128, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump DispatchTask start. MessageCount = {1}, SequenceNumbers: {2}")]
+        void BatchMessageReceiverPumpDispatchTaskStart(string clientId, int messageCount, string sequenceNumbers)
+        {
+            this.WriteEvent(69, clientId, messageCount, sequenceNumbers);
+        }
+
+        [Event(129, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump DispatchTask done: Message: Current Semaphore Count: {1}")]
+        public void BatchMessageReceiverPumpDispatchTaskStop(string clientId, int currentSemaphoreCount)
+        {
+            if (this.IsEnabled())
+            {
+                this.WriteEvent(128, clientId, currentSemaphoreCount);
+            }
+        }
+
+        [NonEvent]
+        public void MessagesAbandonStart(string clientId, int messageCount, IEnumerable<string> lockTokens)
+        {
+            if (this.IsEnabled())
+            {
+                var formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
+                this.MessagesAbandonStart(clientId, messageCount, formattedLockTokens);
+            }
+        }
+
+        [Event(130, Level = EventLevel.Informational, Message = "{0}: AbandonAsync start. MessageCount = {1}, LockTokens = {2}")]
+        void MessagesAbandonStart(string clientId, int messageCount, string lockTokens)
+        {
+            this.WriteEvent(129, clientId, messageCount, lockTokens);
+        }
+
+        [NonEvent]
+        public void MessageReceiverPumpRenewMessageException(string clientId, Exception exception)
+        {
+            if (this.IsEnabled())
+            {
+                this.MessageReceiverPumpRenewMessageException(clientId, exception.ToString());
+            }
+        }
+
+        [Event(131, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump RenewMessage Exception: Exception: {1}")]
+        void MessageReceiverPumpRenewMessageException(string clientId, string exception)
+        {
+            this.WriteEvent(130, clientId, exception);
         }
     }
 

@@ -214,6 +214,15 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The specified value &apos;{0}&apos; is invalid. &quot;maxMessageCount&quot; must be greater than zero..
+        /// </summary>
+        internal static string MaxMessageCountMustBeGreaterThanZero1 {
+            get {
+                return ResourceManager.GetString("MaxMessageCountMustBeGreaterThanZero1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A message handler has already been registered..
         /// </summary>
         internal static string MessageHandlerAlreadyRegistered {

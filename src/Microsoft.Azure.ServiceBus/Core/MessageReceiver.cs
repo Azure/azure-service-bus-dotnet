@@ -48,6 +48,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         readonly ConcurrentExpiringSet<Guid> requestResponseLockedMessages;
         readonly bool isSessionReceiver;
         readonly object messageReceivePumpSyncLock;
+        readonly object batchMessageReceivePumpSyncLock;
         readonly ActiveClientLinkManager clientLinkManager;
         readonly ServiceBusDiagnosticSource diagnosticSource;
 
@@ -55,6 +56,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         long lastPeekedSequenceNumber;
         MessageReceivePump receivePump;
         CancellationTokenSource receivePumpCancellationTokenSource;
+        BatchMessageReceivePump batchReceivePump;
+        CancellationTokenSource batchReceivePumpCancellationTokenSource;
 
         /// <summary>
         /// Creates a new MessageReceiver from a <see cref="ServiceBusConnectionStringBuilder"/>.
@@ -121,7 +124,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             ReceiveMode receiveMode = ReceiveMode.PeekLock,
             RetryPolicy retryPolicy = null,
             int prefetchCount = Constants.DefaultClientPrefetchCount)
-            : this(entityPath, null, receiveMode, new ServiceBusConnection(endpoint, transportType, retryPolicy) {TokenProvider = tokenProvider}, null, retryPolicy, prefetchCount)
+            : this(entityPath, null, receiveMode, new ServiceBusConnection(endpoint, transportType, retryPolicy) { TokenProvider = tokenProvider }, null, retryPolicy, prefetchCount)
         {
             this.OwnsConnection = true;
         }
@@ -192,6 +195,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.requestResponseLockedMessages = new ConcurrentExpiringSet<Guid>();
             this.PrefetchCount = prefetchCount;
             this.messageReceivePumpSyncLock = new object();
+            this.batchMessageReceivePumpSyncLock = new object();
             this.clientLinkManager = new ActiveClientLinkManager(this, this.CbsTokenProvider);
             this.diagnosticSource = new ServiceBusDiagnosticSource(entityPath, serviceBusConnection.Endpoint);
             MessagingEventSource.Log.MessageReceiverCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
@@ -268,7 +272,8 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <summary>
         /// Duration after which individual operations will timeout.
         /// </summary>
-        public override TimeSpan OperationTimeout {
+        public override TimeSpan OperationTimeout
+        {
             get => this.ServiceBusConnection.OperationTimeout;
             set => this.ServiceBusConnection.OperationTimeout = value;
         }
@@ -555,19 +560,34 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Abandoning a message will increase the delivery count on the message.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        public async Task AbandonAsync(string lockToken, IDictionary<string, object> propertiesToModify = null)
+        public Task AbandonAsync(string lockToken, IDictionary<string, object> propertiesToModify = null)
+        {
+            return this.AbandonAsync(new[] { lockToken });
+        }
+
+        /// <summary>
+        /// Abandons a list of <see cref="Message"/> using locktokens. This will make the messages available again for processing.
+        /// </summary>
+        /// <param name="lockTokens">The lock tokens of the corresponding messages to abandon.</param>
+        /// <param name="propertiesToModify">The properties of the message to modify while abandoning the message.</param>
+        /// <remarks>A lock token can be found in <see cref="Message.SystemPropertiesCollection.LockToken"/>,
+        /// only when <see cref="ReceiveMode"/> is set to <see cref="ServiceBus.ReceiveMode.PeekLock"/>.
+        /// Abandoning a message will increase the delivery count on the message.
+        /// This operation can only be performed on messages that were received by this receiver.
+        /// </remarks>
+        public async Task AbandonAsync(IEnumerable<string> lockTokens, IDictionary<string, object> propertiesToModify = null)
         {
             this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
 
-            MessagingEventSource.Log.MessageAbandonStart(this.ClientId, 1, lockToken);
+            MessagingEventSource.Log.MessageAbandonStart(this.ClientId, lockTokens.Count(), lockTokens);
             bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
-            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.DisposeStart("Abandon", lockToken) : null;
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.DisposeStart("Abandon") : null;
             Task abandonTask = null;
 
             try
             {
-                abandonTask = this.RetryPolicy.RunOperation(() => this.OnAbandonAsync(lockToken, propertiesToModify),
+                abandonTask = this.RetryPolicy.RunOperation(() => this.OnAbandonAsync(lockTokens, propertiesToModify),
                     this.OperationTimeout);
                 await abandonTask.ConfigureAwait(false);
             }
@@ -583,7 +603,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
             finally
             {
-                this.diagnosticSource.DisposeStop(activity, lockToken, abandonTask?.Status);
+                this.diagnosticSource.DisposeStop(activity, abandonTask?.Status);
             }
 
 
@@ -792,6 +812,55 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary>
+        /// Renews the lock on the message specified by the lock token. The lock will be renewed based on the setting specified on the queue.
+        /// </summary>
+        /// <remarks>
+        /// When a message is received in <see cref="ServiceBus.ReceiveMode.PeekLock"/> mode, the message is locked on the server for this
+        /// receiver instance for a duration as specified during the Queue/Subscription creation (LockDuration).
+        /// If processing of the message requires longer than this duration, the lock needs to be renewed.
+        /// For each renewal, it resets the time the message is locked by the LockDuration set on the Entity.
+        /// </remarks>
+        public async Task RenewLocksAsync(IEnumerable<Message> messages)
+        {
+            this.ThrowIfClosed();
+            this.ThrowIfNotPeekLockMode();
+
+            var lockTokens = messages.Select(x => x.SystemProperties.LockToken);
+            
+            MessagingEventSource.Log.BatchMessageRenewLockStart(this.ClientId, messages.Count(), lockTokens);
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.RenewLocksStart() : null;
+
+            Task renewTask = null;
+
+            var lockedUntilUtc = DateTime.MinValue;
+
+            try
+            {
+                renewTask = this.RetryPolicy.RunOperation(
+                    async () => lockedUntilUtc = await this.OnRenewLocksAsync(lockTokens).ConfigureAwait(false),
+                    this.OperationTimeout);
+                await renewTask.ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                if (isDiagnosticSourceEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
+
+                MessagingEventSource.Log.MessageRenewLockException(this.ClientId, exception);
+                throw;
+            }
+            finally
+            {
+                this.diagnosticSource.RenewLocksStop(activity, renewTask?.Status, lockedUntilUtc);
+            }
+            MessagingEventSource.Log.BatchMessageRenewLockStop(this.ClientId);
+
+        }
+
+        /// <summary>
         /// Fetches the next active message without changing the state of the receiver or the message source.
         /// </summary>
         /// <remarks>
@@ -890,6 +959,17 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
         /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
         /// </summary>
+        /// <param name="handler">A <see cref="Func{T1, T2, TResult}"/> that processes messages.</param>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is used to notify exceptions.</param>
+        public void RegisterMessageHandler(Func<IEnumerable<Message>, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        {
+            this.RegisterMessageHandler(handler, new MessageHandlerOptions(exceptionReceivedHandler));
+        }
+
+        /// <summary>
+        /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
+        /// </summary>
         /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
         /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
         /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
@@ -897,6 +977,19 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             this.ThrowIfClosed();
             this.OnMessageHandler(messageHandlerOptions, handler);
+        }
+
+        /// <summary>
+        /// Receive messages continuously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the receiver.
+        /// </summary>
+        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
+        /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
+        public void RegisterMessageHandler(Func<IEnumerable<Message>, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
+        {
+            this.ThrowIfClosed();
+            this.OnBatchMessageHandler(messageHandlerOptions, handler);
         }
 
         /// <summary>
@@ -1006,6 +1099,15 @@ namespace Microsoft.Azure.ServiceBus.Core
                     this.receivePump = null;
                 }
             }
+            lock (this.batchMessageReceivePumpSyncLock)
+            {
+                if (this.batchReceivePump != null)
+                {
+                    this.batchReceivePumpCancellationTokenSource.Cancel();
+                    this.batchReceivePumpCancellationTokenSource.Dispose();
+                    this.batchReceivePump = null;
+                }
+            }
             await this.ReceiveLinkManager.CloseAsync().ConfigureAwait(false);
             await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
         }
@@ -1022,7 +1124,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             try
             {
                 var timeoutHelper = new TimeoutHelper(serverWaitTime, true);
-                if(!this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
+                if (!this.ReceiveLinkManager.TryGetOpenedObject(out receiveLink))
                 {
                     MessagingEventSource.Log.CreatingNewLink(this.ClientId, this.isSessionReceiver, this.SessionIdInternal, false, this.LinkException);
                     receiveLink = await this.ReceiveLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
@@ -1198,6 +1300,16 @@ namespace Microsoft.Azure.ServiceBus.Core
             return this.DisposeMessagesAsync(lockTokens, GetAbandonOutcome(propertiesToModify));
         }
 
+        protected virtual Task OnAbandonAsync(IEnumerable<string> lockTokens, IDictionary<string, object> propertiesToModify = null)
+        {
+            var lockTokenGuids = lockTokens.Select(lt => new Guid(lt)).ToArray();
+            if (lockTokenGuids.Any(lt => this.requestResponseLockedMessages.Contains(lt)))
+            {
+                return this.DisposeMessageRequestResponseAsync(lockTokenGuids, DispositionStatus.Abandoned, propertiesToModify);
+            }
+            return this.DisposeMessagesAsync(lockTokenGuids, GetAbandonOutcome(propertiesToModify));
+        }
+
         protected virtual Task OnDeferAsync(string lockToken, IDictionary<string, object> propertiesToModify = null)
         {
             var lockTokens = new[] { new Guid(lockToken) };
@@ -1261,6 +1373,81 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             return lockedUntilUtc;
+        }
+
+        protected virtual async Task<DateTime> OnRenewLocksAsync(IEnumerable<string> lockTokens)
+        {
+            DateTime lockedUntilUtc;
+            try
+            {
+                // Create an AmqpRequest Message to renew locks
+                var amqpRequestMessage = AmqpRequestMessage.CreateRequest(ManagementConstants.Operations.RenewLockOperation, this.OperationTimeout, null);
+
+                if (this.ReceiveLinkManager.TryGetOpenedObject(out var receiveLink))
+                {
+                    amqpRequestMessage.AmqpMessage.ApplicationProperties.Map[ManagementConstants.Request.AssociatedLinkName] = receiveLink.Name;
+                }
+                amqpRequestMessage.Map[ManagementConstants.Properties.LockTokens] = new[] { lockTokens.Select(lockToken => new Guid(lockToken)) };
+
+                var amqpResponseMessage = await this.ExecuteRequestResponseAsync(amqpRequestMessage).ConfigureAwait(false);
+
+                if (amqpResponseMessage.StatusCode == AmqpResponseStatusCode.OK)
+                {
+                    var lockedUntilUtcTimes = amqpResponseMessage.GetValue<IEnumerable<DateTime>>(ManagementConstants.Properties.Expirations);
+                    lockedUntilUtc = lockedUntilUtcTimes.Last();
+                }
+                else
+                {
+                    throw amqpResponseMessage.ToMessagingContractException();
+                }
+            }
+            catch (Exception exception)
+            {
+                throw AmqpExceptionHelper.GetClientException(exception);
+            }
+
+            return lockedUntilUtc;
+        }
+
+        /// <summary> </summary>
+        protected virtual void OnBatchMessageHandler(
+            MessageHandlerOptions registerHandlerOptions,
+            Func<IEnumerable<Message>, CancellationToken, Task> callback)
+        {
+            MessagingEventSource.Log.RegisterOnMessageHandlerStart(this.ClientId, registerHandlerOptions);
+
+            lock (this.batchMessageReceivePumpSyncLock)
+            {
+                if (this.batchReceivePump != null)
+                {
+                    throw new InvalidOperationException(Resources.MessageHandlerAlreadyRegistered);
+                }
+
+                this.batchReceivePumpCancellationTokenSource = new CancellationTokenSource();
+                this.batchReceivePump = new BatchMessageReceivePump(this, registerHandlerOptions, callback, this.ServiceBusConnection.Endpoint, this.batchReceivePumpCancellationTokenSource.Token);
+            }
+
+            try
+            {
+                this.batchReceivePump.StartPump();
+            }
+            catch (Exception exception)
+            {
+                MessagingEventSource.Log.RegisterOnMessageHandlerException(this.ClientId, exception);
+                lock (this.batchMessageReceivePumpSyncLock)
+                {
+                    if (this.batchReceivePump != null)
+                    {
+                        this.batchReceivePumpCancellationTokenSource.Cancel();
+                        this.batchReceivePumpCancellationTokenSource.Dispose();
+                        this.batchReceivePump = null;
+                    }
+                }
+
+                throw;
+            }
+
+            MessagingEventSource.Log.RegisterOnMessageHandlerStop(this.ClientId);
         }
 
         /// <summary> </summary>
@@ -1356,7 +1543,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         async Task DisposeMessagesAsync(IEnumerable<Guid> lockTokens, Outcome outcome)
         {
-            if(this.isSessionReceiver)
+            if (this.isSessionReceiver)
             {
                 this.ThrowIfSessionLockLost();
             }
@@ -1534,7 +1721,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             Tuple<AmqpObject, DateTime> linkDetails = await amqpSendReceiveLinkCreator.CreateAndOpenAmqpLinkAsync().ConfigureAwait(false);
 
-            var receivingAmqpLink = (ReceivingAmqpLink) linkDetails.Item1;
+            var receivingAmqpLink = (ReceivingAmqpLink)linkDetails.Item1;
             var activeSendReceiveClientLink = new ActiveSendReceiveClientLink(
                 receivingAmqpLink,
                 endpointUri,

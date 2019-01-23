@@ -134,6 +134,17 @@ namespace Microsoft.Azure.ServiceBus.Core
         Task RenewLockAsync(Message message);
 
         /// <summary>
+        /// Renews the locks on the messages. The locks will be renewed based on the setting specified on the queue.
+        /// </summary>
+        /// <remarks>
+        /// When messages are received in <see cref="ServiceBus.ReceiveMode.PeekLock"/> mode, the messages is locked on the server for this
+        /// receiver instance for a duration as specified during the Queue/Subscription creation (LockDuration).
+        /// If processing of the messages requires longer than this duration, the lock needs to be renewed.
+        /// For each renewal, it resets the time the message is locked by the LockDuration set on the Entity.
+        /// </remarks>
+        Task RenewLocksAsync(IEnumerable<Message> messages);
+
+        /// <summary>
         /// Renews the lock on the message. The lock will be renewed based on the setting specified on the queue.
         /// <returns>New lock token expiry date and time in UTC format.</returns>
         /// </summary>
