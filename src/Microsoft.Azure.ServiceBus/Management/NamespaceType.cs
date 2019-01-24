@@ -14,8 +14,13 @@ namespace Microsoft.Azure.ServiceBus.Management
         ServiceBus = 0,
 
         /// <summary>
+        /// Namespace contains Service Bus entities (queues, topics)
+        /// </summary>
+        Messaging = 1,
+
+        /// <summary>
         /// Supported only for backward compatibility.
-        /// Namespace can contain mixture of messaging entities and notification hubs. 
+        /// Namespace can contain mixture of messaging entities and notification hubs.
         /// </summary>
         Mixed = 2,
 
