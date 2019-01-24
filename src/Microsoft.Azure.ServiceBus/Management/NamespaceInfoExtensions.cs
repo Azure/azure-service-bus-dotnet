@@ -57,6 +57,10 @@ namespace Microsoft.Azure.ServiceBus.Management
                     case "Alias":
                         nsInfo.Alias = element.Value;
                         break;
+                    case "MessagingUnits":
+                        int.TryParse(element.Value, out var units);
+                        nsInfo.MessagingUnits = units;
+                        break;
                     case "NamespaceType":
                         if (Enum.TryParse<NamespaceType>(element.Value, out var nsType))
                         {
