@@ -730,6 +730,7 @@ namespace Microsoft.Azure.ServiceBus.Management
     public enum NamespaceType
     {
         ServiceBus = 0,
+        Messaging = 1,
         Mixed = 2,
         Others = 99,
     }
