@@ -66,6 +66,10 @@ namespace Microsoft.Azure.ServiceBus.Management
                         {
                             nsInfo.NamespaceType = nsType;
                         }
+                        else if (element.Value == "Messaging") // TODO: workaround till next major as it's a breaking change
+                        {
+                            nsInfo.NamespaceType = NamespaceType.ServiceBus;
+                        }
                         else
                         {
                             nsInfo.NamespaceType = NamespaceType.Others;
