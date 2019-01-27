@@ -17,7 +17,7 @@ namespace Microsoft.Azure.ServiceBus
         public const string BaseActivityName = "Microsoft.Azure.ServiceBus.";
 
         public const string ExceptionEventName = BaseActivityName + "Exception";
-        public const string ProcessActivityName = BaseActivityName + "Process";
+        public const string ProcessActivityName =  BaseActivityName + "Process";
 
         public const string ActivityIdPropertyName = "Diagnostic-Id";
         public const string CorrelationContextPropertyName = "Correlation-Context";
@@ -46,11 +46,11 @@ namespace Microsoft.Azure.ServiceBus
         internal Activity SendStart(IList<Message> messageList)
         {
             Activity activity = Start("Send", () => new
-            {
-                Messages = messageList,
-                Entity = this.entityPath,
-                Endpoint = this.endpoint
-            },
+                {
+                    Messages = messageList,
+                    Entity = this.entityPath,
+                    Endpoint = this.endpoint
+                },
                 a => SetTags(a, messageList)
             );
 
@@ -81,11 +81,11 @@ namespace Microsoft.Azure.ServiceBus
         internal Activity ProcessStart(Message message)
         {
             return ProcessStart("Process", message, () => new
-            {
-                Message = message,
-                Entity = this.entityPath,
-                Endpoint = this.endpoint
-            },
+                {
+                    Message = message,
+                    Entity = this.entityPath,
+                    Endpoint = this.endpoint
+                },
                 a => SetTags(a, message));
         }
 
@@ -103,7 +103,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        internal IEnumerable<Activity> ProcessStart(IEnumerable<Message> messages)
+        internal IEnumerable<Activity> ProcessStart(IList<Message> messages)
         {
             var activities = new List<Activity>();
 
@@ -142,7 +142,6 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-
         #endregion
 
 
@@ -151,12 +150,12 @@ namespace Microsoft.Azure.ServiceBus
         internal Activity ProcessSessionStart(IMessageSession session, Message message)
         {
             return ProcessStart("ProcessSession", message, () => new
-            {
-                Session = session,
-                Message = message,
-                Entity = this.entityPath,
-                Endpoint = this.endpoint
-            },
+                {
+                    Session = session,
+                    Message = message,
+                    Entity = this.entityPath,
+                    Endpoint = this.endpoint
+                },
                 a => SetTags(a, message));
         }
 
@@ -183,12 +182,12 @@ namespace Microsoft.Azure.ServiceBus
         internal Activity ScheduleStart(Message message, DateTimeOffset scheduleEnqueueTimeUtc)
         {
             Activity activity = Start("Schedule", () => new
-            {
-                Message = message,
-                ScheduleEnqueueTimeUtc = scheduleEnqueueTimeUtc,
-                Entity = this.entityPath,
-                Endpoint = this.endpoint
-            },
+                {
+                    Message = message,
+                    ScheduleEnqueueTimeUtc = scheduleEnqueueTimeUtc,
+                    Entity = this.entityPath,
+                    Endpoint = this.endpoint
+                },
                 a => SetTags(a, message));
 
             Inject(message);
@@ -580,11 +579,11 @@ namespace Microsoft.Azure.ServiceBus
         internal Activity AcceptMessageSessionStart(string sessionId)
         {
             return Start("AcceptMessageSession", () => new
-            {
-                SessionId = sessionId,
-                Entity = this.entityPath,
-                Endpoint = this.endpoint
-            },
+                {
+                    SessionId = sessionId,
+                    Entity = this.entityPath,
+                    Endpoint = this.endpoint
+                },
                 a => SetSessionTag(a, sessionId)
             );
         }
@@ -611,11 +610,11 @@ namespace Microsoft.Azure.ServiceBus
         internal Activity GetSessionStateStart(string sessionId)
         {
             return Start("GetSessionState", () => new
-            {
-                SessionId = sessionId,
-                Entity = this.entityPath,
-                Endpoint = this.endpoint
-            },
+                {
+                    SessionId = sessionId,
+                    Entity = this.entityPath,
+                    Endpoint = this.endpoint
+                },
                 a => SetSessionTag(a, sessionId));
         }
 
@@ -642,12 +641,12 @@ namespace Microsoft.Azure.ServiceBus
         internal Activity SetSessionStateStart(string sessionId, byte[] state)
         {
             return Start("SetSessionState", () => new
-            {
-                State = state,
-                SessionId = sessionId,
-                Entity = this.entityPath,
-                Endpoint = this.endpoint
-            },
+                {
+                    State = state,
+                    SessionId = sessionId,
+                    Entity = this.entityPath,
+                    Endpoint = this.endpoint
+                },
                 a => SetSessionTag(a, sessionId));
         }
 
@@ -769,7 +768,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        private string SerializeCorrelationContext(IList<KeyValuePair<string, string>> baggage)
+        private string SerializeCorrelationContext(IList<KeyValuePair<string,string>> baggage)
         {
             if (baggage != null && baggage.Count > 0)
             {
@@ -807,7 +806,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 var tmpActivity = message.ExtractActivity(activityName);
                 setTags?.Invoke(tmpActivity);
-
+                
                 if (DiagnosticListener.IsEnabled(activityName, entityPath, tmpActivity))
                 {
                     activity = tmpActivity;
