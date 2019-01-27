@@ -214,11 +214,11 @@ namespace Microsoft.Azure.ServiceBus {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The specified value &apos;{0}&apos; is invalid. &quot;maxMessageCount&quot; must be greater than zero..
+        ///   Looks up a localized string similar to The specified value &apos;{0}&apos; is invalid. &quot;MaxMessageCount&quot; on BatchMessageHandlerOptions must be greater than zero..
         /// </summary>
-        internal static string MaxMessageCountMustBeGreaterThanZero1 {
+        internal static string MaxMessageCountMustBeGreaterThanZero {
             get {
-                return ResourceManager.GetString("MaxMessageCountMustBeGreaterThanZero1", resourceCulture);
+                return ResourceManager.GetString("MaxMessageCountMustBeGreaterThanZero", resourceCulture);
             }
         }
         

@@ -961,9 +961,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         /// <param name="handler">A <see cref="Func{T1, T2, TResult}"/> that processes messages.</param>
         /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is used to notify exceptions.</param>
-        public void RegisterMessageHandler(Func<IEnumerable<Message>, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        public void RegisterBatchMessageHandler(Func<IList<Message>, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            this.RegisterMessageHandler(handler, new MessageHandlerOptions(exceptionReceivedHandler));
+            this.RegisterBatchMessageHandler(handler, new BatchMessageHandlerOptions(exceptionReceivedHandler));
         }
 
         /// <summary>
@@ -986,7 +986,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
         /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
         /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
-        public void RegisterMessageHandler(Func<IEnumerable<Message>, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
+        public void RegisterBatchMessageHandler(Func<IList<Message>, CancellationToken, Task> handler, BatchMessageHandlerOptions messageHandlerOptions)
         {
             this.ThrowIfClosed();
             this.OnBatchMessageHandler(messageHandlerOptions, handler);
@@ -1411,10 +1411,10 @@ namespace Microsoft.Azure.ServiceBus.Core
 
         /// <summary> </summary>
         protected virtual void OnBatchMessageHandler(
-            MessageHandlerOptions registerHandlerOptions,
-            Func<IEnumerable<Message>, CancellationToken, Task> callback)
+            BatchMessageHandlerOptions registerHandlerOptions,
+            Func<IList<Message>, CancellationToken, Task> callback)
         {
-            MessagingEventSource.Log.RegisterOnMessageHandlerStart(this.ClientId, registerHandlerOptions);
+            MessagingEventSource.Log.RegisterOnBatchMessageHandlerStart(this.ClientId, registerHandlerOptions);
 
             lock (this.batchMessageReceivePumpSyncLock)
             {

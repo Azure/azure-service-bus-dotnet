@@ -7,27 +7,31 @@ namespace Microsoft.Azure.ServiceBus
     using System.Threading;
     using System.Threading.Tasks;
     using Primitives;
+    using System.Collections.Generic;
 
     /// <summary>Provides options associated with message pump processing using
-    /// <see cref="QueueClient.RegisterMessageHandler(Func{Message, CancellationToken, Task}, MessageHandlerOptions)" /> and
-    /// <see cref="SubscriptionClient.RegisterMessageHandler(Func{Message, CancellationToken, Task}, MessageHandlerOptions)" />.</summary>
-    public sealed class MessageHandlerOptions
+    /// <see cref="QueueClient.RegisterBatchMessageHandler(Func{IList{Message}, CancellationToken, Task}, BatchMessageHandlerOptions)" /> and
+    /// <see cref="SubscriptionClient.RegisterBatchMessageHandler(Func{IList{Message}, CancellationToken, Task}, BatchMessageHandlerOptions)" />.</summary>
+    public sealed class BatchMessageHandlerOptions
     {
         int maxConcurrentCalls;
         TimeSpan maxAutoRenewDuration;
+        int maxMessageCount;
 
-        /// <summary>Initializes a new instance of the <see cref="MessageHandlerOptions" /> class.
+        /// <summary>Initializes a new instance of the <see cref="BatchMessageHandlerOptions" /> class.
         /// Default Values:
         ///     <see cref="MaxConcurrentCalls"/> = 1
+        ///     <see cref="MaxMessageCount"/> = 1
         ///     <see cref="AutoComplete"/> = true
         ///     <see cref="ReceiveTimeOut"/> = 1 minute
         ///     <see cref="MaxAutoRenewDuration"/> = 5 minutes
         /// </summary>
         /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
-        public MessageHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        public BatchMessageHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
             this.MaxConcurrentCalls = 1;
+            this.MaxMessageCount = 1;
             this.AutoComplete = true;
             this.ReceiveTimeOut = Constants.DefaultOperationTimeout;
             this.MaxAutoRenewDuration = Constants.ClientPumpRenewLockTimeout;
@@ -72,6 +76,23 @@ namespace Microsoft.Azure.ServiceBus
             {
                 TimeoutHelper.ThrowIfNegativeArgument(value, nameof(value));
                 this.maxAutoRenewDuration = value;
+            }
+        }
+
+        /// <summary>Gets or sets the maximum number of messages the message pump should receive.</summary>
+        /// <value>The maximum number of messages.</value>
+        public int MaxMessageCount
+        {
+            get => this.maxMessageCount;
+
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(Resources.MaxConcurrentCallsMustBeGreaterThanZero.FormatForUser(value));
+                }
+
+                this.maxMessageCount = value;
             }
         }
 

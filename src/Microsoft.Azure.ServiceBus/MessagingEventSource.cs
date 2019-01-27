@@ -1576,6 +1576,22 @@ namespace Microsoft.Azure.ServiceBus
         {
             this.WriteEvent(130, clientId, exception);
         }
+
+        [NonEvent]
+        public void RegisterOnBatchMessageHandlerStart(string clientId, BatchMessageHandlerOptions batchRegisterHandlerOptions)
+        {
+            if (this.IsEnabled())
+            {
+                this.RegisterOnBatchMessageHandlerStart(clientId, batchRegisterHandlerOptions.AutoComplete, batchRegisterHandlerOptions.AutoRenewLock, batchRegisterHandlerOptions.MaxConcurrentCalls, (long)batchRegisterHandlerOptions.MaxAutoRenewDuration.TotalSeconds, batchRegisterHandlerOptions.MaxMessageCount);
+            }
+        }
+
+        [Event(132, Level = EventLevel.Informational, Message = "{0}: Register OnBatchMessageHandler start: OnMessage Options: AutoComplete: {1}, AutoRenewLock: {2}, MaxConcurrentCalls: {3}, AutoRenewTimeout: {4}, MaxMessageCount: {5}")]
+        void RegisterOnBatchMessageHandlerStart(string clientId, bool autoComplete, bool autorenewLock, int maxConcurrentCalls, long autorenewTimeoutInSeconds, int maxMessageCount)
+        {
+            this.WriteEvent(132, clientId, autoComplete, autorenewLock, maxConcurrentCalls, autorenewTimeoutInSeconds, maxMessageCount);
+        }
+
     }
 
     internal static class TraceHelper

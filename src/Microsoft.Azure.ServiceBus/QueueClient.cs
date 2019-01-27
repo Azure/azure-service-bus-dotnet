@@ -463,6 +463,33 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         /// <summary>
+        /// Receive messagess continuously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new list of messages is received by the receiver.
+        /// </summary>
+        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
+        /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
+        /// <remarks>Enable prefetch to speed up the receive rate.
+        /// Use <see cref="RegisterBatchMessageHandler(Func{IList{Message}, CancellationToken, Task}, BatchMessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
+        public void RegisterBatchMessageHandler(Func<IList<Message>, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        {
+            this.RegisterBatchMessageHandler(handler, new BatchMessageHandlerOptions(exceptionReceivedHandler));
+        }
+
+        /// <summary>
+        /// Receive messagess continuously from the entity. Registers a message handler and begins a new thread to receive messages.
+        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new list of messages is received by the receiver.
+        /// </summary>
+        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
+        /// <param name="batchMessageHandlerOptions">The <see cref="BatchMessageHandlerOptions"/> options used to configure the settings of the pump.</param>
+        /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
+        public void RegisterBatchMessageHandler(Func<IList<Message>, CancellationToken, Task> handler, BatchMessageHandlerOptions batchMessageHandlerOptions)
+        {
+            this.ThrowIfClosed();
+            this.InnerReceiver.RegisterBatchMessageHandler(handler, batchMessageHandlerOptions);
+        }
+
+        /// <summary>
         /// Receive session messages continuously from the queue. Registers a message handler and begins a new thread to receive session-messages.
         /// This handler(<see cref="Func{IMessageSession, Message, CancellationToken, Task}"/>) is awaited on every time a new message is received by the queue client.
         /// </summary>
@@ -553,33 +580,5 @@ namespace Microsoft.Azure.ServiceBus
                 await this.sessionClient.CloseAsync().ConfigureAwait(false);
             }
         }
-
-        /// <summary>
-        /// Receive messagess continuously from the entity. Registers a message handler and begins a new thread to receive messages.
-        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new list of messages is received by the receiver.
-        /// </summary>
-        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
-        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
-        /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
-        /// <remarks>Enable prefetch to speed up the receive rate.
-        /// Use <see cref="RegisterMessageHandler(Func{Message,CancellationToken,Task}, MessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
-        public void RegisterMessageHandler(Func<IEnumerable<Message>, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
-        {
-            this.RegisterMessageHandler(handler, new MessageHandlerOptions(exceptionReceivedHandler));
-        }
-
-        /// <summary>
-        /// Receive messagess continuously from the entity. Registers a message handler and begins a new thread to receive messages.
-        /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new list of messages is received by the receiver.
-        /// </summary>
-        /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
-        /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
-        /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
-        public void RegisterMessageHandler(Func<IEnumerable<Message>, CancellationToken, Task> handler, MessageHandlerOptions messageHandlerOptions)
-        {
-            this.ThrowIfClosed();
-            this.InnerReceiver.RegisterMessageHandler(handler, messageHandlerOptions);
-        }
-
     }
 }

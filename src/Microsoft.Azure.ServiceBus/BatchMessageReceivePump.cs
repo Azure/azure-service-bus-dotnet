@@ -14,17 +14,17 @@ namespace Microsoft.Azure.ServiceBus
 
     sealed class BatchMessageReceivePump
     {
-        readonly Func<IEnumerable<Message>, CancellationToken, Task> onBatchMessageCallback;
+        readonly Func<IList<Message>, CancellationToken, Task> onBatchMessageCallback;
         readonly string endpoint;
-        readonly MessageHandlerOptions registerHandlerOptions;
-        readonly IMessageReceiver messageReceiver;
+        readonly BatchMessageHandlerOptions registerHandlerOptions;
+        readonly MessageReceiver messageReceiver;
         readonly CancellationToken pumpCancellationToken;
         readonly SemaphoreSlim maxConcurrentCallsSemaphoreSlim;
         readonly ServiceBusDiagnosticSource diagnosticSource;
 
-        public BatchMessageReceivePump(IMessageReceiver messageReceiver,
-            MessageHandlerOptions registerHandlerOptions,
-            Func<IEnumerable<Message>, CancellationToken, Task> callback,
+        public BatchMessageReceivePump(MessageReceiver messageReceiver,
+            BatchMessageHandlerOptions registerHandlerOptions,
+            Func<IList<Message>, CancellationToken, Task> callback,
             Uri endpoint,
             CancellationToken pumpCancellationToken)
         {
@@ -59,7 +59,7 @@ namespace Microsoft.Azure.ServiceBus
         {
             while (!this.pumpCancellationToken.IsCancellationRequested)
             {
-                IEnumerable<Message> messages = null;
+                IList<Message> messages = null;
                 try
                 {
                     await this.maxConcurrentCallsSemaphoreSlim.WaitAsync(this.pumpCancellationToken).ConfigureAwait(false);
@@ -101,7 +101,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task BatchMessageDispatchTaskInstrumented(IEnumerable<Message> messages)
+        async Task BatchMessageDispatchTaskInstrumented(IList<Message> messages)
         {
             IEnumerable<Activity> activities = this.diagnosticSource.ProcessStart(messages);
             Task processTask = null;
@@ -121,7 +121,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task BatchMessageDispatchTask(IEnumerable<Message> messages)
+        async Task BatchMessageDispatchTask(IList<Message> messages)
         {
             CancellationTokenSource renewLockCancellationTokenSource = null;
             Timer autoRenewLockCancellationTimer = null;
@@ -191,7 +191,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task AbandonMessagesIfNeededAsync(IEnumerable<Message> messages)
+        async Task AbandonMessagesIfNeededAsync(IList<Message> messages)
         {
             try
             {
@@ -207,7 +207,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task CompleteMessagesIfNeededAsync(IEnumerable<Message> messages)
+        async Task CompleteMessagesIfNeededAsync(IList<Message> messages)
         {
             try
             {
@@ -224,7 +224,7 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task RenewMessageLockTask(IEnumerable<Message> messages, CancellationToken renewLockCancellationToken)
+        async Task RenewMessageLockTask(IList<Message> messages, CancellationToken renewLockCancellationToken)
         {
             while (!this.pumpCancellationToken.IsCancellationRequested &&
                    !renewLockCancellationToken.IsCancellationRequested)
