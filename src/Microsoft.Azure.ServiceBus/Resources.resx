@@ -217,6 +217,6 @@
     <value>Argument {0} must be a positive non-zero timeout value. The provided value was {1}.</value>
   </data>
   <data name="MaxMessageCountMustBeGreaterThanZero" xml:space="preserve">
-    <value>The specified value '{0}' is invalid. "MaxMessageCount" on BatchMessageHandlerOptions must be greater than zero.</value>
+    <value>The specified value '{0}' is invalid. "MaxMessageCount" on MessageBatchHandlerOptions must be greater than zero.</value>
   </data>
 </root>

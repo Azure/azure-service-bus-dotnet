@@ -10,15 +10,15 @@ namespace Microsoft.Azure.ServiceBus
     using System.Collections.Generic;
 
     /// <summary>Provides options associated with message pump processing using
-    /// <see cref="QueueClient.RegisterBatchMessageHandler(Func{IList{Message}, CancellationToken, Task}, BatchMessageHandlerOptions)" /> and
-    /// <see cref="SubscriptionClient.RegisterBatchMessageHandler(Func{IList{Message}, CancellationToken, Task}, BatchMessageHandlerOptions)" />.</summary>
-    public sealed class BatchMessageHandlerOptions
+    /// <see cref="QueueClient.RegisterMessageBatchHandler(Func{IList{Message}, CancellationToken, Task}, MessageBatchHandlerOptions)" /> and
+    /// <see cref="SubscriptionClient.RegisterMessageBatchHandler(Func{IList{Message}, CancellationToken, Task}, MessageBatchHandlerOptions)" />.</summary>
+    public sealed class MessageBatchHandlerOptions
     {
         int maxConcurrentCalls;
         TimeSpan maxAutoRenewDuration;
         int maxMessageCount;
 
-        /// <summary>Initializes a new instance of the <see cref="BatchMessageHandlerOptions" /> class.
+        /// <summary>Initializes a new instance of the <see cref="MessageBatchHandlerOptions" /> class.
         /// Default Values:
         ///     <see cref="MaxConcurrentCalls"/> = 1
         ///     <see cref="MaxMessageCount"/> = 1
@@ -28,7 +28,7 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
-        public BatchMessageHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        public MessageBatchHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
             this.MaxConcurrentCalls = 1;
             this.MaxMessageCount = 1;

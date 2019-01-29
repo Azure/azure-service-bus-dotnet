@@ -1393,38 +1393,38 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void BatchMessageReceiverPumpTaskStart(string clientId, IEnumerable<long> sequenceNumbers, int currentSemaphoreCount)
+        public void MessageBatchReceiverPumpTaskStart(string clientId, IEnumerable<long> sequenceNumbers, int currentSemaphoreCount)
         {
             if (this.IsEnabled())
             {
                 var formattedSequenceNumbers = StringUtility.GetFormattedSequenceNumbers(sequenceNumbers);
-                this.BatchMessageReceiverPumpTaskStart(clientId, formattedSequenceNumbers, currentSemaphoreCount);
+                this.MessageBatchReceiverPumpTaskStart(clientId, formattedSequenceNumbers, currentSemaphoreCount);
             }
         }
 
-        [Event(118, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump PumpTask Started: Message: SequenceNumbers: {1}, Available Semaphore Count: {2}")]
-        void BatchMessageReceiverPumpTaskStart(string clientId, string sequenceNumbers, int currentSemaphoreCount)
+        [Event(118, Level = EventLevel.Informational, Message = "{0}: MessageBatchReceiverPump PumpTask Started: Message: SequenceNumbers: {1}, Available Semaphore Count: {2}")]
+        void MessageBatchReceiverPumpTaskStart(string clientId, string sequenceNumbers, int currentSemaphoreCount)
         {
             this.WriteEvent(118, clientId, sequenceNumbers, currentSemaphoreCount);
         }
 
         [NonEvent]
-        public void BatchMessageReceiverPumpRenewMessageStart(string clientId, TimeSpan renewAfterTimeSpan)
+        public void MessageBatchReceiverPumpRenewMessageStart(string clientId, TimeSpan renewAfterTimeSpan)
         {
             if (this.IsEnabled())
             {
-                this.BatchMessageReceiverPumpRenewMessageStart(clientId, (long)renewAfterTimeSpan.TotalSeconds);
+                this.MessageBatchReceiverPumpRenewMessageStart(clientId, (long)renewAfterTimeSpan.TotalSeconds);
             }
         }
 
-        [Event(119, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump RenewMessage start: Message: RenewAfterTimeInSeconds: {1}")]
-        void BatchMessageReceiverPumpRenewMessageStart(string clientId, long renewAfterTimeSpanInSeconds)
+        [Event(119, Level = EventLevel.Informational, Message = "{0}: MessageBatchReceiverPump RenewMessage start: Message: RenewAfterTimeInSeconds: {1}")]
+        void MessageBatchReceiverPumpRenewMessageStart(string clientId, long renewAfterTimeSpanInSeconds)
         {
             this.WriteEvent(118, clientId, renewAfterTimeSpanInSeconds);
         }
 
-        [Event(120, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump RenewMessage done.")]
-        public void BatchMessageReceiverPumpRenewMessageStop(string clientId)
+        [Event(120, Level = EventLevel.Informational, Message = "{0}: MessageBatchReceiverPump RenewMessage done.")]
+        public void MessageBatchReceiverPumpRenewMessageStop(string clientId)
         {
             if (this.IsEnabled())
             {
@@ -1433,24 +1433,24 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void BatchMessageRenewLockStart(string clientId, int messageCount, IEnumerable<string> lockTokens)
+        public void MessageBatchRenewLockStart(string clientId, int messageCount, IEnumerable<string> lockTokens)
         {
             if (this.IsEnabled())
             {
                 var formattedLockTokens = StringUtility.GetFormattedLockTokens(lockTokens);
-                this.BatchMessageRenewLockStart(clientId, messageCount, formattedLockTokens);
+                this.MessageBatchRenewLockStart(clientId, messageCount, formattedLockTokens);
             }
         }
 
         [Event(129, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync start. MessageCount = {1}, LockTokens = {2}")]
-        void BatchMessageRenewLockStart(string clientId, int messageCount, string lockTokens)
+        void MessageBatchRenewLockStart(string clientId, int messageCount, string lockTokens)
         {
             this.WriteEvent(121, clientId, messageCount, lockTokens);
         }
         
 
         [Event(122, Level = EventLevel.Informational, Message = "{0}: RenewLockAsync done.")]
-        public void BatchMessageRenewLockStop(string clientId)
+        public void MessageBatchRenewLockStop(string clientId)
         {
             if (this.IsEnabled())
             {
@@ -1474,22 +1474,22 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void BatchMessageReceiverPumpRenewMessageException(string clientId, Exception exception)
+        public void MessageBatchReceiverPumpRenewMessageException(string clientId, Exception exception)
         {
             if (this.IsEnabled())
             {
-                this.BatchMessageReceiverPumpRenewMessageException(clientId, exception.ToString());
+                this.MessageBatchReceiverPumpRenewMessageException(clientId, exception.ToString());
             }
         }
 
-        [Event(124, Level = EventLevel.Error, Message = "{0}: BatchMessageReceiverPump RenewMessage Exception: {2}")]
-        void BatchMessageReceiverPumpRenewMessageException(string clientId, string exception)
+        [Event(124, Level = EventLevel.Error, Message = "{0}: MessageBatchReceiverPump RenewMessage Exception: {2}")]
+        void MessageBatchReceiverPumpRenewMessageException(string clientId, string exception)
         {
             this.WriteEvent(124, clientId, exception);
         }
 
-        [Event(125, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump UserCallback start")]
-        public void BatchMessageReceiverPumpUserCallbackStart(string clientId)
+        [Event(125, Level = EventLevel.Informational, Message = "{0}: MessageBatchReceiverPump UserCallback start")]
+        public void MessageBatchReceiverPumpUserCallbackStart(string clientId)
         {
             if (this.IsEnabled())
             {
@@ -1497,8 +1497,8 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        [Event(126, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump UserCallback done")]
-        public void BatchMessageReceiverPumpUserCallbackStop(string clientId)
+        [Event(126, Level = EventLevel.Informational, Message = "{0}: MessageBatchReceiverPump UserCallback done")]
+        public void MessageBatchReceiverPumpUserCallbackStop(string clientId)
         {
             if (this.IsEnabled())
             {
@@ -1507,38 +1507,38 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void BatchMessageReceiverPumpUserCallbackException(string clientId, Exception exception)
+        public void MessageBatchReceiverPumpUserCallbackException(string clientId, Exception exception)
         {
             if (this.IsEnabled())
             {
-                this.BatchMessageReceiverPumpUserCallbackException(clientId, exception.ToString());
+                this.MessageBatchReceiverPumpUserCallbackException(clientId, exception.ToString());
             }
         }
 
         [Event(127, Level = EventLevel.Error, Message = "{0}: MessageReceiverPump UserCallback Exception: Exception: {1}")]
-        void BatchMessageReceiverPumpUserCallbackException(string clientId, string exception)
+        void MessageBatchReceiverPumpUserCallbackException(string clientId, string exception)
         {
             this.WriteEvent(127, clientId, exception);
         }
 
         [NonEvent]
-        public void BatchMessageReceiverPumpDispatchTaskStart(string clientId, IEnumerable<Message> messages)
+        public void MessageBatchReceiverPumpDispatchTaskStart(string clientId, IEnumerable<Message> messages)
         {
             if (this.IsEnabled())
             {
                 var formattedSequenceNumbers = StringUtility.GetFormattedSequenceNumbers(messages.Select(x => x.SystemProperties.SequenceNumber));
-                this.BatchMessageReceiverPumpDispatchTaskStart(clientId, messages.Count(), formattedSequenceNumbers);
+                this.MessageBatchReceiverPumpDispatchTaskStart(clientId, messages.Count(), formattedSequenceNumbers);
             }
         }
 
-        [Event(128, Level = EventLevel.Informational, Message = "{0}: BatchMessageReceiverPump DispatchTask start. MessageCount = {1}, SequenceNumbers: {2}")]
-        void BatchMessageReceiverPumpDispatchTaskStart(string clientId, int messageCount, string sequenceNumbers)
+        [Event(128, Level = EventLevel.Informational, Message = "{0}: MessageBatchReceiverPump DispatchTask start. MessageCount = {1}, SequenceNumbers: {2}")]
+        void MessageBatchReceiverPumpDispatchTaskStart(string clientId, int messageCount, string sequenceNumbers)
         {
             this.WriteEvent(69, clientId, messageCount, sequenceNumbers);
         }
 
         [Event(129, Level = EventLevel.Informational, Message = "{0}: MessageReceiverPump DispatchTask done: Message: Current Semaphore Count: {1}")]
-        public void BatchMessageReceiverPumpDispatchTaskStop(string clientId, int currentSemaphoreCount)
+        public void MessageBatchReceiverPumpDispatchTaskStop(string clientId, int currentSemaphoreCount)
         {
             if (this.IsEnabled())
             {
@@ -1578,16 +1578,16 @@ namespace Microsoft.Azure.ServiceBus
         }
 
         [NonEvent]
-        public void RegisterOnBatchMessageHandlerStart(string clientId, BatchMessageHandlerOptions batchRegisterHandlerOptions)
+        public void RegisterOnMessageBatchHandlerStart(string clientId, MessageBatchHandlerOptions batchRegisterHandlerOptions)
         {
             if (this.IsEnabled())
             {
-                this.RegisterOnBatchMessageHandlerStart(clientId, batchRegisterHandlerOptions.AutoComplete, batchRegisterHandlerOptions.AutoRenewLock, batchRegisterHandlerOptions.MaxConcurrentCalls, (long)batchRegisterHandlerOptions.MaxAutoRenewDuration.TotalSeconds, batchRegisterHandlerOptions.MaxMessageCount);
+                this.RegisterOnMessageBatchHandlerStart(clientId, batchRegisterHandlerOptions.AutoComplete, batchRegisterHandlerOptions.AutoRenewLock, batchRegisterHandlerOptions.MaxConcurrentCalls, (long)batchRegisterHandlerOptions.MaxAutoRenewDuration.TotalSeconds, batchRegisterHandlerOptions.MaxMessageCount);
             }
         }
 
-        [Event(132, Level = EventLevel.Informational, Message = "{0}: Register OnBatchMessageHandler start: OnMessage Options: AutoComplete: {1}, AutoRenewLock: {2}, MaxConcurrentCalls: {3}, AutoRenewTimeout: {4}, MaxMessageCount: {5}")]
-        void RegisterOnBatchMessageHandlerStart(string clientId, bool autoComplete, bool autorenewLock, int maxConcurrentCalls, long autorenewTimeoutInSeconds, int maxMessageCount)
+        [Event(132, Level = EventLevel.Informational, Message = "{0}: Register OnMessageBatchHandler start: OnMessage Options: AutoComplete: {1}, AutoRenewLock: {2}, MaxConcurrentCalls: {3}, AutoRenewTimeout: {4}, MaxMessageCount: {5}")]
+        void RegisterOnMessageBatchHandlerStart(string clientId, bool autoComplete, bool autorenewLock, int maxConcurrentCalls, long autorenewTimeoutInSeconds, int maxMessageCount)
         {
             this.WriteEvent(132, clientId, autoComplete, autorenewLock, maxConcurrentCalls, autorenewTimeoutInSeconds, maxMessageCount);
         }

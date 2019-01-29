@@ -48,7 +48,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         readonly ConcurrentExpiringSet<Guid> requestResponseLockedMessages;
         readonly bool isSessionReceiver;
         readonly object messageReceivePumpSyncLock;
-        readonly object batchMessageReceivePumpSyncLock;
+        readonly object messageBatchReceivePumpSyncLock;
         readonly ActiveClientLinkManager clientLinkManager;
         readonly ServiceBusDiagnosticSource diagnosticSource;
 
@@ -56,7 +56,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         long lastPeekedSequenceNumber;
         MessageReceivePump receivePump;
         CancellationTokenSource receivePumpCancellationTokenSource;
-        BatchMessageReceivePump batchReceivePump;
+        MessageBatchReceivePump batchReceivePump;
         CancellationTokenSource batchReceivePumpCancellationTokenSource;
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.requestResponseLockedMessages = new ConcurrentExpiringSet<Guid>();
             this.PrefetchCount = prefetchCount;
             this.messageReceivePumpSyncLock = new object();
-            this.batchMessageReceivePumpSyncLock = new object();
+            this.messageBatchReceivePumpSyncLock = new object();
             this.clientLinkManager = new ActiveClientLinkManager(this, this.CbsTokenProvider);
             this.diagnosticSource = new ServiceBusDiagnosticSource(entityPath, serviceBusConnection.Endpoint);
             MessagingEventSource.Log.MessageReceiverCreateStop(serviceBusConnection.Endpoint.Authority, entityPath, this.ClientId);
@@ -827,7 +827,7 @@ namespace Microsoft.Azure.ServiceBus.Core
 
             var lockTokens = messages.Select(x => x.SystemProperties.LockToken);
             
-            MessagingEventSource.Log.BatchMessageRenewLockStart(this.ClientId, messages.Count(), lockTokens);
+            MessagingEventSource.Log.MessageBatchRenewLockStart(this.ClientId, messages.Count(), lockTokens);
             bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
             Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.RenewLocksStart() : null;
 
@@ -856,7 +856,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 this.diagnosticSource.RenewLocksStop(activity, renewTask?.Status, lockedUntilUtc);
             }
-            MessagingEventSource.Log.BatchMessageRenewLockStop(this.ClientId);
+            MessagingEventSource.Log.MessageBatchRenewLockStop(this.ClientId);
 
         }
 
@@ -961,9 +961,9 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </summary>
         /// <param name="handler">A <see cref="Func{T1, T2, TResult}"/> that processes messages.</param>
         /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is used to notify exceptions.</param>
-        public void RegisterBatchMessageHandler(Func<IList<Message>, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        public void RegisterMessageBatchHandler(Func<IList<Message>, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            this.RegisterBatchMessageHandler(handler, new BatchMessageHandlerOptions(exceptionReceivedHandler));
+            this.RegisterMessageBatchHandler(handler, new MessageBatchHandlerOptions(exceptionReceivedHandler));
         }
 
         /// <summary>
@@ -986,10 +986,10 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
         /// <param name="messageHandlerOptions">The <see cref="MessageHandlerOptions"/> options used to configure the settings of the pump.</param>
         /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
-        public void RegisterBatchMessageHandler(Func<IList<Message>, CancellationToken, Task> handler, BatchMessageHandlerOptions messageHandlerOptions)
+        public void RegisterMessageBatchHandler(Func<IList<Message>, CancellationToken, Task> handler, MessageBatchHandlerOptions messageHandlerOptions)
         {
             this.ThrowIfClosed();
-            this.OnBatchMessageHandler(messageHandlerOptions, handler);
+            this.OnMessageBatchHandler(messageHandlerOptions, handler);
         }
 
         /// <summary>
@@ -1099,7 +1099,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                     this.receivePump = null;
                 }
             }
-            lock (this.batchMessageReceivePumpSyncLock)
+            lock (this.messageBatchReceivePumpSyncLock)
             {
                 if (this.batchReceivePump != null)
                 {
@@ -1410,13 +1410,13 @@ namespace Microsoft.Azure.ServiceBus.Core
         }
 
         /// <summary> </summary>
-        protected virtual void OnBatchMessageHandler(
-            BatchMessageHandlerOptions registerHandlerOptions,
+        protected virtual void OnMessageBatchHandler(
+            MessageBatchHandlerOptions registerHandlerOptions,
             Func<IList<Message>, CancellationToken, Task> callback)
         {
-            MessagingEventSource.Log.RegisterOnBatchMessageHandlerStart(this.ClientId, registerHandlerOptions);
+            MessagingEventSource.Log.RegisterOnMessageBatchHandlerStart(this.ClientId, registerHandlerOptions);
 
-            lock (this.batchMessageReceivePumpSyncLock)
+            lock (this.messageBatchReceivePumpSyncLock)
             {
                 if (this.batchReceivePump != null)
                 {
@@ -1424,7 +1424,7 @@ namespace Microsoft.Azure.ServiceBus.Core
                 }
 
                 this.batchReceivePumpCancellationTokenSource = new CancellationTokenSource();
-                this.batchReceivePump = new BatchMessageReceivePump(this, registerHandlerOptions, callback, this.ServiceBusConnection.Endpoint, this.batchReceivePumpCancellationTokenSource.Token);
+                this.batchReceivePump = new MessageBatchReceivePump(this, registerHandlerOptions, callback, this.ServiceBusConnection.Endpoint, this.batchReceivePumpCancellationTokenSource.Token);
             }
 
             try
@@ -1434,7 +1434,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             catch (Exception exception)
             {
                 MessagingEventSource.Log.RegisterOnMessageHandlerException(this.ClientId, exception);
-                lock (this.batchMessageReceivePumpSyncLock)
+                lock (this.messageBatchReceivePumpSyncLock)
                 {
                     if (this.batchReceivePump != null)
                     {

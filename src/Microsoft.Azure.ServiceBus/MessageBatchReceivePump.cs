@@ -12,25 +12,25 @@ namespace Microsoft.Azure.ServiceBus
     using Core;
     using Primitives;
 
-    sealed class BatchMessageReceivePump
+    sealed class MessageBatchReceivePump
     {
-        readonly Func<IList<Message>, CancellationToken, Task> onBatchMessageCallback;
+        readonly Func<IList<Message>, CancellationToken, Task> onMessageBatchCallback;
         readonly string endpoint;
-        readonly BatchMessageHandlerOptions registerHandlerOptions;
+        readonly MessageBatchHandlerOptions registerHandlerOptions;
         readonly MessageReceiver messageReceiver;
         readonly CancellationToken pumpCancellationToken;
         readonly SemaphoreSlim maxConcurrentCallsSemaphoreSlim;
         readonly ServiceBusDiagnosticSource diagnosticSource;
 
-        public BatchMessageReceivePump(MessageReceiver messageReceiver,
-            BatchMessageHandlerOptions registerHandlerOptions,
+        public MessageBatchReceivePump(MessageReceiver messageReceiver,
+            MessageBatchHandlerOptions registerHandlerOptions,
             Func<IList<Message>, CancellationToken, Task> callback,
             Uri endpoint,
             CancellationToken pumpCancellationToken)
         {
             this.messageReceiver = messageReceiver ?? throw new ArgumentNullException(nameof(messageReceiver));
             this.registerHandlerOptions = registerHandlerOptions;
-            this.onBatchMessageCallback = callback;
+            this.onMessageBatchCallback = callback;
             this.endpoint = endpoint.Authority;
             this.pumpCancellationToken = pumpCancellationToken;
             this.maxConcurrentCallsSemaphoreSlim = new SemaphoreSlim(this.registerHandlerOptions.MaxConcurrentCalls);
@@ -39,7 +39,7 @@ namespace Microsoft.Azure.ServiceBus
 
         public void StartPump()
         {
-            TaskExtensionHelper.Schedule(() => this.BatchMessagePumpTaskAsync());
+            TaskExtensionHelper.Schedule(() => this.MessageBatchPumpTaskAsync());
         }
 
         bool ShouldRenewLock()
@@ -55,7 +55,7 @@ namespace Microsoft.Azure.ServiceBus
             return this.registerHandlerOptions.RaiseExceptionReceived(eventArgs);
         }
 
-        async Task BatchMessagePumpTaskAsync()
+        async Task MessageBatchPumpTaskAsync()
         {
             while (!this.pumpCancellationToken.IsCancellationRequested)
             {
@@ -71,11 +71,11 @@ namespace Microsoft.Azure.ServiceBus
                         {
                             if (ServiceBusDiagnosticSource.IsEnabled())
                             {
-                                return this.BatchMessageDispatchTaskInstrumented(messages);
+                                return this.MessageBatchDispatchTaskInstrumented(messages);
                             }
                             else
                             {
-                                return this.BatchMessageDispatchTask(messages);
+                                return this.MessageBatchDispatchTask(messages);
                             }
                         });
                     }
@@ -101,13 +101,13 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task BatchMessageDispatchTaskInstrumented(IList<Message> messages)
+        async Task MessageBatchDispatchTaskInstrumented(IList<Message> messages)
         {
             IEnumerable<Activity> activities = this.diagnosticSource.ProcessStart(messages);
             Task processTask = null;
             try
             {
-                processTask = BatchMessageDispatchTask(messages);
+                processTask = MessageBatchDispatchTask(messages);
                 await processTask.ConfigureAwait(false);
             }
             catch (Exception e)
@@ -121,12 +121,12 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task BatchMessageDispatchTask(IList<Message> messages)
+        async Task MessageBatchDispatchTask(IList<Message> messages)
         {
             CancellationTokenSource renewLockCancellationTokenSource = null;
             Timer autoRenewLockCancellationTimer = null;
 
-            MessagingEventSource.Log.BatchMessageReceiverPumpDispatchTaskStart(this.messageReceiver.ClientId, messages);
+            MessagingEventSource.Log.MessageBatchReceiverPumpDispatchTaskStart(this.messageReceiver.ClientId, messages);
 
             if (this.ShouldRenewLock())
             {
@@ -139,14 +139,14 @@ namespace Microsoft.Azure.ServiceBus
 
             try
             {
-                MessagingEventSource.Log.BatchMessageReceiverPumpUserCallbackStart(this.messageReceiver.ClientId);
-                await this.onBatchMessageCallback(messages, this.pumpCancellationToken).ConfigureAwait(false);
+                MessagingEventSource.Log.MessageBatchReceiverPumpUserCallbackStart(this.messageReceiver.ClientId);
+                await this.onMessageBatchCallback(messages, this.pumpCancellationToken).ConfigureAwait(false);
 
-                MessagingEventSource.Log.BatchMessageReceiverPumpUserCallbackStop(this.messageReceiver.ClientId);
+                MessagingEventSource.Log.MessageBatchReceiverPumpUserCallbackStop(this.messageReceiver.ClientId);
             }
             catch (Exception exception)
             {
-                MessagingEventSource.Log.BatchMessageReceiverPumpUserCallbackException(this.messageReceiver.ClientId, exception);
+                MessagingEventSource.Log.MessageBatchReceiverPumpUserCallbackException(this.messageReceiver.ClientId, exception);
                 await this.RaiseExceptionReceived(exception, ExceptionReceivedEventArgsAction.UserCallback).ConfigureAwait(false);
 
                 // Nothing much to do if UserCallback throws, Abandon message and Release semaphore.
@@ -175,7 +175,7 @@ namespace Microsoft.Azure.ServiceBus
             await this.CompleteMessagesIfNeededAsync(messages).ConfigureAwait(false);
             this.maxConcurrentCallsSemaphoreSlim.Release();
 
-            MessagingEventSource.Log.BatchMessageReceiverPumpDispatchTaskStop(this.messageReceiver.ClientId, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
+            MessagingEventSource.Log.MessageBatchReceiverPumpDispatchTaskStop(this.messageReceiver.ClientId, this.maxConcurrentCallsSemaphoreSlim.CurrentCount);
         }
 
         void CancelAutoRenewLock(object state)
@@ -232,7 +232,7 @@ namespace Microsoft.Azure.ServiceBus
                 try
                 {
                     var amount = MessagingUtilities.CalculateRenewAfterDuration(messages.Last().SystemProperties.LockedUntilUtc);
-                    MessagingEventSource.Log.BatchMessageReceiverPumpRenewMessageStart(this.messageReceiver.ClientId, amount);
+                    MessagingEventSource.Log.MessageBatchReceiverPumpRenewMessageStart(this.messageReceiver.ClientId, amount);
 
                     // We're awaiting the task created by 'ContinueWith' to avoid awaiting the Delay task which may be canceled
                     // by the renewLockCancellationToken. This way we prevent a TaskCanceledException.
@@ -248,7 +248,7 @@ namespace Microsoft.Azure.ServiceBus
                         !renewLockCancellationToken.IsCancellationRequested)
                     {
                         await this.messageReceiver.RenewLocksAsync(messages).ConfigureAwait(false);
-                        MessagingEventSource.Log.BatchMessageReceiverPumpRenewMessageStop(this.messageReceiver.ClientId);
+                        MessagingEventSource.Log.MessageBatchReceiverPumpRenewMessageStop(this.messageReceiver.ClientId);
                     }
                     else
                     {

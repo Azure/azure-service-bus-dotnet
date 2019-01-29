@@ -470,10 +470,10 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
         /// <remarks>Enable prefetch to speed up the receive rate.
-        /// Use <see cref="RegisterBatchMessageHandler(Func{IList{Message}, CancellationToken, Task}, BatchMessageHandlerOptions)"/> to configure the settings of the pump.</remarks>
-        public void RegisterBatchMessageHandler(Func<IList<Message>, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        /// Use <see cref="RegisterMessageBatchHandler(Func{IList{Message}, CancellationToken, Task}, MessageBatchHandlerOptions)"/> to configure the settings of the pump.</remarks>
+        public void RegisterMessageBatchHandler(Func<IList<Message>, CancellationToken, Task> handler, Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
         {
-            this.RegisterBatchMessageHandler(handler, new BatchMessageHandlerOptions(exceptionReceivedHandler));
+            this.RegisterMessageBatchHandler(handler, new MessageBatchHandlerOptions(exceptionReceivedHandler));
         }
 
         /// <summary>
@@ -481,12 +481,12 @@ namespace Microsoft.Azure.ServiceBus
         /// This handler(<see cref="Func{Message, CancellationToken, Task}"/>) is awaited on every time a new list of messages is received by the receiver.
         /// </summary>
         /// <param name="handler">A <see cref="Func{Message, CancellationToken, Task}"/> that processes messages.</param>
-        /// <param name="batchMessageHandlerOptions">The <see cref="BatchMessageHandlerOptions"/> options used to configure the settings of the pump.</param>
+        /// <param name="messageBatchHandlerOptions">The <see cref="MessageBatchHandlerOptions"/> options used to configure the settings of the pump.</param>
         /// <remarks>Enable prefetch to speed up the receive rate.</remarks>
-        public void RegisterBatchMessageHandler(Func<IList<Message>, CancellationToken, Task> handler, BatchMessageHandlerOptions batchMessageHandlerOptions)
+        public void RegisterMessageBatchHandler(Func<IList<Message>, CancellationToken, Task> handler, MessageBatchHandlerOptions messageBatchHandlerOptions)
         {
             this.ThrowIfClosed();
-            this.InnerReceiver.RegisterBatchMessageHandler(handler, batchMessageHandlerOptions);
+            this.InnerReceiver.RegisterMessageBatchHandler(handler, messageBatchHandlerOptions);
         }
 
         /// <summary>
