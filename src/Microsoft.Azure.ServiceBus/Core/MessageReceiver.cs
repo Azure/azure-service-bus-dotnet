@@ -562,7 +562,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// </remarks>
         public Task AbandonAsync(string lockToken, IDictionary<string, object> propertiesToModify = null)
         {
-            return this.AbandonAsync(new[] { lockToken });
+            return this.AbandonAsync(new[] { lockToken }, propertiesToModify);
         }
 
         /// <summary>
