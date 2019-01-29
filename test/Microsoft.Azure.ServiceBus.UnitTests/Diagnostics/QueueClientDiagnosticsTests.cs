@@ -28,7 +28,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             this.listener.Disable();
 
             await TestUtility.SendMessagesAsync(this.queueClient.InnerSender, 1);
-            this.queueClient.RegisterMessageHandler((Message msg, CancellationToken ct) => {
+            this.queueClient.RegisterMessageHandler((msg, ct) => {
                     processActivity = Activity.Current;
                     processingDone.Set();
                     return Task.CompletedTask;
@@ -54,7 +54,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
                 queueName == null || queueName.ToString() != TestConstants.NonPartitionedQueueName);
 
             await TestUtility.SendMessagesAsync(this.queueClient.InnerSender, 1);
-            this.queueClient.RegisterMessageHandler((Message msg, CancellationToken ct) =>
+            this.queueClient.RegisterMessageHandler((msg, ct) =>
                 {
                     processActivity = Activity.Current;
                     processingDone.Set();
@@ -86,7 +86,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             await TestUtility.SendSessionMessagesAsync(this.queueClient.InnerSender, 1, 1);
             parentActivity.Stop();
 
-            this.queueClient.RegisterMessageHandler((Message msg, CancellationToken ct) =>
+            this.queueClient.RegisterMessageHandler((msg, ct) =>
                 {
                     processActivity = Activity.Current;
                     processingDone.Set();
@@ -151,7 +151,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             this.listener.Enable((name, queueName, arg) => !name.EndsWith(".Start") && !name.Contains("Receive") );
 
             int count = 0;
-            this.queueClient.RegisterMessageHandler((Message msg, CancellationToken ct) =>
+            this.queueClient.RegisterMessageHandler((msg, ct) =>
                 {
                     if (count++ == 0)
                     {
@@ -451,7 +451,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests.Diagnostics
             this.listener.Enable((name, queueName, arg) => !name.EndsWith("Start") && !name.Contains("Receive") && !name.Contains("Exception"));
 
             await TestUtility.SendMessagesAsync(this.queueClient.InnerSender, 1);
-            this.queueClient.RegisterMessageHandler((Message msg, CancellationToken ct) =>
+            this.queueClient.RegisterMessageHandler((msg, ct) =>
                 {
                     processingDone.Set();
                     return Task.CompletedTask;
