@@ -69,7 +69,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             var queueClient = new QueueClient(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
             queueClient.RegisterMessageHandler(
-                (msg, token) => throw new Exception("Unexpected exception: Did not expect messages here"),
+                (message, token) => throw new Exception("Unexpected exception: Did not expect messages here"),
                 (eventArgs) =>
                 {
                     Assert.NotNull(eventArgs);
