@@ -197,7 +197,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 if (this.messageReceiver.ReceiveMode == ReceiveMode.PeekLock)
                 {
-                    var lockTokens = messages.Select(x => x.SystemProperties.LockToken);
+                    var lockTokens = messages.Select(x => x.SystemProperties.LockToken).ToList();
                     await this.messageReceiver.AbandonAsync(lockTokens).ConfigureAwait(false);
                 }
             }

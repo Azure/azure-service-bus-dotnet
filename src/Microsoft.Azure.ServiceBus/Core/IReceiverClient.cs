@@ -96,7 +96,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Abandoning a message will increase the delivery count on the message.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        Task AbandonAsync(IEnumerable<string> lockTokens, IDictionary<string, object> propertiesToModify = null);
+        Task AbandonAsync(IList<string> lockTokens, IDictionary<string, object> propertiesToModify = null);
 
         /// <summary>
         /// Moves a message to the deadletter sub-queue.

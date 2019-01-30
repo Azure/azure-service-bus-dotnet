@@ -560,9 +560,39 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Abandoning a message will increase the delivery count on the message.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        public Task AbandonAsync(string lockToken, IDictionary<string, object> propertiesToModify = null)
+        public async Task AbandonAsync(string lockToken, IDictionary<string, object> propertiesToModify = null)
         {
-            return this.AbandonAsync(new[] { lockToken }, propertiesToModify);
+            this.ThrowIfClosed();
+            this.ThrowIfNotPeekLockMode();
+
+            MessagingEventSource.Log.MessageAbandonStart(this.ClientId, 1, lockToken);
+            bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.DisposeStart("Abandon", lockToken) : null;
+            Task abandonTask = null;
+
+            try
+            {
+                abandonTask = this.RetryPolicy.RunOperation(() => this.OnAbandonAsync(lockToken, propertiesToModify),
+                    this.OperationTimeout);
+                await abandonTask.ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                if (isDiagnosticSourceEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
+
+                MessagingEventSource.Log.MessageAbandonException(this.ClientId, exception);
+                throw;
+            }
+            finally
+            {
+                this.diagnosticSource.DisposeStop(activity, lockToken, abandonTask?.Status);
+            }
+
+
+            MessagingEventSource.Log.MessageAbandonStop(this.ClientId);
         }
 
         /// <summary>
@@ -575,14 +605,14 @@ namespace Microsoft.Azure.ServiceBus.Core
         /// Abandoning a message will increase the delivery count on the message.
         /// This operation can only be performed on messages that were received by this receiver.
         /// </remarks>
-        public async Task AbandonAsync(IEnumerable<string> lockTokens, IDictionary<string, object> propertiesToModify = null)
+        public async Task AbandonAsync(IList<string> lockTokens, IDictionary<string, object> propertiesToModify = null)
         {
             this.ThrowIfClosed();
             this.ThrowIfNotPeekLockMode();
 
             MessagingEventSource.Log.MessageAbandonStart(this.ClientId, lockTokens.Count(), lockTokens);
             bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
-            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.DisposeStart("Abandon") : null;
+            Activity activity = isDiagnosticSourceEnabled ? this.diagnosticSource.DisposeStart("Abandon", lockTokens) : null;
             Task abandonTask = null;
 
             try
@@ -603,7 +633,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
             finally
             {
-                this.diagnosticSource.DisposeStop(activity, abandonTask?.Status);
+                this.diagnosticSource.DisposeStop(activity, lockTokens, abandonTask?.Status);
             }
 
 

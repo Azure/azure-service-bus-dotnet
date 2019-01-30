@@ -404,22 +404,24 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        internal Activity DisposeStart(string operationName)
+        internal Activity DisposeStart(string operationName, IList<string> lockTokens)
         {
             return Start(operationName, () => new
             {
+                LockTokens = lockTokens,
                 Entity = this.entityPath,
                 Endpoint = this.endpoint
             },
             null);
         }
 
-        internal void DisposeStop(Activity activity, TaskStatus? status)
+        internal void DisposeStop(Activity activity, IList<string> lockTokens, TaskStatus? status)
         {
             if (activity != null)
             {
                 DiagnosticListener.StopActivity(activity, new
                 {
+                    LockTokens = lockTokens,
                     Entity = this.entityPath,
                     Endpoint = this.endpoint,
                     Status = status ?? TaskStatus.Faulted

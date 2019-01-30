@@ -347,7 +347,7 @@ namespace Microsoft.Azure.ServiceBus
         /// Abandoning a message will increase the delivery count on the message.
         /// This operation can only be performed on messages that were received by this client.
         /// </remarks>
-        public Task AbandonAsync(IEnumerable<string> lockTokens, IDictionary<string, object> propertiesToModify = null)
+        public Task AbandonAsync(IList<string> lockTokens, IDictionary<string, object> propertiesToModify = null)
         {
             this.ThrowIfClosed();
             return this.InnerSubscriptionClient.InnerReceiver.AbandonAsync(lockTokens, propertiesToModify);

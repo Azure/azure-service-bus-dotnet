@@ -392,7 +392,7 @@ namespace Microsoft.Azure.ServiceBus
         /// This operation can only be performed on messages that were received by this client.
         /// </remarks>
         /// This operation can only be performed on messages that were received by this client.
-        public Task AbandonAsync(IEnumerable<string> lockTokens, IDictionary<string, object> propertiesToModify = null)
+        public Task AbandonAsync(IList<string> lockTokens, IDictionary<string, object> propertiesToModify = null)
         {
             this.ThrowIfClosed();
             return this.InnerReceiver.AbandonAsync(lockTokens, propertiesToModify);
