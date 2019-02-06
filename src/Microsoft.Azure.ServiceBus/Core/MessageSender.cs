@@ -453,6 +453,11 @@ namespace Microsoft.Azure.ServiceBus.Core
                 throw Fx.Exception.ArgumentNull(nameof(messageList));
             }
 
+            if (messageList.Count == 0)
+            {
+                throw new ArgumentException(@"Collection cannot be empty.", nameof(messageList));
+            }
+
             foreach (var message in messageList)
             {
                 count++;

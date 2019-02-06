@@ -376,7 +376,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
                 var recivedMessage = await receiver.ReceiveAsync().ConfigureAwait(false);
                 Assert.True(Encoding.UTF8.GetString(recivedMessage.Body) == Encoding.UTF8.GetString(messageBody));
-            
+
                 var connection = sender.ServiceBusConnection;
                 Assert.Throws<ObjectDisposedException>(() => new MessageSender(connection, TestConstants.PartitionedQueueName));
             }
@@ -413,7 +413,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
                 messageBody = Encoding.UTF8.GetBytes("Message 2");
                 message = new Message(messageBody);
-                await sender.SendAsync(message); 
+                await sender.SendAsync(message);
 
                 recivedMessage = await receiver.ReceiveAsync().ConfigureAwait(false);
                 Assert.True(Encoding.UTF8.GetString(recivedMessage.Body) == Encoding.UTF8.GetString(messageBody));
@@ -459,5 +459,23 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 await receiver.CloseAsync().ConfigureAwait(false);
             }
         }
+
+        [Theory]
+        [InlineData(TestConstants.NonPartitionedQueueName)]
+        [DisplayTestMethodName]
+        async Task MessageSenderThrowsWhenSendingEmptyCollection(string queueName)
+        {
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
+
+            try
+            {
+                await Assert.ThrowsAsync<ArgumentException>(() => sender.SendAsync(new List<Message>()));
+            }
+            finally
+            {
+                await sender.CloseAsync().ConfigureAwait(false);
+            }
+        }
+
     }
 }
