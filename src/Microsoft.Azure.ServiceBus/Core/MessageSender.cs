@@ -237,6 +237,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             this.ThrowIfClosed();
 
             var count = MessageSender.ValidateMessages(messageList);
+            if (count <= 0)
+            {
+                return;
+            }
+
             MessagingEventSource.Log.MessageSendStart(this.ClientId, count);
 
             bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
@@ -451,6 +456,11 @@ namespace Microsoft.Azure.ServiceBus.Core
             if (messageList == null)
             {
                 throw Fx.Exception.ArgumentNull(nameof(messageList));
+            }
+
+            if (messageList.Count == 0)
+            {
+                return count;
             }
 
             foreach (var message in messageList)
