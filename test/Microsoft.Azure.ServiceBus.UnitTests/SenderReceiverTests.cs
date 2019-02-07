@@ -466,8 +466,19 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         async Task MessageSenderShouldNotThrowWhenSendingEmptyCollection(string queueName)
         {
             var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
+            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
 
-            await sender.SendAsync(new List<Message>());
+            try
+            {
+                await sender.SendAsync(new List<Message>());
+                var message = await receiver.ReceiveAsync(TimeSpan.FromSeconds(3));
+                Assert.True(message == null, "Expected not to find any messages, but a message was received.");
+            }
+            finally
+            {
+                await sender.CloseAsync();
+                await receiver.CloseAsync();
+            }
         }
 
     }
