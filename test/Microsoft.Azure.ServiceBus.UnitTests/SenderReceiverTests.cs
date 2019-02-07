@@ -463,7 +463,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [InlineData(TestConstants.NonPartitionedQueueName)]
         [DisplayTestMethodName]
-        async Task MessageSenderThrowsWhenSendingEmptyCollection(string queueName)
+        async Task MessageSenderShouldNotThrowWhenSendingEmptyCollection(string queueName)
         {
             var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
 
