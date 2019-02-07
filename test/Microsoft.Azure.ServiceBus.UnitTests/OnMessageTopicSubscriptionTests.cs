@@ -33,6 +33,22 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             return this.OnMessageTestAsync(topicName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
         }
 
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        Task OnMessageBatchPeekLockWithAutoCompleteTrue(string topicName, int maxConcurrentCalls)
+        {
+            return this.OnMessageBatchTestAsync(topicName, maxConcurrentCalls, ReceiveMode.PeekLock, true);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestPermutations))]
+        [DisplayTestMethodName]
+        Task OnMessageBatchReceiveDelete(string topicName, int maxConcurrentCalls)
+        {
+            return this.OnMessageBatchTestAsync(topicName, maxConcurrentCalls, ReceiveMode.ReceiveAndDelete, false);
+        }
+
         async Task OnMessageTestAsync(string topicName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
         {
             const int messageCount = 10;
@@ -43,7 +59,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 topicName,
                 this.SubscriptionName,
                 mode);
-
+            
             try
             {
                 await this.OnMessageAsyncTestCase(
@@ -52,6 +68,38 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                     maxConcurrentCalls,
                     autoComplete,
                     messageCount);
+            }
+            finally
+            {
+                await subscriptionClient.CloseAsync();
+                await topicClient.CloseAsync();
+            }
+        }
+
+        async Task OnMessageBatchTestAsync(string topicName, int maxConcurrentCalls, ReceiveMode mode, bool autoComplete)
+        {
+            const int messageCount = 20;
+            const int maxMessageCount = 10;
+
+            var topicClient = new TopicClient(TestUtility.NamespaceConnectionString, topicName);
+            var subscriptionClient = new SubscriptionClient(
+                TestUtility.NamespaceConnectionString,
+                topicName,
+                this.SubscriptionName,
+                mode);
+
+            topicClient.ServiceBusConnection.TransportType = TransportType.AmqpWebSockets;
+            subscriptionClient.ServiceBusConnection.TransportType = TransportType.AmqpWebSockets;
+
+            try
+            {
+                await this.OnMessageBatchAsyncTestCase(
+                    topicClient.InnerSender,
+                    subscriptionClient.InnerSubscriptionClient.InnerReceiver,
+                    maxConcurrentCalls,
+                    autoComplete,
+                    messageCount,
+                    maxMessageCount);
             }
             finally
             {

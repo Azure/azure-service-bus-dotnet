@@ -308,6 +308,47 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.True(count == 1);
         }
 
+        internal async Task OnMessageBatchAsyncTestCase(
+            MessageSender messageSender,
+            MessageReceiver messageReceiver,
+            int maxConcurrentCalls,
+            bool autoComplete,
+            int messageCount,
+            int maxMessageCount)
+        {
+            var count = 0;
+            await TestUtility.SendMessagesAsync(messageSender, messageCount);
+            messageReceiver.RegisterMessageBatchHandler(
+                async (messages, token) =>
+                {
+                    TestUtility.Log($"Received messages: Count: {messages.Count()}");
+                    foreach (var message in messages)
+                    {
+                        TestUtility.Log($"Received message: SequenceNumber: {message.SystemProperties.SequenceNumber}");
+                        Interlocked.Increment(ref count);
+                    }
+                    
+                    if (messageReceiver.ReceiveMode == ReceiveMode.PeekLock && !autoComplete)
+                    {
+                        await messageReceiver.CompleteAsync(messages.Select(x => x.SystemProperties.LockToken));
+                    }
+                },
+                new MessageBatchHandlerOptions(ExceptionReceivedHandler) { MaxConcurrentCalls = maxConcurrentCalls, AutoComplete = autoComplete, MaxMessageCount = maxMessageCount });
+
+            // Wait for the OnMessage Tasks to finish
+            var stopwatch = Stopwatch.StartNew();
+            while (stopwatch.Elapsed.TotalSeconds <= 60)
+            {
+                if (count == messageCount)
+                {
+                    TestUtility.Log($"All '{messageCount}' messages Received.");
+                    break;
+                }
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
+            Assert.True(count == messageCount);
+        }
+
         Task ExceptionReceivedHandler(ExceptionReceivedEventArgs eventArgs)
         {
             TestUtility.Log($"Exception Received: ClientId: {eventArgs.ExceptionReceivedContext.ClientId}, EntityPath: {eventArgs.ExceptionReceivedContext.EntityPath}, Exception: {eventArgs.Exception.Message}");
