@@ -78,7 +78,7 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
                 timeout = TimeSpan.Zero;
             }
 
-            while (messagesToReturn.Count < messageCount && (receiveAttempts++ < TestConstants.MaxAttemptsCount || stopwatch.Elapsed < timeout))
+            while (messagesToReturn.Count < messageCount && receiveAttempts++ < TestConstants.MaxAttemptsCount && stopwatch.Elapsed < timeout)
             {
                 var messages = await messageReceiver.ReceiveAsync(messageCount - messagesToReturn.Count);
                 if (messages == null)
