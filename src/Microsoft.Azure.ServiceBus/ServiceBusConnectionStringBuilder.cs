@@ -24,6 +24,8 @@ namespace Microsoft.Azure.ServiceBus
         const string EntityPathConfigName = "EntityPath";
         const string TransportTypeConfigName = "TransportType";
 
+        const string OperationTimeoutConfigName = "OperationTimeout";
+
         string entityPath, sasKeyName, sasKey, sasToken, endpoint;
 
         /// <summary>
@@ -212,6 +214,12 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         public TransportType TransportType { get; set; }
 
+        /// <summary>
+        /// Duration after which individual operations will timeout.
+        /// </summary>
+        /// <remarks>Defaults to 1 minute.</remarks>
+        public TimeSpan OperationTimeout { get; set; } = Constants.DefaultOperationTimeout;
+
         internal Dictionary<string, string> ConnectionStringProperties = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
 
         /// <summary>
@@ -244,6 +252,11 @@ namespace Microsoft.Azure.ServiceBus
             if (this.TransportType != TransportType.Amqp)
             {
                 connectionStringBuilder.Append($"{TransportTypeConfigName}{KeyValueSeparator}{this.TransportType}");
+            }
+
+            if (this.OperationTimeout != Constants.DefaultOperationTimeout)
+            {
+                connectionStringBuilder.Append($"{OperationTimeoutConfigName}{KeyValueSeparator}{this.OperationTimeout}");
             }
 
             return connectionStringBuilder.ToString().Trim(';');
@@ -317,6 +330,17 @@ namespace Microsoft.Azure.ServiceBus
                     if (Enum.TryParse(value, true, out TransportType transportType))
                     {
                         this.TransportType = transportType;
+                    }
+                }
+                else if (key.Equals(OperationTimeoutConfigName, StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        this.OperationTimeout = TimeSpan.Parse(value);
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new FormatException($"Failed to parse {OperationTimeoutConfigName} ({value}).", exception);
                     }
                 }
                 else

@@ -127,6 +127,28 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
+        void ConnectionStringBuilderShouldParseOperationTimeout()
+        {
+            var csBuilder = new ServiceBusConnectionStringBuilder("Endpoint=sb://contoso.servicebus.windows.net;SharedAccessKeyName=keyname;SharedAccessKey=key;OperationTimeout=11:22:33");
+            Assert.Equal(TimeSpan.FromHours(11).Add(TimeSpan.FromMinutes(22)).Add(TimeSpan.FromSeconds(33)), csBuilder.OperationTimeout);
+        }
+
+        [Fact]
+        void ConnectionStringBuilderOperationTimeoutShouldDefaultToOneMinute()
+        {
+            var csBuilder = new ServiceBusConnectionStringBuilder("Endpoint=sb://contoso.servicebus.windows.net;SharedAccessKeyName=keyname;SharedAccessKey=key");
+            Assert.Equal(Constants.DefaultOperationTimeout, csBuilder.OperationTimeout);
+        }
+
+        [Fact]
+        void ConnectionStringBuilderShouldThrowForInvalidOperationTimeout()
+        {
+            var exception = Assert.Throws<FormatException>(() => new ServiceBusConnectionStringBuilder("Endpoint=sb://contoso.servicebus.windows.net;SharedAccessKeyName=keyname;SharedAccessKey=key;OperationTimeout=x"));
+            Assert.Contains("OperationTimeout", exception.Message);
+            Assert.Contains("(x)", exception.Message);
+        }
+
+        [Fact]
         void ConnectionStringBuilderShouldParseToken()
         {
             var token = "SharedAccessSignature sr=https%3a%2f%2fmynamespace.servicebus.windows.net%2fvendor-&sig=somesignature&se=64953734126&skn=PolicyName";
