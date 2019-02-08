@@ -18,7 +18,6 @@ namespace Microsoft.Azure.ServiceBus.Management
         private HttpClient httpClient;
         private readonly string endpointFQDN;
         private readonly ITokenProvider tokenProvider;
-        private readonly TimeSpan operationTimeout;
         private readonly int port;
         private readonly string clientId;
 
@@ -48,14 +47,13 @@ namespace Microsoft.Azure.ServiceBus.Management
         /// <param name="tokenProvider">Token provider which will generate security tokens for authorization.</param>
         public ManagementClient(ServiceBusConnectionStringBuilder connectionStringBuilder, ITokenProvider tokenProvider = default)
         {
-            this.httpClient = new HttpClient();
+            this.httpClient = new HttpClient { Timeout = connectionStringBuilder.OperationTimeout };
             this.endpointFQDN = connectionStringBuilder.Endpoint;
             this.tokenProvider = tokenProvider ?? CreateTokenProvider(connectionStringBuilder);
-            this.operationTimeout = Constants.DefaultOperationTimeout;
             this.port = GetPort(connectionStringBuilder.Endpoint);
             this.clientId = nameof(ManagementClient) + Guid.NewGuid().ToString("N").Substring(0, 6);
 
-            MessagingEventSource.Log.ManagementClientCreated(this.clientId, this.operationTimeout.TotalSeconds, this.tokenProvider.ToString());
+            MessagingEventSource.Log.ManagementClientCreated(this.clientId, this.httpClient.Timeout.TotalSeconds, this.tokenProvider.ToString());
         }
 
         public static HttpRequestMessage CloneRequest(HttpRequestMessage req)
