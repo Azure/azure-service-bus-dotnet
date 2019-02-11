@@ -75,6 +75,13 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
             csBuilder.EntityPath = "myQ";
             Assert.Equal("Endpoint=amqps://contoso.servicebus.windows.net;EntityPath=myQ", csBuilder.ToString());
+
+            csBuilder.EntityPath = "";
+            csBuilder.TransportType = TransportType.AmqpWebSockets;
+            Assert.Equal("Endpoint=amqps://contoso.servicebus.windows.net;TransportType=AmqpWebSockets", csBuilder.ToString());
+
+            csBuilder.OperationTimeout = TimeSpan.FromSeconds(42);
+            Assert.Equal("Endpoint=amqps://contoso.servicebus.windows.net;TransportType=AmqpWebSockets;OperationTimeout=00:00:42", csBuilder.ToString());
         }
 
         [Fact]

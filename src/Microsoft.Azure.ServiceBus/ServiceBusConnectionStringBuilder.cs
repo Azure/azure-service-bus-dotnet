@@ -251,12 +251,12 @@ namespace Microsoft.Azure.ServiceBus
 
             if (this.TransportType != TransportType.Amqp)
             {
-                connectionStringBuilder.Append($"{TransportTypeConfigName}{KeyValueSeparator}{this.TransportType}");
+                connectionStringBuilder.Append($"{TransportTypeConfigName}{KeyValueSeparator}{this.TransportType}{KeyValuePairDelimiter}");
             }
 
             if (this.OperationTimeout != Constants.DefaultOperationTimeout)
             {
-                connectionStringBuilder.Append($"{OperationTimeoutConfigName}{KeyValueSeparator}{this.OperationTimeout}");
+                connectionStringBuilder.Append($"{OperationTimeoutConfigName}{KeyValueSeparator}{this.OperationTimeout}{KeyValuePairDelimiter}");
             }
 
             return connectionStringBuilder.ToString().Trim(';');
