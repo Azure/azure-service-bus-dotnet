@@ -71,7 +71,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="operationTimeout">Duration after which individual operations will timeout.</param>
         /// <param name="retryPolicy">Retry policy for operations. Defaults to <see cref="RetryPolicy.Default"/></param>
         /// <remarks>It is the responsibility of the user to close the connection after use through <see cref="CloseAsync"/></remarks>
-        [Obsolete("Please use the constructor with (string namespaceConnectionString, RetryPolicy retryPolicy) arguments and define the operationTimeout in the connection string.")]
+        [Obsolete("This constructor is obsolete. Use ServiceBusConnection(string namespaceConnectionString, RetryPolicy retryPolicy) constructor instead, providing operationTimeout in the connection string.")]
         public ServiceBusConnection(string namespaceConnectionString, TimeSpan operationTimeout, RetryPolicy retryPolicy = null)
             : this(retryPolicy)
         {
@@ -87,7 +87,7 @@ namespace Microsoft.Azure.ServiceBus
             }
 
             this.InitializeConnection(serviceBusConnectionStringBuilder);
-            // operationTimeout argument wins over OperationTimeout defined in the connection string since it's explicitly specified in the constructor
+            // operationTimeout argument explicitly provided by caller should take precedence over OperationTimeout found in the connection string.
             this.OperationTimeout = operationTimeout;
         }
 
