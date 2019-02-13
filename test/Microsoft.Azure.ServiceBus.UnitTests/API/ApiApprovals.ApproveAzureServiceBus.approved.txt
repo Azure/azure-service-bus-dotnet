@@ -179,10 +179,12 @@ namespace Microsoft.Azure.ServiceBus
     public sealed class MessageHandlerOptions
     {
         public MessageHandlerOptions(System.Func<Microsoft.Azure.ServiceBus.ExceptionReceivedEventArgs, System.Threading.Tasks.Task> exceptionReceivedHandler) { }
+        public MessageHandlerOptions(System.Func<Microsoft.Azure.ServiceBus.ExceptionReceivedEventArgs, System.Threading.Tasks.Task> exceptionReceivedHandler, System.Func<Microsoft.Azure.ServiceBus.ExceptionReceivedEventArgs, System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<string, object>>> propertiesToModifyOnExceptionHandler) { }
         public bool AutoComplete { get; set; }
         public System.Func<Microsoft.Azure.ServiceBus.ExceptionReceivedEventArgs, System.Threading.Tasks.Task> ExceptionReceivedHandler { get; }
         public System.TimeSpan MaxAutoRenewDuration { get; set; }
         public int MaxConcurrentCalls { get; set; }
+        public System.Func<Microsoft.Azure.ServiceBus.ExceptionReceivedEventArgs, System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<string, object>>> PropertiesToModifyOnExceptionHandler { get; }
     }
     public sealed class MessageLockLostException : Microsoft.Azure.ServiceBus.ServiceBusException
     {
@@ -379,11 +381,13 @@ namespace Microsoft.Azure.ServiceBus
     public sealed class SessionHandlerOptions
     {
         public SessionHandlerOptions(System.Func<Microsoft.Azure.ServiceBus.ExceptionReceivedEventArgs, System.Threading.Tasks.Task> exceptionReceivedHandler) { }
+        public SessionHandlerOptions(System.Func<Microsoft.Azure.ServiceBus.ExceptionReceivedEventArgs, System.Threading.Tasks.Task> exceptionReceivedHandler, System.Func<Microsoft.Azure.ServiceBus.ExceptionReceivedEventArgs, System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<string, object>>> propertiesToModifyOnExceptionHandler) { }
         public bool AutoComplete { get; set; }
         public System.Func<Microsoft.Azure.ServiceBus.ExceptionReceivedEventArgs, System.Threading.Tasks.Task> ExceptionReceivedHandler { get; }
         public System.TimeSpan MaxAutoRenewDuration { get; set; }
         public int MaxConcurrentSessions { get; set; }
         public System.TimeSpan MessageWaitTimeout { get; set; }
+        public System.Func<Microsoft.Azure.ServiceBus.ExceptionReceivedEventArgs, System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<string, object>>> PropertiesToModifyOnExceptionHandler { get; }
     }
     public sealed class SessionLockLostException : Microsoft.Azure.ServiceBus.ServiceBusException
     {

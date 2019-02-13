@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
@@ -152,7 +154,7 @@ namespace Microsoft.Azure.ServiceBus
                 // Nothing much to do if UserCallback throws, Abandon message and Release semaphore.
                 if (!(exception is MessageLockLostException))
                 {
-                    await this.AbandonMessageIfNeededAsync(message).ConfigureAwait(false);
+                    await this.AbandonMessageIfNeededAsync(message, exception).ConfigureAwait(false);
                 }
 
                 if (ServiceBusDiagnosticSource.IsEnabled())
@@ -191,13 +193,19 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task AbandonMessageIfNeededAsync(Message message)
+        async Task AbandonMessageIfNeededAsync(Message message, Exception callbackException)
         {
             try
             {
                 if (this.messageReceiver.ReceiveMode == ReceiveMode.PeekLock)
                 {
-                    await this.messageReceiver.AbandonAsync(message.SystemProperties.LockToken).ConfigureAwait(false);
+                    IDictionary<string, object> propertiesToModify = null;
+                    if (this.registerHandlerOptions.PropertiesToModifyOnExceptionHandler != null)
+                    {
+                        var eventArgs = new ExceptionReceivedEventArgs(callbackException, ExceptionReceivedEventArgsAction.UserCallback, this.endpoint, this.messageReceiver.Path, this.messageReceiver.ClientId);
+                        propertiesToModify = await this.registerHandlerOptions.PropertiesToModifyOnExceptionHandler(eventArgs).ConfigureAwait(false);
+                    }
+                    await this.messageReceiver.AbandonAsync(message.SystemProperties.LockToken, propertiesToModify).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

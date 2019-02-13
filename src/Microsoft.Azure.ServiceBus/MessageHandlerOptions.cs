@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+using Microsoft.Azure.ServiceBus.Core;
+
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
@@ -25,18 +28,39 @@ namespace Microsoft.Azure.ServiceBus
         /// </summary>
         /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
-        public MessageHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler)
+        public MessageHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler) : this(exceptionReceivedHandler, null)
+        {
+        }
+
+        /// <summary>Initializes a new instance of the <see cref="MessageHandlerOptions" /> class.
+        /// Default Values:
+        ///     <see cref="MaxConcurrentCalls"/> = 1
+        ///     <see cref="AutoComplete"/> = true
+        ///     <see cref="ReceiveTimeOut"/> = 1 minute
+        ///     <see cref="MaxAutoRenewDuration"/> = 5 minutes
+        /// </summary>
+        /// <param name="exceptionReceivedHandler">A <see cref="Func{T1, TResult}"/> that is invoked during exceptions.
+        /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
+        /// <param name="propertiesToModifyOnExceptionHandler">An optional <see cref="Func{T1, TResult}"/> that is invoked before a message is abandoned because of an exception that happened within the message handler callback;
+        /// The returned dictionary is passed to <see cref="IReceiverClient.AbandonAsync"/>.
+        /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
+        public MessageHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler, Func<ExceptionReceivedEventArgs, Task<IDictionary<string, object>>> propertiesToModifyOnExceptionHandler)
         {
             this.MaxConcurrentCalls = 1;
             this.AutoComplete = true;
             this.ReceiveTimeOut = Constants.DefaultOperationTimeout;
             this.MaxAutoRenewDuration = Constants.ClientPumpRenewLockTimeout;
             this.ExceptionReceivedHandler = exceptionReceivedHandler ?? throw new ArgumentNullException(nameof(exceptionReceivedHandler));
+            this.PropertiesToModifyOnExceptionHandler = propertiesToModifyOnExceptionHandler;
         }
 
         /// <summary>Occurs when an exception is received. Enables you to be notified of any errors encountered by the message pump.
         /// When errors are received calls will automatically be retried, so this is informational. </summary>
         public Func<ExceptionReceivedEventArgs, Task> ExceptionReceivedHandler { get; }
+
+        /// <summary>Occurs when a message is about to be abandoned because of an exception that happened within the message handler callback;
+        /// The returned dictionary is passed to <see cref="IReceiverClient.AbandonAsync"/>.</summary>
+        public Func<ExceptionReceivedEventArgs, Task<IDictionary<string, object>>> PropertiesToModifyOnExceptionHandler { get; }
 
         /// <summary>Gets or sets the maximum number of concurrent calls to the callback the message pump should initiate.</summary>
         /// <value>The maximum number of concurrent calls to the callback.</value>

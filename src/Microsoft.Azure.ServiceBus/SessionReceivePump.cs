@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
@@ -96,13 +98,19 @@ namespace Microsoft.Azure.ServiceBus
             }
         }
 
-        async Task AbandonMessageIfNeededAsync(IMessageSession session, Message message)
+        async Task AbandonMessageIfNeededAsync(IMessageSession session, Message message, Exception callbackException)
         {
             try
             {
                 if (session.ReceiveMode == ReceiveMode.PeekLock)
                 {
-                    await session.AbandonAsync(message.SystemProperties.LockToken).ConfigureAwait(false);
+                    IDictionary<string, object> propertiesToModify = null;
+                    if (this.sessionHandlerOptions.PropertiesToModifyOnExceptionHandler != null)
+                    {
+                        var eventArgs = new ExceptionReceivedEventArgs(callbackException, ExceptionReceivedEventArgsAction.UserCallback, this.endpoint, this.entityPath, this.clientId);
+                        propertiesToModify = await this.sessionHandlerOptions.PropertiesToModifyOnExceptionHandler(eventArgs).ConfigureAwait(false);
+                    }
+                    await session.AbandonAsync(message.SystemProperties.LockToken, propertiesToModify).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)
@@ -243,7 +251,7 @@ namespace Microsoft.Azure.ServiceBus
                             callbackExceptionOccurred = true;
                             if (!(exception is MessageLockLostException || exception is SessionLockLostException))
                             {
-                                await this.AbandonMessageIfNeededAsync(session, message).ConfigureAwait(false);
+                                await this.AbandonMessageIfNeededAsync(session, message, exception).ConfigureAwait(false);
                             }
                         }
                         finally
