@@ -203,7 +203,14 @@ namespace Microsoft.Azure.ServiceBus
                     if (this.registerHandlerOptions.PropertiesToModifyOnExceptionHandler != null)
                     {
                         var eventArgs = new ExceptionReceivedEventArgs(callbackException, ExceptionReceivedEventArgsAction.UserCallback, this.endpoint, this.messageReceiver.Path, this.messageReceiver.ClientId);
-                        propertiesToModify = await this.registerHandlerOptions.PropertiesToModifyOnExceptionHandler(eventArgs).ConfigureAwait(false);
+                        try
+                        {
+                            propertiesToModify = await this.registerHandlerOptions.PropertiesToModifyOnExceptionHandler(eventArgs).ConfigureAwait(false);
+                        }
+                        catch (Exception exception)
+                        {
+                            MessagingEventSource.Log.MessageReceiverPumpUserCallbackException(this.messageReceiver.ClientId, message, exception);
+                        }
                     }
                     await this.messageReceiver.AbandonAsync(message.SystemProperties.LockToken, propertiesToModify).ConfigureAwait(false);
                 }
