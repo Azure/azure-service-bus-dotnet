@@ -45,7 +45,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="propertiesToModifyOnExceptionHandler">An optional <see cref="Func{T1, TResult}"/> that is invoked before a message is abandoned because of an exception that happened within the session handler callback;
         /// The returned dictionary is passed to <see cref="IReceiverClient.AbandonAsync"/>.
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
-        public SessionHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler, Func<ExceptionReceivedEventArgs, Task<IDictionary<string, object>>> propertiesToModifyOnExceptionHandler)
+        public SessionHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler, Func<ExceptionReceivedEventArgs, IDictionary<string, object>> propertiesToModifyOnExceptionHandler)
         {
             // These are default values
             this.AutoComplete = true;
@@ -62,7 +62,7 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>Occurs when a message is about to be abandoned because of an exception that happened within the session handler callback;
         /// The returned dictionary is passed to <see cref="IReceiverClient.AbandonAsync"/>.</summary>
-        public Func<ExceptionReceivedEventArgs, Task<IDictionary<string, object>>> PropertiesToModifyOnExceptionHandler { get; }
+        public Func<ExceptionReceivedEventArgs, IDictionary<string, object>> PropertiesToModifyOnExceptionHandler { get; }
 
         /// <summary>Gets or sets the duration for which the session lock will be renewed automatically.</summary>
         /// <value>The duration for which the session renew its state.</value>

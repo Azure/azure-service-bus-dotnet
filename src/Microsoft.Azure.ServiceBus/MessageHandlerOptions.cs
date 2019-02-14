@@ -44,7 +44,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <param name="propertiesToModifyOnExceptionHandler">An optional <see cref="Func{T1, TResult}"/> that is invoked before a message is abandoned because of an exception that happened within the message handler callback;
         /// The returned dictionary is passed to <see cref="IReceiverClient.AbandonAsync"/>.
         /// <see cref="ExceptionReceivedEventArgs"/> contains contextual information regarding the exception.</param>
-        public MessageHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler, Func<ExceptionReceivedEventArgs, Task<IDictionary<string, object>>> propertiesToModifyOnExceptionHandler)
+        public MessageHandlerOptions(Func<ExceptionReceivedEventArgs, Task> exceptionReceivedHandler, Func<ExceptionReceivedEventArgs, IDictionary<string, object>> propertiesToModifyOnExceptionHandler)
         {
             this.MaxConcurrentCalls = 1;
             this.AutoComplete = true;
@@ -60,7 +60,7 @@ namespace Microsoft.Azure.ServiceBus
 
         /// <summary>Occurs when a message is about to be abandoned because of an exception that happened within the message handler callback;
         /// The returned dictionary is passed to <see cref="IReceiverClient.AbandonAsync"/>.</summary>
-        public Func<ExceptionReceivedEventArgs, Task<IDictionary<string, object>>> PropertiesToModifyOnExceptionHandler { get; }
+        public Func<ExceptionReceivedEventArgs, IDictionary<string, object>> PropertiesToModifyOnExceptionHandler { get; }
 
         /// <summary>Gets or sets the maximum number of concurrent calls to the callback the message pump should initiate.</summary>
         /// <value>The maximum number of concurrent calls to the callback.</value>

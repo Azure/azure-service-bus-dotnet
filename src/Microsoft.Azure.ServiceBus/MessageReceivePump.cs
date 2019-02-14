@@ -205,7 +205,7 @@ namespace Microsoft.Azure.ServiceBus
                         var eventArgs = new ExceptionReceivedEventArgs(callbackException, ExceptionReceivedEventArgsAction.UserCallback, this.endpoint, this.messageReceiver.Path, this.messageReceiver.ClientId);
                         try
                         {
-                            propertiesToModify = await this.registerHandlerOptions.PropertiesToModifyOnExceptionHandler(eventArgs).ConfigureAwait(false);
+                            propertiesToModify = this.registerHandlerOptions.PropertiesToModifyOnExceptionHandler(eventArgs);
                         }
                         catch (Exception exception)
                         {
