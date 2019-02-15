@@ -458,11 +458,6 @@ namespace Microsoft.Azure.ServiceBus.Core
                 throw Fx.Exception.ArgumentNull(nameof(messageList));
             }
 
-            if (messageList.Count == 0)
-            {
-                return count;
-            }
-
             foreach (var message in messageList)
             {
                 count++;
