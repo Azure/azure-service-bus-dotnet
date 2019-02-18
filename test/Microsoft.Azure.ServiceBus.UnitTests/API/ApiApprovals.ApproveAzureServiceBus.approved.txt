@@ -142,7 +142,9 @@ namespace Microsoft.Azure.ServiceBus
         public static string DeadLetterErrorDescriptionHeader;
         public static string DeadLetterReasonHeader;
         public Message() { }
+        public Message(byte[] buffer, int offset, int count) { }
         public Message(byte[] body) { }
+        public System.ArraySegment<byte> BackingData { get; }
         public byte[] Body { get; set; }
         public string ContentType { get; set; }
         public string CorrelationId { get; set; }

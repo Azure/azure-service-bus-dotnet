@@ -64,6 +64,38 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
             Assert.Equal(replyToSessionId, clone.ReplyToSessionId);
         }
 
+        [Fact]
+        void TestBackingData()
+        {
+            var buffer = new byte[] { 0x00, 0x01, 0xFF };
+
+            var message = new Message(buffer, 1, 1);
+
+            Assert.Equal(1, message.Size);
+            Assert.Equal(buffer, message.BackingData.Array);
+
+            var body = message.Body;
+
+            Assert.NotNull(body);
+            Assert.NotEqual(body, buffer);
+            Assert.Equal(1, message.Size);
+            Assert.Equal(1, body.Length);
+            Assert.Equal(body[0], buffer[1]);
+        }
+
+        [Fact]
+        void TestBackingDataClone()
+        {
+            var buffer = new byte[] { 0x00, 0x01, 0xFF };
+
+            var message = new Message(buffer, 1, 1);
+
+            var clone = message.Clone();
+
+            Assert.NotEqual(buffer, clone.BackingData.Array);
+            Assert.Equal(1, clone.BackingData.Array.Length);
+        }
+
         public class WhenQueryingIsReceivedProperty
         {
             [Fact]
