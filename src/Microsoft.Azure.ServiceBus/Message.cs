@@ -268,7 +268,7 @@ namespace Microsoft.Azure.ServiceBus
         /// <summary>
         /// Gets the total size of the message body in bytes.
         /// </summary>
-        public long Size => Body.Length;
+        public long Size => this.Body != null ? this.Body.Length : 0;
 
         /// <summary>
         /// Gets the "user properties" bag, which can be used for custom message metadata.
