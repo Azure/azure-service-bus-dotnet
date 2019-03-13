@@ -56,7 +56,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
-    <PackageReference Include="WindowsAzure.ServiceBus" Version="4.1.2" />
+    <PackageReference Include="WindowsAzure.ServiceBus" Version="5.1.0" />
   </ItemGroup>
 
 
