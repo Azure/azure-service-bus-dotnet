@@ -134,10 +134,17 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         }
 
         [Fact]
-        void ConnectionStringBuilderShouldParseOperationTimeout()
+        void ConnectionStringBuilderShouldParseOperationTimeoutAsInteger()
         {
-            var csBuilder = new ServiceBusConnectionStringBuilder("Endpoint=sb://contoso.servicebus.windows.net;SharedAccessKeyName=keyname;SharedAccessKey=key;OperationTimeout=11:22:33");
-            Assert.Equal(TimeSpan.FromHours(11).Add(TimeSpan.FromMinutes(22)).Add(TimeSpan.FromSeconds(33)), csBuilder.OperationTimeout);
+            var csBuilder = new ServiceBusConnectionStringBuilder("Endpoint=sb://contoso.servicebus.windows.net;SharedAccessKeyName=keyname;SharedAccessKey=key;OperationTimeout=120");
+            Assert.Equal(TimeSpan.FromMinutes(2), csBuilder.OperationTimeout);
+        }
+
+        [Fact]
+        void ConnectionStringBuilderShouldParseOperationTimeoutAsTimeSpan()
+        {
+            var csBuilder = new ServiceBusConnectionStringBuilder("Endpoint=sb://contoso.servicebus.windows.net;SharedAccessKeyName=keyname;SharedAccessKey=key;OperationTimeout=00:12:34");
+            Assert.Equal(TimeSpan.FromMinutes(12).Add(TimeSpan.FromSeconds(34)), csBuilder.OperationTimeout);
         }
 
         [Fact]
@@ -150,7 +157,8 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Fact]
         void ConnectionStringBuilderShouldThrowForInvalidOperationTimeout()
         {
-            var exception = Assert.Throws<FormatException>(() => new ServiceBusConnectionStringBuilder("Endpoint=sb://contoso.servicebus.windows.net;SharedAccessKeyName=keyname;SharedAccessKey=key;OperationTimeout=x"));
+            var exception = Assert.Throws<ArgumentException>(() => new ServiceBusConnectionStringBuilder("Endpoint=sb://contoso.servicebus.windows.net;SharedAccessKeyName=keyname;SharedAccessKey=key;OperationTimeout=x"));
+            Assert.Equal("connectionString", exception.ParamName);
             Assert.Contains("OperationTimeout", exception.Message);
             Assert.Contains("(x)", exception.Message);
         }

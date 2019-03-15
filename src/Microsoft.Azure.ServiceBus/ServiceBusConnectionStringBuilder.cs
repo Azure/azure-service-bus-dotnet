@@ -5,6 +5,7 @@ namespace Microsoft.Azure.ServiceBus
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Text;
     using Primitives;
 
@@ -334,13 +335,27 @@ namespace Microsoft.Azure.ServiceBus
                 }
                 else if (key.Equals(OperationTimeoutConfigName, StringComparison.OrdinalIgnoreCase))
                 {
-                    try
+                    if (int.TryParse(value, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var timeoutInSeconds))
                     {
-                        this.OperationTimeout = TimeSpan.Parse(value);
+                        this.OperationTimeout = TimeSpan.FromSeconds(timeoutInSeconds);
                     }
-                    catch (Exception exception)
+                    else if (TimeSpan.TryParse(value, NumberFormatInfo.InvariantInfo, out var operationTimeout))
                     {
-                        throw new FormatException($"Failed to parse {OperationTimeoutConfigName} ({value}).", exception);
+                        this.OperationTimeout = operationTimeout;
+                    }
+                    else
+                    {
+                        throw Fx.Exception.Argument(nameof(connectionString), $"The {OperationTimeoutConfigName} ({value}) format is invalid. It must be an integer representing a number of seconds.");
+                    }
+
+                    if (this.OperationTimeout.TotalMilliseconds <= 0)
+                    {
+                        throw Fx.Exception.Argument(nameof(connectionString), $"The {OperationTimeoutConfigName} ({value}) must be greater than zero.");
+                    }
+
+                    if (this.OperationTimeout.TotalHours >= 1)
+                    {
+                        throw Fx.Exception.Argument(nameof(connectionString), $"The {OperationTimeoutConfigName} ({value}) must be smaller than one hour.");
                     }
                 }
                 else
