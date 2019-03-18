@@ -23,7 +23,7 @@
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>CS1591;CS1573</NoWarn>
+    <NoWarn>CS1591;CS1573;NU5125</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
