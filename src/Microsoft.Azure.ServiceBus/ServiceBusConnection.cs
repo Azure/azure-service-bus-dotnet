@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.ServiceBus
 {
     using System;
+    using System.Net;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Framing;
@@ -309,7 +310,8 @@ namespace Microsoft.Azure.ServiceBus
                 return AmqpConnectionHelper.CreateWebSocketTransportSettings(
                     networkHost: networkHost,
                     hostName: hostName,
-                    port: port);
+                    port: port,
+                    proxy: WebRequest.DefaultWebProxy);
             }
 
             return AmqpConnectionHelper.CreateTcpTransportSettings(
