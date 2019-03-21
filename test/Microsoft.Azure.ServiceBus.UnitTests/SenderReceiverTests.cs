@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.ServiceBus.UnitTests
 {
     using System;
-    using System.Linq;
     using System.Text;
     using System.Collections.Generic;
     using System.Threading;
@@ -14,9 +13,9 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
 
     public class SenderReceiverTests : SenderReceiverClientTestBase
     {
-        private static readonly TimeSpan TwoSeconds = TimeSpan.FromSeconds(2);
+        private static TimeSpan TwoSeconds = TimeSpan.FromSeconds(2);
 
-        public static IEnumerable<object[]> TestPermutations => new[]
+        public static IEnumerable<object[]> TestPermutations => new object[][]
         {
             new object[] {TestConstants.NonPartitionedQueueName},
             new object[] {TestConstants.PartitionedQueueName}
@@ -464,126 +463,21 @@ namespace Microsoft.Azure.ServiceBus.UnitTests
         [Theory]
         [InlineData(TestConstants.NonPartitionedQueueName)]
         [DisplayTestMethodName]
-            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName);
-                var receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, 1);
+        async Task MessageSenderShouldNotThrowWhenSendingEmptyCollection(string queueName)
+        {
+            var sender = new MessageSender(TestUtility.NamespaceConnectionString, queueName);
             var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, queueName, ReceiveMode.ReceiveAndDelete);
 
             try
             {
-                var message1 = new Message("Hello Neeraj".GetBytes());
-                var message2 = new Message("from".GetBytes());
-                var message3 = new Message("Sean Feldman".GetBytes());
-
-                var batch = new MessageBatch(100, Task.FromResult);
-                Assert.True(await batch.TryAdd(message1), "Couldn't add first message");
-                Assert.True(await batch.TryAdd(message2), "Couldn't add second message");
-                Assert.False(await batch.TryAdd(message3), "Shouldn't be able to add third message");
-                await sender.SendAsync(batch);
-                batch.Dispose();
-                await sender.CloseAsync();
-
-                var receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, 2);
-                var bodies = receivedMessages.Select(m => m.Body.GetString());
-                var bodiesArray = bodies as string[] ?? bodies.ToArray();
-                Assert.True(bodiesArray.Contains("Hello Neeraj") && bodiesArray.Contains("from"));
-
-                var extraMessage = await TestUtility.PeekMessageAsync(receiver);
-                Assert.True(extraMessage == null, $"Should not have any messages other than the two, but an extra message is found. Body='{extraMessage?.Body.GetString()}'");
+                await sender.SendAsync(new List<Message>());
+                var message = await receiver.ReceiveAsync(TimeSpan.FromSeconds(3));
+                Assert.True(message == null, "Expected not to find any messages, but a message was received.");
             }
             finally
             {
                 await sender.CloseAsync();
                 await receiver.CloseAsync();
-            }
-        }
-
-        [Fact]
-        [DisplayTestMethodName]
-        public async Task Sending_batch_with_properties()
-        {
-            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName);
-            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
-            try
-            {
-                var message = new Message("Hello Neeraj".GetBytes());
-                message.UserProperties["custom"] = "value";
-
-                var batch = new MessageBatch(100, Task.FromResult);
-                Assert.True(await batch.TryAdd(message), "Couldn't add  message");
-                await sender.SendAsync(batch);
-                batch.Dispose();
-                await sender.CloseAsync();
-
-                var receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, 1);
-                var receivedMessage = receivedMessages.FirstOrDefault();
-                Assert.NotNull(receivedMessage);
-                Assert.Equal("value", receivedMessage.UserProperties["custom"]);
-            }
-            finally
-            {
-                await sender.CloseAsync().ConfigureAwait(false);
-                await receiver.CloseAsync().ConfigureAwait(false);
-            }
-        }
-
-        [Fact]
-        [DisplayTestMethodName]
-        public async Task Batch_should_have_maximum_size_set()
-        {
-            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName);
-            try
-            {
-                using (var batch = await sender.CreateBatch())
-                {
-                    Assert.True(batch.maximumBatchSize == 256 * 1024 || batch.maximumBatchSize == 1024 * 1024,
-                        $"Maximum batch size was expected to be 256KB or 1MB, but it wasn't. Reported size: {batch.maximumBatchSize}");
-                }
-            }
-            finally
-            {
-                await sender.CloseAsync().ConfigureAwait(false);
-            }
-        }
-
-        [Fact]
-        [DisplayTestMethodName]
-        public async Task Batch_should_go_through_outgoing_plugins()
-        {
-            var sender = new MessageSender(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName);
-            var receiver = new MessageReceiver(TestUtility.NamespaceConnectionString, TestConstants.PartitionedQueueName, receiveMode: ReceiveMode.ReceiveAndDelete);
-
-            sender.RegisterPlugin(new RemoveVowelsPlugin());
-            try
-            {
-                var batch = await sender.CreateBatch();
-                await batch.TryAdd(new Message("Hello Neeraj".GetBytes()));
-                await batch.TryAdd(new Message("from".GetBytes()));
-                await batch.TryAdd(new Message("Sean Feldman".GetBytes()));
-
-                await sender.SendAsync(batch);
-                batch.Dispose();
-                await sender.CloseAsync();
-
-                var receivedMessages = await TestUtility.ReceiveMessagesAsync(receiver, 3);
-                var bodies = receivedMessages.Select(m => m.Body.GetString());
-                var bodiesArray = bodies as string[] ?? bodies.ToArray();
-                Assert.True(bodiesArray.Contains("Hll Nrj") && bodiesArray.Contains("frm") && bodiesArray.Contains("Sn Fldmn"));
-            }
-            finally
-            {
-                await sender.CloseAsync().ConfigureAwait(false);
-                await receiver.CloseAsync().ConfigureAwait(false);
-            }
-        }
-
-        class RemoveVowelsPlugin : ServiceBusPlugin
-        {
-            public override string Name { get; } = nameof(RemoveVowelsPlugin);
-
-            public override Task<Message> BeforeMessageSend(Message message)
-            {
-                message.Body = new string(message.Body.GetString().Where( x => "aeiouy".Contains(x) == false).ToArray()).GetBytes();
-                return Task.FromResult(message);
             }
         }
 
