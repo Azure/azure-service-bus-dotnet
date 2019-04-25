@@ -7,7 +7,7 @@
 Azure Service Bus allows you to build applications that take advantage of asynchronous messaging patterns using a highly-reliable service to broker messages between producers and consumers. Azure Service Bus provides flexible, brokered messaging between client and server, along with structured first-in, first-out (FIFO) messaging, and publish/subscribe capabilities with complex routing.
 
 This is the next generation Service Bus .NET client library focused on queues and topics. If you are looking for Event Hubs and Relay clients, please see:
-* [Event Hubs](https://github.com/Azure/azure-sdk-for-net/tree/master/sdk/eventhub/Microsoft.Azure.EventHub)
+* [Event Hubs](https://github.com/Azure/azure-sdk-for-net/tree/master/sdk/eventhub)
 * [Relay](https://github.com/azure/azure-relay-dotnet)
 
 
