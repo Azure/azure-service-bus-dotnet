@@ -89,7 +89,7 @@ namespace Microsoft.Azure.ServiceBus
             {
                 throw Fx.Exception.ArgumentNullOrWhiteSpace(connectionString);
             }
-            
+
             this.OwnsConnection = true;
         }
 
@@ -328,7 +328,7 @@ namespace Microsoft.Azure.ServiceBus
                 return this.sessionPumpHost;
             }
         }
-        
+
         ICbsTokenProvider CbsTokenProvider { get; }
 
         /// <summary>
@@ -348,6 +348,27 @@ namespace Microsoft.Azure.ServiceBus
 
             return this.InnerSender.SendAsync(messageList);
         }
+
+        /// <summary>
+        /// Sends a <see cref="MessageBatch"/> of messages to Service Bus.
+        /// </summary>
+        public Task SendAsync(MessageBatch messageBatch)
+        {
+            this.ThrowIfClosed();
+
+            return this.innerSender.SendAsync(messageBatch);
+        }
+
+        /// <summary>
+        /// Create a new <see cref="MessageBatch"/> setting maximum size to the maximum message size allowed by the underlying namespace.
+        /// </summary>
+        public Task<MessageBatch> CreateBatch()
+        {
+            this.ThrowIfClosed();
+
+            return this.innerSender.CreateBatch();
+        }
+
 
         /// <summary>
         /// Completes a <see cref="Message"/> using its lock token. This will delete the message from the queue.

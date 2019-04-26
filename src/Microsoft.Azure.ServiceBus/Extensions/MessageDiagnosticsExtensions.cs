@@ -6,6 +6,7 @@ namespace Microsoft.Azure.ServiceBus.Diagnostics
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using Microsoft.Azure.ServiceBus.Primitives;
 
     public static class MessageExtensions
     {
@@ -15,20 +16,20 @@ namespace Microsoft.Azure.ServiceBus.Diagnostics
         /// <returns>New <see cref="Activity"/> with tracing context</returns>
         /// </summary>
         /// <remarks>
-        /// Tracing context is used to correlate telemetry between producer and consumer and 
+        /// Tracing context is used to correlate telemetry between producer and consumer and
         /// represented by 'Diagnostic-Id' and 'Correlation-Context' properties in <see cref="Message.UserProperties"/>.
-        /// 
+        ///
         /// .NET SDK automatically injects context when sending message to the ServiceBus (if diagnostics is enabled by tracing system).
-        /// 
+        ///
         /// <para>
         /// 'Diagnostic-Id' uniquely identifies operation that enqueued message
         /// </para>
         /// <para>
         /// 'Correlation-Context' is comma separated list of sting key value pairs represeting optional context for the operation.
         /// </para>
-        /// 
+        ///
         /// If there is no tracing context in the message, this method returns <see cref="Activity"/> without parent.
-        /// 
+        ///
         /// Returned <see cref="Activity"/> needs to be started before it can be used (see example below)
         /// </remarks>
         /// <example>
@@ -39,7 +40,7 @@ namespace Microsoft.Azure.ServiceBus.Diagnostics
         ///    var activity = message.ExtractActivity();
         ///    activity.Start();
         ///    Logger.LogInformation($"Message received, Id = {Activity.Current.Id}")
-        ///    try 
+        ///    try
         ///    {
         ///       // process message
         ///    }
@@ -47,7 +48,7 @@ namespace Microsoft.Azure.ServiceBus.Diagnostics
         ///    {
         ///         Logger.LogError($"Exception {ex}, Id = {Activity.Current.Id}")
         ///    }
-        ///    finally 
+        ///    finally
         ///    {
         ///         activity.Stop();
         ///         // Activity is stopped, we no longer have it in Activity.Current, let's user activity now
@@ -55,10 +56,10 @@ namespace Microsoft.Azure.ServiceBus.Diagnostics
         ///    }
         /// }
         /// </code>
-        /// 
-        /// Note that every log is stamped with <see cref="Activity.Current"/>.Id, that could be used within 
+        ///
+        /// Note that every log is stamped with <see cref="Activity.Current"/>.Id, that could be used within
         /// any nested method call (sync or async) - <see cref="Activity.Current"/> is an ambient context that flows with async method calls.
-        /// 
+        ///
         /// </example>
 
         public static Activity ExtractActivity(this Message message, string activityName = null)

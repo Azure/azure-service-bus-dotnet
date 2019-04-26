@@ -15,6 +15,8 @@ namespace Microsoft.Azure.ServiceBus.Core
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.ServiceBus.Amqp;
     using Microsoft.Azure.ServiceBus.Primitives;
+    using Microsoft.Azure.ServiceBus.Diagnostics;
+
 
     /// <summary>
     /// The MessageSender can be used to send messages to Queues or Topics.
@@ -41,6 +43,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         readonly ServiceBusDiagnosticSource diagnosticSource;
         readonly bool isViaSender;
         readonly string transferDestinationPath;
+        private ulong maxMessageSize = 0;
 
         /// <summary>
         /// Creates a new AMQP MessageSender.
@@ -236,12 +239,7 @@ namespace Microsoft.Azure.ServiceBus.Core
         {
             this.ThrowIfClosed();
 
-            var count = MessageSender.ValidateMessages(messageList);
-            if (count <= 0)
-            {
-                return;
-            }
-
+            var count = MessageSender.VerifyMessagesAreNotPreviouslyReceived(messageList);
             MessagingEventSource.Log.MessageSendStart(this.ClientId, count);
 
             bool isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
@@ -252,7 +250,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             {
                 var processedMessages = await this.ProcessMessages(messageList).ConfigureAwait(false);
 
-                sendTask = this.RetryPolicy.RunOperation(() => this.OnSendAsync(processedMessages), this.OperationTimeout);
+                sendTask = this.RetryPolicy.RunOperation(() => this.OnSendAsync(() => AmqpMessageConverter.BatchSBMessagesAsAmqpMessage(processedMessages)), this.OperationTimeout);
                 await sendTask.ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -271,6 +269,78 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             MessagingEventSource.Log.MessageSendStop(this.ClientId);
+        }
+
+        /// <summary>
+        /// Sends a <see cref="MessageBatch"/> of messages to Service Bus.
+        /// </summary>
+        public async Task SendAsync(MessageBatch messageBatch)
+        {
+            this.ThrowIfClosed();
+
+            MessagingEventSource.Log.MessageSendStart(this.ClientId, messageBatch.Length);
+
+            var isDiagnosticSourceEnabled = ServiceBusDiagnosticSource.IsEnabled();
+            // TODO: diagnostics (Start/Stop) is currently not possible. Requires change in how Diagnostics works.
+            // See https://github.com/SeanFeldman/azure-service-bus-dotnet/pull/1#issuecomment-415515524 for details.
+            // var activity = isDiagnosticSourceEnabled ? this.diagnosticSource.SendStart(messageList) : null;
+            Task sendTask;
+
+            try
+            {
+                sendTask = this.RetryPolicy.RunOperation(() => this.OnSendAsync(messageBatch.ToAmqpMessage), this.OperationTimeout);
+                await sendTask.ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                if (isDiagnosticSourceEnabled)
+                {
+                    this.diagnosticSource.ReportException(exception);
+                }
+
+                MessagingEventSource.Log.MessageSendException(this.ClientId, exception);
+                throw;
+            }
+            // finally
+            // {
+            //     this.diagnosticSource.SendStop(activity, messageList, sendTask?.Status);
+            // }
+
+            MessagingEventSource.Log.MessageSendStop(this.ClientId);
+        }
+
+        /// <summary>
+        /// Create a new <see cref="MessageBatch"/> setting maximum size to the maximum message size allowed by the underlying namespace.
+        /// </summary>
+        public async Task<MessageBatch> CreateBatch()
+        {
+            if (maxMessageSize != 0)
+            {
+                return new MessageBatch(maxMessageSize, ProcessMessage);
+            }
+
+            var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
+            SendingAmqpLink amqpLink = null;
+            try
+            {
+                if (!this.SendLinkManager.TryGetOpenedObject(out amqpLink))
+                {
+                    amqpLink = await this.SendLinkManager.GetOrCreateAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                }
+
+                if (!amqpLink.Settings.MaxMessageSize.HasValue)
+                {
+                    throw new Exception("Broker didn't provide maximum message size. MessageBatch requires maximum message size to operate.");
+                }
+
+                maxMessageSize = amqpLink.Settings.MaxMessageSize.Value;
+
+                return new MessageBatch(maxMessageSize, ProcessMessage);
+            }
+            catch (Exception exception)
+            {
+                throw AmqpExceptionHelper.GetClientException(exception, amqpLink?.GetTrackingId(), null, amqpLink?.Session.IsClosing() ?? false);
+            }
         }
 
         /// <summary>
@@ -301,7 +371,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             }
 
             message.ScheduledEnqueueTimeUtc = scheduleEnqueueTimeUtc.UtcDateTime;
-            MessageSender.ValidateMessage(message);
+            message.VerifyMessageIsNotPreviouslyReceived();
             MessagingEventSource.Log.ScheduleMessageStart(this.ClientId, scheduleEnqueueTimeUtc);
             long result = 0;
 
@@ -450,7 +520,7 @@ namespace Microsoft.Azure.ServiceBus.Core
             await this.RequestResponseLinkManager.CloseAsync().ConfigureAwait(false);
         }
 
-        static int ValidateMessages(IList<Message> messageList)
+        static int VerifyMessagesAreNotPreviouslyReceived(IList<Message> messageList)
         {
             var count = 0;
             if (messageList == null)
@@ -461,18 +531,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             foreach (var message in messageList)
             {
                 count++;
-                ValidateMessage(message);
+                message.VerifyMessageIsNotPreviouslyReceived();
             }
 
             return count;
-        }
-
-        static void ValidateMessage(Message message)
-        {
-            if (message.SystemProperties.IsLockTokenSet)
-            {
-                throw Fx.Exception.Argument(nameof(message), "Cannot send a message that was already received.");
-            }
         }
 
         static void CloseSession(SendingAmqpLink link)
@@ -526,10 +588,10 @@ namespace Microsoft.Azure.ServiceBus.Core
             return processedMessageList;
         }
 
-        async Task OnSendAsync(IList<Message> messageList)
+        async Task OnSendAsync(Func<AmqpMessage> amqpMessageProvider)
         {
             var timeoutHelper = new TimeoutHelper(this.OperationTimeout, true);
-            using (var amqpMessage = AmqpMessageConverter.BatchSBMessagesAsAmqpMessage(messageList))
+            using (var amqpMessage = amqpMessageProvider())
             {
                 SendingAmqpLink amqpLink = null;
                 try

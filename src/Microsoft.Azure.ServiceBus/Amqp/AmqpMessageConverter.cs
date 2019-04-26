@@ -17,15 +17,15 @@ namespace Microsoft.Azure.ServiceBus.Amqp
 
     static class AmqpMessageConverter
     {
+        internal const string PartitionKeyName = "x-opt-partition-key";
+        internal const string ViaPartitionKeyName = "x-opt-via-partition-key";
         const string EnqueuedTimeUtcName = "x-opt-enqueued-time";
         const string ScheduledEnqueueTimeUtcName = "x-opt-scheduled-enqueue-time";
         const string SequenceNumberName = "x-opt-sequence-number";
         const string EnqueueSequenceNumberName = "x-opt-enqueue-sequence-number";
         const string LockedUntilName = "x-opt-locked-until";
         const string PublisherName = "x-opt-publisher";
-        const string PartitionKeyName = "x-opt-partition-key";
         const string PartitionIdName = "x-opt-partition-id";
-        const string ViaPartitionKeyName = "x-opt-via-partition-key";
         const string DeadLetterSourceName = "x-opt-deadletter-source";
         const string TimeSpanName = AmqpConstants.Vendor + ":timespan";
         const string UriName = AmqpConstants.Vendor + ":uri";
@@ -641,7 +641,7 @@ namespace Microsoft.Azure.ServiceBus.Amqp
             return buffer;
         }
 
-        private static Data ToData(AmqpMessage message)
+        internal static Data ToData(AmqpMessage message)
         {
             ArraySegment<byte>[] payload = message.GetPayload();
             var buffer = new BufferListStream(payload);
